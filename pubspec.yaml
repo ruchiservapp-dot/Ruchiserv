@@ -1,0 +1,58 @@
+name: ruchiserv
+description: "A catering management SaaS app built with Flutter."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & Calendar
+  table_calendar: ^3.0.9
+  cupertino_icons: ^1.0.8
+
+  # Dates/formatting
+  intl: ^0.19.0
+
+  # Network & connectivity
+  http: ^1.2.2
+  connectivity_plus: ^7.0.0
+  url_launcher: ^6.3.0
+
+  # Local storage / DB
+  sqflite: ^2.3.3
+  path: ^1.9.0
+  path_provider: ^2.1.3
+  shared_preferences: ^2.2.3
+  flutter_secure_storage: ^9.2.4
+
+  # Biometrics & app info
+  local_auth: ^3.0.0
+  package_info_plus: ^9.0.0
+
+  # (Optional) Sticky headers used elsewhere in app
+  sticky_headers: ^0.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
