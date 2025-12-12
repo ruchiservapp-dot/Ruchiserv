@@ -1,3 +1,4 @@
+// @locked
 // lib/screens/1.6_register_choice.dart
 import 'package:flutter/material.dart';
 import '../services/otp_service.dart';
@@ -16,10 +17,18 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
   final _mobileCtrl = TextEditingController();
   final _otpCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
+  final _confirmPwdCtrl = TextEditingController();
 
   bool _sending = false;
   int _step = 1; // 1: ask firm+mobile, 2: otp, 3: set password
   String? _otpSessionId;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -27,6 +36,7 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
     _mobileCtrl.dispose();
     _otpCtrl.dispose();
     _pwdCtrl.dispose();
+    _confirmPwdCtrl.dispose();
     super.dispose();
   }
 
@@ -84,14 +94,23 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
 
   Future<void> _setPassword() async {
     final pwd = _pwdCtrl.text.trim();
+    final confirm = _confirmPwdCtrl.text.trim();
+    
     if (pwd.length < 4) {
       _showError('Password must be at least 4 characters.');
       return;
     }
+    if (pwd != confirm) {
+      _showError('Passwords do not match.');
+      return;
+    }
+
     setState(() => _sending = true);
     try {
       final firmId = _firmCtrl.text.trim();
       final mobile = _mobileCtrl.text.trim();
+      
+      // 1. Call API (Mocked)
       final ok = await AuthService.setPassword(
         firmId: firmId,
         mobile: mobile,
@@ -101,6 +120,15 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
         _showError('Failed to set password. Try again.');
         return;
       }
+
+      // 2. Save Locally (So user can login immediately)
+      // We need to insert this user into local DB
+      await AuthService.registerLocalUser(
+        firmId: firmId,
+        mobile: mobile,
+        password: pwd, // In real app, hash this!
+        name: 'Admin', // Default name
+      );
 
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -184,10 +212,27 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _pwdCtrl,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
                           labelText: 'Password',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _confirmPwdCtrl,
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
+                            onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),

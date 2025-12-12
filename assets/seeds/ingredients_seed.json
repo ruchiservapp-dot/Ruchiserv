@@ -1,0 +1,2242 @@
+[
+  {
+    "ing_id": 101,
+    "name": "Basmati Rice",
+    "sku_name": "ING_RICE_BASM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 102,
+    "name": "Toor Dal (Parippu)",
+    "sku_name": "ING_DAL_TOOR",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 95.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 103,
+    "name": "Chicken (Bone-in, Curry Cut)",
+    "sku_name": "ING_CHIC_BONE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 160.0,
+    "category": "Meat"
+  },
+  {
+    "ing_id": 104,
+    "name": "Coconut Milk (Thick)",
+    "sku_name": "ING_COCO_MILK_T",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 180.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 105,
+    "name": "Turmeric Powder",
+    "sku_name": "ING_SPICE_TURM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 250.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 106,
+    "name": "Red Chilli Powder (Kashmiri)",
+    "sku_name": "ING_SPICE_KASHMIRI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 107,
+    "name": "Onion (Small/Shallot)",
+    "sku_name": "ING_VEG_ONION_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 35.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 108,
+    "name": "Tomato",
+    "sku_name": "ING_VEG_TOMATO",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 109,
+    "name": "Ghee (Clarified Butter)",
+    "sku_name": "ING_FAT_GHEE",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 450.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 110,
+    "name": "Fresh Ginger",
+    "sku_name": "ING_FLAV_GINGER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 80.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 111,
+    "name": "Ada (Rice Flakes)",
+    "sku_name": "ING_DESSERT_ADA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Dessert Base"
+  },
+  {
+    "ing_id": 112,
+    "name": "Jaggery (Sharkara)",
+    "sku_name": "ING_JAGG_SHARK",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 70.0,
+    "category": "Sweetener"
+  },
+  {
+    "ing_id": 113,
+    "name": "Black Chickpeas (Kala Chana)",
+    "sku_name": "ING_PULSE_CHANA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 85.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 114,
+    "name": "Raw Banana (Plantain)",
+    "sku_name": "ING_VEG_PLANTAIN",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 30.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 115,
+    "name": "Coconut Oil",
+    "sku_name": "ING_FAT_COCOOIL",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 220.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 116,
+    "name": "Curd/Yogurt (Thick)",
+    "sku_name": "ING_DAIRY_CURD",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 60.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 117,
+    "name": "Curry Leaves",
+    "sku_name": "ING_FLAV_CURRY",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 118,
+    "name": "Cumin Seeds (Jeera)",
+    "sku_name": "ING_SPICE_CUMIN",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 350.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 119,
+    "name": "Whole Black Pepper",
+    "sku_name": "ING_SPICE_PEPPER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 550.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 120,
+    "name": "Drumstick",
+    "sku_name": "ING_VEG_DRUMSTICK",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 121,
+    "name": "Beef (Boneless Cubes)",
+    "sku_name": "ING_BEEF_CUBE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 320.0,
+    "category": "Meat"
+  },
+  {
+    "ing_id": 122,
+    "name": "Tapioca (Kappa)",
+    "sku_name": "ING_VEG_KAPPA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 25.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 123,
+    "name": "Fish (King Fish/Ayakura)",
+    "sku_name": "ING_FISH_KING",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 450.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 124,
+    "name": "Green Cardamom (Elakka)",
+    "sku_name": "ING_SPICE_CARDAMOM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 1800.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 125,
+    "name": "Cinnamon Stick (Patta)",
+    "sku_name": "ING_SPICE_CINNAMON",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 400.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 126,
+    "name": "Nutmeg (Jathikka)",
+    "sku_name": "ING_SPICE_NUTMEG",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 900.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 127,
+    "name": "Rice Flour (Podi)",
+    "sku_name": "ING_FLOUR_RICE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 128,
+    "name": "Urad Dal (Split)",
+    "sku_name": "ING_DAL_URAD",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 110.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 129,
+    "name": "Fresh Coconut, Grated",
+    "sku_name": "ING_COCO_GRATED",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 80.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 130,
+    "name": "Green Chilli",
+    "sku_name": "ING_FLAV_GREENCH",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 131,
+    "name": "Semolina (Rava)",
+    "sku_name": "ING_GRAIN_RAVA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 55.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 132,
+    "name": "Sugar",
+    "sku_name": "ING_SWT_SUGAR",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 42.0,
+    "category": "Sweetener"
+  },
+  {
+    "ing_id": 133,
+    "name": "Cashew Nuts (Broken)",
+    "sku_name": "ING_NUTS_CASHEW",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 750.0,
+    "category": "Nuts"
+  },
+  {
+    "ing_id": 134,
+    "name": "All-Purpose Flour (Maida)",
+    "sku_name": "ING_FLOUR_MAIDA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 135,
+    "name": "Vinegar",
+    "sku_name": "ING_COND_VINEGAR",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 80.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 136,
+    "name": "Dry Yeast",
+    "sku_name": "ING_BAKE_YEAST",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 500.0,
+    "category": "Baking"
+  },
+  {
+    "ing_id": 137,
+    "name": "Vegetable Stock/Broth",
+    "sku_name": "ING_STOCK_VEG",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 50.0,
+    "category": "Liquid"
+  },
+  {
+    "ing_id": 138,
+    "name": "Banana Leaves",
+    "sku_name": "ING_PACK_BANANA",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 5.0,
+    "category": "Packaging"
+  },
+  {
+    "ing_id": 139,
+    "name": "Carrot (Diced)",
+    "sku_name": "ING_VEG_CARROT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 30.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 140,
+    "name": "Capsicum (Bell Pepper)",
+    "sku_name": "ING_VEG_CAPSICUM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 90.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 141,
+    "name": "Mutton/Goat Meat (Bone-in)",
+    "sku_name": "ING_MEAT_MUTTON",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 480.0,
+    "category": "Meat"
+  },
+  {
+    "ing_id": 142,
+    "name": "Sesame Oil (Gingelly)",
+    "sku_name": "ING_FAT_SESAME",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 350.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 143,
+    "name": "Dry Red Chillies (Guntur/Byadgi)",
+    "sku_name": "ING_SPICE_CHILLI_DRY",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 380.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 144,
+    "name": "Coriander Seeds",
+    "sku_name": "ING_SPICE_CORIANDER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 145,
+    "name": "Methi Seeds (Fenugreek)",
+    "sku_name": "ING_SPICE_METHI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 90.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 146,
+    "name": "Mustard Seeds",
+    "sku_name": "ING_SPICE_MUSTARD",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 147,
+    "name": "Tamarind Pulp Concentrate",
+    "sku_name": "ING_COND_TAMARIND",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 250.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 148,
+    "name": "Garlic",
+    "sku_name": "ING_FLAV_GARLIC",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 149,
+    "name": "Chana Dal (Bengal Gram)",
+    "sku_name": "ING_PULSE_CHANA_DAL",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 110.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 150,
+    "name": "Besan (Gram Flour)",
+    "sku_name": "ING_FLOUR_BESAN",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 65.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 151,
+    "name": "Peanuts (Groundnuts)",
+    "sku_name": "ING_NUTS_PEANUT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 140.0,
+    "category": "Nuts"
+  },
+  {
+    "ing_id": 152,
+    "name": "Idli Rice (Parboiled)",
+    "sku_name": "ING_RICE_IDLI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 153,
+    "name": "Coconut Vinegar",
+    "sku_name": "ING_COND_COCOVINE",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 150.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 154,
+    "name": "Potatoes",
+    "sku_name": "ING_VEG_POTATO",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 30.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 155,
+    "name": "Curry Powder (General Masala)",
+    "sku_name": "ING_MASALA_GENERAL",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 280.0,
+    "category": "Masalas"
+  },
+  {
+    "ing_id": 156,
+    "name": "Mint Leaves (Pudina)",
+    "sku_name": "ING_FLAV_MINT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 157,
+    "name": "Ginger-Garlic Paste",
+    "sku_name": "ING_PASTE_GG",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 110.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 158,
+    "name": "Bay Leaf",
+    "sku_name": "ING_SPICE_BAYLEAF",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 500.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 159,
+    "name": "Star Anise",
+    "sku_name": "ING_SPICE_STARANISE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 900.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 160,
+    "name": "Saffron Strands",
+    "sku_name": "ING_SPICE_SAFFRON",
+    "unit_of_measure": "GRAM",
+    "cost_per_unit": 50000.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 161,
+    "name": "Curry Powder (Kerala Standard)",
+    "sku_name": "ING_MASALA_KERALA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Masalas"
+  },
+  {
+    "ing_id": 162,
+    "name": "Yogurt/Curd (Sour)",
+    "sku_name": "ING_DAIRY_CURD_S",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 65.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 163,
+    "name": "Cow Peas (Vanpayar)",
+    "sku_name": "ING_PULSE_VANPAYAR",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 164,
+    "name": "Raw Jackfruit (Idichakka)",
+    "sku_name": "ING_VEG_JACKFRUIT_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 165,
+    "name": "Mushroom (Oyster/Button)",
+    "sku_name": "ING_VEG_MUSHROOM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 250.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 166,
+    "name": "Sharkara Varatti (Jaggery coated chips)",
+    "sku_name": "ING_SNACK_SHARKARA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 350.0,
+    "category": "Snacks"
+  },
+  {
+    "ing_id": 167,
+    "name": "Puttu Podi (Rice Powder, coarse)",
+    "sku_name": "ING_FLOUR_PUTTU",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 168,
+    "name": "Chiratta Puttu Maker",
+    "sku_name": "ING_EQUIP_PUTTU",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 0.0,
+    "category": "Equipment"
+  },
+  {
+    "ing_id": 169,
+    "name": "Red Kidney Beans (Rajma)",
+    "sku_name": "ING_PULSE_RAJMA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 130.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 170,
+    "name": "Coconut Vinegar (Standard)",
+    "sku_name": "ING_COND_COCOVINE_S",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 150.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 171,
+    "name": "Kodampuli (Malabar Tamarind)",
+    "sku_name": "ING_SPICE_KODAMPULI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 800.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 172,
+    "name": "Garcinia (Malabar Tamarind) Paste",
+    "sku_name": "ING_PASTE_KODAMPULI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 700.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 173,
+    "name": "Prawns (Medium/Small)",
+    "sku_name": "ING_SEAFD_PRAWN_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 400.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 174,
+    "name": "Duck Meat",
+    "sku_name": "ING_MEAT_DUCK",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 380.0,
+    "category": "Meat"
+  },
+  {
+    "ing_id": 175,
+    "name": "Tender Coconut Water",
+    "sku_name": "ING_BEV_COCOWATER",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 80.0,
+    "category": "Beverage"
+  },
+  {
+    "ing_id": 176,
+    "name": "Salt",
+    "sku_name": "ING_MISC_SALT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 10.0,
+    "category": "Miscellaneous"
+  },
+  {
+    "ing_id": 177,
+    "name": "Mustard Seeds (Small)",
+    "sku_name": "ING_SPICE_MUSTARD_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 178,
+    "name": "Dried Red Chilli Flakes",
+    "sku_name": "ING_SPICE_CHILLI_DRYFL",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 280.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 179,
+    "name": "Shallots (Kunjulli)",
+    "sku_name": "ING_VEG_SHALLOTS",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 180,
+    "name": "Beetroot",
+    "sku_name": "ING_VEG_BEETROOT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 181,
+    "name": "Prawns (Tiger/Large)",
+    "sku_name": "ING_SEAFD_PRAWN_L",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 650.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 182,
+    "name": "Sardines (Mathi)",
+    "sku_name": "ING_SEAFD_MATHI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 183,
+    "name": "Seer Fish (Neymeen)",
+    "sku_name": "ING_SEAFD_NE\u03a5MEEN",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 850.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 184,
+    "name": "Plain Wheat Flour (Atta)",
+    "sku_name": "ING_FLOUR_WHEAT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 185,
+    "name": "Baking Soda",
+    "sku_name": "ING_BAKE_SODA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 80.0,
+    "category": "Baking"
+  },
+  {
+    "ing_id": 186,
+    "name": "Refined Oil (Sunflower/Vegetable)",
+    "sku_name": "ING_FAT_REFINED",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 150.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 187,
+    "name": "Black Gram Flour (for Pakora/Bajji)",
+    "sku_name": "ING_FLOUR_BLACKGRAM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 100.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 188,
+    "name": "Dried Tamarind",
+    "sku_name": "ING_COND_TAMARIND_DRY",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 189,
+    "name": "Coconut Milk Powder",
+    "sku_name": "ING_COCO_MILK_POWDER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 550.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 190,
+    "name": "Kachimoru (Buttermilk Base)",
+    "sku_name": "ING_DAIRY_KACHIMORU",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 50.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 191,
+    "name": "Raw Mango (Green)",
+    "sku_name": "ING_FRUIT_MANGO_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Fruit/Flavoring"
+  },
+  {
+    "ing_id": 192,
+    "name": "Snake Gourd (Padavalanga)",
+    "sku_name": "ING_VEG_SNAKEG",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 35.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 193,
+    "name": "Yam (Chena)",
+    "sku_name": "ING_VEG_YAM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 194,
+    "name": "Raw Rice (Pachari)",
+    "sku_name": "ING_RICE_PACHARI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 55.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 195,
+    "name": "Sesame Seeds (White)",
+    "sku_name": "ING_SPICE_SESAME_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 220.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 196,
+    "name": "Fennel Seeds (Perumjeerakam)",
+    "sku_name": "ING_SPICE_FENNEL",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 280.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 197,
+    "name": "Eggs",
+    "sku_name": "ING_DAIRY_EGG",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 7.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 198,
+    "name": "Palada (Rice Flakes for Payasam)",
+    "sku_name": "ING_DESSERT_PALADA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Dessert Base"
+  },
+  {
+    "ing_id": 199,
+    "name": "Green Peas",
+    "sku_name": "ING_VEG_PEAS",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 200,
+    "name": "Cauliflower",
+    "sku_name": "ING_VEG_CAULI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 201,
+    "name": "Raw Mango (for Pickle)",
+    "sku_name": "ING_FRUIT_MANGO_PK",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 202,
+    "name": "Sesame Oil (Gingelly for Pickles)",
+    "sku_name": "ING_FAT_GINGELLY",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 380.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 203,
+    "name": "Fenugreek Powder (Uluva)",
+    "sku_name": "ING_SPICE_FENUGREEK_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 204,
+    "name": "Asafoetida Powder (Hing)",
+    "sku_name": "ING_SPICE_ASA_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 1200.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 205,
+    "name": "Gooseberry (Nellikka)",
+    "sku_name": "ING_FRUIT_GOOSEBERRY",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 90.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 206,
+    "name": "Lime (Narthanga)",
+    "sku_name": "ING_FRUIT_LIME",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 70.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 207,
+    "name": "Ash Gourd (Kumbalanga)",
+    "sku_name": "ING_VEG_ASHG",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 20.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 208,
+    "name": "Snake Gourd (Padavalanga)",
+    "sku_name": "ING_VEG_SNAKEG",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 35.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 209,
+    "name": "Ridge Gourd (Peechinga)",
+    "sku_name": "ING_VEG_RIDGEG",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 210,
+    "name": "Elephant Foot Yam (Chena)",
+    "sku_name": "ING_VEG_YAM_EF",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 211,
+    "name": "Colocasia (Chembu)",
+    "sku_name": "ING_VEG_COLOCASIA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 212,
+    "name": "Red Cowpeas (Vanpayar)",
+    "sku_name": "ING_PULSE_VANPAYAR_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 130.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 213,
+    "name": "Horse Gram (Muthira)",
+    "sku_name": "ING_PULSE_HORSEGRAM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 110.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 214,
+    "name": "Jackfruit Seeds (Chakkakuru)",
+    "sku_name": "ING_VEG_JACKFRUIT_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 215,
+    "name": "Bitter Gourd (Pavakka)",
+    "sku_name": "ING_VEG_BITTERG",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 70.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 216,
+    "name": "Ginger (Julienned for Pickle)",
+    "sku_name": "ING_FLAV_GINGER_J",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 80.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 217,
+    "name": "Dates (Pitted)",
+    "sku_name": "ING_FRUIT_DATE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Fruit/Dessert"
+  },
+  {
+    "ing_id": 218,
+    "name": "Black Pepper Powder",
+    "sku_name": "ING_SPICE_PEPPER_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 600.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 219,
+    "name": "Sardines/Anchovies (Kozhuva)",
+    "sku_name": "ING_SEAFD_KOZHUVA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 220,
+    "name": "Unripe Banana (Ethapazham)",
+    "sku_name": "ING_FRUIT_BANANA_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Fruit/Snack"
+  },
+  {
+    "ing_id": 221,
+    "name": "Raw Rice (Pachari for Idli/Dosa)",
+    "sku_name": "ING_RICE_PACHARI_IDLI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 55.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 222,
+    "name": "Puffed Rice (Pori)",
+    "sku_name": "ING_RICE_PUFFED",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 80.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 223,
+    "name": "Jasmine Rice (Fusion)",
+    "sku_name": "ING_RICE_JASMINE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 224,
+    "name": "Chilli Garlic Sauce",
+    "sku_name": "ING_SAUCE_CHIGAR",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 180.0,
+    "category": "Sauces"
+  },
+  {
+    "ing_id": 225,
+    "name": "Soy Sauce (Dark)",
+    "sku_name": "ING_SAUCE_SOY_D",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 150.0,
+    "category": "Sauces"
+  },
+  {
+    "ing_id": 226,
+    "name": "White Pepper Powder",
+    "sku_name": "ING_SPICE_WHTPEPPER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 450.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 227,
+    "name": "Tamarind Water (Diluted)",
+    "sku_name": "ING_COND_TAMARIND_W",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 40.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 228,
+    "name": "Small Onions/Shallots (Finely Chopped)",
+    "sku_name": "ING_VEG_SHALLOTS_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 55.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 229,
+    "name": "Raw Green Mango (Diced)",
+    "sku_name": "ING_FRUIT_MANGO_D",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 65.0,
+    "category": "Fruit/Condiment"
+  },
+  {
+    "ing_id": 230,
+    "name": "Small Prawns (Koonthal/Squid)",
+    "sku_name": "ING_SEAFD_KOONTHAL",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 480.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 231,
+    "name": "Clams/Mussels (Kakkayirachi)",
+    "sku_name": "ING_SEAFD_MUSSELS",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 250.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 232,
+    "name": "Sugar (Brown/Jaggery equivalent)",
+    "sku_name": "ING_SWT_SUGAR_B",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 85.0,
+    "category": "Sweetener"
+  },
+  {
+    "ing_id": 233,
+    "name": "Fresh Milk (Full Cream)",
+    "sku_name": "ING_DAIRY_MILK_FC",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 60.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 234,
+    "name": "Rice Flakes (Poha)",
+    "sku_name": "ING_RICE_FLAKES",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 75.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 235,
+    "name": "Vegetable Oil (General Frying)",
+    "sku_name": "ING_FAT_VEGOIL_G",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 140.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 236,
+    "name": "Semolina (Coarse for Upma)",
+    "sku_name": "ING_GRAIN_SEMOLINA_C",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 58.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 237,
+    "name": "Banana (Ripe)",
+    "sku_name": "ING_FRUIT_BANANA_RIPE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Fruit/Snack"
+  },
+  {
+    "ing_id": 238,
+    "name": "Chilli Powder (Deggi Mirch)",
+    "sku_name": "ING_SPICE_CHILLI_DM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 280.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 239,
+    "name": "Vinegar (White)",
+    "sku_name": "ING_COND_VINEGAR_W",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 100.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 240,
+    "name": "Garlic Paste",
+    "sku_name": "ING_PASTE_GARLIC",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 100.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 241,
+    "name": "Basmati Rice (Broken/Budget)",
+    "sku_name": "ING_RICE_BASM_B",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 80.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 242,
+    "name": "Matta Rice (Boiled/Red)",
+    "sku_name": "ING_RICE_MATTA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 243,
+    "name": "Jeera Rice (Kaima/Ambemohar)",
+    "sku_name": "ING_RICE_KAIMA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 244,
+    "name": "Groundnut Oil (Peanut Oil)",
+    "sku_name": "ING_FAT_GROUNDNUT",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 160.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 245,
+    "name": "Garlic (Peeled)",
+    "sku_name": "ING_FLAV_GARLIC_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 246,
+    "name": "Dry Ginger Powder (Chukku)",
+    "sku_name": "ING_SPICE_DRYGINGER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 350.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 247,
+    "name": "Fenugreek Seeds (Uluva)",
+    "sku_name": "ING_SPICE_FENUGREEK",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 90.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 248,
+    "name": "Mustard Seeds (Black)",
+    "sku_name": "ING_SPICE_MUSTARD_B",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 140.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 249,
+    "name": "Carrots (Julienned)",
+    "sku_name": "ING_VEG_CARROT_J",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 35.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 250,
+    "name": "Drumstick (Muringakka)",
+    "sku_name": "ING_VEG_DRUMSTICK_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 251,
+    "name": "Ash Gourd (Vellarikka)",
+    "sku_name": "ING_VEG_ASHG_C",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 25.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 252,
+    "name": "Pumpkin (Mathan)",
+    "sku_name": "ING_VEG_PUMPKIN_Y",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 30.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 253,
+    "name": "Raw Banana (Nendran)",
+    "sku_name": "ING_VEG_BANANA_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 254,
+    "name": "White Cowpeas (Vellapayar)",
+    "sku_name": "ING_PULSE_COWPEAS_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 125.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 255,
+    "name": "Tamarind Paste (Thick)",
+    "sku_name": "ING_COND_TAMARIND_T",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 256,
+    "name": "Green Cardamom Powder",
+    "sku_name": "ING_SPICE_CARDAMOM_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 1900.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 257,
+    "name": "Cashew Paste",
+    "sku_name": "ING_NUTS_CASHEW_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 800.0,
+    "category": "Nuts"
+  },
+  {
+    "ing_id": 258,
+    "name": "Sugar (Palm/Brown)",
+    "sku_name": "ING_SWT_PALM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 95.0,
+    "category": "Sweetener"
+  },
+  {
+    "ing_id": 259,
+    "name": "Dry Curry Leaves",
+    "sku_name": "ING_FLAV_CURRY_D",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 260,
+    "name": "Black Urad Dal (Whole)",
+    "sku_name": "ING_DAL_URAD_B",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 130.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 261,
+    "name": "Seer Fish (Large Fillet)",
+    "sku_name": "ING_SEAFD_NE\u03a5MEEN_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 950.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 262,
+    "name": "Squid/Calamari (Cleaned)",
+    "sku_name": "ING_SEAFD_SQUID",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 550.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 263,
+    "name": "Ripe Mango (Aam)",
+    "sku_name": "ING_FRUIT_MANGO_RIPE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 80.0,
+    "category": "Fruit/Dessert"
+  },
+  {
+    "ing_id": 264,
+    "name": "Cocoa Powder",
+    "sku_name": "ING_DESSERT_COCOA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 450.0,
+    "category": "Dessert"
+  },
+  {
+    "ing_id": 265,
+    "name": "Vanilla Essence",
+    "sku_name": "ING_DESSERT_VANILLA",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 800.0,
+    "category": "Dessert"
+  },
+  {
+    "ing_id": 266,
+    "name": "Maida (Fine)",
+    "sku_name": "ING_FLOUR_MAIDA_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 267,
+    "name": "Bread Crumbs (Panko)",
+    "sku_name": "ING_CRUMBS_PANKO",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Coating"
+  },
+  {
+    "ing_id": 268,
+    "name": "Toddy/Yeast Starter (for Appam)",
+    "sku_name": "ING_YEAST_TODDY",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 120.0,
+    "category": "Fermentation"
+  },
+  {
+    "ing_id": 269,
+    "name": "Dry Green Peas",
+    "sku_name": "ING_PULSE_PEAS_D",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 110.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 270,
+    "name": "Green Gram (Moong Whole)",
+    "sku_name": "ING_PULSE_MOONG_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 271,
+    "name": "Gingelly Oil (For Frying)",
+    "sku_name": "ING_FAT_GINGELLY_F",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 390.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 272,
+    "name": "Rice Flour (Fine for Pathiri)",
+    "sku_name": "ING_FLOUR_RICE_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 55.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 273,
+    "name": "Dry Fish (Anchovy/Mathi)",
+    "sku_name": "ING_SEAFD_DRYFISH",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 274,
+    "name": "Vinegar (Red Wine Style)",
+    "sku_name": "ING_COND_VINEGAR_R",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 150.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 275,
+    "name": "Tender Coconut (Flesh)",
+    "sku_name": "ING_COCO_TENDER_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 250.0,
+    "category": "Dessert/Drink"
+  },
+  {
+    "ing_id": 276,
+    "name": "Water Chestnut Flour",
+    "sku_name": "ING_FLOUR_CHESTNUT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 400.0,
+    "category": "Thickener"
+  },
+  {
+    "ing_id": 277,
+    "name": "Sweet Potato (Mathura Kizhanghu)",
+    "sku_name": "ING_VEG_SWEETPOTATO",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 35.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 278,
+    "name": "Ridge Gourd (Peechinga)",
+    "sku_name": "ING_VEG_RIDGEG_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 279,
+    "name": "Mustard Oil (Kadu Enna)",
+    "sku_name": "ING_FAT_MUSTARD",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 320.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 280,
+    "name": "Curry Leaf Powder",
+    "sku_name": "ING_FLAV_CURRY_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 450.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 281,
+    "name": "Watermelon",
+    "sku_name": "ING_FRUIT_WTRMELON",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Fruit/Beverage"
+  },
+  {
+    "ing_id": 282,
+    "name": "Pineapple",
+    "sku_name": "ING_FRUIT_PINEAPPLE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Fruit/Dessert"
+  },
+  {
+    "ing_id": 283,
+    "name": "Mint Leaves (Fresh)",
+    "sku_name": "ING_FLAV_MINT_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Flavoring/Beverage"
+  },
+  {
+    "ing_id": 284,
+    "name": "Lemon Juice (Concentrate)",
+    "sku_name": "ING_COND_LEMON_C",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 400.0,
+    "category": "Condiments/Beverage"
+  },
+  {
+    "ing_id": 285,
+    "name": "Ginger Ale/Soda",
+    "sku_name": "ING_BEV_SODA_G",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 60.0,
+    "category": "Beverage"
+  },
+  {
+    "ing_id": 286,
+    "name": "Ice (Consumption Rate)",
+    "sku_name": "ING_MISC_ICE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 5.0,
+    "category": "Miscellaneous"
+  },
+  {
+    "ing_id": 287,
+    "name": "Black Salt (Kala Namak)",
+    "sku_name": "ING_MISC_BLACKSALT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Miscellaneous"
+  },
+  {
+    "ing_id": 288,
+    "name": "Cabbage (Shredded)",
+    "sku_name": "ING_VEG_CABBAGE_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 30.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 289,
+    "name": "Capsicum (Julienned)",
+    "sku_name": "ING_VEG_CAPSICUM_J",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 90.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 290,
+    "name": "White Oil/Dalda (For Frying/Baking)",
+    "sku_name": "ING_FAT_WHITE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 291,
+    "name": "Raw Turmeric (Pacha Manjal)",
+    "sku_name": "ING_SPICE_TURMERIC_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 292,
+    "name": "Green Peas (Dried)",
+    "sku_name": "ING_PULSE_PEAS_D",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 110.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 293,
+    "name": "Ripe Jackfruit Bulb (Chakka Varatti Base)",
+    "sku_name": "ING_FRUIT_JACKFRUIT_B",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Dessert Base"
+  },
+  {
+    "ing_id": 294,
+    "name": "All-Purpose Flour (For Rotti/Parotta)",
+    "sku_name": "ING_FLOUR_AP",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 295,
+    "name": "Vegetable Broth (Stock)",
+    "sku_name": "ING_STOCK_VEG_B",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 50.0,
+    "category": "Liquid"
+  },
+  {
+    "ing_id": 296,
+    "name": "Bay Leaf (Tej Patta)",
+    "sku_name": "ING_SPICE_BAYLEAF_L",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 5.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 297,
+    "name": "Cloves (Grambu)",
+    "sku_name": "ING_SPICE_CLOVE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 800.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 298,
+    "name": "Mace (Jathipathri)",
+    "sku_name": "ING_SPICE_MACE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 1500.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 299,
+    "name": "Dry Chillies (Whole)",
+    "sku_name": "ING_SPICE_CHILLI_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 350.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 300,
+    "name": "Mustard Powder (Rai Powder)",
+    "sku_name": "ING_SPICE_MUSTARD_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 200.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 301,
+    "name": "Refined Sugar (Fine)",
+    "sku_name": "ING_SWT_SUGAR_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Sweetener"
+  },
+  {
+    "ing_id": 302,
+    "name": "Semolina (Fine for Rava Kesari)",
+    "sku_name": "ING_GRAIN_SEMOLINA_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 303,
+    "name": "Dried Fruits (Raisins/Currants)",
+    "sku_name": "ING_DESSERT_FRUITS_D",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 400.0,
+    "category": "Dessert"
+  },
+  {
+    "ing_id": 304,
+    "name": "Ghee (Budget Grade)",
+    "sku_name": "ING_FAT_GHEE_B",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 350.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 305,
+    "name": "Yellow Moong Dal (Cherupayar Parippu)",
+    "sku_name": "ING_DAL_MOONG_Y",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 130.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 306,
+    "name": "Spinach (Cheera)",
+    "sku_name": "ING_VEG_SPINACH",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 307,
+    "name": "Drumstick Leaves (Muringayila)",
+    "sku_name": "ING_VEG_DRUMLEAF",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 308,
+    "name": "Raw Papaya",
+    "sku_name": "ING_VEG_PAPAYA_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 25.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 309,
+    "name": "Prawns (Medium Tail-on)",
+    "sku_name": "ING_SEAFD_PRAWN_TM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 550.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 310,
+    "name": "Pomfret (Avoli)",
+    "sku_name": "ING_SEAFD_POMFRET",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 750.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 311,
+    "name": "Anchovies (Kozhuva, Dried)",
+    "sku_name": "ING_SEAFD_KOZHUVA_D",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 280.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 312,
+    "name": "Coconut Oil (Pure Virgin)",
+    "sku_name": "ING_FAT_COCOOIL_V",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 280.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 313,
+    "name": "Cardamom Pods (Whole)",
+    "sku_name": "ING_SPICE_CARDAMOM_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 1850.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 314,
+    "name": "Clove (Whole)",
+    "sku_name": "ING_SPICE_CLOVE_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 850.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 315,
+    "name": "Fennel Powder (Perumjeerakam P)",
+    "sku_name": "ING_SPICE_FENNEL_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 316,
+    "name": "Star Anise (Whole)",
+    "sku_name": "ING_SPICE_STARANISE_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 950.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 317,
+    "name": "Fish Masala Powder (Kerala Style)",
+    "sku_name": "ING_MASALA_FISH",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 320.0,
+    "category": "Masalas"
+  },
+  {
+    "ing_id": 318,
+    "name": "Meat Masala Powder (Kerala Style)",
+    "sku_name": "ING_MASALA_MEAT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 350.0,
+    "category": "Masalas"
+  },
+  {
+    "ing_id": 319,
+    "name": "Black Chickpeas (Kala Chana, Small)",
+    "sku_name": "ING_PULSE_CHANA_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 115.0,
+    "category": "Pulses"
+  },
+  {
+    "ing_id": 320,
+    "name": "Vegetable Ghee (Vanaspati)",
+    "sku_name": "ING_FAT_VEGGHEE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 110.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 321,
+    "name": "Rice Flour (Brown/Red)",
+    "sku_name": "ING_FLOUR_RICE_R",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 322,
+    "name": "Ragi Flour (Finger Millet)",
+    "sku_name": "ING_FLOUR_RAGI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 75.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 323,
+    "name": "Sago/Sabudana (Javvarisi)",
+    "sku_name": "ING_GRAIN_SAGO",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 90.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 324,
+    "name": "Thick Cream/Malai",
+    "sku_name": "ING_DAIRY_CREAM_T",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 450.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 325,
+    "name": "Pistachio (Garnish)",
+    "sku_name": "ING_NUTS_PISTA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 1200.0,
+    "category": "Nuts"
+  },
+  {
+    "ing_id": 326,
+    "name": "Almonds (Sliced Garnish)",
+    "sku_name": "ING_NUTS_ALMOND_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 900.0,
+    "category": "Nuts"
+  },
+  {
+    "ing_id": 327,
+    "name": "Banana Flower (Vazha Koombu)",
+    "sku_name": "ING_VEG_BANANA_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 328,
+    "name": "Moringa Leaves (Muringayila)",
+    "sku_name": "ING_VEG_MORINGA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 329,
+    "name": "Raw Green Mango (Small diced)",
+    "sku_name": "ING_FRUIT_MANGO_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 65.0,
+    "category": "Fruit/Condiment"
+  },
+  {
+    "ing_id": 330,
+    "name": "Pork (Bone-in, Cubed)",
+    "sku_name": "ING_MEAT_PORK",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Meat"
+  },
+  {
+    "ing_id": 331,
+    "name": "Soy Sauce (Light)",
+    "sku_name": "ING_SAUCE_SOY_L",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 140.0,
+    "category": "Sauces"
+  },
+  {
+    "ing_id": 332,
+    "name": "Sesame Seeds Oil (Chinese style)",
+    "sku_name": "ING_FAT_SESAME_C",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 300.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 333,
+    "name": "Corn Flour (Thickener)",
+    "sku_name": "ING_FLOUR_CORN",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 55.0,
+    "category": "Thickener"
+  },
+  {
+    "ing_id": 334,
+    "name": "Ginger Paste",
+    "sku_name": "ING_PASTE_GINGER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 100.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 335,
+    "name": "Vegetable Broth (Concentrated)",
+    "sku_name": "ING_STOCK_VEG_C",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 60.0,
+    "category": "Liquid"
+  },
+  {
+    "ing_id": 336,
+    "name": "Pickling Spice Mix (General)",
+    "sku_name": "ING_MASALA_PICKLE",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 400.0,
+    "category": "Masalas"
+  },
+  {
+    "ing_id": 337,
+    "name": "Jalebi Batter (Premix)",
+    "sku_name": "ING_BAKE_JALEBI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Dessert Base"
+  },
+  {
+    "ing_id": 338,
+    "name": "Chilli Flakes (Pizza Style)",
+    "sku_name": "ING_SPICE_CHILLI_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 339,
+    "name": "Tofu (Cubed)",
+    "sku_name": "ING_VEG_TOFU",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 340,
+    "name": "Dry Ginger (Whole)",
+    "sku_name": "ING_SPICE_DRYGINGER_W",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 350.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 341,
+    "name": "Red Snapper (Chempally)",
+    "sku_name": "ING_SEAFD_SNAPPER",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 750.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 342,
+    "name": "Clams (Kakkayirachi)",
+    "sku_name": "ING_SEAFD_CLAMS",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 343,
+    "name": "Mackerel (Ayla)",
+    "sku_name": "ING_SEAFD_MACKEREL",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 220.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 344,
+    "name": "Green Cardamom (Whole, Premium)",
+    "sku_name": "ING_SPICE_CARDAMOM_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 2000.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 345,
+    "name": "Cloves (Whole, Premium)",
+    "sku_name": "ING_SPICE_CLOVE_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 950.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 346,
+    "name": "Cinnamon (Quills, Premium)",
+    "sku_name": "ING_SPICE_CINNAMON_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 550.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 347,
+    "name": "Roasted Rice Flour (Pathiri Podi)",
+    "sku_name": "ING_FLOUR_RICE_ROAST",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 65.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 348,
+    "name": "Wheat Flour (Fine, Atta)",
+    "sku_name": "ING_FLOUR_WHEAT_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 349,
+    "name": "Coconut (Whole, for breaking/juice)",
+    "sku_name": "ING_COCO_WHOLE",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 35.0,
+    "category": "Fruit/Flavoring"
+  },
+  {
+    "ing_id": 350,
+    "name": "Drumstick Powder (Muringayila Podi)",
+    "sku_name": "ING_FLAV_DRUMLEAF_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 400.0,
+    "category": "Flavoring"
+  },
+  {
+    "ing_id": 351,
+    "name": "Unniyappam Batter (Premix)",
+    "sku_name": "ING_BAKE_UNNIYAPPAM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Dessert Base"
+  },
+  {
+    "ing_id": 352,
+    "name": "Jackfruit Seeds (Dried)",
+    "sku_name": "ING_VEG_JACKFRUIT_SD",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 353,
+    "name": "Colocasia Leaves (Chembila)",
+    "sku_name": "ING_VEG_COLOCASIA_L",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 50.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 354,
+    "name": "Tamarind Paste (Kerala Style)",
+    "sku_name": "ING_COND_TAMARIND_K",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 320.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 355,
+    "name": "Coconut Jaggery (Karupatti)",
+    "sku_name": "ING_SWT_KARUPATTI",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Sweetener"
+  },
+  {
+    "ing_id": 356,
+    "name": "Raw Banana (Nendran, Diced)",
+    "sku_name": "ING_VEG_BANANA_N",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 357,
+    "name": "Cucumber (Vellarikka, Sadya)",
+    "sku_name": "ING_VEG_CUCUMBER_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 358,
+    "name": "Tomato Ketchup",
+    "sku_name": "ING_SAUCE_KETCHUP",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 120.0,
+    "category": "Sauces"
+  },
+  {
+    "ing_id": 359,
+    "name": "Sweet Chilli Sauce",
+    "sku_name": "ING_SAUCE_CHILLI_S",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 180.0,
+    "category": "Sauces"
+  },
+  {
+    "ing_id": 360,
+    "name": "Black Urad Dal (Split, Skin-on)",
+    "sku_name": "ING_DAL_URAD_BS",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 135.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 361,
+    "name": "King Fish (Neymeen, Steak Cut)",
+    "sku_name": "ING_SEAFD_N\u0395\u03a5MEEN_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 880.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 362,
+    "name": "Duck Eggs",
+    "sku_name": "ING_DAIRY_EGG_D",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 9.0,
+    "category": "Dairy"
+  },
+  {
+    "ing_id": 363,
+    "name": "Seer Fish (Ayamkula, Curry Cut)",
+    "sku_name": "ING_SEAFD_AYAMKULA",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 750.0,
+    "category": "Seafood"
+  },
+  {
+    "ing_id": 364,
+    "name": "Cloves (Ground)",
+    "sku_name": "ING_SPICE_CLOVE_G",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 900.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 365,
+    "name": "Nutmeg Powder",
+    "sku_name": "ING_SPICE_NUTMEG_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 950.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 366,
+    "name": "Kaima Rice (Budget Grade)",
+    "sku_name": "ING_RICE_KAIMA_B",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 120.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 367,
+    "name": "Saffron Water (Infusion)",
+    "sku_name": "ING_SPICE_SAFFRON_W",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 1500.0,
+    "category": "Spices/Garnish"
+  },
+  {
+    "ing_id": 368,
+    "name": "Raisins (Golden)",
+    "sku_name": "ING_DESSERT_RAISINS",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 300.0,
+    "category": "Dessert/Garnish"
+  },
+  {
+    "ing_id": 369,
+    "name": "Fried Onions (Crispy)",
+    "sku_name": "ING_GARNISH_ONION_F",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 180.0,
+    "category": "Garnish"
+  },
+  {
+    "ing_id": 370,
+    "name": "Garam Masala (Premium Blend)",
+    "sku_name": "ING_MASALA_GARAM_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 450.0,
+    "category": "Masalas"
+  },
+  {
+    "ing_id": 371,
+    "name": "Coriander Powder",
+    "sku_name": "ING_SPICE_CORIANDER_P",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 160.0,
+    "category": "Spices"
+  },
+  {
+    "ing_id": 372,
+    "name": "Mustard Paste",
+    "sku_name": "ING_PASTE_MUSTARD",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 150.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 373,
+    "name": "Vegetable Fat (For Roasts)",
+    "sku_name": "ING_FAT_VEGFAT",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 130.0,
+    "category": "Fats"
+  },
+  {
+    "ing_id": 374,
+    "name": "Vinegar (Brown Malt)",
+    "sku_name": "ING_COND_VINEGAR_M",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 120.0,
+    "category": "Condiments"
+  },
+  {
+    "ing_id": 375,
+    "name": "Coconut Toddy (For Kallappam)",
+    "sku_name": "ING_YEAST_TODDY_C",
+    "unit_of_measure": "LITRE",
+    "cost_per_unit": 150.0,
+    "category": "Fermentation"
+  },
+  {
+    "ing_id": 376,
+    "name": "Idiyappam Flour (Fine Rice)",
+    "sku_name": "ING_FLOUR_IDIYAPPAM",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 60.0,
+    "category": "Grains"
+  },
+  {
+    "ing_id": 377,
+    "name": "Vazhayila (Banana Leaf, Large)",
+    "sku_name": "ING_PACK_BANANA_L",
+    "unit_of_measure": "NO",
+    "cost_per_unit": 6.0,
+    "category": "Packaging"
+  },
+  {
+    "ing_id": 378,
+    "name": "Carrot (Sliced)",
+    "sku_name": "ING_VEG_CARROT_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 35.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 379,
+    "name": "Beans (Sliced)",
+    "sku_name": "ING_VEG_BEANS_S",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 40.0,
+    "category": "Vegetables"
+  },
+  {
+    "ing_id": 380,
+    "name": "Beetroot (Grated)",
+    "sku_name": "ING_VEG_BEETROOT_G",
+    "unit_of_measure": "KG",
+    "cost_per_unit": 45.0,
+    "category": "Vegetables"
+  }
+]

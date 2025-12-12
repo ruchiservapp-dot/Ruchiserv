@@ -1,5 +1,7 @@
+// MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 import 'package:flutter/material.dart';
-import '../db/local/local_db_helper.dart';
+import '../db/database_helper.dart';
+import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class SummaryScreen extends StatefulWidget {
   final DateTime date;
@@ -28,19 +30,19 @@ class _SummaryScreenState extends State<SummaryScreen> {
       });
 
       final dateString = widget.date.toIso8601String().split('T').first;
-      final data = await LocalDbHelper.getDishesSummaryByDate(dateString);
+      final data = await DatabaseHelper().getDishesSummaryByDate(dateString);
       setState(() {
         _dishSummary = data;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to load summary: $e';
+        _errorMessage = AppLocalizations.of(context)!.failedLoadSummary(e.toString());
       });
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading summary: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.errorLoadingSummary(e.toString())), backgroundColor: Colors.red),
       );
     }
   }
@@ -60,7 +62,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     final grouped = _groupByMealType(_dishSummary);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Summary - $formattedDate'), centerTitle: true),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.summaryDateTitle(formattedDate)), centerTitle: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
@@ -75,13 +77,13 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       ElevatedButton.icon(
                         onPressed: _loadDishSummary,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
+                        label: Text(AppLocalizations.of(context)!.retry),
                       ),
                     ],
                   ),
                 )
               : _dishSummary.isEmpty
-                  ? const Center(child: Text('No dishes found for this date'))
+                  ? Center(child: Text(AppLocalizations.of(context)!.noDishesFound))
                   : RefreshIndicator(
                       onRefresh: _loadDishSummary,
                       child: ListView(
@@ -115,15 +117,8 @@ class _MealGroupCard extends StatelessWidget {
             ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: Text(d['name']?.toString() ?? 'Unnamed dish'),
-              subtitle: Text('${d['foodType'] ?? 'Veg'}'),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Pax: ${d['totalPax'] ?? 0}'),
-                  Text('₹${d['totalCost'] ?? 0}'),
-                ],
-              ),
+              title: Text(d['name']?.toString() ?? AppLocalizations.of(context)!.unnamedDish),
+              trailing: Text(AppLocalizations.of(context)!.qtyWithCount(d['totalPax'] ?? 0), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             ),
         ]),
       ),

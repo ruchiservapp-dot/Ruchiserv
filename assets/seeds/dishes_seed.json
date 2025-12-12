@@ -1,0 +1,2702 @@
+[
+  {
+    "dish_id": 501,
+    "dish_name": "Kerala Chicken Curry",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 502,
+    "dish_name": "Ghee Rice (Nei Choru)",
+    "region": "Kerala",
+    "category": "Rice"
+  },
+  {
+    "dish_id": 503,
+    "dish_name": "Sadya Sambar (The Kootu)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 504,
+    "dish_name": "Ada Pradhaman (Payasam)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 505,
+    "dish_name": "Chettinad Mutton Gravy",
+    "region": "Tamil Nadu",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 506,
+    "dish_name": "Avial (Mixed Vegetable Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 507,
+    "dish_name": "Parippu Curry (Moong Dal)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 508,
+    "dish_name": "Kaalan (Yam & Plantain Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 509,
+    "dish_name": "Inji Puli (Ginger Tamarind Pickle)",
+    "region": "Kerala",
+    "category": "Pickle/Condiment"
+  },
+  {
+    "dish_id": 510,
+    "dish_name": "Cabbage Thoran",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 511,
+    "dish_name": "Andhra Kodi Vepudu (Chicken Fry)",
+    "region": "Andhra Pradesh",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 512,
+    "dish_name": "Plain Steamed Rice (Matta)",
+    "region": "Kerala",
+    "category": "Rice"
+  },
+  {
+    "dish_id": 513,
+    "dish_name": "Rasam (Pepper Soup)",
+    "region": "General S. India",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 514,
+    "dish_name": "Vendakkai Pachadi (Ladies Finger Raita)",
+    "region": "Tamil Nadu",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 515,
+    "dish_name": "Semiya Payasam (Vermicelli)",
+    "region": "General S. India",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 516,
+    "dish_name": "Kerala Beef Fry (Ularthiyathu)",
+    "region": "Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 517,
+    "dish_name": "Fish Moilee (Syrian Christian Gravy)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 518,
+    "dish_name": "Thalassery Chicken Biryani",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 519,
+    "dish_name": "Mutta Mala (Egg Dessert)",
+    "region": "Malabar",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 520,
+    "dish_name": "Unnakai (Banana Fritter)",
+    "region": "Malabar",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 521,
+    "dish_name": "Olan (Ash Gourd/Coconut Milk)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 522,
+    "dish_name": "Kootu Curry (Black Chana/Yam)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 523,
+    "dish_name": "Pulissery (Buttermilk Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 524,
+    "dish_name": "Manga Curry (Raw Mango)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 525,
+    "dish_name": "Appam (Hopper)",
+    "region": "Kerala",
+    "category": "Bread"
+  },
+  {
+    "dish_id": 526,
+    "dish_name": "Stew (Ishtoo - Chicken)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 527,
+    "dish_name": "Pothichoru (Packed Lunch)",
+    "region": "Kerala",
+    "category": "Specialty"
+  },
+  {
+    "dish_id": 528,
+    "dish_name": "Kappa Biryani (Tapioca & Meat)",
+    "region": "Kerala",
+    "category": "Specialty"
+  },
+  {
+    "dish_id": 529,
+    "dish_name": "Pazham Pori (Banana Fritter)",
+    "region": "Kerala",
+    "category": "Starter/Dessert"
+  },
+  {
+    "dish_id": 530,
+    "dish_name": "Chicken Lollipop (Fried)",
+    "region": "Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 531,
+    "dish_name": "Veg Spring Roll",
+    "region": "Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 532,
+    "dish_name": "Fish Moli (Snapper/Seer Fish)",
+    "region": "Coastal",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 533,
+    "dish_name": "Meen Pollichathu (Fish in Banana Leaf)",
+    "region": "Coastal",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 534,
+    "dish_name": "Semiya Payasam (Milk Base)",
+    "region": "General S. India",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 535,
+    "dish_name": "Parippu Payasam (Split Moong Dal)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 536,
+    "dish_name": "Unniyappam (Sweet Rice Fritter)",
+    "region": "Kerala",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 537,
+    "dish_name": "Gulab Jamun",
+    "region": "General S. India",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 538,
+    "dish_name": "Chana Masala (Kadala Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 539,
+    "dish_name": "Plain Dosa",
+    "region": "General S. India",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 540,
+    "dish_name": "Medu Vada (Uzhunnu Vada)",
+    "region": "General S. India",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 541,
+    "dish_name": "Hyderabadi Mutton Dum Biryani",
+    "region": "Andhra/Telangana",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 542,
+    "dish_name": "Chettinad Chicken Masala",
+    "region": "Tamil Nadu",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 543,
+    "dish_name": "Fish Pulusu (Andhra Tamarind Gravy)",
+    "region": "Andhra Pradesh",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 544,
+    "dish_name": "Lemon Rice",
+    "region": "Tamil Nadu",
+    "category": "Rice"
+  },
+  {
+    "dish_id": 545,
+    "dish_name": "Masala Dosa",
+    "region": "General S. India",
+    "category": "Tiffin/Bread"
+  },
+  {
+    "dish_id": 546,
+    "dish_name": "Idli",
+    "region": "General S. India",
+    "category": "Tiffin/Bread"
+  },
+  {
+    "dish_id": 547,
+    "dish_name": "Sodhi (Tirunelveli Coconut Curry)",
+    "region": "Tamil Nadu",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 548,
+    "dish_name": "Bhindi Fry (Okra Stir Fry)",
+    "region": "General S. India",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 549,
+    "dish_name": "Vada Curry (Tiffin Side)",
+    "region": "Tamil Nadu",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 550,
+    "dish_name": "Gongura Mutton (Andhra Special)",
+    "region": "Andhra Pradesh",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 551,
+    "dish_name": "Mysore Bonda",
+    "region": "Karnataka",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 552,
+    "dish_name": "Filter Coffee Decoction",
+    "region": "General S. India",
+    "category": "Beverage"
+  },
+  {
+    "dish_id": 553,
+    "dish_name": "Rasam Vada (Vada immersed in Rasam)",
+    "region": "Tamil Nadu",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 554,
+    "dish_name": "Gobi Manchurian (Dry)",
+    "region": "Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 555,
+    "dish_name": "Coconut Chutney (Red/Spicy)",
+    "region": "Tamil Nadu",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 556,
+    "dish_name": "Erissery (Pumpkin & Lentil)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 557,
+    "dish_name": "Kichadi (Vegetable in Curd)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 558,
+    "dish_name": "Pachadi (Sweet Pineapple/Beetroot)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 559,
+    "dish_name": "Theeyal (Roasted Coconut Gravy)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 560,
+    "dish_name": "Moru Curry (Seasoned Buttermilk)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 561,
+    "dish_name": "Mathanga Erissery (Pumpkin)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 562,
+    "dish_name": "Prawns Roast (Chemmeen Roast)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Side"
+  },
+  {
+    "dish_id": 563,
+    "dish_name": "Duck Roast (Tharavu Roast)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 564,
+    "dish_name": "Puttu & Beef Curry (Combo)",
+    "region": "Kerala",
+    "category": "Main Course/Tiffin"
+  },
+  {
+    "dish_id": 565,
+    "dish_name": "Meen Curry (Kerala Fish Curry with Kodampuli)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 566,
+    "dish_name": "Fish Molee (Mild Coconut Milk Curry)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 567,
+    "dish_name": "Long Beans Mezhukkupuratti",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 568,
+    "dish_name": "Beetroot Kichadi",
+    "region": "Kerala",
+    "category": "Curry/Side"
+  },
+  {
+    "dish_id": 569,
+    "dish_name": "Mushroom Thoran",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 570,
+    "dish_name": "Idichakka Thoran (Raw Jackfruit)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 571,
+    "dish_name": "Puttu (Steamed Rice Cake)",
+    "region": "Kerala",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 572,
+    "dish_name": "Kadala Curry (Black Chickpea Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 573,
+    "dish_name": "Vellayappam (Lace Hoppers)",
+    "region": "Kerala",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 574,
+    "dish_name": "Idli/Sambar Combo",
+    "region": "Kerala/Tamil",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 575,
+    "dish_name": "Semiya Payasam (Ghee Roasted)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 576,
+    "dish_name": "Chakka Pradhaman (Jackfruit Payasam)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 577,
+    "dish_name": "Pazham Pori (Banana Fritter)",
+    "region": "Kerala",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 578,
+    "dish_name": "Medu Vada (Uzhunnu Vada)",
+    "region": "Kerala",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 579,
+    "dish_name": "Upperi (Banana Chips)",
+    "region": "Kerala",
+    "category": "Snack/Condiment"
+  },
+  {
+    "dish_id": 580,
+    "dish_name": "Thakkali Curry (Tomato Curry for Tiffin)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 581,
+    "dish_name": "Chemmeen Porichathu (Large Prawn Fry)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 582,
+    "dish_name": "Mathi Fry (Sardines Fry)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 583,
+    "dish_name": "Fish Pickle (Neymeen Pickle)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 584,
+    "dish_name": "Chicken Cutlet",
+    "region": "Syrian Christian/Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 585,
+    "dish_name": "Egg Roast",
+    "region": "Kerala",
+    "category": "Side Dish/Tiffin"
+  },
+  {
+    "dish_id": 586,
+    "dish_name": "Manga Curry (Raw Mango Fish Curry)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 587,
+    "dish_name": "Ishtoo (Vegetable Stew with Appam)",
+    "region": "Syrian Christian",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 588,
+    "dish_name": "Idichakka Thoran (Tender Jackfruit)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 589,
+    "dish_name": "Chakka Pradhaman (Jackfruit Payasam)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 590,
+    "dish_name": "Pidi (Rice Dumplings) & Chicken Curry",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 591,
+    "dish_name": "Idli & Sambar Combo",
+    "region": "Kerala/Tamil",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 592,
+    "dish_name": "Poori & Potato Masala",
+    "region": "Kerala/General",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 593,
+    "dish_name": "Uzhunnu Vada (Medu Vada)",
+    "region": "Kerala/General",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 594,
+    "dish_name": "Parippu Vada (Dal Vada)",
+    "region": "Kerala/General",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 595,
+    "dish_name": "Vegetable Pakora",
+    "region": "Fusion/Starter",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 596,
+    "dish_name": "Kadumanga Achar (Instant Mango Pickle)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 597,
+    "dish_name": "Dates Pickle (Malabar)",
+    "region": "Malabar",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 598,
+    "dish_name": "Narthanga Curry (Lime Pickle)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 599,
+    "dish_name": "Puli Inji (Ginger Tamarind Paste)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 600,
+    "dish_name": "Garlic Pickle (Velluthulli Achar)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 601,
+    "dish_name": "Cabbage Thoran",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 602,
+    "dish_name": "Carrot Beans Thoran",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 603,
+    "dish_name": "Achinga Payar Mezhukkupuratti (Long Beans)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 604,
+    "dish_name": "Chena Mezhukkupuratti (Yam Fry)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 605,
+    "dish_name": "Kovakka Mezhukkupuratti (Ivy Gourd)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 606,
+    "dish_name": "Olan (Ash Gourd & Red Beans)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 607,
+    "dish_name": "Mambazha Pulissery (Ripe Mango)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 608,
+    "dish_name": "Mathanga Erissery (Pumpkin)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 609,
+    "dish_name": "Pacha Manga Curry (Raw Mango Curry - Veg)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 610,
+    "dish_name": "Mor\u016b Curry (Plain Buttermilk Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 611,
+    "dish_name": "Kozhuva Peera Vechathu (Anchovies simmered with Coconut)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 612,
+    "dish_name": "Chembu Puzhukku (Mashed Colocasia)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 613,
+    "dish_name": "Paruppu Payasam (Moong Dal Pradhaman)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 614,
+    "dish_name": "Gothambu Payasam (Wheat Pradhaman)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 615,
+    "dish_name": "Unniyappam (Sweet Rice Fritter)",
+    "region": "Kerala",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 616,
+    "dish_name": "Appam & Egg Roast Combo",
+    "region": "Kerala",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 617,
+    "dish_name": "Kallappam (Rice Pancake)",
+    "region": "Syrian Christian",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 618,
+    "dish_name": "Puttu & Fish Molee Combo",
+    "region": "Kerala",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 619,
+    "dish_name": "Idiyappam & Vegetable Stew Combo",
+    "region": "Kerala",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 620,
+    "dish_name": "Upma (Semolina)",
+    "region": "Kerala/General",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 621,
+    "dish_name": "Koonthal Roast (Squid/Calamari Roast)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 622,
+    "dish_name": "Meen Varuthathu (Kerala Fried Fish - General)",
+    "region": "Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 623,
+    "dish_name": "Mussels Fry (Kallumakkaya Fry)",
+    "region": "Malabar",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 624,
+    "dish_name": "Tharavu Mappas (Duck in Rich Gravy)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 625,
+    "dish_name": "Gobi 65 (Fried Cauliflower)",
+    "region": "Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 626,
+    "dish_name": "Paneer Tikka (Starter)",
+    "region": "Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 627,
+    "dish_name": "Chilli Chicken (Dry)",
+    "region": "Indo-Chinese",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 628,
+    "dish_name": "Mushroom Chilli Fry",
+    "region": "Indo-Chinese/Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 629,
+    "dish_name": "Pazham Pori (Ethakka Appam)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 630,
+    "dish_name": "Vattayappam (Steamed Rice Cake)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 631,
+    "dish_name": "Ellada (Sweet Rice Parcel)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 632,
+    "dish_name": "Moru Kachiyathu (Seasoned Buttermilk)",
+    "region": "Kerala",
+    "category": "Curry/Condiment"
+  },
+  {
+    "dish_id": 633,
+    "dish_name": "Pulishery (Pazham/Banana)",
+    "region": "Kerala",
+    "category": "Curry/Condiment"
+  },
+  {
+    "dish_id": 634,
+    "dish_name": "Avial (Traditional Sadya style)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 635,
+    "dish_name": "Vegetable Samosa (Budget)",
+    "region": "Fusion/Starter",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 636,
+    "dish_name": "Koottu Curry (Mixed Pulse/Vegetable)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 637,
+    "dish_name": "Pulissery (Ash Gourd/Curd)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 638,
+    "dish_name": "Mambazha Pulissery (Ripe Mango)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 639,
+    "dish_name": "Vendakka Mezhukkupuratti (Okra Fry)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 640,
+    "dish_name": "Cheena Mezhukkupuratti (Yam Fry)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 641,
+    "dish_name": "Upperi (Salty Banana Chips)",
+    "region": "Kerala",
+    "category": "Condiment/Snack"
+  },
+  {
+    "dish_id": 642,
+    "dish_name": "Achappam (Rose Cookies)",
+    "region": "Kerala Christian",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 643,
+    "dish_name": "Kuzhalappam (Rice Flour Rolls)",
+    "region": "Kerala Christian",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 644,
+    "dish_name": "Matta Rice (Steamed)",
+    "region": "Kerala",
+    "category": "Rice"
+  },
+  {
+    "dish_id": 645,
+    "dish_name": "Jeerakasala Rice Biryani (Malabar)",
+    "region": "Malabar",
+    "category": "Rice"
+  },
+  {
+    "dish_id": 646,
+    "dish_name": "Unnakai (Malabar Banana Roll)",
+    "region": "Malabar",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 647,
+    "dish_name": "Kallumakkaya Biryani (Mussel Biryani)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 648,
+    "dish_name": "Pothu Roast (Beef Roast - Dry)",
+    "region": "Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 649,
+    "dish_name": "Kakka Irachi Roast (Clam/Mussel Meat Roast)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Side"
+  },
+  {
+    "dish_id": 650,
+    "dish_name": "Prawns Theeyal (Roasted Coconut Prawns)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 651,
+    "dish_name": "Nellikka Achar (Gooseberry Pickle)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 652,
+    "dish_name": "Thenga Chutney (Coconut Chutney - Green)",
+    "region": "Kerala/Tamil",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 653,
+    "dish_name": "Idli (Steamed Rice Cake)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 654,
+    "dish_name": "Masala Dosa (Potato Stuffed Crepe)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 655,
+    "dish_name": "Adai (Mixed Lentil Dosa)",
+    "region": "Tamil Nadu/Kerala",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 656,
+    "dish_name": "Kallappam (Toddy Fermented)",
+    "region": "Syrian Christian",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 657,
+    "dish_name": "Pathiri (Rice Flatbread)",
+    "region": "Malabar",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 658,
+    "dish_name": "Mutta Pathiri (Egg Pathiri)",
+    "region": "Malabar",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 659,
+    "dish_name": "Puttu with Cherupayar Curry (Green Gram)",
+    "region": "Kerala",
+    "category": "Tiffin Combo"
+  },
+  {
+    "dish_id": 660,
+    "dish_name": "Neer Dosa (Thin Rice Crepe)",
+    "region": "Coastal/Karnataka",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 661,
+    "dish_name": "Squid Roast (Koonthal)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 662,
+    "dish_name": "Karimeen Pollichathu (Pearl Spot)",
+    "region": "Alappuzha/Kottayam",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 663,
+    "dish_name": "Thalassery Fish Biryani (Neymeen)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 664,
+    "dish_name": "Chicken Clear Soup",
+    "region": "Fusion/Starter",
+    "category": "Soup"
+  },
+  {
+    "dish_id": 665,
+    "dish_name": "Beef Cutlet",
+    "region": "Kerala",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 666,
+    "dish_name": "Onion Bajji (Ulli Bajji)",
+    "region": "Kerala/General",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 667,
+    "dish_name": "Vazhakkai Bajji (Plantain Bajji)",
+    "region": "Kerala/General",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 668,
+    "dish_name": "Samosa (Veg)",
+    "region": "Fusion/Starter",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 669,
+    "dish_name": "Ela Ada (Sweet Rice Parcel in Leaf)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 670,
+    "dish_name": "Sukhiyan (Sweet Green Gram Ball)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 671,
+    "dish_name": "Tender Coconut Pudding",
+    "region": "Kerala Fusion",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 672,
+    "dish_name": "Watalappam (Jaggery Custard)",
+    "region": "Malabar",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 673,
+    "dish_name": "Bread Pudding (Egg based)",
+    "region": "Syrian Christian",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 674,
+    "dish_name": "Milk Payasam (Pal Payasam)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 675,
+    "dish_name": "Chicken Curry (Budget, Boneless)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 676,
+    "dish_name": "Idichakka Thoran (Raw Jackfruit)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 677,
+    "dish_name": "Vazhakka Upperi (Raw Banana Fry)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 678,
+    "dish_name": "Choraka Pulissery (Bottle Gourd)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 679,
+    "dish_name": "Thakkali Pachadi (Tomato Raita)",
+    "region": "Kerala",
+    "category": "Condiment/Side"
+  },
+  {
+    "dish_id": 680,
+    "dish_name": "Beetroot Pachadi (Sadya Pink)",
+    "region": "Kerala",
+    "category": "Condiment/Side"
+  },
+  {
+    "dish_id": 681,
+    "dish_name": "Pineapple Pachadi (Sweet Sadya)",
+    "region": "Kerala",
+    "category": "Condiment/Side"
+  },
+  {
+    "dish_id": 682,
+    "dish_name": "Ulli Theeyal (Shallot Roasted Gravy)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 683,
+    "dish_name": "Vendakka Pulinkari (Okra Tamarind)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 684,
+    "dish_name": "Parippu Payasam (Split Bengal Gram)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 685,
+    "dish_name": "Chakka Varatti (Jackfruit Preserve)",
+    "region": "Kerala",
+    "category": "Dessert Base"
+  },
+  {
+    "dish_id": 686,
+    "dish_name": "Achappam (Rose Cookie)",
+    "region": "Kerala Christian",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 687,
+    "dish_name": "Kuzhalappam (Rice Flour Rolls)",
+    "region": "Kerala Christian",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 688,
+    "dish_name": "Fresh Lime Soda (Sharbath)",
+    "region": "General S. India",
+    "category": "Beverage"
+  },
+  {
+    "dish_id": 689,
+    "dish_name": "Watermelon Juice (Fresh)",
+    "region": "General S. India",
+    "category": "Beverage"
+  },
+  {
+    "dish_id": 690,
+    "dish_name": "Pineapple Juice (Fresh)",
+    "region": "General S. India",
+    "category": "Beverage"
+  },
+  {
+    "dish_id": 691,
+    "dish_name": "Sambharam (Spiced Buttermilk)",
+    "region": "Kerala",
+    "category": "Beverage/Condiment"
+  },
+  {
+    "dish_id": 692,
+    "dish_name": "Mushroom Pepper Fry",
+    "region": "Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 693,
+    "dish_name": "Ghee Rice (Budget)",
+    "region": "Kerala",
+    "category": "Rice"
+  },
+  {
+    "dish_id": 694,
+    "dish_name": "Matta Rice Biryani",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 695,
+    "dish_name": "Parotta (Layered Flatbread)",
+    "region": "Kerala",
+    "category": "Bread"
+  },
+  {
+    "dish_id": 696,
+    "dish_name": "Chatti Pathiri (Layered Dessert)",
+    "region": "Malabar",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 697,
+    "dish_name": "Arikkadukka (Stuffed Mussel Snack)",
+    "region": "Malabar",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 698,
+    "dish_name": "Erachi Pathiri (Meat Stuffed)",
+    "region": "Malabar",
+    "category": "Tiffin/Bread"
+  },
+  {
+    "dish_id": 699,
+    "dish_name": "Kallumakkaya Ularthiyathu (Mussel Fry)",
+    "region": "Malabar",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 700,
+    "dish_name": "Thalassery Chicken Korma",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 701,
+    "dish_name": "Kappa Puzhukku (Mashed Tapioca)",
+    "region": "Kerala",
+    "category": "Side Dish/Tiffin"
+  },
+  {
+    "dish_id": 702,
+    "dish_name": "Puzhukku (Mixed Vegetable Sadya Style)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 703,
+    "dish_name": "Chembu Puzhukku (Mashed Colocasia)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 704,
+    "dish_name": "Fish Nirachathu (Stuffed Fish)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 705,
+    "dish_name": "Pomfret Fry",
+    "region": "Coastal Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 706,
+    "dish_name": "Prawns Roast (Spicy)**",
+    "region": "Coastal Kerala",
+    "category": "Starter/Side"
+  },
+  {
+    "dish_id": 707,
+    "dish_name": "Sardine Curry (Mathi Curry)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 708,
+    "dish_name": "Palada Pradhaman (Milk Payasam)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 709,
+    "dish_name": "Godhambu Payasam (Wheat Pradhaman)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 710,
+    "dish_name": "Rava Kesari (Semolina Dessert)",
+    "region": "General S. India",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 711,
+    "dish_name": "Chakka Varatti (Jackfruit Jam)",
+    "region": "Kerala",
+    "category": "Dessert Base"
+  },
+  {
+    "dish_id": 712,
+    "dish_name": "Porotta (Malabar Layered)",
+    "region": "Kerala",
+    "category": "Bread"
+  },
+  {
+    "dish_id": 713,
+    "dish_name": "Naan (Tandoor Style - Fusion)",
+    "region": "Fusion",
+    "category": "Bread"
+  },
+  {
+    "dish_id": 714,
+    "dish_name": "Vegetable Samosa",
+    "region": "Fusion",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 715,
+    "dish_name": "Masala Peanuts (Chaas Base)",
+    "region": "General S. India",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 716,
+    "dish_name": "Set Dosa (Sponge Dosa)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 717,
+    "dish_name": "Pesarattu (Green Gram Dosa)",
+    "region": "Andhra Pradesh",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 718,
+    "dish_name": "Idli Fry (Fusion Tiffin)",
+    "region": "Fusion/Tiffin",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 719,
+    "dish_name": "Ragi Dosa",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 720,
+    "dish_name": "Vellayappam (Lace Hoppers)",
+    "region": "Kerala",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 721,
+    "dish_name": "Pork Vindaloo (Syrian Christian style)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 722,
+    "dish_name": "Beef Curry (Slow Cooked with Potato)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 723,
+    "dish_name": "Chicken Ularthiyathu (Dry Roast)",
+    "region": "Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 724,
+    "dish_name": "Cheera Thoran (Spinach Stir Fry)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 725,
+    "dish_name": "Vazha Koombu Thoran (Banana Flower)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 726,
+    "dish_name": "Chilli Paneer (Dry/Starter)",
+    "region": "Indo-Chinese",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 727,
+    "dish_name": "Vegetable Clear Soup (Banquet Style)",
+    "region": "Fusion",
+    "category": "Soup"
+  },
+  {
+    "dish_id": 728,
+    "dish_name": "Mushroom Manchurian (Dry)",
+    "region": "Indo-Chinese",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 729,
+    "dish_name": "Goli Bajji (Mangalore Bajji)",
+    "region": "Coastal Karnataka",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 730,
+    "dish_name": "Semiya Payasam (Jaggery Base)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 731,
+    "dish_name": "Beetroot Halwa",
+    "region": "General S. India",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 732,
+    "dish_name": "Bread Halwa (Malabar)",
+    "region": "Malabar",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 733,
+    "dish_name": "Pineapple Mezhukkupuratti",
+    "region": "Fusion/Side",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 734,
+    "dish_name": "Kozhukatta (Sweet Rice Dumplings)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 735,
+    "dish_name": "Mango Lassi",
+    "region": "Fusion/Beverage",
+    "category": "Beverage"
+  },
+  {
+    "dish_id": 736,
+    "dish_name": "Avoli Pollichathu (Pomfret in Banana Leaf)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 737,
+    "dish_name": "Mackerel Fry (Ayla Fry)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 738,
+    "dish_name": "Prawns Pollichathu",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 739,
+    "dish_name": "Squid Roast (Malabar Style)",
+    "region": "Malabar",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 740,
+    "dish_name": "Mussel Biryani (Kallumakkaya - Premium)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 741,
+    "dish_name": "Pachadi (Cucumber/Vellarikka)",
+    "region": "Kerala",
+    "category": "Condiment/Side"
+  },
+  {
+    "dish_id": 742,
+    "dish_name": "Manga Curry (Raw Mango Veg Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 743,
+    "dish_name": "Pavakka Theeyal (Bitter Gourd Roasted)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 744,
+    "dish_name": "Cheera Mezhukkupuratti (Spinach Fry)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 745,
+    "dish_name": "Chakkakuru Manga Curry (Seeds & Mango)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 746,
+    "dish_name": "Neypathiri (Malabar Fried Rice Bread)",
+    "region": "Malabar",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 747,
+    "dish_name": "Chatti Pathiri (Layered Savoury)",
+    "region": "Malabar",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 748,
+    "dish_name": "Thattu Dosa (Thick Street Dosa)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 749,
+    "dish_name": "Gothambu Dosa (Wheat Dosa)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 750,
+    "dish_name": "Achappam (Rose Cookies - Plain)",
+    "region": "Kerala Christian",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 751,
+    "dish_name": "Kuzhalappam (Rice Rolls)",
+    "region": "Kerala Christian",
+    "category": "Snack"
+  },
+  {
+    "dish_id": 752,
+    "dish_name": "Unniyappam (Sweet Fritter)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 753,
+    "dish_name": "Karupatti Payasam (Jaggery Base)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 754,
+    "dish_name": "Chicken Clear Soup (Banquet Style)",
+    "region": "Fusion",
+    "category": "Soup"
+  },
+  {
+    "dish_id": 755,
+    "dish_name": "Vegetable Fried Rice",
+    "region": "Indo-Chinese",
+    "category": "Rice"
+  },
+  {
+    "dish_id": 756,
+    "dish_name": "Thalassery Mutton Biryani (Premium)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 757,
+    "dish_name": "Thalassery Fish Biryani (King Fish)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 758,
+    "dish_name": "Prawns Biryani (Chemmeen Biryani)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 759,
+    "dish_name": "Vegetable Biryani (Sadya Style)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 760,
+    "dish_name": "Chicken Kanthari Roast (Green Chilli)",
+    "region": "Fusion/Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 761,
+    "dish_name": "Seer Fish Curry (Kodampuli, Premium)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 762,
+    "dish_name": "Duck Roast (Syrian Christian Premium)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 763,
+    "dish_name": "Beef Roast (Slow Cooked Dry Fry)",
+    "region": "Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 764,
+    "dish_name": "Puttu & Egg Curry Combo",
+    "region": "Kerala",
+    "category": "Tiffin Combo"
+  },
+  {
+    "dish_id": 765,
+    "dish_name": "Kallappam (Rice Pancake - Premium)",
+    "region": "Syrian Christian",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 766,
+    "dish_name": "Idiyappam (String Hoppers)",
+    "region": "Kerala",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 767,
+    "dish_name": "Muttappam (Egg Appam)",
+    "region": "Kerala",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 768,
+    "dish_name": "Masala Dosa (Budget)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 769,
+    "dish_name": "Pineapple Pulissery",
+    "region": "Kerala",
+    "category": "Curry/Condiment"
+  },
+  {
+    "dish_id": 770,
+    "dish_name": "Semiya Payasam (Ghee Roasted Vermicelli)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 771,
+    "dish_name": "Gajar Halwa (Carrot Dessert)",
+    "region": "Fusion/Dessert",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 772,
+    "dish_name": "Fruit Salad with Ice Cream",
+    "region": "Fusion",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 773,
+    "dish_name": "Mint Lime Juice (Non-Carbonated)",
+    "region": "General S. India",
+    "category": "Beverage"
+  },
+  {
+    "dish_id": 774,
+    "dish_name": "Pazham Nirachathu (Stuffed Banana)",
+    "region": "Malabar",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 775,
+    "dish_name": "Ulli Vada (Onion Fritters)",
+    "region": "Kerala",
+    "category": "Starter"
+  },
+  {
+    "dish_id": 776,
+    "dish_name": "Palada Pradhaman (Coconut Milk Base)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 777,
+    "dish_name": "Palada Pradhaman (Milk Base, Condensed)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 778,
+    "dish_name": "Chakka Pradhaman (Premium Jaggery)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 779,
+    "dish_name": "Parippu Pradhaman (Jaggery Base)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 780,
+    "dish_name": "Parippu Pradhaman (Sugar Base)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 781,
+    "dish_name": "Godhambu Payasam (Broken Wheat)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 782,
+    "dish_name": "Semiya Payasam (Jaggery & Cardamom)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 783,
+    "dish_name": "Semiya Payasam (Milk, Low Sugar)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 784,
+    "dish_name": "Kozhukatta (Sweetened Puttu Flour)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 785,
+    "dish_name": "Elayada (Rice Flour, Banana Leaf)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 786,
+    "dish_name": "Unniyappam (Premium Ghee)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 787,
+    "dish_name": "Unniyappam (Coconut Oil Fry)",
+    "region": "Kerala",
+    "category": "Snack/Dessert"
+  },
+  {
+    "dish_id": 788,
+    "dish_name": "Vattayappam (Sugar Free)",
+    "region": "Kerala",
+    "category": "Dessert"
+  },
+  {
+    "dish_id": 796,
+    "dish_name": "Thalassery Beef Biryani (Standard Cut)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 797,
+    "dish_name": "Thalassery Chicken Biryani (Budget Rice)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 798,
+    "dish_name": "Prawns Biryani (Small Chemmeen)",
+    "region": "Coastal Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 799,
+    "dish_name": "Egg Biryani (Kerala Style)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 800,
+    "dish_name": "Vegetable Biryani (Basmati Budget)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 801,
+    "dish_name": "Kaima Rice Biryani (Pure Veg)",
+    "region": "Malabar",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 816,
+    "dish_name": "Chicken Stew (Low Spice, Thick Gravy)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 817,
+    "dish_name": "Beef Curry (Slow Cooked in Coconut Milk)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 818,
+    "dish_name": "Mutton Curry (Red Chilli Paste Base)",
+    "region": "Kerala",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 819,
+    "dish_name": "Fish Molee (King Fish, Mild)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 820,
+    "dish_name": "Fish Moilee (Mackerel, Budget)",
+    "region": "Syrian Christian",
+    "category": "Main Course"
+  },
+  {
+    "dish_id": 821,
+    "dish_name": "Chicken Ularthiyathu (Bone-in)",
+    "region": "Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 822,
+    "dish_name": "Beef Ularthiyathu (Bone-in)",
+    "region": "Kerala",
+    "category": "Starter/Main"
+  },
+  {
+    "dish_id": 836,
+    "dish_name": "Vendakka Kichadi (Okra/Curd)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 837,
+    "dish_name": "Mambazha Pulissery (Sour Mango)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 838,
+    "dish_name": "Choraka Pulissery (Bottle Gourd)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 839,
+    "dish_name": "Moru Kachiyathu (Basic Buttermilk Curry)",
+    "region": "Kerala",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 840,
+    "dish_name": "Payar Mezhukkupuratti (Long Beans, Garlic)",
+    "region": "Kerala",
+    "category": "Side Dish"
+  },
+  {
+    "dish_id": 841,
+    "dish_name": "Thakkali Pachadi (Tomato, Budget)",
+    "region": "Kerala",
+    "category": "Condiment/Side"
+  },
+  {
+    "dish_id": 842,
+    "dish_name": "Beetroot Pachadi (Sadya Pink, Sweet)",
+    "region": "Kerala",
+    "category": "Condiment/Side"
+  },
+  {
+    "dish_id": 843,
+    "dish_name": "Pineapple Pachadi (Jaggery Base)",
+    "region": "Kerala",
+    "category": "Condiment/Side"
+  },
+  {
+    "dish_id": 856,
+    "dish_name": "Porotta (Budget Maida/Oil)",
+    "region": "Kerala",
+    "category": "Bread"
+  },
+  {
+    "dish_id": 857,
+    "dish_name": "Chapati (Whole Wheat, Thin)",
+    "region": "General S. India",
+    "category": "Bread"
+  },
+  {
+    "dish_id": 858,
+    "dish_name": "Appam (Quick Yeast)",
+    "region": "Kerala",
+    "category": "Bread/Tiffin"
+  },
+  {
+    "dish_id": 859,
+    "dish_name": "Idli (Rice Flour Base)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 860,
+    "dish_name": "Dosa (Plain Rice, Budget)",
+    "region": "General S. India",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 861,
+    "dish_name": "Puttu (Matta Rice)",
+    "region": "Kerala",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 862,
+    "dish_name": "Idiyappam (Steamed Rice Flour)",
+    "region": "Kerala",
+    "category": "Tiffin"
+  },
+  {
+    "dish_id": 876,
+    "dish_name": "Mango Pickle (Vinaigrette Base)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 877,
+    "dish_name": "Lime Pickle (Salt Cured)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 878,
+    "dish_name": "Garlic Pickle (Budget Oil)",
+    "region": "Kerala",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 879,
+    "dish_name": "Mixed Vegetable Pickle",
+    "region": "General S. India",
+    "category": "Condiment"
+  },
+  {
+    "dish_id": 896,
+    "dish_name": "Chicken Fry (Pepper & Turmeric)",
+    "region": "Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 897,
+    "dish_name": "Chicken Fry (Chilli Garlic Marinade)",
+    "region": "Fusion/Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 898,
+    "dish_name": "Beef Fry (Coconut Oil, Shallot Base)",
+    "region": "Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 899,
+    "dish_name": "Prawns Fry (Ginger & Tamarind)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 900,
+    "dish_name": "Fish Fry (Mackerel, Vinegar Dip)",
+    "region": "Coastal Kerala",
+    "category": "Starter/Fry"
+  },
+  {
+    "dish_id": 901,
+    "dish_name": "Regional Special Variation 1",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 902,
+    "dish_name": "Regional Special Variation 2",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 903,
+    "dish_name": "Regional Special Variation 3",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 904,
+    "dish_name": "Regional Special Variation 4",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 905,
+    "dish_name": "Regional Special Variation 5",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 906,
+    "dish_name": "Regional Special Variation 6",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 907,
+    "dish_name": "Regional Special Variation 7",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 908,
+    "dish_name": "Regional Special Variation 8",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 909,
+    "dish_name": "Regional Special Variation 9",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 910,
+    "dish_name": "Regional Special Variation 10",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 911,
+    "dish_name": "Regional Special Variation 11",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 912,
+    "dish_name": "Regional Special Variation 12",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 913,
+    "dish_name": "Regional Special Variation 13",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 914,
+    "dish_name": "Regional Special Variation 14",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 915,
+    "dish_name": "Regional Special Variation 15",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 916,
+    "dish_name": "Regional Special Variation 16",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 917,
+    "dish_name": "Regional Special Variation 17",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 918,
+    "dish_name": "Regional Special Variation 18",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 919,
+    "dish_name": "Regional Special Variation 19",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 920,
+    "dish_name": "Regional Special Variation 20",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 921,
+    "dish_name": "Regional Special Variation 21",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 922,
+    "dish_name": "Regional Special Variation 22",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 923,
+    "dish_name": "Regional Special Variation 23",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 924,
+    "dish_name": "Regional Special Variation 24",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 925,
+    "dish_name": "Regional Special Variation 25",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 926,
+    "dish_name": "Regional Special Variation 26",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 927,
+    "dish_name": "Regional Special Variation 27",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 928,
+    "dish_name": "Regional Special Variation 28",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 929,
+    "dish_name": "Regional Special Variation 29",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 930,
+    "dish_name": "Regional Special Variation 30",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 931,
+    "dish_name": "Regional Special Variation 31",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 932,
+    "dish_name": "Regional Special Variation 32",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 933,
+    "dish_name": "Regional Special Variation 33",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 934,
+    "dish_name": "Regional Special Variation 34",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 935,
+    "dish_name": "Regional Special Variation 35",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 936,
+    "dish_name": "Regional Special Variation 36",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 937,
+    "dish_name": "Regional Special Variation 37",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 938,
+    "dish_name": "Regional Special Variation 38",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 939,
+    "dish_name": "Regional Special Variation 39",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 940,
+    "dish_name": "Regional Special Variation 40",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 941,
+    "dish_name": "Regional Special Variation 41",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 942,
+    "dish_name": "Regional Special Variation 42",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 943,
+    "dish_name": "Regional Special Variation 43",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 944,
+    "dish_name": "Regional Special Variation 44",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 945,
+    "dish_name": "Regional Special Variation 45",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 946,
+    "dish_name": "Regional Special Variation 46",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 947,
+    "dish_name": "Regional Special Variation 47",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 948,
+    "dish_name": "Regional Special Variation 48",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 949,
+    "dish_name": "Regional Special Variation 49",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 950,
+    "dish_name": "Regional Special Variation 50",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 951,
+    "dish_name": "Regional Special Variation 51",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 952,
+    "dish_name": "Regional Special Variation 52",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 953,
+    "dish_name": "Regional Special Variation 53",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 954,
+    "dish_name": "Regional Special Variation 54",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 955,
+    "dish_name": "Regional Special Variation 55",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 956,
+    "dish_name": "Regional Special Variation 56",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 957,
+    "dish_name": "Regional Special Variation 57",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 958,
+    "dish_name": "Regional Special Variation 58",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 959,
+    "dish_name": "Regional Special Variation 59",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 960,
+    "dish_name": "Regional Special Variation 60",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 961,
+    "dish_name": "Regional Special Variation 61",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 962,
+    "dish_name": "Regional Special Variation 62",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 963,
+    "dish_name": "Regional Special Variation 63",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 964,
+    "dish_name": "Regional Special Variation 64",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 965,
+    "dish_name": "Regional Special Variation 65",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 966,
+    "dish_name": "Regional Special Variation 66",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 967,
+    "dish_name": "Regional Special Variation 67",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 968,
+    "dish_name": "Regional Special Variation 68",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 969,
+    "dish_name": "Regional Special Variation 69",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 970,
+    "dish_name": "Regional Special Variation 70",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 971,
+    "dish_name": "Regional Special Variation 71",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 972,
+    "dish_name": "Regional Special Variation 72",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 973,
+    "dish_name": "Regional Special Variation 73",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 974,
+    "dish_name": "Regional Special Variation 74",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 975,
+    "dish_name": "Regional Special Variation 75",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 976,
+    "dish_name": "Regional Special Variation 76",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 977,
+    "dish_name": "Regional Special Variation 77",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 978,
+    "dish_name": "Regional Special Variation 78",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 979,
+    "dish_name": "Regional Special Variation 79",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 980,
+    "dish_name": "Regional Special Variation 80",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 981,
+    "dish_name": "Regional Special Variation 81",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 982,
+    "dish_name": "Regional Special Variation 82",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 983,
+    "dish_name": "Regional Special Variation 83",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 984,
+    "dish_name": "Regional Special Variation 84",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 985,
+    "dish_name": "Regional Special Variation 85",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 986,
+    "dish_name": "Regional Special Variation 86",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 987,
+    "dish_name": "Regional Special Variation 87",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 988,
+    "dish_name": "Regional Special Variation 88",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 989,
+    "dish_name": "Regional Special Variation 89",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 990,
+    "dish_name": "Regional Special Variation 90",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 991,
+    "dish_name": "Regional Special Variation 91",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 992,
+    "dish_name": "Regional Special Variation 92",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 993,
+    "dish_name": "Regional Special Variation 93",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 994,
+    "dish_name": "Regional Special Variation 94",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 995,
+    "dish_name": "Regional Special Variation 95",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 996,
+    "dish_name": "Regional Special Variation 96",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 997,
+    "dish_name": "Regional Special Variation 97",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 998,
+    "dish_name": "Regional Special Variation 98",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 999,
+    "dish_name": "Regional Special Variation 99",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1000,
+    "dish_name": "Regional Special Variation 100",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1001,
+    "dish_name": "Regional Special Variation 101",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1002,
+    "dish_name": "Regional Special Variation 102",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1003,
+    "dish_name": "Regional Special Variation 103",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1004,
+    "dish_name": "Regional Special Variation 104",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1005,
+    "dish_name": "Regional Special Variation 105",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1006,
+    "dish_name": "Regional Special Variation 106",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1007,
+    "dish_name": "Regional Special Variation 107",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1008,
+    "dish_name": "Regional Special Variation 108",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1009,
+    "dish_name": "Regional Special Variation 109",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1010,
+    "dish_name": "Regional Special Variation 110",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1011,
+    "dish_name": "Regional Special Variation 111",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1012,
+    "dish_name": "Regional Special Variation 112",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1013,
+    "dish_name": "Regional Special Variation 113",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1014,
+    "dish_name": "Regional Special Variation 114",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1015,
+    "dish_name": "Regional Special Variation 115",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1016,
+    "dish_name": "Regional Special Variation 116",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1017,
+    "dish_name": "Regional Special Variation 117",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1018,
+    "dish_name": "Regional Special Variation 118",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1019,
+    "dish_name": "Regional Special Variation 119",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1020,
+    "dish_name": "Regional Special Variation 120",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1021,
+    "dish_name": "Regional Special Variation 121",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1022,
+    "dish_name": "Regional Special Variation 122",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1023,
+    "dish_name": "Regional Special Variation 123",
+    "region": "Kerala",
+    "category": "Special"
+  },
+  {
+    "dish_id": 1024,
+    "dish_name": "Vegetable Curry (Budget Peas & Potato)",
+    "region": "General",
+    "category": "Curry"
+  },
+  {
+    "dish_id": 1025,
+    "dish_name": "Tomato Onion Thokku (Budget)",
+    "region": "General",
+    "category": "Condiment"
+  }
+]

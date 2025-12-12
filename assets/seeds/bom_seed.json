@@ -1,0 +1,5504 @@
+[
+  {
+    "rd_id": 9001,
+    "dish_id": 501,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9002,
+    "dish_id": 501,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9003,
+    "dish_id": 501,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9004,
+    "dish_id": 501,
+    "ing_id": 110,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9005,
+    "dish_id": 502,
+    "ing_id": 101,
+    "quantity_per_base_pax": 0.11,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9006,
+    "dish_id": 502,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.012,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9007,
+    "dish_id": 503,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9008,
+    "dish_id": 503,
+    "ing_id": 108,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9009,
+    "dish_id": 503,
+    "ing_id": 120,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9010,
+    "dish_id": 504,
+    "ing_id": 111,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9011,
+    "dish_id": 504,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9012,
+    "dish_id": 504,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9013,
+    "dish_id": 505,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9014,
+    "dish_id": 505,
+    "ing_id": 119,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9015,
+    "dish_id": 505,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9016,
+    "dish_id": 506,
+    "ing_id": 114,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9017,
+    "dish_id": 506,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9018,
+    "dish_id": 506,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9019,
+    "dish_id": 507,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9020,
+    "dish_id": 507,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.008,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9021,
+    "dish_id": 508,
+    "ing_id": 114,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9022,
+    "dish_id": 508,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9023,
+    "dish_id": 508,
+    "ing_id": 119,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9024,
+    "dish_id": 509,
+    "ing_id": 110,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9025,
+    "dish_id": 509,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9026,
+    "dish_id": 510,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9027,
+    "dish_id": 510,
+    "ing_id": 117,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9028,
+    "dish_id": 511,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9029,
+    "dish_id": 511,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.004,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9030,
+    "dish_id": 511,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9031,
+    "dish_id": 512,
+    "ing_id": 101,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9032,
+    "dish_id": 513,
+    "ing_id": 108,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9033,
+    "dish_id": 513,
+    "ing_id": 119,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9034,
+    "dish_id": 514,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9035,
+    "dish_id": 515,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9036,
+    "dish_id": 516,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9037,
+    "dish_id": 516,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9038,
+    "dish_id": 516,
+    "ing_id": 110,
+    "quantity_per_base_pax": 0.008,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9039,
+    "dish_id": 516,
+    "ing_id": 119,
+    "quantity_per_base_pax": 0.004,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9040,
+    "dish_id": 517,
+    "ing_id": 123,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9041,
+    "dish_id": 517,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9042,
+    "dish_id": 517,
+    "ing_id": 130,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9043,
+    "dish_id": 518,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9044,
+    "dish_id": 518,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9045,
+    "dish_id": 518,
+    "ing_id": 124,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9046,
+    "dish_id": 518,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9047,
+    "dish_id": 521,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9048,
+    "dish_id": 521,
+    "ing_id": 139,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9049,
+    "dish_id": 522,
+    "ing_id": 113,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9050,
+    "dish_id": 522,
+    "ing_id": 114,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9051,
+    "dish_id": 522,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9052,
+    "dish_id": 525,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9053,
+    "dish_id": 525,
+    "ing_id": 136,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9054,
+    "dish_id": 528,
+    "ing_id": 122,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9055,
+    "dish_id": 528,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9056,
+    "dish_id": 533,
+    "ing_id": 123,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9057,
+    "dish_id": 533,
+    "ing_id": 138,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9058,
+    "dish_id": 533,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9059,
+    "dish_id": 534,
+    "ing_id": 131,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9060,
+    "dish_id": 534,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9061,
+    "dish_id": 534,
+    "ing_id": 133,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9062,
+    "dish_id": 540,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9063,
+    "dish_id": 540,
+    "ing_id": 117,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9065,
+    "dish_id": 541,
+    "ing_id": 141,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9066,
+    "dish_id": 541,
+    "ing_id": 101,
+    "quantity_per_base_pax": 0.11,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9067,
+    "dish_id": 541,
+    "ing_id": 157,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9068,
+    "dish_id": 541,
+    "ing_id": 156,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9069,
+    "dish_id": 541,
+    "ing_id": 159,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9070,
+    "dish_id": 542,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9071,
+    "dish_id": 542,
+    "ing_id": 144,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9072,
+    "dish_id": 542,
+    "ing_id": 143,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9073,
+    "dish_id": 542,
+    "ing_id": 142,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9074,
+    "dish_id": 543,
+    "ing_id": 123,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9075,
+    "dish_id": 543,
+    "ing_id": 147,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9076,
+    "dish_id": 543,
+    "ing_id": 143,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9077,
+    "dish_id": 544,
+    "ing_id": 101,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9078,
+    "dish_id": 544,
+    "ing_id": 146,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9079,
+    "dish_id": 544,
+    "ing_id": 151,
+    "quantity_per_base_pax": 0.008,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9080,
+    "dish_id": 545,
+    "ing_id": 152,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9081,
+    "dish_id": 545,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9082,
+    "dish_id": 545,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9083,
+    "dish_id": 546,
+    "ing_id": 152,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9084,
+    "dish_id": 546,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9085,
+    "dish_id": 547,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.07,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9086,
+    "dish_id": 547,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9087,
+    "dish_id": 549,
+    "ing_id": 149,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9088,
+    "dish_id": 549,
+    "ing_id": 108,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9089,
+    "dish_id": 550,
+    "ing_id": 141,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9090,
+    "dish_id": 550,
+    "ing_id": 147,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9091,
+    "dish_id": 551,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9092,
+    "dish_id": 551,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9093,
+    "dish_id": 553,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9094,
+    "dish_id": 553,
+    "ing_id": 147,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9095,
+    "dish_id": 554,
+    "ing_id": 150,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9096,
+    "dish_id": 554,
+    "ing_id": 140,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9097,
+    "dish_id": 555,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9098,
+    "dish_id": 555,
+    "ing_id": 143,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9099,
+    "dish_id": 556,
+    "ing_id": 163,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9100,
+    "dish_id": 556,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9101,
+    "dish_id": 559,
+    "ing_id": 179,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9102,
+    "dish_id": 559,
+    "ing_id": 147,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9103,
+    "dish_id": 559,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9104,
+    "dish_id": 562,
+    "ing_id": 173,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9105,
+    "dish_id": 562,
+    "ing_id": 110,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9106,
+    "dish_id": 562,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9107,
+    "dish_id": 563,
+    "ing_id": 174,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9108,
+    "dish_id": 563,
+    "ing_id": 157,
+    "quantity_per_base_pax": 0.008,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9109,
+    "dish_id": 563,
+    "ing_id": 125,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9110,
+    "dish_id": 565,
+    "ing_id": 123,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9111,
+    "dish_id": 565,
+    "ing_id": 171,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9112,
+    "dish_id": 565,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.004,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9113,
+    "dish_id": 567,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9114,
+    "dish_id": 567,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9115,
+    "dish_id": 570,
+    "ing_id": 164,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9116,
+    "dish_id": 570,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9117,
+    "dish_id": 571,
+    "ing_id": 167,
+    "quantity_per_base_pax": 0.07,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9118,
+    "dish_id": 571,
+    "ing_id": 176,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9119,
+    "dish_id": 572,
+    "ing_id": 113,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9120,
+    "dish_id": 572,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9121,
+    "dish_id": 575,
+    "ing_id": 131,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9122,
+    "dish_id": 575,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9123,
+    "dish_id": 578,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9124,
+    "dish_id": 578,
+    "ing_id": 117,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9125,
+    "dish_id": 579,
+    "ing_id": 114,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9126,
+    "dish_id": 579,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9127,
+    "dish_id": 581,
+    "ing_id": 181,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9128,
+    "dish_id": 581,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9129,
+    "dish_id": 581,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9130,
+    "dish_id": 582,
+    "ing_id": 182,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9131,
+    "dish_id": 582,
+    "ing_id": 179,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9132,
+    "dish_id": 582,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9133,
+    "dish_id": 583,
+    "ing_id": 183,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9134,
+    "dish_id": 583,
+    "ing_id": 170,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9135,
+    "dish_id": 583,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9136,
+    "dish_id": 584,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9137,
+    "dish_id": 584,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9138,
+    "dish_id": 584,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9139,
+    "dish_id": 585,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9140,
+    "dish_id": 585,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9141,
+    "dish_id": 585,
+    "ing_id": 108,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9142,
+    "dish_id": 586,
+    "ing_id": 183,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9143,
+    "dish_id": 586,
+    "ing_id": 191,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9144,
+    "dish_id": 586,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9145,
+    "dish_id": 587,
+    "ing_id": 199,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9146,
+    "dish_id": 587,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9147,
+    "dish_id": 588,
+    "ing_id": 164,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9148,
+    "dish_id": 588,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9149,
+    "dish_id": 589,
+    "ing_id": 293,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9150,
+    "dish_id": 589,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9151,
+    "dish_id": 589,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9152,
+    "dish_id": 590,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9153,
+    "dish_id": 590,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9154,
+    "dish_id": 591,
+    "ing_id": 152,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9155,
+    "dish_id": 591,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9156,
+    "dish_id": 592,
+    "ing_id": 184,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9157,
+    "dish_id": 592,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.07,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9158,
+    "dish_id": 593,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9159,
+    "dish_id": 593,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9160,
+    "dish_id": 594,
+    "ing_id": 149,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9161,
+    "dish_id": 594,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9162,
+    "dish_id": 595,
+    "ing_id": 150,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9163,
+    "dish_id": 595,
+    "ing_id": 200,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9164,
+    "dish_id": 596,
+    "ing_id": 201,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9165,
+    "dish_id": 596,
+    "ing_id": 202,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9166,
+    "dish_id": 596,
+    "ing_id": 203,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9167,
+    "dish_id": 597,
+    "ing_id": 217,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9168,
+    "dish_id": 597,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9169,
+    "dish_id": 597,
+    "ing_id": 170,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9170,
+    "dish_id": 599,
+    "ing_id": 216,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9171,
+    "dish_id": 599,
+    "ing_id": 147,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9172,
+    "dish_id": 599,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9173,
+    "dish_id": 601,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9174,
+    "dish_id": 601,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9175,
+    "dish_id": 601,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9176,
+    "dish_id": 603,
+    "ing_id": 163,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9177,
+    "dish_id": 603,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9178,
+    "dish_id": 606,
+    "ing_id": 207,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9179,
+    "dish_id": 606,
+    "ing_id": 163,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9180,
+    "dish_id": 606,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9181,
+    "dish_id": 607,
+    "ing_id": 191,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9182,
+    "dish_id": 607,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9183,
+    "dish_id": 611,
+    "ing_id": 219,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9184,
+    "dish_id": 611,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9185,
+    "dish_id": 611,
+    "ing_id": 171,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9186,
+    "dish_id": 613,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9187,
+    "dish_id": 613,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9188,
+    "dish_id": 613,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9189,
+    "dish_id": 615,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9190,
+    "dish_id": 615,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9191,
+    "dish_id": 616,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9192,
+    "dish_id": 616,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9193,
+    "dish_id": 616,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9194,
+    "dish_id": 619,
+    "ing_id": 376,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9195,
+    "dish_id": 619,
+    "ing_id": 199,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9196,
+    "dish_id": 619,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9197,
+    "dish_id": 621,
+    "ing_id": 262,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9198,
+    "dish_id": 621,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.004,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9199,
+    "dish_id": 623,
+    "ing_id": 231,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9200,
+    "dish_id": 623,
+    "ing_id": 196,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9201,
+    "dish_id": 625,
+    "ing_id": 200,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9202,
+    "dish_id": 625,
+    "ing_id": 187,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9203,
+    "dish_id": 625,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9204,
+    "dish_id": 627,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9205,
+    "dish_id": 627,
+    "ing_id": 224,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9206,
+    "dish_id": 627,
+    "ing_id": 225,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9207,
+    "dish_id": 630,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9208,
+    "dish_id": 630,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9209,
+    "dish_id": 632,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9210,
+    "dish_id": 632,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9211,
+    "dish_id": 634,
+    "ing_id": 114,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9212,
+    "dish_id": 634,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9213,
+    "dish_id": 634,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9214,
+    "dish_id": 636,
+    "ing_id": 254,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9215,
+    "dish_id": 636,
+    "ing_id": 210,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9216,
+    "dish_id": 636,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9217,
+    "dish_id": 642,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9218,
+    "dish_id": 642,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9219,
+    "dish_id": 642,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9220,
+    "dish_id": 644,
+    "ing_id": 242,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9221,
+    "dish_id": 645,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.11,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9222,
+    "dish_id": 645,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9223,
+    "dish_id": 645,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9224,
+    "dish_id": 648,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9225,
+    "dish_id": 648,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9226,
+    "dish_id": 648,
+    "ing_id": 170,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9227,
+    "dish_id": 653,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9228,
+    "dish_id": 653,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9229,
+    "dish_id": 655,
+    "ing_id": 149,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9230,
+    "dish_id": 655,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9231,
+    "dish_id": 655,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9232,
+    "dish_id": 650,
+    "ing_id": 173,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9233,
+    "dish_id": 650,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9234,
+    "dish_id": 650,
+    "ing_id": 255,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9235,
+    "dish_id": 656,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9236,
+    "dish_id": 656,
+    "ing_id": 268,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9237,
+    "dish_id": 656,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9238,
+    "dish_id": 657,
+    "ing_id": 272,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9239,
+    "dish_id": 657,
+    "ing_id": 176,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9240,
+    "dish_id": 659,
+    "ing_id": 167,
+    "quantity_per_base_pax": 0.07,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9241,
+    "dish_id": 659,
+    "ing_id": 270,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9242,
+    "dish_id": 659,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9243,
+    "dish_id": 661,
+    "ing_id": 262,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9244,
+    "dish_id": 661,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.004,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9245,
+    "dish_id": 661,
+    "ing_id": 148,
+    "quantity_per_base_pax": 0.003,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9246,
+    "dish_id": 665,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9247,
+    "dish_id": 665,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9248,
+    "dish_id": 665,
+    "ing_id": 267,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9249,
+    "dish_id": 666,
+    "ing_id": 150,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9250,
+    "dish_id": 666,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9251,
+    "dish_id": 666,
+    "ing_id": 235,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9252,
+    "dish_id": 669,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9253,
+    "dish_id": 669,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9254,
+    "dish_id": 669,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9255,
+    "dish_id": 671,
+    "ing_id": 275,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9256,
+    "dish_id": 671,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.07,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9257,
+    "dish_id": 671,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9258,
+    "dish_id": 673,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9259,
+    "dish_id": 673,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9260,
+    "dish_id": 673,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9261,
+    "dish_id": 674,
+    "ing_id": 198,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9262,
+    "dish_id": 674,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9263,
+    "dish_id": 674,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9264,
+    "dish_id": 676,
+    "ing_id": 164,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9265,
+    "dish_id": 676,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9266,
+    "dish_id": 677,
+    "ing_id": 253,
+    "quantity_per_base_pax": 0.09,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9267,
+    "dish_id": 677,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9268,
+    "dish_id": 678,
+    "ing_id": 192,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9269,
+    "dish_id": 678,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9270,
+    "dish_id": 679,
+    "ing_id": 110,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9271,
+    "dish_id": 679,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9272,
+    "dish_id": 680,
+    "ing_id": 180,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9273,
+    "dish_id": 680,
+    "ing_id": 157,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9274,
+    "dish_id": 681,
+    "ing_id": 282,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9275,
+    "dish_id": 681,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9276,
+    "dish_id": 682,
+    "ing_id": 179,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9277,
+    "dish_id": 682,
+    "ing_id": 147,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9278,
+    "dish_id": 683,
+    "ing_id": 119,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9279,
+    "dish_id": 683,
+    "ing_id": 147,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9280,
+    "dish_id": 684,
+    "ing_id": 149,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9281,
+    "dish_id": 684,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9282,
+    "dish_id": 685,
+    "ing_id": 293,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9283,
+    "dish_id": 685,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9284,
+    "dish_id": 685,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9285,
+    "dish_id": 688,
+    "ing_id": 206,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9286,
+    "dish_id": 688,
+    "ing_id": 285,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9287,
+    "dish_id": 689,
+    "ing_id": 281,
+    "quantity_per_base_pax": 0.3,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9288,
+    "dish_id": 689,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9289,
+    "dish_id": 690,
+    "ing_id": 282,
+    "quantity_per_base_pax": 0.25,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9290,
+    "dish_id": 691,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9291,
+    "dish_id": 691,
+    "ing_id": 130,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9292,
+    "dish_id": 691,
+    "ing_id": 283,
+    "quantity_per_base_pax": 0.001,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9293,
+    "dish_id": 692,
+    "ing_id": 165,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9294,
+    "dish_id": 692,
+    "ing_id": 218,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9295,
+    "dish_id": 693,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9296,
+    "dish_id": 693,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9297,
+    "dish_id": 696,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9298,
+    "dish_id": 696,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.4,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9299,
+    "dish_id": 696,
+    "ing_id": 303,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9300,
+    "dish_id": 697,
+    "ing_id": 231,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9301,
+    "dish_id": 697,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9302,
+    "dish_id": 700,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9303,
+    "dish_id": 700,
+    "ing_id": 260,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9304,
+    "dish_id": 701,
+    "ing_id": 122,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9305,
+    "dish_id": 701,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9306,
+    "dish_id": 704,
+    "ing_id": 363,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9307,
+    "dish_id": 704,
+    "ing_id": 317,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9308,
+    "dish_id": 707,
+    "ing_id": 182,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9309,
+    "dish_id": 707,
+    "ing_id": 171,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9310,
+    "dish_id": 707,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.008,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9311,
+    "dish_id": 708,
+    "ing_id": 198,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9312,
+    "dish_id": 708,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9313,
+    "dish_id": 708,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9314,
+    "dish_id": 709,
+    "ing_id": 305,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9315,
+    "dish_id": 709,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9316,
+    "dish_id": 709,
+    "ing_id": 189,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9317,
+    "dish_id": 710,
+    "ing_id": 302,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9318,
+    "dish_id": 710,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9319,
+    "dish_id": 710,
+    "ing_id": 304,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9320,
+    "dish_id": 712,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9321,
+    "dish_id": 712,
+    "ing_id": 290,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9322,
+    "dish_id": 715,
+    "ing_id": 151,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9323,
+    "dish_id": 715,
+    "ing_id": 150,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9324,
+    "dish_id": 715,
+    "ing_id": 155,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9325,
+    "dish_id": 716,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9326,
+    "dish_id": 716,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9327,
+    "dish_id": 717,
+    "ing_id": 270,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9328,
+    "dish_id": 717,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9329,
+    "dish_id": 719,
+    "ing_id": 322,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9330,
+    "dish_id": 719,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9331,
+    "dish_id": 721,
+    "ing_id": 330,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9332,
+    "dish_id": 721,
+    "ing_id": 274,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9333,
+    "dish_id": 721,
+    "ing_id": 143,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9334,
+    "dish_id": 722,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9335,
+    "dish_id": 722,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9336,
+    "dish_id": 723,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.18,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9337,
+    "dish_id": 723,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9338,
+    "dish_id": 723,
+    "ing_id": 318,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9339,
+    "dish_id": 724,
+    "ing_id": 306,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9340,
+    "dish_id": 724,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9341,
+    "dish_id": 725,
+    "ing_id": 327,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9342,
+    "dish_id": 725,
+    "ing_id": 163,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9343,
+    "dish_id": 726,
+    "ing_id": 339,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9344,
+    "dish_id": 726,
+    "ing_id": 289,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9345,
+    "dish_id": 726,
+    "ing_id": 331,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9346,
+    "dish_id": 729,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9347,
+    "dish_id": 729,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9348,
+    "dish_id": 730,
+    "ing_id": 160,
+    "quantity_per_base_pax": 0.035,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9349,
+    "dish_id": 730,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9350,
+    "dish_id": 731,
+    "ing_id": 180,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9351,
+    "dish_id": 731,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9352,
+    "dish_id": 731,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9353,
+    "dish_id": 734,
+    "ing_id": 347,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9354,
+    "dish_id": 734,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9355,
+    "dish_id": 734,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9356,
+    "dish_id": 738,
+    "ing_id": 181,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9357,
+    "dish_id": 738,
+    "ing_id": 138,
+    "quantity_per_base_pax": 1.0,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9358,
+    "dish_id": 740,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9359,
+    "dish_id": 740,
+    "ing_id": 231,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9360,
+    "dish_id": 745,
+    "ing_id": 352,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9361,
+    "dish_id": 745,
+    "ing_id": 191,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9362,
+    "dish_id": 746,
+    "ing_id": 347,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9363,
+    "dish_id": 756,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9364,
+    "dish_id": 756,
+    "ing_id": 141,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9365,
+    "dish_id": 756,
+    "ing_id": 304,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9366,
+    "dish_id": 760,
+    "ing_id": 230,
+    "quantity_per_base_pax": 0.2,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9367,
+    "dish_id": 760,
+    "ing_id": 130,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9368,
+    "dish_id": 761,
+    "ing_id": 361,
+    "quantity_per_base_pax": 0.18,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9369,
+    "dish_id": 761,
+    "ing_id": 171,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9370,
+    "dish_id": 762,
+    "ing_id": 174,
+    "quantity_per_base_pax": 0.25,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9371,
+    "dish_id": 762,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9372,
+    "dish_id": 766,
+    "ing_id": 376,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9373,
+    "dish_id": 766,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9374,
+    "dish_id": 770,
+    "ing_id": 160,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9375,
+    "dish_id": 770,
+    "ing_id": 304,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9376,
+    "dish_id": 774,
+    "ing_id": 356,
+    "quantity_per_base_pax": 1.0,
+    "unit_override": "NO"
+  },
+  {
+    "rd_id": 9377,
+    "dish_id": 774,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9378,
+    "dish_id": 774,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9379,
+    "dish_id": 776,
+    "ing_id": 198,
+    "quantity_per_base_pax": 0.025,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9380,
+    "dish_id": 776,
+    "ing_id": 113,
+    "quantity_per_base_pax": 0.1,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9381,
+    "dish_id": 776,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.04,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9382,
+    "dish_id": 788,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.08,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9383,
+    "dish_id": 788,
+    "ing_id": 136,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9384,
+    "dish_id": 896,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9385,
+    "dish_id": 896,
+    "ing_id": 218,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9386,
+    "dish_id": 896,
+    "ing_id": 291,
+    "quantity_per_base_pax": 0.002,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9387,
+    "dish_id": 897,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9388,
+    "dish_id": 897,
+    "ing_id": 224,
+    "quantity_per_base_pax": 0.02,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9389,
+    "dish_id": 898,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9390,
+    "dish_id": 898,
+    "ing_id": 179,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9391,
+    "dish_id": 898,
+    "ing_id": 312,
+    "quantity_per_base_pax": 0.015,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9392,
+    "dish_id": 899,
+    "ing_id": 173,
+    "quantity_per_base_pax": 0.12,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9393,
+    "dish_id": 899,
+    "ing_id": 255,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9394,
+    "dish_id": 899,
+    "ing_id": 340,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9395,
+    "dish_id": 900,
+    "ing_id": 343,
+    "quantity_per_base_pax": 0.15,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9396,
+    "dish_id": 900,
+    "ing_id": 374,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9397,
+    "dish_id": 900,
+    "ing_id": 299,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9400,
+    "dish_id": 1024,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.06,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9401,
+    "dish_id": 1024,
+    "ing_id": 292,
+    "quantity_per_base_pax": 0.03,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9402,
+    "dish_id": 1024,
+    "ing_id": 284,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9403,
+    "dish_id": 1025,
+    "ing_id": 358,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "LITRE"
+  },
+  {
+    "rd_id": 9404,
+    "dish_id": 1025,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.05,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9405,
+    "dish_id": 1025,
+    "ing_id": 299,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9406,
+    "dish_id": 1025,
+    "ing_id": 372,
+    "quantity_per_base_pax": 0.005,
+    "unit_override": "KG"
+  },
+  {
+    "rd_id": 9407,
+    "dish_id": 1025,
+    "ing_id": 257,
+    "quantity_per_base_pax": 0.01,
+    "unit_override": "LITRE"
+  },
+  {
+    "dish_id": 552,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9408,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 552,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.025,
+    "rd_id": 9409,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 735,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9410,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 735,
+    "ing_id": 263,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9411,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 773,
+    "ing_id": 284,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9412,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 773,
+    "ing_id": 283,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9413,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 773,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9414,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 732,
+    "ing_id": 266,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9415,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 732,
+    "ing_id": 304,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9416,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 732,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9417,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 771,
+    "ing_id": 139,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9418,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 771,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9419,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 771,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9420,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 772,
+    "ing_id": 282,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9421,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 772,
+    "ing_id": 263,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9422,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 772,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9423,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 782,
+    "ing_id": 131,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9424,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 782,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.035,
+    "rd_id": 9425,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 782,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9426,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 783,
+    "ing_id": 131,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9427,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 783,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.09,
+    "rd_id": 9428,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 783,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9429,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 558,
+    "ing_id": 282,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9430,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 558,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9431,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 558,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9432,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 652,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9433,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 652,
+    "ing_id": 149,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9434,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 652,
+    "ing_id": 130,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9435,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 877,
+    "ing_id": 206,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9436,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 877,
+    "ing_id": 176,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9437,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 877,
+    "ing_id": 202,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9438,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 651,
+    "ing_id": 205,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9439,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 651,
+    "ing_id": 203,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9440,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 651,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.002,
+    "rd_id": 9441,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 668,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9442,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 668,
+    "ing_id": 266,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9443,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 668,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.025,
+    "rd_id": 9444,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 536,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9445,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 536,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9446,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 536,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9447,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 620,
+    "ing_id": 236,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9448,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 620,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9449,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 564,
+    "ing_id": 167,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9450,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 564,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.09,
+    "rd_id": 9451,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 564,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9452,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 618,
+    "ing_id": 167,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9453,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 618,
+    "ing_id": 123,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9454,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 618,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9455,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 764,
+    "ing_id": 167,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9456,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 764,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9457,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 764,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9458,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 799,
+    "ing_id": 101,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9459,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 799,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9460,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 799,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9461,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 526,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9462,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 526,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9463,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 526,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9464,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 819,
+    "ing_id": 123,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9465,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 819,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9466,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 819,
+    "ing_id": 130,
+    "quantity_per_base_pax": 0.002,
+    "rd_id": 9467,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 566,
+    "ing_id": 123,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9468,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 566,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9469,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 566,
+    "ing_id": 124,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9470,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 532,
+    "ing_id": 183,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9471,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 532,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9472,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 532,
+    "ing_id": 124,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9473,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 624,
+    "ing_id": 174,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9474,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 624,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9475,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 624,
+    "ing_id": 124,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9476,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 736,
+    "ing_id": 310,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9477,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 736,
+    "ing_id": 377,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9478,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 736,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9479,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 662,
+    "ing_id": 361,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9480,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 662,
+    "ing_id": 377,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9481,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 662,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9482,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 756,
+    "ing_id": 141,
+    "quantity_per_base_pax": 0.13,
+    "rd_id": 9483,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 756,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9484,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 756,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9485,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 797,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9486,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 797,
+    "ing_id": 241,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9487,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 797,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9488,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 857,
+    "ing_id": 184,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9489,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 857,
+    "ing_id": 176,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9490,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 713,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9491,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 713,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9492,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 713,
+    "ing_id": 136,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9493,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 695,
+    "ing_id": 294,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9494,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 695,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9495,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 856,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.085,
+    "rd_id": 9496,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 856,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9497,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 539,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9498,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 539,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9499,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 640,
+    "ing_id": 210,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9500,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 640,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9501,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 548,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9502,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 548,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9503,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 588,
+    "ing_id": 164,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9504,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 588,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9505,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 744,
+    "ing_id": 306,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9506,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 744,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9507,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 840,
+    "ing_id": 163,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9508,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 840,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9509,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 609,
+    "ing_id": 191,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9510,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 609,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9511,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 839,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9512,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 839,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9513,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 560,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9514,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 560,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9515,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 743,
+    "ing_id": 215,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9516,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 743,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9517,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 743,
+    "ing_id": 255,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9518,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 858,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9519,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 858,
+    "ing_id": 136,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9520,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 742,
+    "ing_id": 191,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9521,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 742,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9522,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 580,
+    "ing_id": 108,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9523,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 580,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9524,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 720,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9525,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 720,
+    "ing_id": 136,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9526,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 740,
+    "ing_id": 231,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9527,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 740,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9528,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 740,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9529,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 758,
+    "ing_id": 173,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9530,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 758,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9531,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 758,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9532,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 699,
+    "ing_id": 231,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9533,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 699,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9534,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 699,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9535,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 705,
+    "ing_id": 310,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9536,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 705,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9537,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 705,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9538,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 574,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9539,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 574,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.025,
+    "rd_id": 9540,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 718,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9541,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 718,
+    "ing_id": 224,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9542,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 768,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9543,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 768,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9544,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 529,
+    "ing_id": 237,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9545,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 529,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9546,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 529,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9547,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 646,
+    "ing_id": 237,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9548,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 646,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9549,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 531,
+    "ing_id": 266,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9550,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 531,
+    "ing_id": 249,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9551,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 531,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9552,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 714,
+    "ing_id": 184,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9553,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 714,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9554,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 635,
+    "ing_id": 184,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9555,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 635,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9556,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 755,
+    "ing_id": 101,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9557,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 755,
+    "ing_id": 289,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9558,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 755,
+    "ing_id": 225,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9559,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 765,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9560,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 765,
+    "ing_id": 375,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9561,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 617,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9562,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 617,
+    "ing_id": 268,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9563,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 658,
+    "ing_id": 272,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9564,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 658,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9565,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 767,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9566,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 767,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9567,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 573,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9568,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 573,
+    "ing_id": 136,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9569,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 878,
+    "ing_id": 148,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9570,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 878,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9571,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 600,
+    "ing_id": 148,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9572,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 600,
+    "ing_id": 170,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9573,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 876,
+    "ing_id": 201,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9574,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 876,
+    "ing_id": 202,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9575,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 879,
+    "ing_id": 139,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9576,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 879,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9577,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 598,
+    "ing_id": 206,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9578,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 598,
+    "ing_id": 176,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9579,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 842,
+    "ing_id": 180,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9580,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 842,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9581,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 741,
+    "ing_id": 357,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9582,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 741,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9583,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 843,
+    "ing_id": 282,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9584,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 843,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9585,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 841,
+    "ing_id": 108,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9586,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 841,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9587,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 641,
+    "ing_id": 253,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9588,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 641,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9589,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 538,
+    "ing_id": 113,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9590,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 538,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9591,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 838,
+    "ing_id": 207,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9592,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 838,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9593,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 557,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9594,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 557,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9595,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 638,
+    "ing_id": 263,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9596,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 638,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9597,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 837,
+    "ing_id": 191,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9598,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 837,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9599,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 524,
+    "ing_id": 191,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9600,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 524,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9601,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 561,
+    "ing_id": 252,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9602,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 561,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9603,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 608,
+    "ing_id": 252,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9604,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 608,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9605,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 610,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9606,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 610,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9607,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 637,
+    "ing_id": 251,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9608,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 637,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9609,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 523,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9610,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 523,
+    "ing_id": 105,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9611,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 836,
+    "ing_id": 192,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9612,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 836,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9613,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 769,
+    "ing_id": 282,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9614,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 769,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9615,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 633,
+    "ing_id": 237,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9616,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 633,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9617,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 568,
+    "ing_id": 180,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9618,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 568,
+    "ing_id": 162,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9619,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 576,
+    "ing_id": 293,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9620,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 576,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.035,
+    "rd_id": 9621,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 778,
+    "ing_id": 293,
+    "quantity_per_base_pax": 0.035,
+    "rd_id": 9622,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 778,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9623,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 781,
+    "ing_id": 184,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9624,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 781,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.035,
+    "rd_id": 9625,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 614,
+    "ing_id": 184,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9626,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 614,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.035,
+    "rd_id": 9627,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 537,
+    "ing_id": 150,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9628,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 537,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9629,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 753,
+    "ing_id": 198,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9630,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 753,
+    "ing_id": 355,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9631,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 535,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9632,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 535,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9633,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 779,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9634,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 779,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9635,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 780,
+    "ing_id": 102,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9636,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 780,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.035,
+    "rd_id": 9637,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 519,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9638,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 519,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.025,
+    "rd_id": 9639,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 520,
+    "ing_id": 237,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9640,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 520,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9641,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 672,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9642,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 672,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9643,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 777,
+    "ing_id": 198,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9644,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 777,
+    "ing_id": 233,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9645,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 711,
+    "ing_id": 293,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9646,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 711,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9647,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 602,
+    "ing_id": 139,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9648,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 602,
+    "ing_id": 379,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9649,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 612,
+    "ing_id": 211,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9650,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 612,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9651,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 703,
+    "ing_id": 211,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9652,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 703,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9653,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 604,
+    "ing_id": 210,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9654,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 604,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9655,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 605,
+    "ing_id": 278,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9656,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 605,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9657,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 569,
+    "ing_id": 165,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9658,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 569,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9659,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 733,
+    "ing_id": 282,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9660,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 733,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9661,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 702,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9662,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 702,
+    "ing_id": 163,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9663,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 639,
+    "ing_id": 192,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9664,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 639,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9665,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 686,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9666,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 686,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9667,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 750,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9668,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 750,
+    "ing_id": 132,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9669,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 643,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9670,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 643,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9671,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 687,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9672,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 687,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9673,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 751,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9674,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 751,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9675,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 577,
+    "ing_id": 237,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9676,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 577,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9677,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 667,
+    "ing_id": 253,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9678,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 667,
+    "ing_id": 150,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9679,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 785,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9680,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 785,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9681,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 631,
+    "ing_id": 194,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9682,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 631,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9683,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 784,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9684,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 784,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.025,
+    "rd_id": 9685,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 629,
+    "ing_id": 237,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9686,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 629,
+    "ing_id": 134,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9687,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 670,
+    "ing_id": 270,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9688,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 670,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9689,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 786,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9690,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 786,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9691,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 787,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9692,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 787,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9693,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 752,
+    "ing_id": 127,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9694,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 752,
+    "ing_id": 112,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9695,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 817,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9696,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 817,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9697,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 817,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9698,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 675,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.09,
+    "rd_id": 9699,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 675,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9700,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 675,
+    "ing_id": 161,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9701,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 816,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9702,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 816,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9703,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 816,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9704,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 820,
+    "ing_id": 343,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9705,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 820,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9706,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 820,
+    "ing_id": 130,
+    "quantity_per_base_pax": 0.002,
+    "rd_id": 9707,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 801,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9708,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 801,
+    "ing_id": 139,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9709,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 801,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9710,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 647,
+    "ing_id": 231,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9711,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 647,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9712,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 647,
+    "ing_id": 157,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9713,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 694,
+    "ing_id": 242,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9714,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 694,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9715,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 694,
+    "ing_id": 318,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9716,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 818,
+    "ing_id": 141,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9717,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 818,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.004,
+    "rd_id": 9718,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 818,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9719,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 798,
+    "ing_id": 173,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9720,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 798,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9721,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 798,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9722,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 796,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9723,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 796,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9724,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 796,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9725,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 757,
+    "ing_id": 361,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9726,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 757,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9727,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 757,
+    "ing_id": 369,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9728,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 663,
+    "ing_id": 183,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9729,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 663,
+    "ing_id": 243,
+    "quantity_per_base_pax": 0.11,
+    "rd_id": 9730,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 663,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9731,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 800,
+    "ing_id": 241,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9732,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 800,
+    "ing_id": 139,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9733,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 800,
+    "ing_id": 379,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9734,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 759,
+    "ing_id": 101,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9735,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 759,
+    "ing_id": 139,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9736,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 759,
+    "ing_id": 109,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9737,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 747,
+    "ing_id": 266,
+    "quantity_per_base_pax": 0.05,
+    "rd_id": 9738,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 747,
+    "ing_id": 197,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9739,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 860,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9740,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 860,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9741,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 749,
+    "ing_id": 184,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9742,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 749,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9743,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 862,
+    "ing_id": 376,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9744,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 862,
+    "ing_id": 176,
+    "quantity_per_base_pax": 0.001,
+    "rd_id": 9745,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 859,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9746,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 859,
+    "ing_id": 128,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9747,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 654,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9748,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 654,
+    "ing_id": 154,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9749,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 660,
+    "ing_id": 272,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9750,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 660,
+    "ing_id": 104,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9751,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 861,
+    "ing_id": 242,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9752,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 861,
+    "ing_id": 129,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9753,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 748,
+    "ing_id": 221,
+    "quantity_per_base_pax": 0.07,
+    "rd_id": 9754,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 748,
+    "ing_id": 186,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9755,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 698,
+    "ing_id": 272,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9756,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 698,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.04,
+    "rd_id": 9757,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 530,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9758,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 530,
+    "ing_id": 358,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9759,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 628,
+    "ing_id": 165,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9760,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 628,
+    "ing_id": 224,
+    "quantity_per_base_pax": 0.008,
+    "rd_id": 9761,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 728,
+    "ing_id": 165,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9762,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 728,
+    "ing_id": 225,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9763,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 626,
+    "ing_id": 120,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9764,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 626,
+    "ing_id": 116,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9765,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 775,
+    "ing_id": 107,
+    "quantity_per_base_pax": 0.06,
+    "rd_id": 9766,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 775,
+    "ing_id": 150,
+    "quantity_per_base_pax": 0.02,
+    "rd_id": 9767,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 737,
+    "ing_id": 343,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9768,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 737,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.003,
+    "rd_id": 9769,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 622,
+    "ing_id": 183,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9770,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 622,
+    "ing_id": 317,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9771,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 763,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9772,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 763,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9773,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 822,
+    "ing_id": 121,
+    "quantity_per_base_pax": 0.15,
+    "rd_id": 9774,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 822,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.015,
+    "rd_id": 9775,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 821,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.12,
+    "rd_id": 9776,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 821,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9777,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 739,
+    "ing_id": 262,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9778,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 739,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9779,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 649,
+    "ing_id": 342,
+    "quantity_per_base_pax": 0.08,
+    "rd_id": 9780,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 649,
+    "ing_id": 115,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9781,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 706,
+    "ing_id": 173,
+    "quantity_per_base_pax": 0.1,
+    "rd_id": 9782,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 706,
+    "ing_id": 106,
+    "quantity_per_base_pax": 0.005,
+    "rd_id": 9783,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 664,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9784,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 664,
+    "ing_id": 335,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9785,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 754,
+    "ing_id": 103,
+    "quantity_per_base_pax": 0.03,
+    "rd_id": 9786,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 754,
+    "ing_id": 335,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9787,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 727,
+    "ing_id": 295,
+    "quantity_per_base_pax": 0.2,
+    "rd_id": 9788,
+    "unit_override": "KG"
+  },
+  {
+    "dish_id": 727,
+    "ing_id": 199,
+    "quantity_per_base_pax": 0.01,
+    "rd_id": 9789,
+    "unit_override": "KG"
+  }
+]

@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'core/app_theme.dart';
+import 'core/encryption_helper.dart'; // COMPLIANCE: PII encryption (Rule C.3)
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:ruchiserv/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'core/locale_provider.dart';
 
-import 'screens/1.4_login_screen.dart';
-import 'screens/2.0_orders_calendar_screen.dart';
+import 'screens/1.4_login_screen.dart'; // Full version with biometrics
+import 'screens/main_menu_screen.dart'; // Proper menu navigation
+import 'screens/0.0_splash_screen.dart';
+import 'db/seed_test_user.dart'; // DEVELOPMENT: Test user seeding
 
-void main() {
+// COMPLIANCE: Initialize encryption before any database operations
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // CRITICAL: Initialize encryption before database access (Rule C.3)
+  await EncryptionHelper.initialize();
+  
+  // DEVELOPMENT: Seed test user (remove in production)
+  await seedTestUser();
+  
   runApp(const RuchiServApp());
 }
 
@@ -14,54 +30,32 @@ class RuchiServApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'RuchiServ',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
-        fontFamily: 'Poppins',
+    return ChangeNotifierProvider(
+      create: (_) => LocaleProvider(),
+      child: Consumer<LocaleProvider>(
+        builder: (context, localeProvider, child) {
+          return MaterialApp(
+            title: 'RuchiServ',
+            locale: localeProvider.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.light, // Default to Light theme (Golden/White) as requested
+            home: const SplashScreen(),
+            routes: {
+              '/login': (context) => LoginScreen(),
+              '/home': (context) => MainMenuScreen(), // Route to menu with bottom nav
+            },
+          );
+        },
       ),
-      home: const _StartupRouter(),
     );
-  }
-}
-
-class _StartupRouter extends StatefulWidget {
-  const _StartupRouter();
-
-  @override
-  State<_StartupRouter> createState() => _StartupRouterState();
-}
-
-class _StartupRouterState extends State<_StartupRouter> {
-  Widget? _next;
-
-  @override
-  void initState() {
-    super.initState();
-    _boot();
-  }
-
-  Future<void> _boot() async {
-    // Very simple: if we have a last mobile saved, show Login directly,
-    // else still show Login. (We can add auto route to calendar later if needed.)
-    final sp = await SharedPreferences.getInstance();
-    final lastMobile = sp.getString('auth_mobile') ?? '';
-    await Future.delayed(const Duration(milliseconds: 800)); // splash feel
-
-    if (!mounted) return;
-    setState(() {
-      _next = const LoginScreen();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _next == null
-        ? const Scaffold(
-            body: Center(child: Text('RuchiServ', style: TextStyle(fontSize: 24))),
-          )
-        : _next!;
   }
 }

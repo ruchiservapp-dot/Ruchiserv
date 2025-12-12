@@ -1,5 +1,7 @@
+// MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 import 'package:flutter/material.dart';
-import '../db/local/local_db_helper.dart';
+import '../db/database_helper.dart';
+import 'package:ruchiserv/l10n/app_localizations.dart';
 import '2.1_add_order_screen.dart';
 import '2.3_summary_screen.dart';
 
@@ -29,19 +31,19 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         _errorMessage = null;
       });
       final dateStr = widget.date.toIso8601String().split('T')[0];
-      final data = await LocalDbHelper.getOrdersByDate(dateStr);
+      final data = await DatabaseHelper().getOrdersByDate(dateStr);
       setState(() {
         _orders = List<Map<String, dynamic>>.from(data);
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load orders: $e';
+        _errorMessage = AppLocalizations.of(context)!.failedLoadOrders(e.toString());
         _isLoading = false;
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading orders: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.errorLoadingOrders(e.toString())), backgroundColor: Colors.red),
       );
     }
   }
@@ -75,7 +77,20 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     return {'veg': veg, 'nonVeg': nonVeg, 'total': veg + nonVeg};
   }
 
+  bool get _isPastDate {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final pageDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    return pageDate.isBefore(today);
+  }
+
   Future<void> _editOrder(Map<String, dynamic> order) async {
+    if (_isPastDate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.cannotEditPastOrders)),
+      );
+      return;
+    }
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -86,35 +101,42 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   }
 
   Future<void> _deleteOrder(int orderId) async {
+    if (_isPastDate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.cannotDeletePastOrders)),
+      );
+      return;
+    }
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Order?'),
-        content: const Text('This will remove the order locally. (Will sync when online)'),
+        title: Text(AppLocalizations.of(context)!.deleteOrderTitle),
+        content: Text(AppLocalizations.of(context)!.deleteOrderConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(AppLocalizations.of(context)!.delete)),
         ],
       ),
     );
     if (confirm != true) return;
 
     try {
-      await LocalDbHelper.deleteOrder(orderId);
-      await LocalDbHelper.queuePendingSync(
+      await DatabaseHelper().deleteOrder(orderId);
+      await DatabaseHelper().queuePendingSync(
         table: 'orders',
         data: {"id": orderId},
         action: 'DELETE',
       );
       await _loadOrders();
+      await _loadOrders();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order deleted (will sync when online)')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.orderDeleted)),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting order: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.errorDeletingOrder(e.toString())), backgroundColor: Colors.red),
       );
     }
   }
@@ -131,7 +153,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(mealType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blueAccent)),
-              Text('${orders.length} orders', style: const TextStyle(fontSize: 13, color: Colors.blueGrey)),
+              Text(AppLocalizations.of(context)!.ordersCount(orders.length), style: const TextStyle(fontSize: 13, color: Colors.blueGrey)),
             ],
           ),
         ),
@@ -149,12 +171,12 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 backgroundColor: isVeg ? Colors.green.shade600 : Colors.red.shade600,
                 child: Icon(isVeg ? Icons.eco : Icons.restaurant, color: Colors.white),
               ),
-              title: Text(order['customerName']?.toString() ?? 'Unnamed', style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text(order['customerName']?.toString() ?? AppLocalizations.of(context)!.unnamed, style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${order['location'] ?? 'No location'} • ${order['mobile'] ?? ''}',
+                    '${order['location'] ?? AppLocalizations.of(context)!.noLocation} • ${order['mobile'] ?? ''}',
                     style: const TextStyle(fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -173,8 +195,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                         style: const TextStyle(fontSize: 11, color: Colors.redAccent)),
                 ],
               ),
-              onTap: () => _editOrder(order),
-              onLongPress: orderId != null ? () => _deleteOrder(orderId) : null,
+              onTap: _isPastDate ? null : () => _editOrder(order),
+              onLongPress: (_isPastDate || orderId == null) ? null : () => _deleteOrder(orderId),
+              tileColor: _isPastDate ? Colors.grey.shade50 : null, // Visual cue for disabled
             ),
           );
         }),
@@ -195,12 +218,12 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Orders - $formattedDate'),
+          title: Text(AppLocalizations.of(context)!.ordersDateTitle(formattedDate)),
           centerTitle: true,
           actions: [
             IconButton(
               icon: const Icon(Icons.summarize),
-              tooltip: 'Dish Summary',
+              tooltip: AppLocalizations.of(context)!.dishSummary,
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => SummaryScreen(date: widget.date)));
               },
@@ -221,7 +244,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                         ElevatedButton.icon(
                           onPressed: _loadOrders,
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
+                          label: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -233,7 +256,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                           children: [
                             Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
                             const SizedBox(height: 16),
-                            const Text('No orders found for this date', style: TextStyle(color: Colors.grey)),
+                            Text(AppLocalizations.of(context)!.noOrdersFound, style: const TextStyle(color: Colors.grey)),
                           ],
                         ),
                       )
@@ -256,24 +279,26 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Veg: ${totals['veg']}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text('Non-Veg: ${totals['nonVeg']}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text('Total: ${totals['total']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(AppLocalizations.of(context)!.vegCount(totals['veg']!), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(AppLocalizations.of(context)!.nonVegCount(totals['nonVeg']!), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(AppLocalizations.of(context)!.totalCount(totals['total']!), style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
               )
             : null,
-        floatingActionButton: FloatingActionButton.extended(
-          icon: const Icon(Icons.add),
-          label: const Text('Add Order'),
-          onPressed: () async {
-            final result = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(builder: (_) => AddOrderScreen(date: widget.date)),
-            );
-            if (result == true) await _loadOrders();
-          },
-        ),
+        floatingActionButton: _isPastDate
+            ? null // Hide add button for past dates
+            : FloatingActionButton.extended(
+                icon: const Icon(Icons.add),
+                label: Text(AppLocalizations.of(context)!.addOrder),
+                onPressed: () async {
+                  final result = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(builder: (_) => AddOrderScreen(date: widget.date)),
+                  );
+                  if (result == true) await _loadOrders();
+                },
+              ),
       ),
     );
   }

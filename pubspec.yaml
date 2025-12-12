@@ -10,29 +10,46 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # UI & Calendar
   table_calendar: ^3.0.9
   cupertino_icons: ^1.0.8
+  fl_chart: ^0.66.0
 
   # Dates/formatting
-  intl: ^0.19.0
+  intl: ^0.20.2
 
   # Network & connectivity
   http: ^1.2.2
   connectivity_plus: ^7.0.0
   url_launcher: ^6.3.0
+  razorpay_flutter: ^1.3.7
+  provider: ^6.1.1
 
   # Local storage / DB
   sqflite: ^2.3.3
+  sqflite_common_ffi_web: ^0.4.0
   path: ^1.9.0
   path_provider: ^2.1.3
   shared_preferences: ^2.2.3
   flutter_secure_storage: ^9.2.4
+  encrypt: ^5.0.3  # COMPLIANCE: PII encryption (Rule C.3)
+  csv: ^6.0.0      # COMPLIANCE: Audit Export (Task B)
+  share_plus: ^10.0.0 # COMPLIANCE: Audit Export (Task B)
+  pdf: ^3.10.0     # COMPLIANCE: PDF Generation (Task B)
+  printing: ^5.11.0 # COMPLIANCE: PDF Printing/Sharing (Task B)
 
   # Biometrics & app info
   local_auth: ^3.0.0
   package_info_plus: ^9.0.0
+  
+  # GPS Location
+  geolocator: ^13.0.1
+
+  # Image picker for staff photos
+  image_picker: ^1.0.7
 
   # (Optional) Sticky headers used elsewhere in app
   sticky_headers: ^0.3.0
@@ -41,12 +58,25 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  sqflite_common_ffi: ^2.3.0 # For running DB tests on host
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  macos:
+    generate: true
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:
     - assets/images/
+    - assets/seeds/
+    - assets/fonts/
 
   fonts:
     - family: Poppins

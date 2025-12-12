@@ -1,8 +1,11 @@
+// MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 // lib/screens/2.0_orders_calendar_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ruchiserv/l10n/app_localizations.dart';
 
 import '../db/database_helper.dart';
 import '2.2_orders_list_screen.dart';
@@ -18,9 +21,9 @@ class OrderCalendarScreen extends StatefulWidget {
 
 class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAware {
   // ---- Config you can tweak later (or move to Settings) ----
-  static const double _utilizationAmberAt = 0.60; // >=60% = amber
-  static const double _utilizationRedAt = 0.85;   // >=85% = red
-  static const int _dailyCapacity = 500;          // default kitchen capacity pax/day
+  static const double _utilizationAmberAt = 0.50; // >=50% = amber (User request: Green < 50%)
+  static const double _utilizationRedAt = 0.90;   // >=90% = red (User request: Red >= 90%)
+  int _dailyCapacity = 500;                       // Dynamic from DB
   static const bool useAws = false;               // keep false to avoid previous shape errors
 
   final DateTime _today = DateTime.now();
@@ -56,34 +59,31 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
     _focusedDay = DateTime(_today.year, _today.month, 1);
 
     // initial load for current month
+    _loadFirmCapacity();
     _loadCalendarForMonth(_focusedDay);
+  }
+
+  Future<void> _loadFirmCapacity() async {
+    final sp = await SharedPreferences.getInstance();
+    final firmId = sp.getString('last_firm');
+    if (firmId != null) {
+      final firm = await DatabaseHelper().getFirmDetails(firmId);
+      if (firm != null && mounted) {
+        setState(() {
+          _dailyCapacity = (firm['capacity'] as int?) ?? 500;
+          // Refresh calendar to update colors
+        });
+      }
+    }
   }
 
   // ---------- Helpers ----------
   String _keyOf(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
-  bool _isPast(DateTime d) {
-    final dd = DateTime(d.year, d.month, d.day);
-    final tt = DateTime(_today.year, _today.month, _today.day);
-    return dd.isBefore(tt);
-  }
-
   void _jumpToToday() {
     _selectedDay = DateTime(_today.year, _today.month, _today.day);
     _focusedDay = DateTime(_today.year, _today.month, 1);
     setState(() {});
-  }
-
-  Color _bgFor(int pax) {
-    if (pax <= 0) return Colors.transparent;
-    final u = pax / _dailyCapacity;
-    if (u >= _utilizationRedAt) {
-      return Colors.red.withOpacity(0.15);
-    } else if (u >= _utilizationAmberAt) {
-      return Colors.orange.withOpacity(0.12);
-    } else {
-      return Colors.green.withOpacity(0.10);
-    }
   }
 
   // ---------- System calendar ----------
@@ -212,80 +212,6 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
     }
   }
 
-  // ---------- Day Cell ----------
-  Widget _buildDayCell(BuildContext context, DateTime day, DateTime focusedMonth) {
-    final dateKey = _keyOf(day);
-    final pax = _dailyPax[dateKey] ?? 0;
-    final isOutside = day.month != focusedMonth.month;
-    final isToday = isSameDay(day, _today);
-    final isPastDay = _isPast(day);
-
-    final base = _bgFor(pax);
-    final Color bg = isOutside ? Colors.transparent : base;
-    final Color border = isToday
-        ? Theme.of(context).colorScheme.primary.withOpacity(0.35)
-        : Colors.transparent;
-
-    // Text styles
-    final dateStyle = TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w600,
-      color: isOutside
-          ? Colors.grey.shade400
-          : (isPastDay ? Colors.grey.shade500 : Colors.grey.shade700),
-    );
-
-    final paxStyle = TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w700,
-      color: isOutside
-          ? Colors.grey.shade400
-          : (isPastDay ? Colors.grey.shade600 : Colors.grey.shade900),
-    );
-
-    return Container(
-      margin: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: border, width: isToday ? 1.3 : 0.8),
-      ),
-      child: Stack(
-        children: [
-          // Date (top-left)
-          Positioned(
-            top: 6,
-            left: 8,
-            child: Text('${day.day}', style: dateStyle),
-          ),
-          // Pax (center)
-          Center(
-            child: Text(
-              pax > 0 ? pax.toString() : '',
-              style: paxStyle,
-              maxLines: 1,
-              overflow: TextOverflow.fade,
-              softWrap: false,
-            ),
-          ),
-          // Past overlay (light grey wash for visual cue, but still tappable)
-          if (isPastDay)
-            Positioned.fill(
-              child: IgnorePointer(
-                ignoring: true,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.white.withOpacity(0.0), // keep subtle
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   // ---------- Navigation handlers ----------
   Future<void> _onDaySelected(DateTime selectedDay, DateTime focusedDay) async {
     setState(() {
@@ -314,120 +240,214 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
   // ---------- Build ----------
   @override
   Widget build(BuildContext context) {
-    final monthLabel = DateFormat('MMMM yyyy').format(_focusedDay);
-    final pctText = (_monthUtilization * 100).toStringAsFixed(1);
+    // Dynamic row height optimized for visibility
+    // Prevent giant cells on wide screens (laptops/tablets) by clamping height
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double cardWidth = screenWidth - 32;
+    final double rawSquareHeight = (cardWidth / 7);
+    
+    // Clamp height: Min 65 (for text visibility), Max 85 (to fit screen on laptops)
+    final double cellHeight = rawSquareHeight.clamp(65.0, 95.0);
 
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Light background for contrast
       appBar: AppBar(
-        title: Text(monthLabel),
+        title: Text(AppLocalizations.of(context)!.ordersCalendarTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.white,
+        elevation: 0,
         centerTitle: true,
+        foregroundColor: Colors.black87,
         actions: [
-          // System calendar icon (Option 1)
           IconButton(
-            tooltip: 'Open system calendar',
-            icon: const Icon(Icons.event),
-            onPressed: () async {
-              await _openSystemCalendar();
-              if (!mounted) return;
-              // when back to our app, highlight TODAY again
-              _jumpToToday();
-              _loadCalendarForMonth(_focusedDay);
-            },
+            icon: const Icon(Icons.calendar_month_outlined, color: Colors.indigo),
+            tooltip: AppLocalizations.of(context)!.openSystemCalendar,
+            onPressed: _openSystemCalendar,
           ),
         ],
-        bottom: _isMonthLoading
-            ? const PreferredSize(
-                preferredSize: Size.fromHeight(2),
-                child: LinearProgressIndicator(minHeight: 2),
-              )
-            : null,
       ),
       body: Column(
         children: [
-          // Month summary strip
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Total: $_monthTotalPax pax • $pctText% avg utilization',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                if (_showOfflineChip)
-                  const Chip(
-                    label: Text('Offline data'),
-                    visualDensity: VisualDensity(vertical: -3),
-                  ),
-              ],
-            ),
-          ),
-
+          if (_isMonthLoading)
+            const LinearProgressIndicator(minHeight: 2, backgroundColor: Colors.transparent),
+            
           Expanded(
-            child: TableCalendar(
-              firstDay: _firstDayLimit,
-              lastDay: _lastDayLimit,
-              focusedDay: _focusedDay,
-              calendarFormat: _calendarFormat,
-              availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-              headerVisible: false, // we render our own header above
-
-              selectedDayPredicate: (day) =>
-                  _selectedDay != null && isSameDay(_selectedDay, day),
-
-              onDaySelected: _onDaySelected,
-              onPageChanged: _onMonthChanged,
-
-              calendarBuilders: CalendarBuilders(
-                defaultBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-                todayBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-                selectedBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-                outsideBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-              ),
-
-              calendarStyle: const CalendarStyle(
-                outsideDaysVisible: true,
-                isTodayHighlighted: true,
-              ),
-            ),
-          ),
-
-          // Month navigation + Today auto behavior:
-          // (You said no explicit 'Today' button; user can swipe or use arrows)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: ListView( // Scrollable to handle smaller screens or tall calendars
+              padding: const EdgeInsets.all(16.0),
               children: [
-                // Back month
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: _focusedDay.isAfter(DateTime(_firstDayLimit.year, _firstDayLimit.month, 1))
-                      ? () {
-                          final prev = DateTime(_focusedDay.year, _focusedDay.month - 1, 1);
-                          _onMonthChanged(prev);
-                        }
-                      : null,
+                // Calendar Card
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TableCalendar(
+                    firstDay: _firstDayLimit,
+                    lastDay: _lastDayLimit,
+                    focusedDay: _focusedDay,
+                    calendarFormat: _calendarFormat,
+                    rowHeight: cellHeight, // responsive height
+                    daysOfWeekHeight: 40,
+                    availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+                    
+                    // Style Header
+                    headerVisible: true, 
+                    headerStyle: HeaderStyle(
+                      titleCentered: true,
+                      formatButtonVisible: false,
+                      titleTextStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      leftChevronIcon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: Colors.grey[100], shape: BoxShape.circle),
+                        child: const Icon(Icons.chevron_left, color: Colors.black54),
+                      ),
+                      rightChevronIcon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: Colors.grey[100], shape: BoxShape.circle),
+                        child: const Icon(Icons.chevron_right, color: Colors.black54),
+                      ),
+                      headerPadding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    
+                    // Style Days of Week
+                    daysOfWeekStyle: DaysOfWeekStyle(
+                      weekdayStyle: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 12),
+                      weekendStyle: TextStyle(color: Colors.red[300], fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+
+                    selectedDayPredicate: (day) =>
+                        _selectedDay != null && isSameDay(_selectedDay, day),
+
+                    onDaySelected: _onDaySelected,
+                    onPageChanged: _onMonthChanged,
+
+                    calendarBuilders: CalendarBuilders(
+                      defaultBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
+                      todayBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
+                      selectedBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
+                      outsideBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
+                    ),
+
+                    calendarStyle: const CalendarStyle(
+                      outsideDaysVisible: true,
+                      cellMargin: EdgeInsets.zero, // We handle margins/padding in builder
+                    ),
+                  ),
                 ),
-                Text(
-                  monthLabel,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                // Next month
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: DateTime(_focusedDay.year, _focusedDay.month, 1)
-                          .isBefore(DateTime(_lastDayLimit.year, _lastDayLimit.month, 1))
-                      ? () {
-                          final next = DateTime(_focusedDay.year, _focusedDay.month + 1, 1);
-                          _onMonthChanged(next);
-                        }
-                      : null,
+                
+                const SizedBox(height: 20),
+                // Legend / Info
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildLegendDot(Colors.green[100]!, AppLocalizations.of(context)!.utilizationLow),
+                    const SizedBox(width: 16),
+                    _buildLegendDot(Colors.orange[100]!, AppLocalizations.of(context)!.utilizationMed),
+                    const SizedBox(width: 16),
+                    _buildLegendDot(Colors.red[100]!, AppLocalizations.of(context)!.utilizationHigh),
+                  ],
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildLegendDot(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 12, height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  // ---------- Day Cell ----------
+  Widget _buildDayCell(BuildContext context, DateTime day, DateTime focusedMonth) {
+    final dateKey = _keyOf(day);
+    final pax = _dailyPax[dateKey] ?? 0;
+    final isOutside = day.month != focusedMonth.month;
+    final isToday = isSameDay(day, _today);
+    // final isPastDay = _isPast(day); // Optional: dim past days?
+    
+    // Modern colors
+    Color bgColor = Colors.transparent;
+    Color textColor = isOutside ? Colors.grey.shade300 : Colors.black87;
+    FontWeight fontWeight = FontWeight.normal;
+    Border? border;
+
+    if (!isOutside) {
+      if (pax > 0) {
+        final u = pax / (_dailyCapacity > 0 ? _dailyCapacity : 1);
+        if (u >= _utilizationRedAt) {
+          bgColor = const Color(0xFFFFEBEE); // Red 50
+          textColor = const Color(0xFFC62828); // Red 800
+        } else if (u >= _utilizationAmberAt) {
+          bgColor = const Color(0xFFFFF3E0); // Orange 50
+          textColor = const Color(0xFFEF6C00); // Orange 800
+        } else {
+          bgColor = const Color(0xFFE8F5E9); // Green 50
+          textColor = const Color(0xFF2E7D32); // Green 800
+        }
+        fontWeight = FontWeight.bold;
+      }
+      
+      if (isToday) {
+        border = Border.all(color: Colors.indigo, width: 2);
+      } else {
+        border = Border.all(color: Colors.grey.shade300, width: 1);
+      }
+    } else {
+        border = Border.all(color: Colors.grey.shade200, width: 1);
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(4), // Gap between cells
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: border,
+      ),
+      child: Stack(
+        children: [
+          // Date (Top Left)
+          Positioned(
+            top: 6,
+            left: 8,
+            child: Text(
+              '${day.day}',
+              style: TextStyle(
+                fontSize: 12,
+                color: isOutside ? Colors.grey[300] : (isSameDay(day, _selectedDay) ? Colors.indigo : Colors.grey[600]),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          // Pax (Center)
+          if (!isOutside && pax > 0)
+            Center(
+              child: Text(
+                '$pax',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: fontWeight,
+                  color: textColor,
+                ),
+              ),
+            ),
         ],
       ),
     );

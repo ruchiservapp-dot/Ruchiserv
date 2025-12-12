@@ -5,7 +5,7 @@ import 'dart:core';
 /// We keep it flexible so you can change stage or paths later without touching call sites.
 class AwsConfig {
   /// Your API Gateway base URL (no trailing slash)
-  static const String baseUrl = 'https://42x75cturc.execute-api.ap-south-1.amazonaws.com';
+  static const String baseUrl = 'https://zgcy1tisjc.execute-api.ap-south-1.amazonaws.com/prod';
 
   /// API Gateway stage. If you don’t use stages, set this to '' (empty).
   static const String stage = 'prod';

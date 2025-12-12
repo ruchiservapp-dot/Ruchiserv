@@ -1,0 +1,1028 @@
+{
+  "appTitle": "RuchiServ",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "signInContinue": "Sign in to continue",
+  "firmId": "Firm ID",
+  "enterFirmId": "Enter firm ID",
+  "mobileNumber": "Mobile Number",
+  "enterMobile": "Enter mobile",
+  "password": "Password",
+  "enterPassword": "Enter password",
+  "loginButton": "LOGIN",
+  "enableBiometricLogin": "Enable Biometric Login",
+  "enableBiometricPrompt": "Would you like to enable biometric authentication for faster login next time?",
+  "notNow": "Not Now",
+  "enable": "Enable",
+  "biometricEnabled": "Biometric login enabled!",
+  "failedEnableBiometric": "Failed to enable biometrics: {error}",
+  "@failedEnableBiometric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "biometricNotAllowed": "Biometric login not allowed. Please login online once.",
+  "biometricFailed": "Biometric failed: {error}",
+  "@biometricFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "subscription": "Subscription",
+  "subscriptionExpired": "Your subscription has expired. Please renew to continue.",
+  "subscriptionExpiresIn": "Your subscription expires in {days} day(s). Please renew.",
+  "@subscriptionExpiresIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "ok": "OK",
+  "loginError": "Login error: {error}",
+  "@loginError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "register": "Register",
+  "forgotPassword": "Forgot password?",
+  "invalidCredentials": "Invalid credentials.",
+  "offlineLoginNotAllowed": "Offline login not allowed. Please connect to the internet.",
+  "mainMenuTitle": "Menu",
+  "moduleOrders": "Orders",
+  "moduleOperations": "Operations",
+  "moduleInventory": "Inventory",
+  "moduleFinance": "Finance",
+  "moduleReports": "Reports",
+  "moduleSettings": "Settings",
+  "moduleAttendance": "My Attendance",
+  "noModulesAvailable": "No modules available",
+  "contactAdministrator": "Contact your administrator",
+  "firmProfile": "Firm Profile",
+  "viewUpdateFirm": "View or update your firm details",
+  "userProfile": "User Profile",
+  "manageLoginPrefs": "Manage your login and preferences",
+  "manageUsers": "Manage Users",
+  "manageUsersSubtitle": "Add users and set permissions",
+  "authMobiles": "Authorized Mobiles",
+  "authMobilesSubtitle": "Manage pre-approved mobile numbers",
+  "paymentSettings": "Payment Settings",
+  "paymentSettingsSubtitle": "Configure payment gateways",
+  "generalSettings": "General Settings",
+  "generalSettingsSubtitle": "Theme, Notifications, Security",
+  "vehicleMaster": "Vehicle Master",
+  "vehicleMasterSubtitle": "Manage fleet vehicles",
+  "utensilMaster": "Utensil Master",
+  "utensilMasterSubtitle": "Manage utensils & consumables",
+  "backupAWS": "Backup to AWS",
+  "backupSubtitle": "Upload all data to cloud",
+  "auditLogs": "Audit Logs",
+  "auditLogsSubtitle": "View and export compliance logs",
+  "aboutApp": "About RuchiServ",
+  "logout": "Logout",
+  "selectLanguage": "Select Language",
+  "attendanceTitle": "My Attendance",
+  "noStaffRecord": "No Staff Record Found",
+  "mobileNotLinked": "Your mobile number is not linked to any staff record.\nPlease contact your administrator.",
+  "checkingLocation": "Checking location...",
+  "punchIn": "PUNCH IN",
+  "punchOut": "PUNCH OUT",
+  "punching": "Punching...",
+  "readyToPunchIn": "Ready to Punch In",
+  "workingSince": "Working since {time}",
+  "@workingSince": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "todayShiftCompleted": "Today's Shift Completed",
+  "elapsedTime": "{hours}h {minutes}m elapsed",
+  "@elapsedTime": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "todayDetails": "Today's Details",
+  "punchedIn": "Punched In",
+  "punchedOut": "Punched Out",
+  "location": "Location",
+  "withinKitchen": "Within Kitchen Area",
+  "outsideKitchen": "Outside Kitchen Area",
+  "punchSuccess": "✅ Punched In Successfully!",
+  "punchWarning": "⚠️ Punched In (Outside Kitchen Area)",
+  "punchOutSuccess": "✅ Punched Out - {hours} hours",
+  "@punchOutSuccess": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "refresh": "Refresh",
+  "refresh": "Refresh",
+  "loading": "Loading...",
+  "ordersCalendarTitle": "Orders Calendar",
+  "openSystemCalendar": "Open System Calendar",
+  "utilizationLow": "Low (<50%)",
+  "utilizationMed": "Med (50-90%)",
+  "utilizationHigh": "High (>90%)",
+  "editOrder": "Edit Order",
+  "addOrder": "Add Order",
+  "dateLabel": "Date: {date}",
+  "@dateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "totalPax": "Total Pax",
+  "deliveryTime": "Delivery Time",
+  "tapToSelectTime": "Tap to select time",
+  "customerName": "Customer Name",
+  "digitsOnly": "Digits only",
+  "mobileLengthError": "Must be exactly 10 digits",
+  "mealType": "Meal Type",
+  "foodType": "Food Type",
+  "menuItems": "Menu Items",
+  "addItem": "Add Item",
+  "subtotal": "Subtotal (₹)",
+  "discPercent": "Disc %",
+  "dishTotal": "Dish Total:",
+  "serviceAndCounterSetup": "Service & Counter Setup",
+  "serviceRequiredQuestion": "Service Required?",
+  "serviceType": "Service Type: ",
+  "countersCount": "No. of Counters",
+  "ratePerStaff": "Rate/Staff (₹)",
+  "staffRequired": "Staff Required",
+  "costWithRupee": "Cost: ₹{cost}",
+  "@costWithRupee": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "counterSetupNeeded": "Counter Setup Needed?",
+  "ratePerCounter": "Rate/Counter (₹)",
+  "counterCostWithRupee": "Counter Cost: ₹{cost}",
+  "@counterCostWithRupee": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "discountWithPercent": "Discount ({percent}%):",
+  "@discountWithPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "serviceCost": "Service Cost:",
+  "counterSetup": "Counter Setup:",
+  "grandTotal": "GRAND TOTAL:",
+  "notes": "Notes",
+  "saveOrder": "SAVE ORDER",
+  "orderSaved": "✅ Order saved",
+  "saveOrderError": "Error saving order: {error}",
+  "@saveOrderError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "typeDishName": "Type dish name",
+  "rate": "Rate",
+  "qty": "Qty",
+  "cost": "Cost",
+  "required": "Required",
+  "required": "Required",
+  "resetCalculation": "Reset Calculation",
+  "breakfast": "Breakfast",
+  "lunch": "Lunch",
+  "dinner": "Dinner",
+  "snacksOthers": "Snacks/Others",
+  "veg": "Veg",
+  "nonVeg": "Non-Veg",
+  "failedLoadOrders": "Failed to load orders: {error}",
+  "@failedLoadOrders": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingOrders": "Error loading orders: {error}",
+  "@errorLoadingOrders": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cannotEditPastOrders": "Cannot edit past orders.",
+  "cannotDeletePastOrders": "Cannot delete past orders.",
+  "deleteOrderTitle": "Delete Order?",
+  "deleteOrderConfirm": "This will remove the order locally. (Will sync when online)",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "confirm": "Confirm",
+  "requiredField": "Required",
+  "error": "Error: {error}",
+  "@error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "orderDeleted": "Order deleted (will sync when online)",
+  "errorDeletingOrder": "Error deleting order: {error}",
+  "@errorDeletingOrder": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ordersCount": "{count} orders",
+  "@ordersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noLocation": "No location",
+  "unnamed": "Unnamed",
+  "ordersDateTitle": "Orders - {date}",
+  "@ordersDateTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dishSummary": "Dish Summary",
+  "retry": "Retry",
+  "noOrdersFound": "No orders found for this date",
+  "vegCount": "Veg: {count}",
+  "@vegCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nonVegCount": "Non-Veg: {count}",
+  "@nonVegCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "totalCount": "Total: {count}",
+  "@totalCount": {
+     "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failedLoadSummary": "Failed to load summary: {error}",
+  "@failedLoadSummary": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingSummary": "Error loading summary: {error}",
+  "@errorLoadingSummary": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryDateTitle": "Summary - {date}",
+  "@summaryDateTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noDishesFound": "No dishes found for this date",
+  "unnamedDish": "Unnamed dish",
+  "qtyWithCount": "Qty: {count}",
+  "@qtyWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kitchenView": "Kitchen View",
+  "dispatchView": "Dispatch View",
+  "punchInOut": "Punch In/Out",
+  "staffManagement": "Staff Management",
+  "adminOnly": "Admin Only",
+  "restrictedToAdmins": "⛔ Staff Management is restricted to Admins",
+  "utensils": "Utensils",
+  "kitchenOperations": "Kitchen Operations",
+  "ordersView": "Orders View",
+  "productionQueue": "Production Queue",
+  "ready": "Ready",
+  "other": "Other",
+  "internalKitchen": "Internal Kitchen",
+  "subcontract": "Subcontract",
+  "liveCounter": "Live Counter",
+  "prepIngredients": "🔥 PREP INGREDIENTS",
+  "live": "LIVE",
+  "prep": "Prep",
+  "start": "Start",
+  "prepping": "Prepping",
+  "inQueue": "In Queue",
+  "assignEdit": "Assign / Edit",
+  "productionSettings": "Production Settings",
+  "noItemsInQueue": "No items in production queue",
+  "done": "Done",
+  "noRecipeDefined": "No recipe defined for this dish",
+  "ingredientsRequired": "📋 Ingredients Required:",
+  "noReadyItems": "No ready items",
+  "returnItem": "Return",
+  "paxLabel": "Pax: {count}",
+  "@paxLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locLabel": "Loc: {location}",
+  "@locLabel": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "na": "N/A",
+  "noOrdersForDispatch": "No orders available for dispatch today",
+  "createDispatch": "Create Dispatch",
+  "dispatchDetails": "Dispatch Details",
+  "driverName": "Driver Name",
+  "vehicleNumber": "Vehicle Number",
+  "noPendingDispatches": "No pending dispatches yet!",
+  "tapToAddDispatch": "Tap the '+' button to create a new dispatch.",
+  "orderFor": "Order for: {name}",
+  "@orderFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "driverWithVehicle": "Driver: {driver} ({vehicle})",
+  "@driverWithVehicle": {
+    "placeholders": {
+      "driver": {
+        "type": "String"
+      },
+      "vehicle": {
+        "type": "String"
+      }
+    }
+  },
+  "statusPending": "Pending",
+  "statusDispatched": "Dispatched",
+  "statusDelivered": "Delivered",
+  "failedUpdateStatus": "Failed to update status: {error}",
+  "@failedUpdateStatus": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "payroll": "Payroll",
+  "staff": "Staff",
+  "today": "Today",
+  "noStaffMembers": "No staff members",
+  "tapToAddStaff": "Tap + to add staff",
+  "unknown": "Unknown",
+  "noMobile": "No mobile",
+  "permanent": "Permanent",
+  "dailyWage": "Daily Wage",
+  "contractor": "Contractor",
+  "alreadyPunchedIn": "Already punched in today!",
+  "couldNotGetLocation": "Could not get location",
+  "punchedInGeo": "✓ Punched In (Within Geo-fence)",
+  "punchedInNoGeo": "⚠️ Punched In (Outside Geo-fence)",
+  "punchedOutMsg": "Punched Out - {hours} hrs{ot}",
+  "@punchedOutMsg": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "ot": {
+        "type": "String"
+      }
+    }
+  },
+  "totalStaff": "Total Staff",
+  "present": "Present",
+  "absent": "Absent",
+  "noAttendanceToday": "No attendance records today",
+  "workingStatus": "working",
+  "otLabel": "OT",
+  "addStaff": "Add Staff",
+  "staffDetails": "Staff Details",
+  "tapToPhoto": "Tap to {action} photo",
+  "@tapToPhoto": {
+      "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "basicInfo": "Basic Information",
+  "fullName": "Full Name *",
+  "roleDesignation": "Role/Designation",
+  "staffType": "Staff Type",
+  "email": "Email",
+  "salaryRates": "Salary & Rates",
+  "monthlySalary": "Monthly Salary (₹)",
+  "payoutFrequency": "Payout Frequency",
+  "dailyWageLabel": "Daily Wage (₹)",
+  "hourlyRate": "Hourly Rate (₹)",
+  "bankIdDetails": "Bank & ID Details",
+  "bankName": "Bank Name",
+  "accountNumber": "Account Number",
+  "ifscCode": "IFSC Code",
+  "aadharNumber": "Aadhar Number",
+  "emergencyContact": "Emergency Contact",
+  "contactName": "Contact Name",
+  "contactNumber": "Contact Number",
+  "address": "Address",
+  "addStaffBtn": "ADD STAFF",
+  "saveChanges": "SAVE CHANGES",
+  "advances": "Advances",
+  "attendance": "Attendance",
+  "totalAdvances": "Total Advances",
+  "pendingDeduction": "Pending Deduction",
+  "addAdvance": "Add Advance",
+  "noAdvances": "No advances recorded",
+  "deducted": "Deducted",
+  "pending": "Pending",
+  "reason": "Reason",
+  "deleteStaff": "Delete Staff",
+  "deleteStaffConfirm": "Are you sure you want to delete this staff member? This cannot be undone.",
+  "staffDeleted": "Staff deleted",
+  "staffAdded": "Staff added!",
+  "staffUpdated": "Staff updated!",
+  "selectPhoto": "Select Photo",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "photoSelectedWeb": "Photo selected (Web Mode)",
+  "photoUpdated": "Photo updated",
+  "amountRupee": "Amount (₹)",
+  "staffPayroll": "Staff Payroll",
+  "basePay": "Base Pay",
+  "otPay": "OT Pay",
+  "netPay": "Net Pay",
+  "noStaffData": "No staff data",
+  "processPayroll": "Process Payroll",
+  "processPayrollConfirm": "Mark all pending advances as deducted for {name} for {date}?",
+  "@processPayrollConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "payrollProcessed": "Payroll processed for {name}",
+  "@payrollProcessed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "advanceDeduction": "Advance Deduction",
+  "netPayable": "Net Payable",
+  "markAdvancesDeducted": "Mark Advances Deducted",
+  "otMultiplierInfo": "OT Multiplier: {rate}x | OT = hours > 8 × hourly rate × {rate}",
+  "@otMultiplierInfo": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "utensilsTracking": "Utensils Tracking",
+  "noUtensilsAdded": "No utensils added yet",
+  "addFirstUtensil": "Add First Utensil",
+  "addUtensil": "Add Utensil",
+  "utensilName": "Utensil Name",
+  "utensilNameHint": "e.g., Plates, Spoons, Cups",
+  "totalStock": "Total Stock",
+  "enterQuantity": "Enter quantity",
+  "availableStock": "Available Stock",
+  "enterUtensilName": "Please enter utensil name",
+  "utensilAdded": "✅ Utensil added",
+  "utensilUpdated": "✅ Utensil updated",
+  "utensilDeleted": "Utensil deleted",
+  "editUtensil": "Edit: {name}",
+  "@editUtensil": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteUtensil": "Delete Utensil?",
+  "deleteUtensilConfirm": "Are you sure you want to delete \"{name}\"?",
+  "@deleteUtensilConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Save",
+  "add": "Add",
+  "availableCount": "Available: {available} / {total}",
+  "@availableCount": {
+    "placeholders": {
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "issuedCount": "Issued: {issued} ({percent}% utilized)",
+  "@issuedCount": {
+    "placeholders": {
+      "issued": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryHub": "Inventory Hub",
+  "ingredients": "Ingredients",
+  "masterList": "Master List",
+  "bom": "BOM",
+  "recipeMapping": "Recipe Mapping",
+  "mrpRun": "MRP Run",
+  "calculate": "Calculate",
+  "purchaseOrders": "Purchase Orders",
+  "purchaseOrderShort": "PO",
+  "trackOrders": "Track Orders",
+  "suppliers": "Suppliers",
+  "vendors": "Vendors",
+  "subcontractors": "Subcontractors",
+  "kitchens": "Kitchens",
+  "ingredientsMaster": "Ingredients Master",
+  "ingredientName": "Ingredient Name",
+  "skuBrandOptional": "SKU / Brand Name (Optional)",
+  "costPerUnit": "Cost per Unit (₹)",
+  "category": "Category",
+  "unit": "Unit",
+  "unitKg": "Kilogram (kg)",
+  "unitG": "Gram (g)",
+  "unitL": "Liter",
+  "unitMl": "Milliliter (ml)",
+  "unitNos": "Numbers (nos)",
+  "unitBunch": "Bunch",
+  "unitPcs": "Pieces (pcs)",
+  "enterIngredientName": "Enter ingredient name",
+  "ingredientAdded": "✅ Ingredient added",
+  "editIngredient": "Edit Ingredient",
+  "ingredientUpdated": "✅ Ingredient updated",
+  "searchPlaceholder": "Search...",
+  "ingredientsCount": "{count} ingredients",
+  "@ingredientsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesCount": "{count} categories",
+  "@categoriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "catAll": "All",
+  "catVegetable": "Vegetable",
+  "catMeat": "Meat",
+  "catSeafood": "Seafood",
+  "catSpice": "Spice",
+  "catDairy": "Dairy",
+  "catGrain": "Grain",
+  "catOil": "Oil",
+  "catBeverage": "Beverage",
+  "catOther": "Other",
+  "bomManagement": "BOM Management",
+  "bomInfo": "Define ingredients required for each dish at 100 pax standard",
+  "searchDishes": "Search dishes...",
+  "addDishesHint": "Add dishes in Menu Management first",
+  "itemsCount": "{count} items",
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quantity100Pax": "Quantity for 100 pax",
+  "selectIngredient": "Select Ingredient",
+  "selectIngredientHint": "Select ingredient and enter quantity",
+  "allIngredientsAdded": "All ingredients already added",
+  "quantityUpdated": "✅ Quantity updated",
+  "ingredientRemoved": "Ingredient removed",
+  "pax100": "100 PAX",
+  "noIngredientsAdded": "No ingredients added",
+  "mrpRunScreenTitle": "MRP Run",
+  "changeDate": "Change Date",
+  "totalOrders": "Total Orders",
+  "liveKitchen": "Live Kitchen",
+  "subcontracted": "Subcontracted",
+  "totalPax": "Total Pax",
+  "noOrdersForDate": "No orders for selected date",
+  "selectDifferentDate": "Select Different Date",
+  "runMrp": "RUN MRP",
+  "calculating": "Calculating...",
+  "noOrdersToProcess": "No orders to process",
+  "venueNotSpecified": "Venue not specified",
+  "selectSubcontractor": "Select Subcontractor",
+  "liveKitchenChip": "Live Kitchen",
+  "subcontractChip": "Subcontract",
+  "mrpOutputTitle": "MRP Output",
+  "noIngredientsCalculated": "No ingredients calculated",
+  "checkBomDefined": "Check if dishes have BOM defined",
+  "total": "total",
+  "proceedToAllotment": "PROCEED TO ALLOTMENT",
+  "allotmentTitle": "Allotment",
+  "supplierAllotment": "Supplier Allotment",
+  "summary": "Summary",
+  "assignIngredientHint": "Assign each ingredient to a supplier",
+  "assignedStatus": "{assigned}/{total} assigned",
+  "@assignedStatus": {
+    "placeholders": {
+      "assigned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "supplier": "Supplier",
+  "generateAndSendPos": "GENERATE & SEND POs",
+  "posWillBeGenerated": "{count} POs will be generated",
+  "@posWillBeGenerated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noAllocationsMade": "No allocations made yet",
+  "allocateIngredientsFirst": "Allocate ingredients to suppliers first",
+  "posGeneratedSuccess": "✅ {count} POs generated and sent",
+  "@posGeneratedSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "catGrocery": "Grocery",
+  "supplierMaster": "Supplier Master",
+  "addSupplier": "Add Supplier",
+  "editSupplier": "Edit Supplier",
+  "nameRequired": "Name *",
+  "mobile": "Mobile",
+  "email": "Email",
+  "address": "Address",
+  "gstNumber": "GST Number",
+  "bankDetails": "Bank Details",
+  "bankName": "Bank Name",
+  "accountNumber": "Account Number",
+  "ifscCode": "IFSC Code",
+  "enterSupplierName": "Enter supplier name",
+  "supplierUpdated": "✅ Supplier updated",
+  "supplierAdded": "✅ Supplier added",
+  "noSuppliersAdded": "No suppliers added",
+  "noPhone": "No phone",
+  "subcontractorMaster": "Subcontractor Master",
+  "editSubcontractor": "Edit Subcontractor",
+  "addSubcontractor": "Add Subcontractor",
+  "kitchenBusinessName": "Kitchen/Business Name *",
+  "mobileRequired": "Mobile *",
+  "specialization": "Specialization",
+  "specializationHint": "e.g., Biriyani, Chinese, Sweets",
+  "ratePerPax": "Rate per Pax (₹)",
+  "enterNameMobile": "Enter name and mobile",
+  "subcontractorUpdated": "✅ Subcontractor updated",
+  "subcontractorAdded": "✅ Subcontractor added",
+  "noSubcontractorsAdded": "No subcontractors added",
+  "perPax": "per pax",
+  "purchaseOrdersTitle": "Purchase Orders",
+  "statusSent": "SENT",
+  "statusViewed": "VIEWED",
+  "statusAccepted": "ACCEPTED",
+  "statusDispatched": "DISPATCHED",
+  "statusDelivered": "DELIVERED",
+  "purchaseOrdersCount": "{count} purchase orders",
+  "@purchaseOrdersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noPurchaseOrders": "No purchase orders",
+  "runMrpHint": "Run MRP to generate POs",
+  "dispatchTitle": "Dispatch",
+  "tabList": "List",
+  "tabActive": "Active",
+  "tabReturns": "Returns",
+  "tabUnload": "Unload",
+  "noPendingOrdersDate": "No pending orders for {date}",
+  "@noPendingOrdersDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noActiveDispatches": "No active dispatches",
+  "noReturnTracking": "No items for return tracking",
+  "noUnloadItems": "No items ready for unload",
+  "startDispatch": "Start Dispatch",
+  "waitingForKitchen": "Waiting for Kitchen",
+  "track": "Track",
+  "verify": "Verify",
+  "trackReturn": "Track Return",
+  "ready": "Ready",
+  "locationLabel": "Location",
+  "locationValues": "Location: {lat}, {lng}",
+  "@locationValues": {
+    "placeholders": {
+      "lat": { "type": "double" },
+      "lng": { "type": "double" }
+    }
+  },
+  "tapToViewItems": "Tap to view loaded items →",
+  "loadedItems": "Loaded Items",
+  "noItemsRecorded": "No items recorded",
+  "kitchenItems": "🍳 Kitchen Items",
+  "kitchenItemsSubtitle": "Prepared in kitchen - tick when loaded",
+  "subcontractItems": "🏪 Subcontract Items",
+  "subcontractItemsSubtitle": "Optional - may come directly to venue",
+  "liveCookingItems": "🔥 Live Cooking Items",
+  "liveCookingItemsSubtitle": "Load ingredients for on-site cooking",
+  "selectVehicle": "Select Vehicle",
+  "dispatchedMsg": "Dispatched!",
+  "dispatchError": "Error: {error}",
+  "@dispatchError": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "dispatchListTitle": "Dispatch List",
+  "inHouseReady": "{ready}/{total} In-House Ready",
+  "@inHouseReady": {
+    "placeholders": {
+      "ready": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "noInHouseItems": "No in-house items",
+  "statusPending": "Pending",
+  "statusInProduction": "In Production",
+  "statusReady": "Ready",
+  "dispatchCustomerTitle": "Dispatch: {customer}",
+  "@dispatchCustomerTitle": {
+    "placeholders": {
+      "customer": { "type": "String" }
+    }
+  },
+  "chooseVehicle": "Choose vehicle",
+  "completeDispatchNotify": "Complete Dispatch & Notify Customer",
+  "pleaseSelectVehicle": "Please select a vehicle",
+  "savedMsg": "Saved!",
+  "loadAllDishesFirst": "Please load all dishes first",
+  "dispatchedNotifiedMsg": "Dispatched! Customer notified.",
+  "utensilsEquipment": "Utensils & Equipment",
+  "returnTitle": "Return: {customer}",
+  "@returnTitle": {
+    "placeholders": {
+      "customer": { "type": "String" }
+    }
+  },
+  "returnVehicle": "Return Vehicle",
+  "items": "Items",
+  "noUtensilsReturn": "No Utensils to return.",
+  "returnSaved": "Return saved successfully!",
+  "saveFailed": "Save failed: {error}",
+  "@saveFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "completeReturn": "Complete Return",
+  "unloadTitle": "Unload: {customer}",
+  "@unloadTitle": {
+    "placeholders": {
+      "customer": { "type": "String" }
+    }
+  },
+  "verifyItems": "Verify Items",
+  "noUtensilsUnload": "No Utensils to Unload.",
+  "closeOrder": "Close Order",
+  "missingItems": "Missing Items",
+  "acknowledgeClose": "Acknowledge & Close",
+  "reasonMismatch": "Reason for mismatch",
+  "reason": "Reason: {reason}",
+  "@reason": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
+  "loadedQty": "Loaded: {qty}",
+  "@loadedQty": {
+    "placeholders": {
+      "qty": { "type": "int" }
+    }
+  },
+  "qtyLabel": "Qty",
+  "reportsTitle": "Reports",
+  "periodLabel": "Period: ",
+  "day": "Day",
+  "week": "Week",
+  "month": "Month",
+  "year": "Year",
+  "payroll": "Payroll",
+  "orders": "Orders",
+  "kitchen": "Kitchen",
+  "dispatch": "Dispatch",
+  "hr": "HR",
+  "noDataSelectedPeriod": "No data for selected period",
+  "totalPax": "Total Pax: {pax}",
+  "@totalPax": {
+    "placeholders": {
+      "pax": { "type": "int" }
+    }
+  },
+  "revenue": "Revenue",
+  "confirmed": "Confirmed",
+  "completed": "Completed",
+  "cancelled": "Cancelled",
+  "totalOrders": "Total Orders",
+  "inProgress": "In Progress",
+  "pending": "Pending",
+  "delivered": "Delivered",
+  "inTransit": "In Transit",
+  "totalDispatches": "Dispatches",
+  "staff": "Staff",
+  "attendance": "Attendance",
+  "hours": "Hours",
+  "overtime": "OT",
+  "otPay": "OT Pay",
+  "staffWithOt": "Staff with OT",
+  "totalOt": "Total OT",
+  "noOvertime": "No overtime recorded",
+  "financeTitle": "Finance",
+  "income": "Income",
+  "expense": "Expense",
+  "netBalance": "Net Balance",
+  "transactions": "Transactions",
+  "ledgers": "Ledgers",
+  "export": "Export",
+  "recentTransactions": "Recent Transactions",
+  "noTransactionsFound": "No transactions found",
+  "exportingReport": "Exporting Finance Report... (Mock)",
+  "filterAll": "All",
+  "deleteTransactionTitle": "Delete Transaction?",
+  "deleteTransactionContent": "This cannot be undone.",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "suppliers": "Suppliers",
+  "customers": "Customers",
+  "comingSoon": "Coming Soon",
+  "addIncome": "Add Income",
+  "addExpense": "Add Expense",
+  "amountLabel": "Amount",
+  "categoryLabel": "Category",
+  "dateLabel": "Date",
+  "paymentModeLabel": "Payment Mode",
+  "descriptionLabel": "Description / Notes",
+  "saveTransaction": "Save Transaction",
+  "enterAmount": "Enter amount",
+  "invalidAmount": "Invalid amount",
+  "transactionSaved": "Transaction Saved",
+  "collectPayment": "Collect Payment",
+  "selectPaymentMethod": "Select Payment Method",
+  "upiRazorpay": "UPI (Razorpay)",
+  "cardRazorpay": "Credit/Debit Card (Razorpay)",
+  "cash": "Cash",
+  "paymentSuccessful": "Payment Successful!",
+  "paymentReceivedMsg": "Payment of {amount} received for Order #{orderId}",
+  "@paymentReceivedMsg": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "orderId": { "type": "int" }
+    }
+  },
+  "paymentFailed": "Payment Failed: {error}",
+  "@paymentFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "chooseSubscription": "Choose Subscription Plan",
+  "selectStartPlan": "Select Your Plan",
+  "payBtn": "Pay {amount}",
+  "@payBtn": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "subscriptionActivated": "Subscription Activated!",
+  "planActiveUntil": "Your plan is now active until {date}.",
+  "@planActiveUntil": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "continueBtn": "Continue",
+  "auditReportTitle": "Audit Report",
+  "noLogsExport": "No logs to export",
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "userIdLabel": "User ID",
+  "tableLabel": "Table",
+  "noAuditLogs": "No audit logs found",
+  "changedFields": "Changed: {fields}",
+  "@changedFields": {
+    "placeholders": {
+      "fields": { "type": "String" }
+    }
+  },
+  "beforeVal": "Before: {val}",
+  "@beforeVal": {
+    "placeholders": {
+      "val": { "type": "String" }
+    }
+  },
+  "afterVal": "After: {val}",
+  "@afterVal": {
+    "placeholders": {
+      "val": { "type": "String" }
+    }
+  },
+  "addIngredient": "Add Ingredient",
+  "noIngredientsFound": "No ingredients found"
+}

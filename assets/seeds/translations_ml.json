@@ -1,0 +1,30 @@
+[
+  {
+    "entity_type": "INGREDIENT",
+    "entity_id": 1,
+    "language_code": "ml",
+    "field_name": "name",
+    "translated_text": "സവാള"
+  },
+  {
+    "entity_type": "INGREDIENT",
+    "entity_id": 2,
+    "language_code": "ml",
+    "field_name": "name",
+    "translated_text": "തക്കാളി"
+  },
+  {
+    "entity_type": "DISH",
+    "entity_id": 1,
+    "language_code": "ml",
+    "field_name": "name",
+    "translated_text": "ചിക്കൻ ബിരിയാണി"
+  },
+  {
+    "entity_type": "DISH",
+    "entity_id": 2,
+    "language_code": "ml",
+    "field_name": "name",
+    "translated_text": "നെയ്‌ചോറ്"
+  }
+]
