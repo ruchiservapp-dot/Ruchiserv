@@ -41,7 +41,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       return await openDatabase(
         path,
-        version: 21, // v21: Multi-Language Support (Translations)
+        version: 22, // v22: Multi-tenant Master Data with firmId
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -308,47 +308,59 @@ class DatabaseHelper {
       );
     ''');
 
-    // === INGREDIENTS MASTER (v19) ================================
+    // === INGREDIENTS MASTER (v22) ================================
     await db.execute('''
       CREATE TABLE IF NOT EXISTS ingredients_master (
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL DEFAULT 'SEED',
+        baseId INTEGER,
         name TEXT NOT NULL,
         sku_name TEXT,
         unit_of_measure TEXT,
         cost_per_unit REAL DEFAULT 0,
         category TEXT,
+        isModified INTEGER DEFAULT 0,
         createdAt TEXT,
         updatedAt TEXT
       );
     ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_ingredients_firmId ON ingredients_master(firmId);');
 
-    // === DISH MASTER (v19) ================================
+    // === DISH MASTER (v22) ================================
     await db.execute('''
       CREATE TABLE IF NOT EXISTS dish_master (
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL DEFAULT 'SEED',
+        baseId INTEGER,
         name TEXT NOT NULL,
         region TEXT,
         category TEXT,
         base_pax INTEGER DEFAULT 1,
         rate INTEGER DEFAULT 0,
         foodType TEXT DEFAULT 'Veg',
+        isModified INTEGER DEFAULT 0,
         createdAt TEXT,
         updatedAt TEXT
       );
     ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_dish_firmId ON dish_master(firmId);');
 
-    // === RECIPE DETAIL / BOM (v19) ================================
+    // === RECIPE DETAIL / BOM (v22) ================================
     await db.execute('''
       CREATE TABLE IF NOT EXISTS recipe_detail (
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL DEFAULT 'SEED',
+        baseId INTEGER,
         dish_id INTEGER NOT NULL,
         ing_id INTEGER NOT NULL,
         quantity_per_base_pax REAL NOT NULL,
         unit_override TEXT,
+        isModified INTEGER DEFAULT 0,
         FOREIGN KEY(dish_id) REFERENCES dish_master(id),
         FOREIGN KEY(ing_id) REFERENCES ingredients_master(id)
       );
     ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_recipe_firmId ON recipe_detail(firmId);');
 
     // === CONTENT TRANSLATIONS (v21) ================================
     await db.execute('''
@@ -1154,25 +1166,53 @@ class DatabaseHelper {
         );
       ''');
     }
+
+    // v22: Multi-Tenant Master Data (firmId partitioning)
+    if (oldVersion < 22) {
+      // Add firmId, baseId, isModified to ingredients_master
+      try { await db.execute("ALTER TABLE ingredients_master ADD COLUMN firmId TEXT DEFAULT 'SEED';"); } catch (_) {}
+      try { await db.execute("ALTER TABLE ingredients_master ADD COLUMN baseId INTEGER;"); } catch (_) {}
+      try { await db.execute("ALTER TABLE ingredients_master ADD COLUMN isModified INTEGER DEFAULT 0;"); } catch (_) {}
+      try { await db.execute('CREATE INDEX IF NOT EXISTS idx_ingredients_firmId ON ingredients_master(firmId);'); } catch (_) {}
+      
+      // Add firmId, baseId, isModified to dish_master
+      try { await db.execute("ALTER TABLE dish_master ADD COLUMN firmId TEXT DEFAULT 'SEED';"); } catch (_) {}
+      try { await db.execute("ALTER TABLE dish_master ADD COLUMN baseId INTEGER;"); } catch (_) {}
+      try { await db.execute("ALTER TABLE dish_master ADD COLUMN isModified INTEGER DEFAULT 0;"); } catch (_) {}
+      try { await db.execute('CREATE INDEX IF NOT EXISTS idx_dish_firmId ON dish_master(firmId);'); } catch (_) {}
+      
+      // Add firmId, baseId, isModified to recipe_detail
+      try { await db.execute("ALTER TABLE recipe_detail ADD COLUMN firmId TEXT DEFAULT 'SEED';"); } catch (_) {}
+      try { await db.execute("ALTER TABLE recipe_detail ADD COLUMN baseId INTEGER;"); } catch (_) {}
+      try { await db.execute("ALTER TABLE recipe_detail ADD COLUMN isModified INTEGER DEFAULT 0;"); } catch (_) {}
+      try { await db.execute('CREATE INDEX IF NOT EXISTS idx_recipe_firmId ON recipe_detail(firmId);'); } catch (_) {}
+      
+      // Copy existing seed data's id to baseId for reference
+      try { await db.execute("UPDATE ingredients_master SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
+      try { await db.execute("UPDATE dish_master SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
+      try { await db.execute("UPDATE recipe_detail SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
+    }
   }
 
   // ---------- SEED DATA LOADER ----------
   Future<void> _loadSeeds(Database db) async {
-    print('🌱 Loading Seed Data for v19...');
+    print('🌱 Loading Seed Data for v22 (multi-tenant)...');
     try {
       final batch = db.batch(); // Use batch for performance
 
-      // Load Ingredients
+      // Load Ingredients (firmId='SEED' marks base seed data)
       final ingJson = await rootBundle.loadString('assets/seeds/ingredients_seed.json');
       final List<dynamic> ingredients = json.decode(ingJson);
       for (var item in ingredients) {
         batch.insert('ingredients_master', {
-          'id': item['ing_id'],
+          'firmId': 'SEED', // Base seed data marker
+          'baseId': item['ing_id'], // Original ID for reference
           'name': item['name'],
           'sku_name': item['sku_name'],
           'unit_of_measure': item['unit_of_measure'],
           'cost_per_unit': item['cost_per_unit'],
           'category': item['category'],
+          'isModified': 0,
           'createdAt': DateTime.now().toIso8601String(),
           'updatedAt': DateTime.now().toIso8601String(),
         }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -1183,11 +1223,13 @@ class DatabaseHelper {
       final List<dynamic> dishes = json.decode(dishJson);
       for (var item in dishes) {
         batch.insert('dish_master', {
-          'id': item['dish_id'],
+          'firmId': 'SEED',
+          'baseId': item['dish_id'],
           'name': item['dish_name'],
           'region': item['region'],
           'category': item['category'],
           'base_pax': item['base_pax'] ?? 1,
+          'isModified': 0,
           'createdAt': DateTime.now().toIso8601String(),
           'updatedAt': DateTime.now().toIso8601String(),
         }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -1198,11 +1240,13 @@ class DatabaseHelper {
       final List<dynamic> bom = json.decode(bomJson);
       for (var item in bom) {
         batch.insert('recipe_detail', {
-          'id': item['rd_id'],
+          'firmId': 'SEED',
+          'baseId': item['rd_id'],
           'dish_id': item['dish_id'],
           'ing_id': item['ing_id'],
           'quantity_per_base_pax': item['quantity_per_base_pax'],
           'unit_override': item['unit_override'],
+          'isModified': 0,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
