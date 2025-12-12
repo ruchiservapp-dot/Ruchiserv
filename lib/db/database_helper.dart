@@ -221,20 +221,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_firm ON authorized_mobiles(firmId);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_mobile ON authorized_mobiles(firmId, mobile);');
 
-    // === DISH MASTER (for autocomplete suggestions) ================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS dish_master (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        rate INTEGER DEFAULT 0,
-        foodType TEXT DEFAULT 'Veg',
-        createdAt TEXT,
-        updatedAt TEXT,
-        UNIQUE(name, category)
-      );
-    ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_dish_master_category ON dish_master(category);');
+    // NOTE: dish_master is now defined later with v19 schema (includes region, base_pax)
 
     // === VEHICLES (for Dispatch module) ================================
     await db.execute('''
@@ -320,6 +307,65 @@ class DatabaseHelper {
         updatedAt TEXT
       );
     ''');
+
+    // === INGREDIENTS MASTER (v19) ================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ingredients_master (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        sku_name TEXT,
+        unit_of_measure TEXT,
+        cost_per_unit REAL DEFAULT 0,
+        category TEXT,
+        createdAt TEXT,
+        updatedAt TEXT
+      );
+    ''');
+
+    // === DISH MASTER (v19) ================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS dish_master (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        region TEXT,
+        category TEXT,
+        base_pax INTEGER DEFAULT 1,
+        rate INTEGER DEFAULT 0,
+        foodType TEXT DEFAULT 'Veg',
+        createdAt TEXT,
+        updatedAt TEXT
+      );
+    ''');
+
+    // === RECIPE DETAIL / BOM (v19) ================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS recipe_detail (
+        id INTEGER PRIMARY KEY,
+        dish_id INTEGER NOT NULL,
+        ing_id INTEGER NOT NULL,
+        quantity_per_base_pax REAL NOT NULL,
+        unit_override TEXT,
+        FOREIGN KEY(dish_id) REFERENCES dish_master(id),
+        FOREIGN KEY(ing_id) REFERENCES ingredients_master(id)
+      );
+    ''');
+
+    // === CONTENT TRANSLATIONS (v21) ================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS content_translations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_type TEXT NOT NULL,
+        entity_id INTEGER NOT NULL,
+        language_code TEXT NOT NULL,
+        field_name TEXT DEFAULT 'name',
+        translated_text TEXT NOT NULL,
+        created_at TEXT,
+        UNIQUE(entity_type, entity_id, language_code, field_name)
+      );
+    ''');
+    
+    // Load seed data (ingredients, dishes, BOM)
+    await _loadSeeds(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
