@@ -701,7 +701,7 @@ class AppLocalizationsTe extends AppLocalizations {
   String get staff => 'స్టాఫ్';
 
   @override
-  String get today => 'Today';
+  String get today => 'ఈ రోజు';
 
   @override
   String get noStaffMembers => 'స్టాఫ్ లేరు';

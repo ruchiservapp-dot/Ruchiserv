@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'finance_reports_screen.dart';
+import 'utensil_report_screen.dart';
 // import 'sales_reports_screen.dart';
 // import 'kitchen_reports_screen.dart';
 // import 'hr_reports_screen.dart';
@@ -50,13 +51,10 @@ class ReportsHubScreen extends StatelessWidget {
                 ),
                 _buildReportTile(
                   context,
-                  "Operations",
-                  Icons.settings,
-                  Colors.orange,
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Coming Soon...')));
-                    // Navigator.push(context, MaterialPageRoute(builder: (_) => const KitchenReportsScreen()));
-                  },
+                  "Utensils",
+                  Icons.restaurant,
+                  Colors.teal,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UtensilReportScreen())),
                 ),
                 _buildReportTile(
                   context,

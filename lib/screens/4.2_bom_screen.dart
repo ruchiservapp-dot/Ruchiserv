@@ -229,62 +229,169 @@ class _BomEditScreenState extends State<BomEditScreen> {
     
     int? selectedId;
     final qtyController = TextEditingController();
+    final searchController = TextEditingController();
+    String searchQuery = '';
     
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.addIngredient),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<int>(
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.selectIngredient,
-                  border: const OutlineInputBorder(),
-                ),
-                items: available.map((i) => DropdownMenuItem<int>(
-                  value: i['id'],
-                  child: Text('${i['name']} (${i['unit_of_measure'] ?? 'kg'})'),
-                )).toList(),
-                onChanged: (v) => setDialogState(() => selectedId = v),
+        builder: (context, setDialogState) {
+          // Filter available ingredients based on search query
+          final filteredIngredients = searchQuery.isEmpty
+              ? available
+              : available.where((i) => 
+                  (i['name'] ?? '').toLowerCase().contains(searchQuery.toLowerCase()) ||
+                  (i['category'] ?? '').toLowerCase().contains(searchQuery.toLowerCase())
+                ).toList();
+          
+          // Find selected ingredient for display
+          final selectedIng = selectedId != null 
+              ? available.firstWhere((i) => i['id'] == selectedId, orElse: () => <String, dynamic>{})
+              : null;
+          
+          return AlertDialog(
+            title: Text(AppLocalizations.of(context)!.addIngredient),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 400,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Search field
+                  TextField(
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.searchPlaceholder,
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    onChanged: (value) => setDialogState(() => searchQuery = value),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Selected ingredient chip (if any)
+                  if (selectedIng != null && selectedIng.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${selectedIng['name']} (${selectedIng['unit_of_measure'] ?? 'kg'})',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade800),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () => setDialogState(() => selectedId = null),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
+                  // Ingredients list
+                  Expanded(
+                    child: filteredIngredients.isEmpty
+                        ? Center(
+                            child: Text(
+                              AppLocalizations.of(context)!.noResultsFound,
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: filteredIngredients.length,
+                            itemBuilder: (context, index) {
+                              final ing = filteredIngredients[index];
+                              final isSelected = selectedId == ing['id'];
+                              return ListTile(
+                                dense: true,
+                                leading: CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: isSelected ? Colors.green : Colors.grey.shade200,
+                                  child: Icon(
+                                    isSelected ? Icons.check : Icons.eco,
+                                    size: 16,
+                                    color: isSelected ? Colors.white : Colors.grey.shade600,
+                                  ),
+                                ),
+                                title: Text(
+                                  ing['name'] ?? '',
+                                  style: TextStyle(
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected ? Colors.green.shade800 : null,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${ing['category'] ?? 'Other'} • ${ing['unit_of_measure'] ?? 'kg'}',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                ),
+                                selected: isSelected,
+                                selectedTileColor: Colors.green.shade50,
+                                onTap: () => setDialogState(() => selectedId = ing['id']),
+                              );
+                            },
+                          ),
+                  ),
+                  
+                  const Divider(),
+                  
+                  // Quantity input
+                  TextField(
+                    controller: qtyController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.quantity100Pax,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.scale),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: qtyController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.quantity100Pax,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false), 
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                onPressed: () async {
+                  if (selectedId == null || qtyController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(AppLocalizations.of(context)!.selectIngredientHint), backgroundColor: Colors.red),
+                    );
+                    return;
+                  }
+                  
+                  final ing = available.firstWhere((i) => i['id'] == selectedId);
+                  await DatabaseHelper().insertBomItem({
+                    'firmId': widget.firmId,
+                    'dishId': widget.dishId,
+                    'ingredientId': selectedId,
+                    'quantityPer100Pax': double.parse(qtyController.text),
+                    'unit': ing['unit_of_measure'],
+                  });
+                  Navigator.pop(context, true);
+                },
+                label: Text(AppLocalizations.of(context)!.add),
               ),
             ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
-            ElevatedButton(
-              onPressed: () async {
-                if (selectedId == null || qtyController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.selectIngredientHint), backgroundColor: Colors.red),
-                  );
-                  return;
-                }
-                
-                final ing = available.firstWhere((i) => i['id'] == selectedId);
-                await DatabaseHelper().insertBomItem({
-                  'firmId': widget.firmId,
-                  'dishId': widget.dishId,
-                  'ingredientId': selectedId,
-                  'quantityPer100Pax': double.parse(qtyController.text),
-                  'unit': ing['unit_of_measure'],
-                });
-                Navigator.pop(context, true);
-              },
-              child: Text(AppLocalizations.of(context)!.add),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
     

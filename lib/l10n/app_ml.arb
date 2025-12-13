@@ -413,6 +413,7 @@
   "editIngredient": "ചേരുവ എഡിറ്റ് ചെയ്യുക",
   "ingredientUpdated": "✅ ചേരുവ പുതുക്കി",
   "searchPlaceholder": "തിരയുക...",
+  "noResultsFound": "ഫലങ്ങൾ ഇല്ല",
   "ingredientsCount": "{count} ചേരുവകൾ",
   "categoriesCount": "{count} വിഭാഗങ്ങൾ",
   "catAll": "എല്ലാം",
@@ -609,5 +610,6 @@
   },
   "cash": "Cash",
   "addIngredient": "Add Ingredient",
-  "noIngredientsFound": "No ingredients found"
+  "noIngredientsFound": "No ingredients found",
+  "today": "ഇന്ന്"
 }

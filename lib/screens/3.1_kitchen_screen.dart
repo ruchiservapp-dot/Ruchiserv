@@ -30,6 +30,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
 
   final List<DateTime> _dateList = [];
   Timer? _refreshTimer; // Auto-refresh for TV displays
+  final ScrollController _dateScrollController = ScrollController(); // Date scroller controller
 
   @override
   void initState() {
@@ -39,30 +40,56 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
     _loadData();
     // Auto-refresh every 30 seconds for TV/shared displays
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadData());
+    
+    // Scroll to today's position after build (today is at index 7)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_dateScrollController.hasClients) {
+        _dateScrollController.animateTo(
+          7 * 72.0, // 60 width + 12 separator = 72 per item, scroll to index 7 (today)
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
     _tabController.dispose();
+    _dateScrollController.dispose();
     super.dispose();
   }
   
   void _generateDateList() {
     final today = DateTime.now();
-    for (int i = 0; i < 30; i++) {
+    // Include 7 past days + today + 22 future days = 30 days total
+    for (int i = -7; i < 23; i++) {
       _dateList.add(today.add(Duration(days: i)));
     }
   }
 
   Future<void> _loadData() async {
+    print('🔄 KitchenScreen: Setting isLoading = true');
     setState(() => _isLoading = true);
-    await Future.wait([
-      _loadOrdersForDate(),
-      _loadProductionQueue(),
-      _loadReadyQueue(),
-    ]);
-    if (mounted) setState(() => _isLoading = false);
+    try {
+      print('🔄 KitchenScreen: Starting data load...');
+      await Future.wait([
+        _loadOrdersForDate(),
+        _loadProductionQueue(),
+        _loadReadyQueue(),
+      ]);
+      print('✅ KitchenScreen: Data load complete. Orders: ${_orders.length}, ProductionQueue: ${_productionQueue.length}, ReadyQueue: ${_readyQueue.length}');
+    } catch (e, stack) {
+      print('❌ KitchenScreen: Data load failed: $e');
+      print(stack);
+    }
+    if (mounted) {
+      print('✅ KitchenScreen: Setting isLoading = false');
+      setState(() => _isLoading = false);
+    } else {
+      print('⚠️ KitchenScreen: Not mounted, skipping setState');
+    }
   }
 
   Future<void> _loadOrdersForDate() async {
@@ -87,6 +114,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
       FROM dishes d 
       JOIN orders o ON d.orderId = o.id 
       WHERE d.productionStatus IN ('QUEUED', 'PENDING')
+      AND d.productionType != 'SUBCONTRACT'
       ORDER BY o.date ASC, o.time ASC
     ''');
     _productionQueue = res;
@@ -213,6 +241,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
       height: 80,
       color: Colors.white,
       child: ListView.separated(
+        controller: _dateScrollController, // Wire the scroll controller
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: _dateList.length,

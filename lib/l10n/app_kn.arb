@@ -413,6 +413,7 @@
   "editIngredient": "సవరించు",
   "ingredientUpdated": "✅ నవీకరించబడింది",
   "searchPlaceholder": "వెతకండి...",
+  "noResultsFound": "ఫలితాలు లేవు",
   "ingredientsCount": "{count} పదార్థాలు",
   "categoriesCount": "{count} వర్గాలు",
   "catAll": "అన్నీ",
@@ -609,5 +610,6 @@
   },
   "cash": "Cash",
   "addIngredient": "Add Ingredient",
-  "noIngredientsFound": "No ingredients found"
+  "noIngredientsFound": "No ingredients found",
+  "today": "ಇಂದು"
 }

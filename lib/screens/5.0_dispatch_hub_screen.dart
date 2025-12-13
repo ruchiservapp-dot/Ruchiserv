@@ -13,6 +13,8 @@ import '../services/notification_service.dart';
 import '../services/location_service.dart';
 import '../services/feature_gate_service.dart';
 import '../widgets/access_widgets.dart';
+import '5.4_return_tracking_screen.dart';
+import '5.5_unload_verify_screen.dart';
 
 class DispatchScreen extends StatefulWidget {
   const DispatchScreen({super.key});
@@ -484,14 +486,14 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   void _trackReturn(Map<String, dynamic> dispatch) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => _ReturnTrackingSheet(dispatch: dispatch)),
+      MaterialPageRoute(builder: (_) => ReturnTrackingScreen(dispatch: dispatch)),
     ).then((_) => _loadAllData());
   }
 
   void _verifyUnload(Map<String, dynamic> dispatch) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => _UnloadVerifySheet(dispatch: dispatch)),
+      MaterialPageRoute(builder: (_) => UnloadVerifyScreen(dispatch: dispatch)),
     ).then((_) => _loadAllData());
   }
 }
@@ -638,6 +640,13 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
             'loadedQty': qtyInt,
             'status': 'LOADED',
           });
+          
+          // Reduce utensil stock when dispatched
+          await db.rawUpdate('''
+            UPDATE utensils 
+            SET availableStock = MAX(0, availableStock - ?) 
+            WHERE name = ?
+          ''', [qtyInt, name]);
         }
       }
 
@@ -918,343 +927,8 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
   }
 }
 
-// ======== RETURN TRACKING SHEET ========
-class _ReturnTrackingSheet extends StatefulWidget {
-  final Map<String, dynamic> dispatch;
-  const _ReturnTrackingSheet({required this.dispatch});
 
-  @override
-  State<_ReturnTrackingSheet> createState() => _ReturnTrackingSheetState();
-}
+// NOTE: _ReturnTrackingSheet and _UnloadVerifySheet have been moved to separate files:
+// - 5.4_return_tracking_screen.dart (ReturnTrackingScreen)
+// - 5.5_unload_verify_screen.dart (UnloadVerifyScreen)
 
-class _ReturnTrackingSheetState extends State<_ReturnTrackingSheet> {
-  List<Map<String, dynamic>> _items = [];
-  List<Map<String, dynamic>> _vehicles = [];
-  int? _returnVehicleId;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final db = await DatabaseHelper().database;
-    // Only load UTENSIL items - dishes and consumables are consumed, not returned
-    final items = await db.query('dispatch_items', 
-      where: 'dispatchId = ? AND itemType = ?', 
-      whereArgs: [widget.dispatch['id'], 'UTENSIL']);
-    final vehicles = await db.query('vehicles', where: 'isActive = 1');
-    
-    setState(() {
-      _items = items.map((i) => {...i, 'returnedQty': i['loadedQty'] ?? 0}).toList();
-      _vehicles = vehicles;
-      _returnVehicleId = widget.dispatch['vehicleId'] as int?;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _completeReturn() async {
-    try {
-      final db = await DatabaseHelper().database;
-      final now = DateTime.now().toIso8601String();
-
-      // Update dispatch items with returned quantities
-      for (final item in _items) {
-        await db.update('dispatch_items', 
-          {'returnedQty': item['returnedQty'], 'status': 'RETURNED'},
-          where: 'id = ?', whereArgs: [item['id']]);
-      }
-
-      // Update dispatch status
-      await db.update('dispatches', {
-        'dispatchStatus': 'RETURNING',
-        'returnVehicleId': _returnVehicleId,
-        'returnTime': now,
-        'updatedAt': now,
-      }, where: 'id = ?', whereArgs: [widget.dispatch['id']]);
-
-      // Update order status
-      await db.update('orders', {'dispatchStatus': 'RETURNING', 'returnedAt': now}, 
-        where: 'id = ?', whereArgs: [widget.dispatch['orderId']]);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Return tracked!'), backgroundColor: Colors.green));
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Return: ${(widget.dispatch['customerName'] as String?) ?? 'Order'}'),
-        backgroundColor: Colors.orange,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Text('Order: ${widget.dispatch['date']} | ${widget.dispatch['time']}', style: TextStyle(color: Colors.grey.shade600)),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: _returnVehicleId,
-                  decoration: const InputDecoration(labelText: 'Return Vehicle', border: OutlineInputBorder()),
-                  items: _vehicles.map((v) => DropdownMenuItem<int>(
-                    value: v['id'] as int,
-                    child: Text('${v['vehicleNo']} - ${v['driverName'] ?? 'N/A'}'),
-                  )).toList(),
-                  onChanged: (v) => setState(() => _returnVehicleId = v),
-                ),
-                const SizedBox(height: 16),
-                const Text('Enter Returned Quantities', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                ..._items.asMap().entries.map((e) {
-                  final i = e.key;
-                  final item = e.value;
-                  final loaded = item['loadedQty'] ?? 0;
-                  final returned = item['returnedQty'] ?? 0;
-                  final variance = loaded - returned;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    color: variance > 0 ? Colors.red.shade50 : null,
-                    child: ListTile(
-                      title: Text(item['itemName'].toString()),
-                      subtitle: Text('Loaded: $loaded${variance > 0 ? ' | Missing: $variance' : ''}'),
-                      trailing: SizedBox(
-                        width: 70,
-                        child: TextField(
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Returned', isDense: true, border: OutlineInputBorder()),
-                          controller: TextEditingController(text: '$returned'),
-                          onChanged: (v) => setState(() => _items[i]['returnedQty'] = int.tryParse(v) ?? 0),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _completeReturn,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size.fromHeight(48)),
-                  child: const Text('Complete Return'),
-                ),
-              ],
-            ),
-    );
-  }
-}
-
-// ======== UNLOAD VERIFY SHEET ========
-class _UnloadVerifySheet extends StatefulWidget {
-  final Map<String, dynamic> dispatch;
-  const _UnloadVerifySheet({required this.dispatch});
-
-  @override
-  State<_UnloadVerifySheet> createState() => _UnloadVerifySheetState();
-}
-
-class _UnloadVerifySheetState extends State<_UnloadVerifySheet> {
-  List<Map<String, dynamic>> _items = [];
-  bool _isLoading = true;
-  int _totalVariance = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final db = await DatabaseHelper().database;
-    // Only load UTENSIL items for unload verification
-    final items = await db.query('dispatch_items', 
-      where: 'dispatchId = ? AND itemType = ?', 
-      whereArgs: [widget.dispatch['id'], 'UTENSIL']);
-    
-    // Calculate variance
-    int totalVar = 0;
-    final itemsWithVariance = items.map((i) {
-      final loaded = (i['loadedQty'] as int?) ?? 0;
-      final returned = (i['returnedQty'] as int?) ?? 0;
-      final unloaded = returned; // Pre-fill with returned qty
-      final variance = loaded - returned;
-      totalVar += variance;
-      return {...i, 'unloadedQty': unloaded, 'variance': variance};
-    }).toList();
-    
-    setState(() {
-      _items = itemsWithVariance;
-      _totalVariance = totalVar;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _completeUnload() async {
-    try {
-      final db = await DatabaseHelper().database;
-      final now = DateTime.now().toIso8601String();
-
-      // Update dispatch items with unloaded quantities
-      for (final item in _items) {
-        await db.update('dispatch_items', 
-          {'unloadedQty': item['unloadedQty'], 'status': 'UNLOADED'},
-          where: 'id = ?', whereArgs: [item['id']]);
-      }
-
-      // Update dispatch status to COMPLETED
-      await db.update('dispatches', {
-        'dispatchStatus': 'COMPLETED',
-        'updatedAt': now,
-      }, where: 'id = ?', whereArgs: [widget.dispatch['id']]);
-
-      // Update order status
-      await db.update('orders', {'dispatchStatus': 'COMPLETED'}, 
-        where: 'id = ?', whereArgs: [widget.dispatch['orderId']]);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_totalVariance > 0 
-              ? 'Completed with ${_totalVariance} items missing' 
-              : 'Dispatch completed successfully!'),
-            backgroundColor: _totalVariance > 0 ? Colors.orange : Colors.green,
-          ),
-        );
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Verify: ${(widget.dispatch['customerName'] as String?) ?? 'Order'}'),
-        backgroundColor: Colors.purple,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _items.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.check_circle, size: 80, color: Colors.green),
-                      const SizedBox(height: 16),
-                      const Text('No utensils to verify', style: TextStyle(fontSize: 18)),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _completeUnload,
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                        child: const Text('Complete & Close'),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Text('Order: ${widget.dispatch['date']} | ${widget.dispatch['time'] ?? ''}', style: TextStyle(color: Colors.grey.shade600)),
-                    const SizedBox(height: 16),
-                    
-                    // Summary Card
-                    Card(
-                      color: _totalVariance > 0 ? Colors.red.shade50 : Colors.green.shade50,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Column(
-                              children: [
-                                const Text('Total Items', style: TextStyle(fontSize: 12)),
-                                Text('${_items.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                const Text('Missing', style: TextStyle(fontSize: 12)),
-                                Text('$_totalVariance', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _totalVariance > 0 ? Colors.red : Colors.green)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    const Text('Utensil Verification', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 8),
-                    
-                    ..._items.asMap().entries.map((e) {
-                      final i = e.key;
-                      final item = e.value;
-                      final loaded = item['loadedQty'] ?? 0;
-                      final returned = item['returnedQty'] ?? 0;
-                      final unloaded = item['unloadedQty'] ?? 0;
-                      final variance = loaded - unloaded;
-                      
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        color: variance > 0 ? Colors.red.shade50 : Colors.green.shade50,
-                        child: ListTile(
-                          leading: Icon(
-                            variance > 0 ? Icons.warning : Icons.check_circle,
-                            color: variance > 0 ? Colors.red : Colors.green,
-                          ),
-                          title: Text(item['itemName'].toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Sent: $loaded | Returned: $returned'),
-                              if (variance > 0)
-                                Text('Missing: $variance', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                          trailing: SizedBox(
-                            width: 70,
-                            child: TextField(
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Verify', isDense: true, border: OutlineInputBorder()),
-                              controller: TextEditingController(text: '$unloaded'),
-                              onChanged: (v) {
-                                final newQty = int.tryParse(v) ?? 0;
-                                setState(() {
-                                  _items[i]['unloadedQty'] = newQty;
-                                  // Recalculate total variance
-                                  _totalVariance = _items.fold<int>(0, (sum, item) => 
-                                    sum + ((item['loadedQty'] as int? ?? 0) - (item['unloadedQty'] as int? ?? 0)));
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                    
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _completeUnload,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _totalVariance > 0 ? Colors.orange : Colors.green, 
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                      child: Text(_totalVariance > 0 ? 'Complete with Missing Items' : 'Complete & Close'),
-                    ),
-                  ],
-                ),
-    );
-  }
-}

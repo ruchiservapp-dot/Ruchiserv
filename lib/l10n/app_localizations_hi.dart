@@ -701,7 +701,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get staff => 'स्टाफ';
 
   @override
-  String get today => 'Today';
+  String get today => 'आज';
 
   @override
   String get noStaffMembers => 'कोई स्टाफ नहीं';

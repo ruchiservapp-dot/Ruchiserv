@@ -218,17 +218,14 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                 }
                 
                 try {
-                  final db = await DatabaseHelper().database;
-                  await db.update(
-                    'utensils',
+                  await DatabaseHelper().updateUtensil(
                     {
+                      'id': utensil['id'],
                       'name': name,
                       'totalStock': int.tryParse(totalStockController.text) ?? 0,
                       'availableStock': int.tryParse(availableController.text) ?? 0,
                       'updatedAt': DateTime.now().toIso8601String(),
-                    },
-                    where: 'id = ?',
-                    whereArgs: [utensil['id']],
+                    }
                   );
                   
                   if (dialogContext.mounted) {
@@ -264,8 +261,7 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
 
   Future<void> _deleteUtensil(int id) async {
     try {
-      final db = await DatabaseHelper().database;
-      await db.delete('utensils', where: 'id = ?', whereArgs: [id]);
+      await DatabaseHelper().deleteUtensil(id);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

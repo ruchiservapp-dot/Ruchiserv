@@ -630,6 +630,7 @@
   "editIngredient": "Edit Ingredient",
   "ingredientUpdated": "✅ Ingredient updated",
   "searchPlaceholder": "Search...",
+  "noResultsFound": "No results found",
   "ingredientsCount": "{count} ingredients",
   "@ingredientsCount": {
     "placeholders": {

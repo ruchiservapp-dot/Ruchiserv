@@ -413,6 +413,7 @@
   "editIngredient": "திருத்து",
   "ingredientUpdated": "✅ புதுப்பிக்கப்பட்டது",
   "searchPlaceholder": "தேடு...",
+  "noResultsFound": "முடிவுகள் இல்லை",
   "ingredientsCount": "{count} பொருட்கள்",
   "categoriesCount": "{count} வகைகள்",
   "catAll": "எல்லாம்",
@@ -609,5 +610,6 @@
   },
   "cash": "Cash",
   "addIngredient": "Add Ingredient",
-  "noIngredientsFound": "No ingredients found"
+  "noIngredientsFound": "No ingredients found",
+  "today": "இன்று"
 }

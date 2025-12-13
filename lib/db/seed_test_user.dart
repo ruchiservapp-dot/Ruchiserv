@@ -97,6 +97,34 @@ Future<void> seedTestUser() async {
     print('⚠️  Mobile may already be authorized');
   }
   
+  // 4. Create test staff member for attendance/punching
+  try {
+    await database.insert('staff', {
+      'firmId': 'RCHSRV',
+      'name': 'Admin Staff',
+      'mobile': '9999999999',
+      'email': 'admin@ruchiserv.com',
+      'role': 'Manager',
+      'salary': 50000,
+      'staffType': 'PERMANENT',
+      'isActive': 1,
+      'joinDate': DateTime.now().toIso8601String().split('T')[0],
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+    print('✅ Staff member created for punching module');
+  } catch (e) {
+    // Try update if exists
+    try {
+      await database.update('staff', {
+        'isActive': 1,
+        'updatedAt': DateTime.now().toIso8601String(),
+      }, where: 'mobile = ? AND firmId = ?', whereArgs: ['9999999999', 'RCHSRV']);
+      print('✅ Staff member updated');
+    } catch (_) {
+      print('⚠️  Staff creation may have failed: $e');
+    }
+  }
+  
   print('\n🎉 TEST ACCOUNT READY WITH UNIVERSAL ACCESS!');
   print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   print('📱 Firm ID:   RCHSRV');

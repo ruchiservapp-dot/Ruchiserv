@@ -33,7 +33,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       return await openDatabase(
         fileName,
-        version: 19,
+        version: 28, // v28: Add all missing tables defensively
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -43,7 +43,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       return await openDatabase(
         path,
-        version: 23, // v23: Added showUniversalData to firms
+        version: 28, // v28: Add all missing tables defensively
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -81,6 +81,8 @@ class DatabaseHelper {
         serviceCost REAL DEFAULT 0,
         counterSetupCost REAL DEFAULT 0,
         grandTotal REAL DEFAULT 0,
+        dispatchStatus TEXT,
+        dispatchedAt TEXT,
         createdAt TEXT,
         updatedAt TEXT
       );
@@ -116,6 +118,7 @@ class DatabaseHelper {
         productionStatus TEXT DEFAULT 'PENDING', -- PENDING, QUEUED, COMPLETED
         productionType TEXT DEFAULT 'INTERNAL', -- INTERNAL, SUBCONTRACT, LIVE
         subcontractorId TEXT,
+        readyAt TEXT,
         createdAt TEXT,
         FOREIGN KEY(orderId) REFERENCES orders(id) ON DELETE CASCADE
       );
@@ -195,6 +198,20 @@ class DatabaseHelper {
         timestamp TEXT
       );
     ''');
+    
+    // === AUDIT LOG (v26) ===========================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        table_name TEXT,
+        record_id INTEGER,
+        action TEXT,
+        user_id TEXT,
+        firm_id TEXT,
+        notes TEXT,
+        timestamp TEXT
+      );
+    ''');
 
     // === PENDING SYNC (offline queue) ==============================
     await db.execute('''
@@ -238,6 +255,7 @@ class DatabaseHelper {
         driverMobile TEXT,
         capacity INTEGER DEFAULT 0,
         isActive INTEGER DEFAULT 1,
+        isModified INTEGER DEFAULT 0,
         createdAt TEXT,
         updatedAt TEXT
       );
@@ -288,11 +306,97 @@ class DatabaseHelper {
         firmId TEXT NOT NULL,
         name TEXT NOT NULL,
         category TEXT DEFAULT 'SERVING', -- SERVING, COOKING, CUTLERY, CONSUMABLE
+        totalStock INTEGER DEFAULT 0,
+        availableStock INTEGER DEFAULT 0,
         isReturnable INTEGER DEFAULT 1,
+        isModified INTEGER DEFAULT 0,
         createdAt TEXT,
+        updatedAt TEXT,
         UNIQUE(firmId, name)
       );
     ''');
+
+    // === STAFF MANAGEMENT ================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staff (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        role TEXT,
+        mobile TEXT,
+        email TEXT,
+        salary REAL DEFAULT 0,
+        joinDate TEXT,
+        isActive INTEGER DEFAULT 1,
+        staffType TEXT DEFAULT 'PERMANENT',
+        dailyWageRate REAL DEFAULT 0,
+        hourlyRate REAL DEFAULT 0,
+        payoutFrequency TEXT DEFAULT 'MONTHLY',
+        bankAccountNo TEXT,
+        bankIfsc TEXT,
+        bankName TEXT,
+        aadharNumber TEXT,
+        emergencyContact TEXT,
+        emergencyContactName TEXT,
+        address TEXT,
+        photoUrl TEXT,
+        createdAt TEXT,
+        updatedAt TEXT
+      );
+    ''');
+
+    // === ATTENDANCE ======================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS attendance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        punchInTime TEXT,
+        punchOutTime TEXT,
+        punchInLat REAL,
+        punchInLng REAL,
+        punchOutLat REAL,
+        punchOutLng REAL,
+        isWithinGeoFence INTEGER DEFAULT 0,
+        hoursWorked REAL DEFAULT 0,
+        overtime REAL DEFAULT 0,
+        location TEXT,
+        status TEXT DEFAULT 'Present',
+        notes TEXT,
+        createdAt TEXT,
+        FOREIGN KEY(staffId) REFERENCES staff(id)
+      );
+    ''');
+
+    // === STAFF ASSIGNMENTS ===============================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staff_assignments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        orderId INTEGER NOT NULL,
+        staffId INTEGER NOT NULL,
+        role TEXT,
+        assignedAt TEXT,
+        status TEXT DEFAULT 'ASSIGNED',
+        FOREIGN KEY(orderId) REFERENCES orders(id),
+        FOREIGN KEY(staffId) REFERENCES staff(id)
+      );
+    ''');
+
+    // === STAFF ADVANCES ==================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staff_advances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        amount REAL DEFAULT 0,
+        reason TEXT,
+        date TEXT,
+        deductedFromPayroll INTEGER DEFAULT 0,
+        payrollDate TEXT,
+        createdAt TEXT,
+        FOREIGN KEY(staffId) REFERENCES staff(id)
+      );
+    ''');
+
     // === TRANSACTIONS (Finance Module) =================================
     await db.execute('''
       CREATE TABLE IF NOT EXISTS transactions (
@@ -1202,6 +1306,249 @@ class DatabaseHelper {
         await db.execute("ALTER TABLE firms ADD COLUMN showUniversalData INTEGER DEFAULT 1;");
       } catch (_) {}
     }
+
+    // Upgrade to v24: Add readyAt to dishes (for Ready Queue sorting)
+    if (oldVersion < 24) {
+      try {
+        await db.execute("ALTER TABLE dishes ADD COLUMN readyAt TEXT;");
+      } catch (_) {}
+    }
+
+    // Upgrade to v25: Add dispatch status fields to orders
+    if (oldVersion < 25) {
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN dispatchStatus TEXT;");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN dispatchedAt TEXT;");
+      } catch (_) {}
+    }
+
+    // Upgrade to v26: Fix Dispatch Schema (audit_log, returnedAt, isModified)
+    if (oldVersion < 26) {
+      // 1. Create audit_log table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS audit_log (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          table_name TEXT,
+          record_id INTEGER,
+          action TEXT,
+          user_id TEXT,
+          firm_id TEXT,
+          notes TEXT,
+          timestamp TEXT
+        );
+      ''');
+
+      // 2. Add returnedAt to orders
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN returnedAt TEXT;");
+      } catch (_) {}
+
+      // 3. Add isModified to vehicles
+      try {
+        await db.execute("ALTER TABLE vehicles ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {}
+
+      // 4. Add isModified to utensils
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {}
+    }
+
+    // === DEFENSIVE: Always ensure critical tables exist (for any DB version) ===
+    // This fixes issues where tables were added in migrations but not in _onCreate
+    
+    // Staff table (missed in some DBs)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staff (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        role TEXT,
+        mobile TEXT,
+        email TEXT,
+        salary REAL DEFAULT 0,
+        joinDate TEXT,
+        isActive INTEGER DEFAULT 1,
+        staffType TEXT DEFAULT 'PERMANENT',
+        dailyWageRate REAL DEFAULT 0,
+        hourlyRate REAL DEFAULT 0,
+        payoutFrequency TEXT DEFAULT 'MONTHLY',
+        bankAccountNo TEXT,
+        bankIfsc TEXT,
+        bankName TEXT,
+        aadharNumber TEXT,
+        emergencyContact TEXT,
+        emergencyContactName TEXT,
+        address TEXT,
+        photoUrl TEXT,
+        createdAt TEXT,
+        updatedAt TEXT
+      );
+    ''');
+
+    // Attendance table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS attendance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        punchInTime TEXT,
+        punchOutTime TEXT,
+        punchInLat REAL,
+        punchInLng REAL,
+        punchOutLat REAL,
+        punchOutLng REAL,
+        isWithinGeoFence INTEGER DEFAULT 0,
+        hoursWorked REAL DEFAULT 0,
+        overtime REAL DEFAULT 0,
+        location TEXT,
+        status TEXT DEFAULT 'Present',
+        notes TEXT,
+        createdAt TEXT,
+        FOREIGN KEY(staffId) REFERENCES staff(id)
+      );
+    ''');
+
+    // Staff assignments table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staff_assignments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        orderId INTEGER NOT NULL,
+        staffId INTEGER NOT NULL,
+        role TEXT,
+        assignedAt TEXT,
+        status TEXT DEFAULT 'ASSIGNED',
+        FOREIGN KEY(orderId) REFERENCES orders(id),
+        FOREIGN KEY(staffId) REFERENCES staff(id)
+      );
+    ''');
+
+    // Staff advances table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS staff_advances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staffId INTEGER NOT NULL,
+        amount REAL DEFAULT 0,
+        reason TEXT,
+        date TEXT,
+        deductedFromPayroll INTEGER DEFAULT 0,
+        payrollDate TEXT,
+        createdAt TEXT,
+        FOREIGN KEY(staffId) REFERENCES staff(id)
+      );
+    ''');
+
+    // Add missing utensils columns
+    try { await db.execute("ALTER TABLE utensils ADD COLUMN totalStock INTEGER DEFAULT 0;"); } catch (_) {}
+    try { await db.execute("ALTER TABLE utensils ADD COLUMN availableStock INTEGER DEFAULT 0;"); } catch (_) {}
+    try { await db.execute("ALTER TABLE utensils ADD COLUMN updatedAt TEXT;"); } catch (_) {}
+
+    // Suppliers table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS suppliers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        contactPerson TEXT,
+        mobile TEXT,
+        email TEXT,
+        address TEXT,
+        gstNumber TEXT,
+        category TEXT DEFAULT 'GENERAL',
+        isActive INTEGER DEFAULT 1,
+        createdAt TEXT,
+        updatedAt TEXT
+      );
+    ''');
+
+    // Subcontractors table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS subcontractors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        name TEXT NOT NULL,
+        contactPerson TEXT,
+        mobile TEXT,
+        email TEXT,
+        address TEXT,
+        specialization TEXT,
+        ratePerPax REAL DEFAULT 0,
+        isActive INTEGER DEFAULT 1,
+        rating INTEGER DEFAULT 3,
+        createdAt TEXT,
+        updatedAt TEXT
+      );
+    ''');
+
+    // Purchase Orders table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS purchase_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        poNumber TEXT UNIQUE,
+        supplierId INTEGER,
+        date TEXT,
+        deliveryDate TEXT,
+        status TEXT DEFAULT 'DRAFT',
+        totalAmount REAL DEFAULT 0,
+        notes TEXT,
+        createdAt TEXT,
+        updatedAt TEXT,
+        FOREIGN KEY(supplierId) REFERENCES suppliers(id)
+      );
+    ''');
+
+    // PO Items table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS po_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        poId INTEGER NOT NULL,
+        ingredientId INTEGER,
+        itemName TEXT,
+        quantity REAL DEFAULT 0,
+        unit TEXT,
+        rate REAL DEFAULT 0,
+        amount REAL DEFAULT 0,
+        FOREIGN KEY(poId) REFERENCES purchase_orders(id)
+      );
+    ''');
+
+    // Invoices table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        invoiceNumber TEXT,
+        orderId INTEGER,
+        customerId INTEGER,
+        date TEXT,
+        dueDate TEXT,
+        subtotal REAL DEFAULT 0,
+        taxPercent REAL DEFAULT 0,
+        taxAmount REAL DEFAULT 0,
+        discountAmount REAL DEFAULT 0,
+        finalAmount REAL DEFAULT 0,
+        status TEXT DEFAULT 'PENDING',
+        paidAmount REAL DEFAULT 0,
+        createdAt TEXT,
+        updatedAt TEXT,
+        FOREIGN KEY(orderId) REFERENCES orders(id)
+      );
+    ''');
+
+    // Service rates table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS service_rates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        rateType TEXT NOT NULL,
+        rate REAL DEFAULT 0,
+        updatedAt TEXT,
+        UNIQUE(firmId, rateType)
+      );
+    ''');
   }
 
   // ---------- SEED DATA LOADER ----------
@@ -1466,7 +1813,7 @@ class DatabaseHelper {
     return await db.query(
       'dishes',
       where:
-          'orderId = ? AND name IS NOT NULL AND name != "" AND name != "Unnamed"',
+          "orderId = ? AND name IS NOT NULL AND name != '' AND name != 'Unnamed'",
       whereArgs: [orderId],
       orderBy: 'id ASC',
     );
@@ -2215,6 +2562,20 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final id = await db.insert('utensils', data);
     await _syncOrQueue(table: 'utensils', data: {...data, 'id': id}, action: 'INSERT');
     return id;
+  }
+
+  Future<int> updateUtensil(Map<String, dynamic> data) async {
+    final db = await database;
+    final rows = await db.update('utensils', data, where: 'id = ?', whereArgs: [data['id']]);
+    await _syncOrQueue(table: 'utensils', data: data, action: 'UPDATE', filters: {'id': data['id']});
+    return rows;
+  }
+
+  Future<int> deleteUtensil(int id) async {
+    final db = await database;
+    final rows = await db.delete('utensils', where: 'id = ?', whereArgs: [id]);
+    await _syncOrQueue(table: 'utensils', data: {'id': id}, action: 'DELETE', filters: {'id': id});
+    return rows;
   }
 
   // User Management

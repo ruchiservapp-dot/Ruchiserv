@@ -701,7 +701,7 @@ class AppLocalizationsKn extends AppLocalizations {
   String get staff => 'సిబ్బంది';
 
   @override
-  String get today => 'Today';
+  String get today => 'ಇಂದು';
 
   @override
   String get noStaffMembers => 'సిబ్బంది లేరు';

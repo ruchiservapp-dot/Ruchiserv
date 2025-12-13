@@ -23,6 +23,8 @@ class MasterDataSyncService {
     'ingredients_master',
     'dish_master', 
     'recipe_detail',
+    'utensils',
+    'vehicles',
   ];
 
   /// Get current firm ID from SharedPreferences

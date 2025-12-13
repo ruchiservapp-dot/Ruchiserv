@@ -702,7 +702,7 @@ class AppLocalizationsMl extends AppLocalizations {
   String get staff => 'ജീവനക്കാർ';
 
   @override
-  String get today => 'Today';
+  String get today => 'ഇന്ന്';
 
   @override
   String get noStaffMembers => 'ജീവനക്കാർ ഇല്ല';

@@ -413,6 +413,7 @@
   "editIngredient": "संपादित करें",
   "ingredientUpdated": "✅ अपडेट किया गया",
   "searchPlaceholder": "खोजें...",
+  "noResultsFound": "कोई परिणाम नहीं मिला",
   "ingredientsCount": "{count} सामग्री",
   "categoriesCount": "{count} श्रेणियां",
   "catAll": "सभी",
@@ -609,5 +610,6 @@
   },
   "cash": "Cash",
   "addIngredient": "Add Ingredient",
-  "noIngredientsFound": "No ingredients found"
+  "noIngredientsFound": "No ingredients found",
+  "today": "आज"
 }
