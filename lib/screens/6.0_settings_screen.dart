@@ -20,16 +20,100 @@ import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import '../core/locale_provider.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _isLoading = true;
+  bool _isAdmin = false;
+  bool _showUniversalData = true;
+  String? _firmId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    setState(() => _isLoading = true);
+    final sp = await SharedPreferences.getInstance();
+    _firmId = sp.getString('last_firm');
+    final userId = sp.getString('user_id');
+    final mobile = sp.getString('last_mobile');
+
+    if (_firmId != null) {
+      final db = DatabaseHelper();
+      
+      // 1. Check User Role
+      final users = await db.getUsersByFirm(_firmId!);
+      Map<String, dynamic>? foundUser;
+      if (userId != null) {
+        foundUser = users.firstWhere((u) => u['userId'] == userId || u['id'].toString() == userId, orElse: () => {});
+      }
+      if ((foundUser == null || foundUser.isEmpty) && mobile != null) {
+        foundUser = users.firstWhere((u) => u['mobile'] == mobile, orElse: () => {});
+      }
+
+      if (foundUser != null && foundUser.isNotEmpty) {
+        final role = foundUser['role']?.toString() ?? 'User';
+        _isAdmin = (role == 'Admin' || role == 'Owner');
+      }
+
+      // 2. Check Firm Setting (Universal Data)
+      _showUniversalData = await db.getFirmUniversalDataVisibility(_firmId!);
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _toggleUniversalData(bool value) async {
+    if (_firmId == null) return;
+    setState(() => _showUniversalData = value); // Optimistic update
+    
+    await DatabaseHelper().setFirmUniversalDataVisibility(_firmId!, value);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Universal Data Visibility: ${value ? 'ON' : 'OFF'}"),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // AppBar removed to avoid duplication with MainMenuScreen
-      body: ListView(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator()) 
+          : ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // === FIRM SETTINGS (Admin Only) ===
+          if (_isAdmin) ...[
+             const Padding(
+               padding: EdgeInsets.only(left: 16, top: 8, bottom: 8),
+               child: Text("Admin Controls", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+             ),
+             SwitchListTile(
+               title: const Text("Show Universal Data"),
+               subtitle: const Text("Display pre-loaded recipes/ingredients alongside firm data"),
+               value: _showUniversalData,
+               onChanged: _toggleUniversalData,
+               secondary: const Icon(Icons.public, color: Colors.teal),
+             ),
+             const Divider(),
+          ],
+
           ListTile(
             leading: const Icon(Icons.business_rounded, color: Colors.indigo),
             title: const Text("Firm Profile"),

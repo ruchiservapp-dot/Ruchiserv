@@ -80,19 +80,13 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
   }
 
   Future<void> _loadProductionQueue() async {
-    // Fetch ALL active production items (Status = QUEUED) relative to today/future
-    // ideally we modify DB helper to get dishes by status, but for now we can iterate relevant orders
-    // Optimization: For now just show QUEUED items from selected date + next 7 days or simply fetch all QUEUED?
-    // User requirement: "second screen is productio... based on timing all dishes will be quied"
-    // I'll fetch ALL 'QUEUED' dishes across the system for simplicity.
-    // Since SQL query for this is custom, I'll do a raw query here or add method. 
-    // I'll use raw query for speed.
+    // Fetch ALL active production items (Status = QUEUED or PENDING)
     final db = await DatabaseHelper().database;
     final res = await db.rawQuery('''
       SELECT d.*, o.date, o.time, o.customerName 
       FROM dishes d 
       JOIN orders o ON d.orderId = o.id 
-      WHERE d.productionStatus = 'QUEUED' 
+      WHERE d.productionStatus IN ('QUEUED', 'PENDING')
       ORDER BY o.date ASC, o.time ASC
     ''');
     _productionQueue = res;
@@ -491,12 +485,19 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
                     ),
                   ],
                 ),
-                trailing: ElevatedButton.icon(
-                  onPressed: () => _updateDish(d['id'], {'productionStatus': 'COMPLETED'}),
-                  icon: const Icon(Icons.check),
-                  label: Text(AppLocalizations.of(context)!.done),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                ),
+                trailing: d['productionStatus'] == 'PENDING'
+                    ? ElevatedButton.icon(
+                        onPressed: () => _updateDish(d['id'], {'productionStatus': 'QUEUED'}),
+                        icon: const Icon(Icons.play_arrow),
+                        label: Text(AppLocalizations.of(context)!.start),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: () => _updateDish(d['id'], {'productionStatus': 'COMPLETED'}),
+                        icon: const Icon(Icons.check),
+                        label: Text(AppLocalizations.of(context)!.done),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      ),
                 // Ingredient Details (loaded on expand)
                 children: [
                   FutureBuilder<List<Map<String, dynamic>>>(

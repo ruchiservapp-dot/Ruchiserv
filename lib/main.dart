@@ -36,6 +36,7 @@ class RuchiServApp extends StatelessWidget {
         builder: (context, localeProvider, child) {
           return MaterialApp(
             title: 'RuchiServ',
+            // App text follows user's language preference
             locale: localeProvider.locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,
@@ -47,11 +48,11 @@ class RuchiServApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.light, // Default to Light theme (Golden/White) as requested
+            themeMode: ThemeMode.light,
             home: const SplashScreen(),
             routes: {
               '/login': (context) => LoginScreen(),
-              '/home': (context) => MainMenuScreen(), // Route to menu with bottom nav
+              '/home': (context) => MainMenuScreen(),
             },
           );
         },

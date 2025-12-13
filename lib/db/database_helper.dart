@@ -11,7 +11,9 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 // Optional but useful if you already added these in your project
 // If not present, you can safely remove these two imports.
 import '../services/connectivity_service.dart';
+import '../services/connectivity_service.dart';
 import '../db/aws/aws_api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -41,7 +43,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       return await openDatabase(
         path,
-        version: 22, // v22: Multi-tenant Master Data with firmId
+        version: 23, // v23: Added showUniversalData to firms
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -154,6 +156,7 @@ class DatabaseHelper {
         kitchenLongitude REAL,
         geoFenceRadius INTEGER DEFAULT 100,
         otMultiplier REAL DEFAULT 1.5,
+        showUniversalData INTEGER DEFAULT 1,
         createdAt TEXT,
         updatedAt TEXT
       );
@@ -1192,6 +1195,13 @@ class DatabaseHelper {
       try { await db.execute("UPDATE dish_master SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
       try { await db.execute("UPDATE recipe_detail SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
     }
+
+    // Upgrade to v23: Show Universal Data Flag
+    if (oldVersion < 23) {
+      try {
+        await db.execute("ALTER TABLE firms ADD COLUMN showUniversalData INTEGER DEFAULT 1;");
+      } catch (_) {}
+    }
   }
 
   // ---------- SEED DATA LOADER ----------
@@ -1579,48 +1589,62 @@ class DatabaseHelper {
 
   // ---------- DISH MASTER (Autocomplete Suggestions) ----------
   /// Get all saved dishes for a category (for autocomplete)
-  /// Maps UI categories to DB categories using pattern matching
-  Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
-    try {
-      final db = await database;
-      if (category != null && category.isNotEmpty) {
-        // Map UI category names to DB category patterns
-        // UI uses: 'Starters', 'Main Course', 'Desserts', 'Beverages', 'Specialties'
-        // DB has: 'Starter', 'Starter/Main', 'Main Course', 'Dessert', 'Beverage', 'Specialty', etc.
-        String pattern;
-        switch (category) {
-          case 'Starters':
-            pattern = 'Starter%'; // Matches Starter, Starter/Main, Starter/Fry, etc.
-            break;
-          case 'Desserts':
-            pattern = 'Dessert%'; // Matches Dessert, Dessert Base
-            break;
-          case 'Beverages':
-            pattern = 'Beverage%';
-            break;
-          case 'Specialties':
-            pattern = 'Special%'; // Matches Special, Specialty
-            break;
-          default:
-            pattern = '$category%'; // For 'Main Course' etc.
-        }
-        
-        return await db.query(
-          'dish_master',
-          where: 'category LIKE ?',
-          whereArgs: [pattern],
-          orderBy: 'name ASC',
-        );
+/// Maps UI categories to DB categories using pattern matching
+Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
+  try {
+    final db = await database;
+    final sp = await SharedPreferences.getInstance();
+    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final showUniversal = await getFirmUniversalDataVisibility(firmId);
+
+    String whereClause = "(firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
+    List<dynamic> args = [firmId];
+
+    if (category != null && category.isNotEmpty) {
+      // Map UI category names to DB category patterns
+      // UI uses: 'Starters', 'Main Course', 'Desserts', 'Beverages', 'Specialties'
+      // DB has: 'Starter', 'Starter/Main', 'Main Course', 'Dessert', 'Beverage', 'Specialty', etc.
+      String pattern;
+      switch (category) {
+        case 'Starters':
+          pattern = 'Starter%';
+          break;
+        case 'Main Course':
+          pattern = 'Main Course%'; // Or 'Main%' but might be too broad
+          break;
+        case 'Desserts':
+          pattern = 'Dessert%';
+          break;
+        case 'Beverages':
+          pattern = 'Beverage%';
+          break;
+        case 'Specialties':
+          pattern = 'Special%'; // Matches Special, Specialty
+          break;
+        default:
+          pattern = '$category%'; // For 'Main Course' etc.
       }
-      return await db.query('dish_master', orderBy: 'category, name ASC');
-    } catch (_) {
-      // Return empty list if table doesn't exist or other error
-      return [];
+      whereClause += " AND category LIKE ?";
+      args.add(pattern);
+      
+      return await db.query(
+        'dish_master',
+        where: whereClause,
+        whereArgs: args,
+        orderBy: 'name ASC',
+      );
     }
+    return await db.query('dish_master', where: whereClause, whereArgs: args, orderBy: 'category, name ASC');
+  } catch (_) {
+    // Return empty list if table doesn't exist or other error
+    return [];
   }
+}
+  
 
   /// Upsert a dish to the master table (called when order is saved)
   /// Uses Check-Update-Insert to preserve IDs (Critical for BOM integrity)
+  /// V22: Implements Copy-On-Write logic for Multi-Tenancy (Seed -> Firm)
   Future<void> upsertDishMaster({
     required String name,
     required String category,
@@ -1632,41 +1656,83 @@ class DatabaseHelper {
     final db = await database;
     final now = DateTime.now().toIso8601String();
     
+    final sp = await SharedPreferences.getInstance();
+    final firmId = sp.getString('last_firm');
+
+    // If no firmId, we can't save legally.
+    if (firmId == null) return; 
+
     try {
-      // Check if exists
-      final existing = await db.query(
+      // 1. Check for Firm-Specific Version
+      final firmDish = await db.query(
         'dish_master',
-        columns: ['id'],
-        where: 'name = ? AND category = ?',
-        whereArgs: [name.trim(), category],
+        where: 'name = ? AND category = ? AND firmId = ?',
+        whereArgs: [name.trim(), category, firmId],
         limit: 1,
       );
 
-      if (existing.isNotEmpty) {
-        // Update existing (Preserve ID)
+      if (firmDish.isNotEmpty) {
+        // Update Firm Dish
         await db.update(
           'dish_master',
           {
             'rate': rate,
             'foodType': foodType,
             'updatedAt': now,
+            'isModified': 1,
           },
           where: 'id = ?',
-          whereArgs: [existing.first['id']],
+          whereArgs: [firmDish.first['id']],
         );
       } else {
-        // Insert new
-        await db.insert(
+        // 2. Check for Seed Version
+        final seedDish = await db.query(
           'dish_master',
-          {
-            'name': name.trim(),
-            'category': category,
-            'rate': rate,
-            'foodType': foodType,
-            'createdAt': now,
-            'updatedAt': now,
-          },
+          where: 'name = ? AND category = ? AND firmId = ?',
+          whereArgs: [name.trim(), category, 'SEED'],
+          limit: 1,
         );
+
+        if (seedDish.isNotEmpty) {
+          // Found Seed Dish. Check if values differ.
+          final s = seedDish.first;
+          final currentRate = (s['rate'] as num).toInt();
+          final currentType = s['foodType'] as String;
+
+          if (currentRate != rate || currentType != foodType) {
+            // Values changed! Copy-On-Write.
+            await db.insert(
+              'dish_master',
+              {
+                'firmId': firmId,
+                'baseId': s['id'], // Link to seed
+                'name': name.trim(),
+                'category': category,
+                'rate': rate, // New rate
+                'foodType': foodType, // New type
+                'createdAt': now,
+                'updatedAt': now,
+                'isModified': 1,
+              },
+            );
+          }
+          // Else: Seed is fine, no need to duplicate.
+        } else {
+          // 3. New Dish entirely
+          await db.insert(
+            'dish_master',
+            {
+              'firmId': firmId,
+              'name': name.trim(),
+              'category': category,
+              'rate': rate,
+              'foodType': foodType,
+              'createdAt': now,
+              'updatedAt': now,
+              'isModified': 1,
+            },
+          );
+        }
       }
     } catch (_) {
       // Ignore errors (e.g., constraint violations)
@@ -2788,25 +2854,118 @@ whereArgs: [firmId],
   /// Gets all dishes from Master Table (for BOM management)
   Future<List<Map<String, dynamic>>> getAllDishes(String firmId) async {
     final db = await database;
-    // V19: Use dish_master directly. 
-    // Currently dish_master is global. If we add firmId later, we'd filter here.
-    return await db.query('dish_master', orderBy: 'category, name');
+    
+    // 1. Get Firm Specific Data
+    final firmData = await db.query(
+      'dish_master',
+      where: 'firmId = ?',
+      whereArgs: [firmId],
+      orderBy: 'category, name',
+    );
+
+    // 2. Get Seed Data (excluding overridden)
+  bool showUniversal = await getFirmUniversalDataVisibility(firmId);
+  if (!showUniversal) {
+     return firmData;
   }
 
+  final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
+  
+  String seedWhere = "firmId = 'SEED'";
+  if (customizedBaseIds.isNotEmpty) {
+    seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
+  }
+  
+  final seedData = await db.rawQuery(
+    'SELECT * FROM dish_master WHERE $seedWhere ORDER BY category, name',
+  );
+  
+  final combined = [...firmData, ...seedData];
+  combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+  
+  return combined;
+}
+
+// === VISIBILITY SETTINGS ===
+Future<bool> getFirmUniversalDataVisibility(String firmId) async {
+  final db = await database;
+  final res = await db.query(
+    'firms',
+    columns: ['showUniversalData'],
+    where: 'firmId = ?',
+    whereArgs: [firmId],
+  );
+  if (res.isNotEmpty) {
+    return (res.first['showUniversalData'] as int? ?? 1) == 1;
+  }
+  return true; // Default to true
+}
+
+Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async {
+    final db = await database;
+    await db.update(
+      'firms',
+      {'showUniversalData': isVisible ? 1 : 0},
+      where: 'firmId = ?',
+      whereArgs: [firmId],
+    );
+    // Auto Sync
+    await _syncOrQueue(
+      table: 'firms',
+      data: {'firmId': firmId, 'showUniversalData': isVisible ? 1 : 0},
+      action: 'UPDATE',
+      filters: {'firmId': firmId}
+    );
+}
   // ========== INVENTORY MODULE HELPERS ==========
 
   // --- INGREDIENTS ---
   Future<List<Map<String, dynamic>>> getAllIngredients(String firmId) async {
     final db = await database;
-    // v19 uses ingredients_master which is global (not firm-specific for now, or could be filtered if we added firmId)
-    // The seed data didn't have firmId. If we want global ingredients:
-    return await db.query('ingredients_master', 
+    
+    // 1. Get Firm Specific Data
+    final firmData = await db.query(
+      'ingredients_master',
+      where: 'firmId = ?',
+      whereArgs: [firmId],
       orderBy: 'category, name',
     );
+
+    // 2. Get Seed Data (excluding overridden)
+  // Check if firm allows universal data
+  bool showUniversal = await getFirmUniversalDataVisibility(firmId);
+  if (!showUniversal) {
+    // If not showing universal, just return firm data
+    return firmData;
   }
+
+  final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
+  
+  String seedWhere = "firmId = 'SEED'";
+  if (customizedBaseIds.isNotEmpty) {
+    seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
+  }
+
+  final seedData = await db.rawQuery(
+    'SELECT * FROM ingredients_master WHERE $seedWhere ORDER BY category, name',
+  );
+  
+  // 3. Merge & Sort
+  final combined = [...firmData, ...seedData];
+  combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+  
+  return combined;
+}
 
   Future<int> insertIngredient(Map<String, dynamic> data) async {
     final db = await database;
+    
+    if (data['firmId'] == null) {
+       final sp = await SharedPreferences.getInstance();
+       final fid = sp.getString('last_firm');
+       if (fid != null) data['firmId'] = fid;
+    }
+
     data['createdAt'] = DateTime.now().toIso8601String();
     data['updatedAt'] = DateTime.now().toIso8601String();
     // Use master table
@@ -2854,37 +3013,49 @@ whereArgs: [firmId],
   }
 
   /// Get recipe ingredients for a dish by NAME (for Kitchen Production view)
-  /// Returns empty list if dish not in master or has no recipe.
-  Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int paxQty) async {
-    final db = await database;
-    // Step 1: Find dish_master ID by name
-    final dishMaster = await db.query(
-      'dish_master',
-      columns: ['id', 'base_pax'],
-      where: 'name = ?',
-      whereArgs: [dishName.trim()],
-      limit: 1,
-    );
-    if (dishMaster.isEmpty) return [];
-    
-    final dishId = dishMaster.first['id'] as int;
-    final basePax = (dishMaster.first['base_pax'] as int?) ?? 1;
-    
-    // Step 2: Get recipe_detail for this dish_id, scaled by paxQty
-    final recipe = await db.rawQuery('''
-      SELECT rd.*, 
-             i.name as ingredientName, 
-             i.category, 
-             COALESCE(rd.unit_override, i.unit_of_measure) as unit,
-             (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
-      FROM recipe_detail rd
-      JOIN ingredients_master i ON rd.ing_id = i.id
-      WHERE rd.dish_id = ?
-      ORDER BY i.category, i.name
-    ''', [paxQty, basePax, dishId]);
-    
-    return recipe;
-  }
+/// Returns empty list if dish not in master or has no recipe.
+Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int paxQty) async {
+  final db = await database;
+
+  // Get Context
+  final sp = await SharedPreferences.getInstance();
+  final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+  final showUniversal = await getFirmUniversalDataVisibility(firmId);
+  
+  // Step 1: Find dish_master ID by name
+  // Prioritize FIRM specific dish over SEED dish
+  final where = "name = ? AND (firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
+  final args = [dishName.trim(), firmId];
+
+  final dishMaster = await db.query(
+    'dish_master',
+    columns: ['id', 'base_pax', 'firmId'],
+    where: where,
+    whereArgs: args,
+    orderBy: "CASE WHEN firmId = '$firmId' THEN 0 ELSE 1 END", // Firm first
+    limit: 1,
+  );
+
+  if (dishMaster.isEmpty) return [];
+  
+  final dishId = dishMaster.first['id'] as int;
+  final basePax = (dishMaster.first['base_pax'] as int?) ?? 1;
+  
+  // Step 2: Get recipe_detail for this dish_id, scaled by paxQty
+  final recipe = await db.rawQuery('''
+    SELECT rd.*, 
+           i.name as ingredientName, 
+           i.category, 
+           COALESCE(rd.unit_override, i.unit_of_measure) as unit,
+           (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
+    FROM recipe_detail rd
+    JOIN ingredients_master i ON rd.ing_id = i.id
+    WHERE rd.dish_id = ?
+    ORDER BY i.category, i.name
+  ''', [paxQty, basePax, dishId]);
+  
+  return recipe;
+}
 
   Future<int> insertBomItem(Map<String, dynamic> data) async {
     final db = await database;

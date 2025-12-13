@@ -84,7 +84,7 @@ class MasterDataSyncService {
         await AwsApi.callDbHandler(
           method: 'PUT',
           table: 'master_data', // Single table for all master data
-          body: data,
+          data: data,
         );
 
         // Mark as synced

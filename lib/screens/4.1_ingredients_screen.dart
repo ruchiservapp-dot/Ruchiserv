@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import '../services/language_service.dart';
+import '../services/master_data_sync_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class IngredientsScreen extends StatefulWidget {
@@ -149,6 +150,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                     'category': category,
                     'unit_of_measure': unit,
                   });
+
+                  
+                  // Trigger Background Sync
+                  MasterDataSyncService().syncToAWS();
+                  
                   Navigator.pop(context, true);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -269,6 +275,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                     'category': category,
                     'unit_of_measure': unit,
                   });
+
+                  
+                  // Trigger Background Sync
+                  MasterDataSyncService().syncToAWS();
+                  
                   Navigator.pop(context, true);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(

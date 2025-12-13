@@ -3,6 +3,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/aws/aws_api.dart'; // you already have this
 import '../db/database_helper.dart';
+import 'master_data_sync_service.dart';
 
 /// Central place for login/registration/password APIs + local expiry rules.
 class AuthService {
@@ -45,6 +46,14 @@ class AuthService {
             (resp['user']['subscriptionExpiry'] ?? '').toString().isNotEmpty) {
           await sp.setString('subscription_expiry', resp['user']['subscriptionExpiry']);
         }
+        
+        // SYNC MASTER DATA (Ingredients/Dishes for this Firm)
+        try {
+          await MasterDataSyncService().syncFromAWS();
+        } catch (e) {
+          print('⚠️ Initial Sync Failed: $e');
+        }
+
         return true;
       }
     } catch (e) {

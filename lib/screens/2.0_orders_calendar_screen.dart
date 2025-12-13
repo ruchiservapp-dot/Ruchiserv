@@ -1,5 +1,6 @@
 // MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 // lib/screens/2.0_orders_calendar_screen.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -88,23 +89,29 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
 
   // ---------- System calendar ----------
   Future<void> _openSystemCalendar() async {
-    // Try platform schemes; fall back to Google Calendar
-    final candidates = <Uri>[
-      // iOS/macOS
-      Uri.parse('calshow://'),
-      // Android content deep link (may not work on all devices)
-      Uri.parse('content://com.android.calendar/time'),
-      // Fallback
-      Uri.parse('https://calendar.google.com'),
-    ];
-
-    for (final uri in candidates) {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      if (Platform.isMacOS) {
+        // On macOS, use shell command to open Calendar app
+        await Process.run('open', ['-a', 'Calendar']);
         return;
+      } else if (Platform.isIOS) {
+        // On iOS, calshow:// works
+        final Uri calUrl = Uri.parse('calshow://');
+        if (await launchUrl(calUrl, mode: LaunchMode.externalApplication)) {
+          return;
+        }
+      } else if (Platform.isAndroid) {
+        // Try Android content deep link
+        final Uri androidCalUrl = Uri.parse('content://com.android.calendar/time');
+        if (await launchUrl(androidCalUrl, mode: LaunchMode.externalApplication)) {
+          return;
+        }
       }
+    } catch (_) {
+      // Ignore and fall through to web fallback
     }
-    // As a last resort try opening google calendar in browser
+    
+    // Fallback to Google Calendar in browser
     await launchUrl(Uri.parse('https://calendar.google.com'), mode: LaunchMode.externalApplication);
   }
 

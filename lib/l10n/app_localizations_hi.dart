@@ -12,851 +12,850 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appTitle => 'RuchiServ';
 
   @override
-  String get signInContinue => 'Sign in to continue';
+  String get signInContinue => 'जारी रखने के लिए साइन इन करें';
 
   @override
-  String get firmId => 'Firm ID';
+  String get firmId => 'फर्म आईडी';
 
   @override
-  String get enterFirmId => 'Enter firm ID';
+  String get enterFirmId => 'फर्म आईडी दर्ज करें';
 
   @override
-  String get mobileNumber => 'Mobile Number';
+  String get mobileNumber => 'मोबाइल नंबर';
 
   @override
-  String get enterMobile => 'Enter mobile';
+  String get enterMobile => 'मोबाइल नंबर दर्ज करें';
 
   @override
-  String get password => 'Password';
+  String get password => 'पासवर्ड';
 
   @override
-  String get enterPassword => 'Enter password';
+  String get enterPassword => 'पासवर्ड दर्ज करें';
 
   @override
-  String get loginButton => 'LOGIN';
+  String get loginButton => 'लॉगिन';
 
   @override
-  String get enableBiometricLogin => 'Enable Biometric Login';
+  String get enableBiometricLogin => 'बायोमेट्रिक लॉगिन सक्षम करें';
 
   @override
   String get enableBiometricPrompt =>
-      'Would you like to enable biometric authentication for faster login next time?';
+      'क्या आप अगली बार तेज़ लॉगिन के लिए बायोमेट्रिक प्रमाणीकरण सक्षम करना चाहेंगे?';
 
   @override
-  String get notNow => 'Not Now';
+  String get notNow => 'अभी नहीं';
 
   @override
-  String get enable => 'Enable';
+  String get enable => 'सक्षम करें';
 
   @override
-  String get biometricEnabled => 'Biometric login enabled!';
+  String get biometricEnabled => 'बायोमेट्रिक लॉगिन सक्षम!';
 
   @override
   String failedEnableBiometric(String error) {
-    return 'Failed to enable biometrics: $error';
+    return 'बायोमेट्रिक्स सक्षम करने में विफल: $error';
   }
 
   @override
   String get biometricNotAllowed =>
-      'Biometric login not allowed. Please login online once.';
+      'बायोमेट्रिक लॉगिन की अनुमति नहीं है। कृपया ऑनलाइन लॉगिन करें।';
 
   @override
   String biometricFailed(String error) {
-    return 'Biometric failed: $error';
+    return 'बायोमेट्रिक विफल: $error';
   }
 
   @override
-  String get subscription => 'Subscription';
+  String get subscription => 'सदस्यता';
 
   @override
   String get subscriptionExpired =>
-      'Your subscription has expired. Please renew to continue.';
+      'आपकी सदस्यता समाप्त हो गई है। जारी रखने के लिए कृपया नवीनीकृत करें।';
 
   @override
   String subscriptionExpiresIn(int days) {
-    return 'Your subscription expires in $days day(s). Please renew.';
+    return 'किरप्या नवीनीकृत करें। आपकी सदस्यता $days दिन(नों) में समाप्त हो जाएगी।';
   }
 
   @override
-  String get ok => 'OK';
+  String get ok => 'ठीक है';
 
   @override
   String loginError(String error) {
-    return 'Login error: $error';
+    return 'लॉगिन त्रुटि: $error';
   }
 
   @override
-  String get register => 'Register';
+  String get register => 'रजिस्टर';
 
   @override
-  String get forgotPassword => 'Forgot password?';
+  String get forgotPassword => 'पासवर्ड भूल गए?';
 
   @override
-  String get invalidCredentials => 'Invalid credentials.';
+  String get invalidCredentials => 'अमान्य क्रेडेंशियल्स।';
 
   @override
   String get offlineLoginNotAllowed =>
-      'Offline login not allowed. Please connect to the internet.';
+      'ऑफ़लाइन लॉगिन की अनुमति नहीं है। कृपया इंटरनेट से कनेक्ट करें।';
 
   @override
-  String get mainMenuTitle => 'Menu';
+  String get mainMenuTitle => 'मेनू';
 
   @override
-  String get moduleOrders => 'Orders';
+  String get moduleOrders => 'ऑर्डर';
 
   @override
-  String get moduleOperations => 'Operations';
+  String get moduleOperations => 'संचालन';
 
   @override
-  String get moduleInventory => 'Inventory';
+  String get moduleInventory => 'इन्वेंट्री';
 
   @override
-  String get moduleFinance => 'Finance';
+  String get moduleFinance => 'वित्त';
 
   @override
-  String get moduleReports => 'Reports';
+  String get moduleReports => 'रिपोर्ट';
 
   @override
-  String get moduleSettings => 'Settings';
+  String get moduleSettings => 'सेटिंग्स';
 
   @override
-  String get moduleAttendance => 'My Attendance';
+  String get moduleAttendance => 'मेरी उपस्थिति';
 
   @override
-  String get noModulesAvailable => 'No modules available';
+  String get noModulesAvailable => 'कोई मॉड्यूल उपलब्ध नहीं';
 
   @override
-  String get contactAdministrator => 'Contact your administrator';
+  String get contactAdministrator => 'प्रशासक से संपर्क करें';
 
   @override
-  String get firmProfile => 'Firm Profile';
+  String get firmProfile => 'फर्म प्रोफाइल';
 
   @override
-  String get viewUpdateFirm => 'View or update your firm details';
+  String get viewUpdateFirm => 'विवरण देखें या अपडेट करें';
 
   @override
-  String get userProfile => 'User Profile';
+  String get userProfile => 'उपयोगकर्ता प्रोफाइल';
 
   @override
-  String get manageLoginPrefs => 'Manage your login and preferences';
+  String get manageLoginPrefs => 'लॉगिन प्राथमिकताएं प्रबंधित करें';
 
   @override
-  String get manageUsers => 'Manage Users';
+  String get manageUsers => 'उपयोगकर्ता प्रबंधित करें';
 
   @override
-  String get manageUsersSubtitle => 'Add users and set permissions';
+  String get manageUsersSubtitle => 'उपयोगकर्ता जोड़ें और अनुमतियां सेट करें';
 
   @override
-  String get authMobiles => 'Authorized Mobiles';
+  String get authMobiles => 'अधिकृत मोबाइल';
 
   @override
-  String get authMobilesSubtitle => 'Manage pre-approved mobile numbers';
+  String get authMobilesSubtitle => 'मोबाइल नंबर प्रबंधित करें';
 
   @override
-  String get paymentSettings => 'Payment Settings';
+  String get paymentSettings => 'भुगतान सेटिंग्स';
 
   @override
-  String get paymentSettingsSubtitle => 'Configure payment gateways';
+  String get paymentSettingsSubtitle => 'गेटवे कॉन्फ़िगर करें';
 
   @override
-  String get generalSettings => 'General Settings';
+  String get generalSettings => 'सामान्य सेटिंग्स';
 
   @override
-  String get generalSettingsSubtitle => 'Theme, Notifications, Security';
+  String get generalSettingsSubtitle => 'थीम, सूचनाएं, सुरक्षा';
 
   @override
-  String get vehicleMaster => 'Vehicle Master';
+  String get vehicleMaster => 'वाहन';
 
   @override
-  String get vehicleMasterSubtitle => 'Manage fleet vehicles';
+  String get vehicleMasterSubtitle => 'वाहन प्रबंधित करें';
 
   @override
-  String get utensilMaster => 'Utensil Master';
+  String get utensilMaster => 'बर्तन';
 
   @override
-  String get utensilMasterSubtitle => 'Manage utensils & consumables';
+  String get utensilMasterSubtitle => 'बर्तन प्रबंधित करें';
 
   @override
-  String get backupAWS => 'Backup to AWS';
+  String get backupAWS => 'AWS बैकअप';
 
   @override
-  String get backupSubtitle => 'Upload all data to cloud';
+  String get backupSubtitle => 'क्लाउड पर अपलोड करें';
 
   @override
-  String get auditLogs => 'Audit Logs';
+  String get auditLogs => 'ऑडिट लॉग';
 
   @override
-  String get auditLogsSubtitle => 'View and export compliance logs';
+  String get auditLogsSubtitle => 'लॉग देखें';
 
   @override
-  String get aboutApp => 'About RuchiServ';
+  String get aboutApp => 'ऐप के बारे में';
 
   @override
-  String get logout => 'Logout';
+  String get logout => 'लॉगआउट';
 
   @override
-  String get selectLanguage => 'Select Language';
+  String get selectLanguage => 'भाषा चुनें';
 
   @override
-  String get attendanceTitle => 'My Attendance';
+  String get attendanceTitle => 'मेरी उपस्थिति';
 
   @override
-  String get noStaffRecord => 'No Staff Record Found';
+  String get noStaffRecord => 'कोई स्टाफ रिकॉर्ड नहीं मिला';
 
   @override
   String get mobileNotLinked =>
-      'Your mobile number is not linked to any staff record.\nPlease contact your administrator.';
+      'आपका मोबाइल नंबर किसी स्टाफ रिकॉर्ड से लिंक नहीं है।\nकृपया प्रशासक से संपर्क करें।';
 
   @override
-  String get checkingLocation => 'Checking location...';
+  String get checkingLocation => 'स्थान की जाँच की जा रही है...';
 
   @override
-  String get punchIn => 'PUNCH IN';
+  String get punchIn => 'पंच इन';
 
   @override
-  String get punchOut => 'PUNCH OUT';
+  String get punchOut => 'पंच आउट';
 
   @override
-  String get punching => 'Punching...';
+  String get punching => 'पंचिंग...';
 
   @override
-  String get readyToPunchIn => 'Ready to Punch In';
+  String get readyToPunchIn => 'पंच इन के लिए तैयार';
 
   @override
   String workingSince(String time) {
-    return 'Working since $time';
+    return '$time से काम कर रहे हैं';
   }
 
   @override
-  String get todayShiftCompleted => 'Today\'s Shift Completed';
+  String get todayShiftCompleted => 'आज की शिफ्ट पूरी हुई';
 
   @override
   String elapsedTime(int hours, int minutes) {
-    return '${hours}h ${minutes}m elapsed';
+    return '$hours घंटे $minutes मिनट बीते';
   }
 
   @override
-  String get todayDetails => 'Today\'s Details';
+  String get todayDetails => 'आज का विवरण';
 
   @override
-  String get punchedIn => 'Punched In';
+  String get punchedIn => 'पंच इन किया गया';
 
   @override
-  String get punchedOut => 'Punched Out';
+  String get punchedOut => 'पंच आउट किया गया';
 
   @override
-  String get location => 'Location';
+  String get location => 'स्थान';
 
   @override
-  String get withinKitchen => 'Within Kitchen Area';
+  String get withinKitchen => 'रसोई क्षेत्र के भीतर';
 
   @override
-  String get outsideKitchen => 'Outside Kitchen Area';
+  String get outsideKitchen => 'रसोई क्षेत्र के बाहर';
 
   @override
-  String get punchSuccess => '✅ Punched In Successfully!';
+  String get punchSuccess => '✅ सफलतापूर्वक पंच इन किया गया!';
 
   @override
-  String get punchWarning => '⚠️ Punched In (Outside Kitchen Area)';
+  String get punchWarning => '⚠️ पंच इन किया गया (रसोई क्षेत्र के बाहर)';
 
   @override
   String punchOutSuccess(String hours) {
-    return '✅ Punched Out - $hours hours';
+    return '✅ पंच आउट किया गया - $hours घंटे';
   }
 
   @override
-  String get refresh => 'Refresh';
+  String get refresh => 'ताज़ा करें';
 
   @override
-  String get loading => 'Loading...';
+  String get loading => 'लोड हो रहा है...';
 
   @override
-  String get ordersCalendarTitle => 'Orders Calendar';
+  String get ordersCalendarTitle => 'ऑर्डर कैलेंडर';
 
   @override
-  String get openSystemCalendar => 'Open System Calendar';
+  String get openSystemCalendar => 'सिस्टम कैलेंडर खोलें';
 
   @override
-  String get utilizationLow => 'Low (<50%)';
+  String get utilizationLow => 'कम (<50%)';
 
   @override
-  String get utilizationMed => 'Med (50-90%)';
+  String get utilizationMed => 'मध्यम (50-90%)';
 
   @override
-  String get utilizationHigh => 'High (>90%)';
+  String get utilizationHigh => 'उच्च (>90%)';
 
   @override
-  String get editOrder => 'Edit Order';
+  String get editOrder => 'ऑर्डर संपादित करें';
 
   @override
-  String get addOrder => 'Add Order';
+  String get addOrder => 'ऑर्डर जोड़ें';
 
   @override
   String dateLabel(String date) {
-    return 'Date';
+    return 'तारीख';
   }
 
   @override
   String totalPax(int pax) {
-    return 'Total Pax: $pax';
+    return 'कुल पैक्स: $pax';
   }
 
   @override
-  String get deliveryTime => 'Delivery Time';
+  String get deliveryTime => 'डिलीवरी का समय';
 
   @override
-  String get tapToSelectTime => 'Tap to select time';
+  String get tapToSelectTime => 'समय चुनने के लिए टैप करें';
 
   @override
-  String get customerName => 'Customer Name';
+  String get customerName => 'ग्राहक का नाम';
 
   @override
-  String get digitsOnly => 'Digits only';
+  String get digitsOnly => 'केवल अंक';
 
   @override
-  String get mobileLengthError => 'Must be exactly 10 digits';
+  String get mobileLengthError => 'ठीक 10 अंक होने चाहिए';
 
   @override
-  String get mealType => 'Meal Type';
+  String get mealType => 'भोजन का प्रकार';
 
   @override
-  String get foodType => 'Food Type';
+  String get foodType => 'खाद्य प्रकार';
 
   @override
-  String get menuItems => 'Menu Items';
+  String get menuItems => 'मेनू आइटम';
 
   @override
-  String get addItem => 'Add Item';
+  String get addItem => 'आइटम जोड़ें';
 
   @override
-  String get subtotal => 'Subtotal (₹)';
+  String get subtotal => 'उपयोग (₹)';
 
   @override
-  String get discPercent => 'Disc %';
+  String get discPercent => 'छूट %';
 
   @override
-  String get dishTotal => 'Dish Total:';
+  String get dishTotal => 'डिश कुल:';
 
   @override
-  String get serviceAndCounterSetup => 'Service & Counter Setup';
+  String get serviceAndCounterSetup => 'सेवा और काउंटर सेटअप';
 
   @override
-  String get serviceRequiredQuestion => 'Service Required?';
+  String get serviceRequiredQuestion => 'क्या सेवा आवश्यक है?';
 
   @override
-  String get serviceType => 'Service Type: ';
+  String get serviceType => 'सेवा का प्रकार: ';
 
   @override
-  String get countersCount => 'No. of Counters';
+  String get countersCount => 'काउंटरों की संख्या';
 
   @override
-  String get ratePerStaff => 'Rate/Staff (₹)';
+  String get ratePerStaff => 'दर/स्टाफ (₹)';
 
   @override
-  String get staffRequired => 'Staff Required';
+  String get staffRequired => 'आवश्यक स्टाफ';
 
   @override
   String costWithRupee(String cost) {
-    return 'Cost: ₹$cost';
+    return 'लागत: ₹$cost';
   }
 
   @override
-  String get counterSetupNeeded => 'Counter Setup Needed?';
+  String get counterSetupNeeded => 'क्या काउंटर सेटअप की आवश्यकता है?';
 
   @override
-  String get ratePerCounter => 'Rate/Counter (₹)';
+  String get ratePerCounter => 'दर/काउंटर (₹)';
 
   @override
   String counterCostWithRupee(String cost) {
-    return 'Counter Cost: ₹$cost';
+    return 'काउंटर लागत: ₹$cost';
   }
 
   @override
   String discountWithPercent(String percent) {
-    return 'Discount ($percent%):';
+    return 'छूट ($percent%):';
   }
 
   @override
-  String get serviceCost => 'Service Cost:';
+  String get serviceCost => 'सेवा लागत:';
 
   @override
-  String get counterSetup => 'Counter Setup:';
+  String get counterSetup => 'काउंटर सेटअप:';
 
   @override
-  String get grandTotal => 'GRAND TOTAL:';
+  String get grandTotal => 'कुल योग:';
 
   @override
-  String get notes => 'Notes';
+  String get notes => 'नोट्स';
 
   @override
-  String get saveOrder => 'SAVE ORDER';
+  String get saveOrder => 'ऑर्डर सहेजें';
 
   @override
-  String get orderSaved => '✅ Order saved';
+  String get orderSaved => '✅ ऑर्डर सहेजा गया';
 
   @override
   String saveOrderError(String error) {
-    return 'Error saving order: $error';
+    return 'ऑर्डर सहेजने में त्रुटि: $error';
   }
 
   @override
-  String get typeDishName => 'Type dish name';
+  String get typeDishName => 'डिश का नाम लिखें';
 
   @override
-  String get rate => 'Rate';
+  String get rate => 'दर';
 
   @override
-  String get qty => 'Qty';
+  String get qty => 'मात्र';
 
   @override
-  String get cost => 'Cost';
+  String get cost => 'लागत';
 
   @override
-  String get required => 'Required';
+  String get required => 'आवश्यक';
 
   @override
-  String get resetCalculation => 'Reset Calculation';
+  String get resetCalculation => 'गणना रीसेट करें';
 
   @override
-  String get breakfast => 'Breakfast';
+  String get breakfast => 'नाश्ता';
 
   @override
-  String get lunch => 'Lunch';
+  String get lunch => 'दोपहर का भोजन';
 
   @override
-  String get dinner => 'Dinner';
+  String get dinner => 'रात का खाना';
 
   @override
-  String get snacksOthers => 'Snacks/Others';
+  String get snacksOthers => 'नाश्ता/अन्य';
 
   @override
-  String get veg => 'Veg';
+  String get veg => 'शाकाहारी';
 
   @override
-  String get nonVeg => 'Non-Veg';
+  String get nonVeg => 'मांषाजी';
 
   @override
   String failedLoadOrders(String error) {
-    return 'Failed to load orders: $error';
+    return 'ऑर्डर लोड करने में विफल: $error';
   }
 
   @override
   String errorLoadingOrders(String error) {
-    return 'Error loading orders: $error';
+    return 'त्रुटि: $error';
   }
 
   @override
-  String get cannotEditPastOrders => 'Cannot edit past orders.';
+  String get cannotEditPastOrders => 'पिछले ऑर्डर संपादित नहीं कर सकते।';
 
   @override
-  String get cannotDeletePastOrders => 'Cannot delete past orders.';
+  String get cannotDeletePastOrders => 'पिछले ऑर्डर हटा नहीं सकते।';
 
   @override
-  String get deleteOrderTitle => 'Delete Order?';
+  String get deleteOrderTitle => 'ऑर्डर हटाएं?';
 
   @override
   String get deleteOrderConfirm =>
-      'This will remove the order locally. (Will sync when online)';
+      'यह स्थानीय रूप से हटा देगा। (ऑनलाइन होने पर सिंक होगा)';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => 'रद्द करें';
 
   @override
-  String get delete => 'Delete';
+  String get delete => 'हटाएं';
 
   @override
-  String get confirm => 'Confirm';
+  String get confirm => 'पुष्टि करें';
 
   @override
-  String get requiredField => 'Required';
+  String get requiredField => 'आवश्यक';
 
   @override
   String error(String error) {
-    return 'Error: $error';
+    return 'त्रुटि: $error';
   }
 
   @override
-  String get orderDeleted => 'Order deleted (will sync when online)';
+  String get orderDeleted => 'ऑर्डर हटा दिया गया';
 
   @override
   String errorDeletingOrder(String error) {
-    return 'Error deleting order: $error';
+    return 'हटाने में त्रुटि: $error';
   }
 
   @override
   String ordersCount(int count) {
-    return '$count orders';
+    return '$count ऑर्डर';
   }
 
   @override
-  String get noLocation => 'No location';
+  String get noLocation => 'कोई स्थान नहीं';
 
   @override
-  String get unnamed => 'Unnamed';
+  String get unnamed => 'बेनाम';
 
   @override
   String ordersDateTitle(String date) {
-    return 'Orders - $date';
+    return 'ऑर्डर - $date';
   }
 
   @override
-  String get dishSummary => 'Dish Summary';
+  String get dishSummary => 'डिश सारांश';
 
   @override
-  String get retry => 'Retry';
+  String get retry => 'पुनः प्रयास करें';
 
   @override
-  String get noOrdersFound => 'No orders found for this date';
+  String get noOrdersFound => 'इस तारीख के लिए कोई ऑर्डर नहीं';
 
   @override
   String vegCount(int count) {
-    return 'Veg: $count';
+    return 'शाकाहारी: $count';
   }
 
   @override
   String nonVegCount(int count) {
-    return 'Non-Veg: $count';
+    return 'मांसाहारी: $count';
   }
 
   @override
   String totalCount(int count) {
-    return 'Total: $count';
+    return 'कुल: $count';
   }
 
   @override
   String failedLoadSummary(String error) {
-    return 'Failed to load summary: $error';
+    return 'सारांश लोड करने में विफल: $error';
   }
 
   @override
   String errorLoadingSummary(String error) {
-    return 'Error loading summary: $error';
+    return 'त्रुटि: $error';
   }
 
   @override
   String summaryDateTitle(String date) {
-    return 'Summary - $date';
+    return 'सारांश - $date';
   }
 
   @override
-  String get noDishesFound => 'No dishes found for this date';
+  String get noDishesFound => 'कोई व्यंजन नहीं मिला';
 
   @override
-  String get unnamedDish => 'Unnamed dish';
+  String get unnamedDish => 'बेनाम व्यंजन';
 
   @override
   String qtyWithCount(int count) {
-    return 'Qty: $count';
+    return 'मात्रा: $count';
   }
 
   @override
-  String get kitchenView => 'Kitchen View';
+  String get kitchenView => 'रसोई';
 
   @override
-  String get dispatchView => 'Dispatch View';
+  String get dispatchView => 'डिस्पैच';
 
   @override
-  String get punchInOut => 'Punch In/Out';
+  String get punchInOut => 'पंच इन/आउट';
 
   @override
-  String get staffManagement => 'Staff Management';
+  String get staffManagement => 'स्टाफ प्रबंधन';
 
   @override
-  String get adminOnly => 'Admin Only';
+  String get adminOnly => 'केवल एडमिन';
 
   @override
-  String get restrictedToAdmins => '⛔ Staff Management is restricted to Admins';
+  String get restrictedToAdmins => '⛔ केवल एडमिन के लिए';
 
   @override
-  String get utensils => 'Utensils';
+  String get utensils => 'बर्तन';
 
   @override
-  String get kitchenOperations => 'Kitchen Operations';
+  String get kitchenOperations => 'रसोई संचालन';
 
   @override
-  String get ordersView => 'Orders View';
+  String get ordersView => 'ऑर्डर';
 
   @override
-  String get productionQueue => 'Production Queue';
+  String get productionQueue => 'उत्पादन कतार';
 
   @override
-  String get ready => 'Ready';
+  String get ready => 'तैयार';
 
   @override
-  String get other => 'Other';
+  String get other => 'अन्य';
 
   @override
-  String get internalKitchen => 'Internal Kitchen';
+  String get internalKitchen => 'आंतरिक रसोई';
 
   @override
-  String get subcontract => 'Subcontract';
+  String get subcontract => 'सबकांट्रैक्ट';
 
   @override
-  String get liveCounter => 'Live Counter';
+  String get liveCounter => 'लाइव काउंटर';
 
   @override
-  String get prepIngredients => '🔥 PREP INGREDIENTS';
+  String get prepIngredients => '🔥 सामग्री तैयार करें';
 
   @override
-  String get live => 'LIVE';
+  String get live => 'लाइव';
 
   @override
-  String get prep => 'Prep';
+  String get prep => 'तैयारी';
 
   @override
-  String get start => 'Start';
+  String get start => 'शुरू';
 
   @override
-  String get prepping => 'Prepping';
+  String get prepping => 'तैयारी चल रही है';
 
   @override
-  String get inQueue => 'In Queue';
+  String get inQueue => 'कतार में';
 
   @override
-  String get assignEdit => 'Assign / Edit';
+  String get assignEdit => 'सौंपें / संपादित करें';
 
   @override
-  String get productionSettings => 'Production Settings';
+  String get productionSettings => 'उत्पादन सेटिंग्स';
 
   @override
-  String get noItemsInQueue => 'No items in production queue';
+  String get noItemsInQueue => 'कतार में कोई आइटम नहीं';
 
   @override
-  String get done => 'Done';
+  String get done => 'हो गया';
 
   @override
-  String get noRecipeDefined => 'No recipe defined for this dish';
+  String get noRecipeDefined => 'कोई रेसिपी नहीं';
 
   @override
-  String get ingredientsRequired => '📋 Ingredients Required:';
+  String get ingredientsRequired => '📋 आवश्यक सामग्री:';
 
   @override
-  String get noReadyItems => 'No ready items';
+  String get noReadyItems => 'कोई तैयार आइटम नहीं';
 
   @override
-  String get returnItem => 'Return';
+  String get returnItem => 'वापस करें';
 
   @override
   String paxLabel(int count) {
-    return 'Pax: $count';
+    return 'पैक्स: $count';
   }
 
   @override
   String locLabel(String location) {
-    return 'Loc: $location';
+    return 'स्थान: $location';
   }
 
   @override
-  String get na => 'N/A';
+  String get na => 'लागू नहीं';
 
   @override
-  String get noOrdersForDispatch => 'No orders available for dispatch today';
+  String get noOrdersForDispatch => 'डिस्पैच के लिए कोई ऑर्डर नहीं';
 
   @override
-  String get createDispatch => 'Create Dispatch';
+  String get createDispatch => 'डिस्पैच बनाएं';
 
   @override
-  String get dispatchDetails => 'Dispatch Details';
+  String get dispatchDetails => 'विवरण';
 
   @override
-  String get driverName => 'Driver Name';
+  String get driverName => 'ड्राइवर का नाम';
 
   @override
-  String get vehicleNumber => 'Vehicle Number';
+  String get vehicleNumber => 'वाहन नंबर';
 
   @override
-  String get noPendingDispatches => 'No pending dispatches yet!';
+  String get noPendingDispatches => 'कोई लंबित डिस्पैच नहीं!';
 
   @override
-  String get tapToAddDispatch =>
-      'Tap the \'+\' button to create a new dispatch.';
+  String get tapToAddDispatch => '+ टैप करके जोड़ें।';
 
   @override
   String orderFor(String name) {
-    return 'Order for: $name';
+    return 'ऑर्डर: $name';
   }
 
   @override
   String driverWithVehicle(String driver, String vehicle) {
-    return 'Driver: $driver ($vehicle)';
+    return 'ड्राइवर: $driver ($vehicle)';
   }
 
   @override
-  String get statusPending => 'Pending';
+  String get statusPending => 'लंबित';
 
   @override
-  String get statusDispatched => 'DISPATCHED';
+  String get statusDispatched => 'भेजा गया';
 
   @override
-  String get statusDelivered => 'DELIVERED';
+  String get statusDelivered => 'वितरित';
 
   @override
   String failedUpdateStatus(String error) {
-    return 'Failed to update status: $error';
+    return 'विफल: $error';
   }
 
   @override
-  String get payroll => 'Payroll';
+  String get payroll => 'पेरोल';
 
   @override
-  String get staff => 'Staff';
+  String get staff => 'स्टाफ';
 
   @override
   String get today => 'Today';
 
   @override
-  String get noStaffMembers => 'No staff members';
+  String get noStaffMembers => 'कोई स्टाफ नहीं';
 
   @override
-  String get tapToAddStaff => 'Tap + to add staff';
+  String get tapToAddStaff => '+ टैप करके स्टाफ जोड़ें';
 
   @override
-  String get unknown => 'Unknown';
+  String get unknown => 'अज्ञात';
 
   @override
-  String get noMobile => 'No mobile';
+  String get noMobile => 'मोबाइल नहीं';
 
   @override
-  String get permanent => 'Permanent';
+  String get permanent => 'स्थायी';
 
   @override
-  String get dailyWage => 'Daily Wage';
+  String get dailyWage => 'दैनिक वेतन';
 
   @override
-  String get contractor => 'Contractor';
+  String get contractor => 'ठेकेदार';
 
   @override
-  String get alreadyPunchedIn => 'Already punched in today!';
+  String get alreadyPunchedIn => 'आज पहले ही पंच इन कर चुके हैं!';
 
   @override
-  String get couldNotGetLocation => 'Could not get location';
+  String get couldNotGetLocation => 'स्थान प्राप्त नहीं कर सके';
 
   @override
-  String get punchedInGeo => '✓ Punched In (Within Geo-fence)';
+  String get punchedInGeo => '✓ पंच इन (सीमा के भीतर)';
 
   @override
-  String get punchedInNoGeo => '⚠️ Punched In (Outside Geo-fence)';
+  String get punchedInNoGeo => '⚠️ पंच इन (सीमा के बाहर)';
 
   @override
   String punchedOutMsg(String hours, String ot) {
-    return 'Punched Out - $hours hrs$ot';
+    return 'पंच आउट - $hours घंटे $ot';
   }
 
   @override
-  String get totalStaff => 'Total Staff';
+  String get totalStaff => 'कुल स्टाफ';
 
   @override
-  String get present => 'Present';
+  String get present => 'उपस्थित';
 
   @override
-  String get absent => 'Absent';
+  String get absent => 'अनुपस्थित';
 
   @override
-  String get noAttendanceToday => 'No attendance records today';
+  String get noAttendanceToday => 'आज कोई उपस्थिति नहीं';
 
   @override
-  String get workingStatus => 'working';
+  String get workingStatus => 'काम कर रहे हैं';
 
   @override
   String get otLabel => 'OT';
 
   @override
-  String get addStaff => 'Add Staff';
+  String get addStaff => 'स्टाफ जोड़ें';
 
   @override
-  String get staffDetails => 'Staff Details';
+  String get staffDetails => 'स्टाफ विवरण';
 
   @override
   String tapToPhoto(String action) {
-    return 'Tap to $action photo';
+    return 'फोटो $action के लिए टैप करें';
   }
 
   @override
-  String get basicInfo => 'Basic Information';
+  String get basicInfo => 'बुनियादी जानकारी';
 
   @override
-  String get fullName => 'Full Name *';
+  String get fullName => 'पूरा नाम *';
 
   @override
-  String get roleDesignation => 'Role/Designation';
+  String get roleDesignation => 'पद';
 
   @override
-  String get staffType => 'Staff Type';
+  String get staffType => 'प्रकार';
 
   @override
-  String get email => 'Email';
+  String get email => 'ईमेल';
 
   @override
-  String get salaryRates => 'Salary & Rates';
+  String get salaryRates => 'वेतन दरें';
 
   @override
-  String get monthlySalary => 'Monthly Salary (₹)';
+  String get monthlySalary => 'मासिक वेतन (₹)';
 
   @override
-  String get payoutFrequency => 'Payout Frequency';
+  String get payoutFrequency => 'भुगतान आवृत्ति';
 
   @override
-  String get dailyWageLabel => 'Daily Wage (₹)';
+  String get dailyWageLabel => 'दैनिक वेतन (₹)';
 
   @override
-  String get hourlyRate => 'Hourly Rate (₹)';
+  String get hourlyRate => 'प्रति घंटा दर (₹)';
 
   @override
-  String get bankIdDetails => 'Bank & ID Details';
+  String get bankIdDetails => 'बैंक और आईडी विवरण';
 
   @override
-  String get bankName => 'Bank Name';
+  String get bankName => 'बैंक का नाम';
 
   @override
-  String get accountNumber => 'Account Number';
+  String get accountNumber => 'खाता संख्या';
 
   @override
-  String get ifscCode => 'IFSC Code';
+  String get ifscCode => 'आईएफएससी कोड';
 
   @override
-  String get aadharNumber => 'Aadhar Number';
+  String get aadharNumber => 'आधार नंबर';
 
   @override
-  String get emergencyContact => 'Emergency Contact';
+  String get emergencyContact => 'आपातकालीन संपर्क';
 
   @override
-  String get contactName => 'Contact Name';
+  String get contactName => 'नाम';
 
   @override
-  String get contactNumber => 'Contact Number';
+  String get contactNumber => 'नंबर';
 
   @override
-  String get address => 'Address';
+  String get address => 'पता';
 
   @override
-  String get addStaffBtn => 'ADD STAFF';
+  String get addStaffBtn => 'जोड़ें';
 
   @override
-  String get saveChanges => 'SAVE CHANGES';
+  String get saveChanges => 'परिवर्तन सहेजें';
 
   @override
-  String get advances => 'Advances';
+  String get advances => 'अग्रिम';
 
   @override
-  String get attendance => 'Attendance';
+  String get attendance => 'उपस्थिति';
 
   @override
-  String get totalAdvances => 'Total Advances';
+  String get totalAdvances => 'कुल अग्रिम';
 
   @override
-  String get pendingDeduction => 'Pending Deduction';
+  String get pendingDeduction => 'लंबित कटौती';
 
   @override
-  String get addAdvance => 'Add Advance';
+  String get addAdvance => 'अग्रिम जोड़ें';
 
   @override
-  String get noAdvances => 'No advances recorded';
+  String get noAdvances => 'कोई अग्रिम नहीं';
 
   @override
-  String get deducted => 'Deducted';
+  String get deducted => 'कटौती की गई';
 
   @override
-  String get pending => 'Pending';
+  String get pending => 'लंबित';
 
   @override
   String reason(String reason) {
@@ -864,565 +863,563 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get deleteStaff => 'Delete Staff';
+  String get deleteStaff => 'स्टाफ हटाएं';
 
   @override
   String get deleteStaffConfirm =>
-      'Are you sure you want to delete this staff member? This cannot be undone.';
+      'निश्चित रूप से हटाएं? इसे पूर्ववत नहीं किया जा सकता।';
 
   @override
-  String get staffDeleted => 'Staff deleted';
+  String get staffDeleted => 'हटा दिया गया';
 
   @override
-  String get staffAdded => 'Staff added!';
+  String get staffAdded => 'जोड़ा गया!';
 
   @override
-  String get staffUpdated => 'Staff updated!';
+  String get staffUpdated => 'अपडेट किया गया!';
 
   @override
-  String get selectPhoto => 'Select Photo';
+  String get selectPhoto => 'फोटो चुनें';
 
   @override
-  String get camera => 'Camera';
+  String get camera => 'कैमरा';
 
   @override
-  String get gallery => 'Gallery';
+  String get gallery => 'गेलरी';
 
   @override
-  String get photoSelectedWeb => 'Photo selected (Web Mode)';
+  String get photoSelectedWeb => 'फोटो चुना गया';
 
   @override
-  String get photoUpdated => 'Photo updated';
+  String get photoUpdated => 'अपडेट किया गया';
 
   @override
-  String get amountRupee => 'Amount (₹)';
+  String get amountRupee => 'राशि (₹)';
 
   @override
-  String get staffPayroll => 'Staff Payroll';
+  String get staffPayroll => 'स्टाफ पेरोल';
 
   @override
-  String get basePay => 'Base Pay';
+  String get basePay => 'मूल वेतन';
 
   @override
-  String get otPay => 'OT Pay';
+  String get otPay => 'ओवरटाइम वेतन';
 
   @override
-  String get netPay => 'Net Pay';
+  String get netPay => 'शुद्ध वेतन';
 
   @override
-  String get noStaffData => 'No staff data';
+  String get noStaffData => 'कोई डेटा नहीं';
 
   @override
-  String get processPayroll => 'Process Payroll';
+  String get processPayroll => 'वेतन संसाधित करें';
 
   @override
   String processPayrollConfirm(String name, String date) {
-    return 'Mark all pending advances as deducted for $name for $date?';
+    return 'क्या $name के लिए अग्रिम में कटौती करें ($date)?';
   }
 
   @override
   String payrollProcessed(String name) {
-    return 'Payroll processed for $name';
+    return '$name का वेतन संसाधित किया गया';
   }
 
   @override
-  String get advanceDeduction => 'Advance Deduction';
+  String get advanceDeduction => 'अग्रिम कटौती';
 
   @override
-  String get netPayable => 'Net Payable';
+  String get netPayable => 'देय राशि';
 
   @override
-  String get markAdvancesDeducted => 'Mark Advances Deducted';
+  String get markAdvancesDeducted => 'कटौती के रूप में चिह्नित करें';
 
   @override
   String otMultiplierInfo(String rate) {
-    return 'OT Multiplier: ${rate}x | OT = hours > 8 × hourly rate × $rate';
+    return 'OT गुणक: ${rate}x | 8 घंटे से अधिक';
   }
 
   @override
-  String get utensilsTracking => 'Utensils Tracking';
+  String get utensilsTracking => 'बर्तन ट्रैकिंग';
 
   @override
-  String get noUtensilsAdded => 'No utensils added yet';
+  String get noUtensilsAdded => 'कोई बर्तन नहीं';
 
   @override
-  String get addFirstUtensil => 'Add First Utensil';
+  String get addFirstUtensil => 'पहला बर्तन जोड़ें';
 
   @override
-  String get addUtensil => 'Add Utensil';
+  String get addUtensil => 'बर्तन जोड़ें';
 
   @override
-  String get utensilName => 'Utensil Name';
+  String get utensilName => 'बर्तन का नाम';
 
   @override
-  String get utensilNameHint => 'e.g., Plates, Spoons, Cups';
+  String get utensilNameHint => 'उदा. प्लेट, कप';
 
   @override
-  String get totalStock => 'Total Stock';
+  String get totalStock => 'कुल स्टॉक';
 
   @override
-  String get enterQuantity => 'Enter quantity';
+  String get enterQuantity => 'मात्रा दर्ज करें';
 
   @override
-  String get availableStock => 'Available Stock';
+  String get availableStock => 'उपलब्ध स्टॉक';
 
   @override
-  String get enterUtensilName => 'Please enter utensil name';
+  String get enterUtensilName => 'नाम दर्ज करें';
 
   @override
-  String get utensilAdded => '✅ Utensil added';
+  String get utensilAdded => '✅ जोड़ा गया';
 
   @override
-  String get utensilUpdated => '✅ Utensil updated';
+  String get utensilUpdated => '✅ अपडेट किया गया';
 
   @override
-  String get utensilDeleted => 'Utensil deleted';
+  String get utensilDeleted => 'हटा दिया गया';
 
   @override
   String editUtensil(String name) {
-    return 'Edit: $name';
+    return 'संपादित करें: $name';
   }
 
   @override
-  String get deleteUtensil => 'Delete Utensil?';
+  String get deleteUtensil => 'हटाएं?';
 
   @override
   String deleteUtensilConfirm(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return '\"$name\" को हटाएं?';
   }
 
   @override
-  String get save => 'Save';
+  String get save => 'सहेजें';
 
   @override
-  String get add => 'Add';
+  String get add => 'जोड़ें';
 
   @override
   String availableCount(int available, int total) {
-    return 'Available: $available / $total';
+    return 'उपलब्ध: $available / $total';
   }
 
   @override
   String issuedCount(int issued, String percent) {
-    return 'Issued: $issued ($percent% utilized)';
+    return 'जारी: $issued ($percent%)';
   }
 
   @override
-  String get inventoryHub => 'Inventory Hub';
+  String get inventoryHub => 'इन्वेंट्री हब';
 
   @override
-  String get ingredients => 'Ingredients';
+  String get ingredients => 'सामग्री';
 
   @override
-  String get masterList => 'Master List';
+  String get masterList => 'मास्टर सूची';
 
   @override
-  String get bom => 'BOM';
+  String get bom => 'बीओएम';
 
   @override
-  String get recipeMapping => 'Recipe Mapping';
+  String get recipeMapping => 'रेसिपी मैप';
 
   @override
-  String get mrpRun => 'MRP Run';
+  String get mrpRun => 'एमआरपी रन';
 
   @override
-  String get calculate => 'Calculate';
+  String get calculate => 'गणना करें';
 
   @override
-  String get purchaseOrders => 'Purchase Orders';
+  String get purchaseOrders => 'खरीद आदेश';
 
   @override
-  String get purchaseOrderShort => 'PO';
+  String get purchaseOrderShort => 'पीओ';
 
   @override
-  String get trackOrders => 'Track Orders';
+  String get trackOrders => 'ऑर्डर ट्रैक करें';
 
   @override
-  String get suppliers => 'Suppliers';
+  String get suppliers => 'आपूर्तिकर्ता';
 
   @override
-  String get vendors => 'Vendors';
+  String get vendors => 'विक्रेता';
 
   @override
-  String get subcontractors => 'Subcontractors';
+  String get subcontractors => 'उपठेकेदार';
 
   @override
-  String get kitchens => 'Kitchens';
+  String get kitchens => 'रसोई';
 
   @override
-  String get ingredientsMaster => 'Ingredients Master';
+  String get ingredientsMaster => 'सामग्री मास्टर';
 
   @override
-  String get ingredientName => 'Ingredient Name';
+  String get ingredientName => 'सामग्री का नाम';
 
   @override
-  String get skuBrandOptional => 'SKU / Brand Name (Optional)';
+  String get skuBrandOptional => 'SKU / ब्रांड (वैकल्पिक)';
 
   @override
-  String get costPerUnit => 'Cost per Unit (₹)';
+  String get costPerUnit => 'प्रति यूनिट लागत (₹)';
 
   @override
-  String get category => 'Category';
+  String get category => 'श्रेणी';
 
   @override
-  String get unit => 'Unit';
+  String get unit => 'इकाई';
 
   @override
-  String get unitKg => 'Kilogram (kg)';
+  String get unitKg => 'किलोग्राम (kg)';
 
   @override
-  String get unitG => 'Gram (g)';
+  String get unitG => 'ग्राम (g)';
 
   @override
-  String get unitL => 'Liter';
+  String get unitL => 'लीटर';
 
   @override
-  String get unitMl => 'Milliliter (ml)';
+  String get unitMl => 'मिलीलीटर (ml)';
 
   @override
-  String get unitNos => 'Numbers (nos)';
+  String get unitNos => 'संख्या (nos)';
 
   @override
-  String get unitBunch => 'Bunch';
+  String get unitBunch => 'गुच्छा';
 
   @override
-  String get unitPcs => 'Pieces (pcs)';
+  String get unitPcs => 'टुकड़े (pcs)';
 
   @override
-  String get enterIngredientName => 'Enter ingredient name';
+  String get enterIngredientName => 'नाम दर्ज करें';
 
   @override
-  String get ingredientAdded => '✅ Ingredient added';
+  String get ingredientAdded => '✅ जोड़ा गया';
 
   @override
-  String get editIngredient => 'Edit Ingredient';
+  String get editIngredient => 'संपादित करें';
 
   @override
-  String get ingredientUpdated => '✅ Ingredient updated';
+  String get ingredientUpdated => '✅ अपडेट किया गया';
 
   @override
-  String get searchPlaceholder => 'Search...';
+  String get searchPlaceholder => 'खोजें...';
 
   @override
   String ingredientsCount(int count) {
-    return '$count ingredients';
+    return '$count सामग्री';
   }
 
   @override
   String categoriesCount(int count) {
-    return '$count categories';
+    return '$count श्रेणियां';
   }
 
   @override
-  String get catAll => 'All';
+  String get catAll => 'सभी';
 
   @override
-  String get catVegetable => 'Vegetable';
+  String get catVegetable => 'सब्जी';
 
   @override
-  String get catMeat => 'Meat';
+  String get catMeat => 'मांस';
 
   @override
-  String get catSeafood => 'Seafood';
+  String get catSeafood => 'सीफूड';
 
   @override
-  String get catSpice => 'Spice';
+  String get catSpice => 'मसाला';
 
   @override
-  String get catDairy => 'Dairy';
+  String get catDairy => 'डेयरी';
 
   @override
-  String get catGrain => 'Grain';
+  String get catGrain => 'अनाज';
 
   @override
-  String get catOil => 'Oil';
+  String get catOil => 'तेल';
 
   @override
-  String get catBeverage => 'Beverage';
+  String get catBeverage => 'पेय';
 
   @override
-  String get catOther => 'Other';
+  String get catOther => 'अन्य';
 
   @override
-  String get bomManagement => 'BOM Management';
+  String get bomManagement => 'बीओएम प्रबंधन';
 
   @override
-  String get bomInfo =>
-      'Define ingredients required for each dish at 100 pax standard';
+  String get bomInfo => '100 लोगों के लिए आवश्यक सामग्री';
 
   @override
-  String get searchDishes => 'Search dishes...';
+  String get searchDishes => 'व्यंजन खोजें...';
 
   @override
-  String get addDishesHint => 'Add dishes in Menu Management first';
+  String get addDishesHint => 'पहले मेनू में व्यंजन जोड़ें';
 
   @override
   String itemsCount(int count) {
-    return '$count items';
+    return '$count आइटम';
   }
 
   @override
-  String get quantity100Pax => 'Quantity for 100 pax';
+  String get quantity100Pax => '100 लोगों के लिए मात्रा';
 
   @override
-  String get selectIngredient => 'Select Ingredient';
+  String get selectIngredient => 'सामग्री चुनें';
 
   @override
-  String get selectIngredientHint => 'Select ingredient and enter quantity';
+  String get selectIngredientHint => 'चुनें और मात्रा दर्ज करें';
 
   @override
-  String get allIngredientsAdded => 'All ingredients already added';
+  String get allIngredientsAdded => 'सभी जोड़े गए';
 
   @override
-  String get quantityUpdated => '✅ Quantity updated';
+  String get quantityUpdated => '✅ मात्रा अपडेट की गई';
 
   @override
-  String get ingredientRemoved => 'Ingredient removed';
+  String get ingredientRemoved => 'हटा दिया गया';
 
   @override
-  String get pax100 => '100 PAX';
+  String get pax100 => '100 लोग';
 
   @override
-  String get noIngredientsAdded => 'No ingredients added';
+  String get noIngredientsAdded => 'कोई सामग्री नहीं';
 
   @override
-  String get mrpRunScreenTitle => 'MRP Run';
+  String get mrpRunScreenTitle => 'एमआरपी रन';
 
   @override
-  String get changeDate => 'Change Date';
+  String get changeDate => 'तारीख बदलें';
 
   @override
-  String get totalOrders => 'Total Orders';
+  String get totalOrders => 'कुल ऑर्डर';
 
   @override
-  String get liveKitchen => 'Live Kitchen';
+  String get liveKitchen => 'लाइव किचन';
 
   @override
-  String get subcontracted => 'Subcontracted';
+  String get subcontracted => 'सबकांट्रेक्टेड';
 
   @override
-  String get noOrdersForDate => 'No orders for selected date';
+  String get noOrdersForDate => 'कोई ऑर्डर नहीं';
 
   @override
-  String get selectDifferentDate => 'Select Different Date';
+  String get selectDifferentDate => 'दूसरी तारीख चुनें';
 
   @override
-  String get runMrp => 'RUN MRP';
+  String get runMrp => 'एमआरपी चलाएं';
 
   @override
-  String get calculating => 'Calculating...';
+  String get calculating => 'गणना हो रही है...';
 
   @override
-  String get noOrdersToProcess => 'No orders to process';
+  String get noOrdersToProcess => 'कोई ऑर्डर नहीं';
 
   @override
-  String get venueNotSpecified => 'Venue not specified';
+  String get venueNotSpecified => 'स्थान निर्दिष्ट नहीं है';
 
   @override
-  String get selectSubcontractor => 'Select Subcontractor';
+  String get selectSubcontractor => 'उपठेकेदार चुनें';
 
   @override
-  String get liveKitchenChip => 'Live Kitchen';
+  String get liveKitchenChip => 'लाइव';
 
   @override
-  String get subcontractChip => 'Subcontract';
+  String get subcontractChip => 'ठेका';
 
   @override
-  String get mrpOutputTitle => 'MRP Output';
+  String get mrpOutputTitle => 'एमआरपी आउटपुट';
 
   @override
-  String get noIngredientsCalculated => 'No ingredients calculated';
+  String get noIngredientsCalculated => 'गणना नहीं की गई';
 
   @override
-  String get checkBomDefined => 'Check if dishes have BOM defined';
+  String get checkBomDefined => 'बीओएम की जांच करें';
 
   @override
-  String get total => 'total';
+  String get total => 'कुल';
 
   @override
-  String get proceedToAllotment => 'PROCEED TO ALLOTMENT';
+  String get proceedToAllotment => 'आवंटन के लिए आगे बढ़ें';
 
   @override
-  String get allotmentTitle => 'Allotment';
+  String get allotmentTitle => 'आवंटन';
 
   @override
-  String get supplierAllotment => 'Supplier Allotment';
+  String get supplierAllotment => 'आपूर्तिकर्ता आवंटन';
 
   @override
-  String get summary => 'Summary';
+  String get summary => 'सारांश';
 
   @override
-  String get assignIngredientHint => 'Assign each ingredient to a supplier';
+  String get assignIngredientHint => 'आपूर्तिकर्ताओं को असाइन करें';
 
   @override
   String assignedStatus(int assigned, int total) {
-    return '$assigned/$total assigned';
+    return '$assigned/$total असाइन किया गया';
   }
 
   @override
-  String get supplier => 'Supplier';
+  String get supplier => 'आपूर्तिकर्ता';
 
   @override
-  String get generateAndSendPos => 'GENERATE & SEND POs';
+  String get generateAndSendPos => 'पीओ जनरेट करें और भेजें';
 
   @override
   String posWillBeGenerated(int count) {
-    return '$count POs will be generated';
+    return '$count पीओ जनरेट होंगे';
   }
 
   @override
-  String get noAllocationsMade => 'No allocations made yet';
+  String get noAllocationsMade => 'कोई आवंटन नहीं';
 
   @override
-  String get allocateIngredientsFirst =>
-      'Allocate ingredients to suppliers first';
+  String get allocateIngredientsFirst => 'पहले आवंटन करें';
 
   @override
   String posGeneratedSuccess(int count) {
-    return '✅ $count POs generated and sent';
+    return '✅ $count पीओ जनरेट किए गए';
   }
 
   @override
-  String get catGrocery => 'Grocery';
+  String get catGrocery => 'किराना';
 
   @override
-  String get supplierMaster => 'Supplier Master';
+  String get supplierMaster => 'आपूर्तिकर्ता';
 
   @override
-  String get addSupplier => 'Add Supplier';
+  String get addSupplier => 'आपूर्तिकर्ता जोड़ें';
 
   @override
-  String get editSupplier => 'Edit Supplier';
+  String get editSupplier => 'संपादित करें';
 
   @override
-  String get nameRequired => 'Name *';
+  String get nameRequired => 'नाम *';
 
   @override
-  String get mobile => 'Mobile';
+  String get mobile => 'मोबाइल';
 
   @override
-  String get gstNumber => 'GST Number';
+  String get gstNumber => 'जीएसटी नंबर';
 
   @override
-  String get bankDetails => 'Bank Details';
+  String get bankDetails => 'बैंक विवरण';
 
   @override
-  String get enterSupplierName => 'Enter supplier name';
+  String get enterSupplierName => 'नाम दर्ज करें';
 
   @override
-  String get supplierUpdated => '✅ Supplier updated';
+  String get supplierUpdated => '✅ अपडेट किया गया';
 
   @override
-  String get supplierAdded => '✅ Supplier added';
+  String get supplierAdded => '✅ जोड़ा गया';
 
   @override
-  String get noSuppliersAdded => 'No suppliers added';
+  String get noSuppliersAdded => 'कोई आपूर्तिकर्ता नहीं';
 
   @override
-  String get noPhone => 'No phone';
+  String get noPhone => 'फोन नहीं';
 
   @override
-  String get subcontractorMaster => 'Subcontractor Master';
+  String get subcontractorMaster => 'उपठेकेदार';
 
   @override
-  String get editSubcontractor => 'Edit Subcontractor';
+  String get editSubcontractor => 'संपादित करें';
 
   @override
-  String get addSubcontractor => 'Add Subcontractor';
+  String get addSubcontractor => 'जोड़ें';
 
   @override
-  String get kitchenBusinessName => 'Kitchen/Business Name *';
+  String get kitchenBusinessName => 'नाम *';
 
   @override
-  String get mobileRequired => 'Mobile *';
+  String get mobileRequired => 'मोबाइल *';
 
   @override
-  String get specialization => 'Specialization';
+  String get specialization => 'विशेषज्ञता';
 
   @override
-  String get specializationHint => 'e.g., Biriyani, Chinese, Sweets';
+  String get specializationHint => 'उदा. बिरयानी';
 
   @override
-  String get ratePerPax => 'Rate per Pax (₹)';
+  String get ratePerPax => 'दर (प्रति व्यक्ति - ₹)';
 
   @override
-  String get enterNameMobile => 'Enter name and mobile';
+  String get enterNameMobile => 'नाम और नंबर';
 
   @override
-  String get subcontractorUpdated => '✅ Subcontractor updated';
+  String get subcontractorUpdated => '✅ अपडेट किया गया';
 
   @override
-  String get subcontractorAdded => '✅ Subcontractor added';
+  String get subcontractorAdded => '✅ जोड़ा गया';
 
   @override
-  String get noSubcontractorsAdded => 'No subcontractors added';
+  String get noSubcontractorsAdded => 'कोई नहीं';
 
   @override
-  String get perPax => 'per pax';
+  String get perPax => 'प्रति व्यक्ति';
 
   @override
-  String get purchaseOrdersTitle => 'Purchase Orders';
+  String get purchaseOrdersTitle => 'खरीद आदेश';
 
   @override
-  String get statusSent => 'SENT';
+  String get statusSent => 'भेजा गया';
 
   @override
-  String get statusViewed => 'VIEWED';
+  String get statusViewed => 'देखा गया';
 
   @override
-  String get statusAccepted => 'ACCEPTED';
+  String get statusAccepted => 'स्वीकार किया गया';
 
   @override
   String purchaseOrdersCount(int count) {
-    return '$count purchase orders';
+    return '$count खरीद आदेश';
   }
 
   @override
-  String get noPurchaseOrders => 'No purchase orders';
+  String get noPurchaseOrders => 'कोई नहीं';
 
   @override
-  String get runMrpHint => 'Run MRP to generate POs';
+  String get runMrpHint => 'पीओ पाने के लिए एमआरपी चलाएं';
 
   @override
-  String get dispatchTitle => 'Dispatch';
+  String get dispatchTitle => 'डिस्पैच';
 
   @override
-  String get tabList => 'List';
+  String get tabList => 'सूची';
 
   @override
-  String get tabActive => 'Active';
+  String get tabActive => 'सक्रिय';
 
   @override
-  String get tabReturns => 'Returns';
+  String get tabReturns => 'वापसी';
 
   @override
-  String get tabUnload => 'Unload';
+  String get tabUnload => 'उतारना';
 
   @override
   String noPendingOrdersDate(String date) {
-    return 'No pending orders for $date';
+    return 'कोई लंबित ऑर्डर नहीं';
   }
 
   @override
-  String get noActiveDispatches => 'No active dispatches';
+  String get noActiveDispatches => 'सक्रिय नहीं';
 
   @override
-  String get noReturnTracking => 'No items for return tracking';
+  String get noReturnTracking => 'नहीं';
 
   @override
-  String get noUnloadItems => 'No items ready for unload';
+  String get noUnloadItems => 'उतारने के लिए कुछ नहीं';
 
   @override
-  String get startDispatch => 'Start Dispatch';
+  String get startDispatch => 'शुरू करें';
 
   @override
-  String get waitingForKitchen => 'Waiting for Kitchen';
+  String get waitingForKitchen => 'रसोई का इंतजार';
 
   @override
-  String get track => 'Track';
+  String get track => 'ट्रैक';
 
   @override
-  String get verify => 'Verify';
+  String get verify => 'सत्यापित करें';
 
   @override
   String get trackReturn => 'Track Return';
@@ -1436,7 +1433,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get tapToViewItems => 'Tap to view loaded items →';
+  String get tapToViewItems => 'Tap to view loaded items ->';
 
   @override
   String get loadedItems => 'Loaded Items';
@@ -1445,23 +1442,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noItemsRecorded => 'No items recorded';
 
   @override
-  String get kitchenItems => '🍳 Kitchen Items';
+  String get kitchenItems => 'Kitchen Items';
 
   @override
-  String get kitchenItemsSubtitle => 'Prepared in kitchen - tick when loaded';
+  String get kitchenItemsSubtitle => 'Prepared in kitchen';
 
   @override
-  String get subcontractItems => '🏪 Subcontract Items';
+  String get subcontractItems => 'Subcontract Items';
 
   @override
-  String get subcontractItemsSubtitle =>
-      'Optional - may come directly to venue';
+  String get subcontractItemsSubtitle => 'Direct to venue';
 
   @override
-  String get liveCookingItems => '🔥 Live Cooking Items';
+  String get liveCookingItems => 'Live Cooking Items';
 
   @override
-  String get liveCookingItemsSubtitle => 'Load ingredients for on-site cooking';
+  String get liveCookingItemsSubtitle => 'On-site cooking';
 
   @override
   String get selectVehicle => 'Select Vehicle';
@@ -1571,244 +1567,244 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get qtyLabel => 'Qty';
+  String get qtyLabel => 'मात्रा';
 
   @override
-  String get reportsTitle => 'Reports';
+  String get reportsTitle => 'रिपोर्ट';
 
   @override
-  String get periodLabel => 'Period: ';
+  String get periodLabel => 'अवधि: ';
 
   @override
-  String get day => 'Day';
+  String get day => 'दिन';
 
   @override
-  String get week => 'Week';
+  String get week => 'सप्ताह';
 
   @override
-  String get month => 'Month';
+  String get month => 'महीना';
 
   @override
-  String get year => 'Year';
+  String get year => 'वर्ष';
 
   @override
-  String get orders => 'Orders';
+  String get orders => 'ऑर्डर';
 
   @override
-  String get kitchen => 'Kitchen';
+  String get kitchen => 'रसोई';
 
   @override
-  String get dispatch => 'Dispatch';
+  String get dispatch => 'डिस्पैच';
 
   @override
-  String get hr => 'HR';
+  String get hr => 'मानव संसाधन';
 
   @override
-  String get noDataSelectedPeriod => 'No data for selected period';
+  String get noDataSelectedPeriod => 'चयनित अवधि के लिए कोई डेटा नहीं';
 
   @override
-  String get revenue => 'Revenue';
+  String get revenue => 'राजस्व';
 
   @override
-  String get confirmed => 'Confirmed';
+  String get confirmed => 'पुष्टि की गई';
 
   @override
-  String get completed => 'Completed';
+  String get completed => 'पूरा हुआ';
 
   @override
-  String get cancelled => 'Cancelled';
+  String get cancelled => 'रद्द किया गया';
 
   @override
-  String get inProgress => 'In Progress';
+  String get inProgress => 'प्रगति में';
 
   @override
-  String get delivered => 'Delivered';
+  String get delivered => 'वितरित';
 
   @override
-  String get inTransit => 'In Transit';
+  String get inTransit => 'रास्ते में';
 
   @override
-  String get totalDispatches => 'Dispatches';
+  String get totalDispatches => 'कुल डिस्पैच';
 
   @override
-  String get hours => 'Hours';
+  String get hours => 'घंटे';
 
   @override
-  String get overtime => 'OT';
+  String get overtime => 'ओवरटाइम';
 
   @override
-  String get staffWithOt => 'Staff with OT';
+  String get staffWithOt => 'ओवरटाइम वाले स्टाफ';
 
   @override
-  String get totalOt => 'Total OT';
+  String get totalOt => 'कुल ओवरटाइम';
 
   @override
-  String get noOvertime => 'No overtime recorded';
+  String get noOvertime => 'कोई ओवरटाइम नहीं';
 
   @override
-  String get financeTitle => 'Finance';
+  String get financeTitle => 'वित्त';
 
   @override
-  String get income => 'Income';
+  String get income => 'आय';
 
   @override
-  String get expense => 'Expense';
+  String get expense => 'व्यय';
 
   @override
-  String get netBalance => 'Net Balance';
+  String get netBalance => 'शुद्ध शेष';
 
   @override
-  String get transactions => 'Transactions';
+  String get transactions => 'लेन-देन';
 
   @override
-  String get ledgers => 'Ledgers';
+  String get ledgers => 'खाता बही';
 
   @override
-  String get export => 'Export';
+  String get export => 'निर्यात';
 
   @override
-  String get recentTransactions => 'Recent Transactions';
+  String get recentTransactions => 'हाल के लेन-देन';
 
   @override
-  String get noTransactionsFound => 'No transactions found';
+  String get noTransactionsFound => 'कोई लेन-देन नहीं मिला';
 
   @override
-  String get exportingReport => 'Exporting Finance Report... (Mock)';
+  String get exportingReport => 'रिपोर्ट निर्यात की जा रही है...';
 
   @override
-  String get filterAll => 'All';
+  String get filterAll => 'सभी';
 
   @override
-  String get deleteTransactionTitle => 'Delete Transaction?';
+  String get deleteTransactionTitle => 'हटाएं?';
 
   @override
-  String get deleteTransactionContent => 'This cannot be undone.';
+  String get deleteTransactionContent => 'इसे पूर्ववत नहीं किया जा सकता।';
 
   @override
-  String get customers => 'Customers';
+  String get customers => 'ग्राहक';
 
   @override
-  String get comingSoon => 'Coming Soon';
+  String get comingSoon => 'जल्द आ रहा है';
 
   @override
-  String get addIncome => 'Add Income';
+  String get addIncome => 'आय जोड़ें';
 
   @override
-  String get addExpense => 'Add Expense';
+  String get addExpense => 'व्यय जोड़ें';
 
   @override
-  String get amountLabel => 'Amount';
+  String get amountLabel => 'राशि';
 
   @override
-  String get categoryLabel => 'Category';
+  String get categoryLabel => 'श्रेणी';
 
   @override
-  String get paymentModeLabel => 'Payment Mode';
+  String get paymentModeLabel => 'भुगतान मोड';
 
   @override
-  String get descriptionLabel => 'Description / Notes';
+  String get descriptionLabel => 'विवरण / नोट्स';
 
   @override
-  String get saveTransaction => 'Save Transaction';
+  String get saveTransaction => 'सहेजें';
 
   @override
-  String get enterAmount => 'Enter amount';
+  String get enterAmount => 'राशि दर्ज करें';
 
   @override
-  String get invalidAmount => 'Invalid amount';
+  String get invalidAmount => 'अमान्य राशि';
 
   @override
-  String get transactionSaved => 'Transaction Saved';
+  String get transactionSaved => 'लेन-देन सहेजा गया';
 
   @override
-  String get collectPayment => 'Collect Payment';
+  String get collectPayment => 'भुगतान प्राप्त करें';
 
   @override
-  String get selectPaymentMethod => 'Select Payment Method';
+  String get selectPaymentMethod => 'विधि चुनें';
 
   @override
-  String get upiRazorpay => 'UPI (Razorpay)';
+  String get upiRazorpay => 'यूपीआई (Razorpay)';
 
   @override
-  String get cardRazorpay => 'Credit/Debit Card (Razorpay)';
+  String get cardRazorpay => 'कार्ड (Razorpay)';
 
   @override
   String get cash => 'Cash';
 
   @override
-  String get paymentSuccessful => 'Payment Successful!';
+  String get paymentSuccessful => 'भुगतान सफल!';
 
   @override
   String paymentReceivedMsg(String amount, int orderId) {
-    return 'Payment of $amount received for Order #$orderId';
+    return '₹$amount प्राप्त हुए (ऑर्डर #$orderId)';
   }
 
   @override
   String paymentFailed(Object error) {
-    return 'Payment Failed: $error';
+    return 'विफल: $error';
   }
 
   @override
-  String get chooseSubscription => 'Choose Subscription Plan';
+  String get chooseSubscription => 'सदस्यता योजना चुनें';
 
   @override
-  String get selectStartPlan => 'Select Your Plan';
+  String get selectStartPlan => 'योजना चुनें';
 
   @override
   String payBtn(String amount) {
-    return 'Pay $amount';
+    return 'भुगतान करें ₹$amount';
   }
 
   @override
-  String get subscriptionActivated => 'Subscription Activated!';
+  String get subscriptionActivated => 'सदस्यता सक्रिय!';
 
   @override
   String planActiveUntil(String date) {
-    return 'Your plan is now active until $date.';
+    return '$date तक सक्रिय।';
   }
 
   @override
-  String get continueBtn => 'Continue';
+  String get continueBtn => 'जारी रखें';
 
   @override
-  String get auditReportTitle => 'Audit Report';
+  String get auditReportTitle => 'ऑडिट रिपोर्ट';
 
   @override
-  String get noLogsExport => 'No logs to export';
+  String get noLogsExport => 'निर्यात के लिए कोई लॉग नहीं';
 
   @override
   String exportFailed(Object error) {
-    return 'Export failed: $error';
+    return 'विफल: $error';
   }
 
   @override
-  String get startDate => 'Start Date';
+  String get startDate => 'प्रारंभ तिथि';
 
   @override
-  String get endDate => 'End Date';
+  String get endDate => 'अंतिम तिथि';
 
   @override
-  String get userIdLabel => 'User ID';
+  String get userIdLabel => 'उपयोगकर्ता आईडी';
 
   @override
-  String get tableLabel => 'Table';
+  String get tableLabel => 'तालिका';
 
   @override
-  String get noAuditLogs => 'No audit logs found';
+  String get noAuditLogs => 'कोई लॉग नहीं';
 
   @override
   String changedFields(String fields) {
-    return 'Changed: $fields';
+    return 'परिवर्तन: $fields';
   }
 
   @override
   String beforeVal(String val) {
-    return 'Before: $val';
+    return 'पहले: $val';
   }
 
   @override
   String afterVal(String val) {
-    return 'After: $val';
+    return 'बाद में: $val';
   }
 
   @override

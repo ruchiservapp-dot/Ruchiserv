@@ -8,6 +8,7 @@ import '../services/permission_service.dart';
 import '../services/notification_service.dart';
 import '../utils/staffing_logic.dart';
 import '../services/language_service.dart';
+import '../services/master_data_sync_service.dart';
 
 class AddOrderScreen extends StatefulWidget {
   final DateTime date;
@@ -438,6 +439,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       }
 
       if (!mounted) return;
+      
+      // Trigger Master Data Sync (for any new dishes created)
+      MasterDataSyncService().syncToAWS();
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.orderSaved)),
       );
@@ -582,6 +587,13 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                         final picked = await showTimePicker(
                           context: context,
                           initialTime: _selectedTime ?? TimeOfDay.now(),
+                          builder: (context, child) {
+                            return Localizations.override(
+                              context: context,
+                              locale: const Locale('en'),
+                              child: child,
+                            );
+                          },
                         );
                         if (picked != null) {
                           setState(() => _selectedTime = picked);

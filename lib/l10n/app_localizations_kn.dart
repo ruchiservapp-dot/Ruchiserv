@@ -12,851 +12,850 @@ class AppLocalizationsKn extends AppLocalizations {
   String get appTitle => 'RuchiServ';
 
   @override
-  String get signInContinue => 'Sign in to continue';
+  String get signInContinue => 'ముందుసాగడానికి సైన్ ఇన్ చేయండి';
 
   @override
-  String get firmId => 'Firm ID';
+  String get firmId => 'కంపెనీ ID';
 
   @override
-  String get enterFirmId => 'Enter firm ID';
+  String get enterFirmId => 'కంపెనీ ID ని నమోదు చేయండి';
 
   @override
-  String get mobileNumber => 'Mobile Number';
+  String get mobileNumber => 'మొబైల్ సంఖ్య';
 
   @override
-  String get enterMobile => 'Enter mobile';
+  String get enterMobile => 'మొబైల్ సంఖ్యను నమోదు చేయండి';
 
   @override
-  String get password => 'Password';
+  String get password => 'పాస్‌వర్డ్';
 
   @override
-  String get enterPassword => 'Enter password';
+  String get enterPassword => 'పాస్‌వర్డ్‌ను నమోదు చేయండి';
 
   @override
-  String get loginButton => 'LOGIN';
+  String get loginButton => 'లాగిన్';
 
   @override
-  String get enableBiometricLogin => 'Enable Biometric Login';
+  String get enableBiometricLogin => 'బయోమెట్రిక్ లాగిన్‌ను ప్రారంభించు';
 
   @override
   String get enableBiometricPrompt =>
-      'Would you like to enable biometric authentication for faster login next time?';
+      'తదుపరి సారి వేగంగా లాగిన్ చేయడానికి మీరు బయోమెట్రిక్ ప్రామాణీకరణను ఉపయోగించాలనుకుంటున్నారా?';
 
   @override
-  String get notNow => 'Not Now';
+  String get notNow => 'ఇప్పుడు వద్దు';
 
   @override
-  String get enable => 'Enable';
+  String get enable => 'ప్రారంభించు';
 
   @override
-  String get biometricEnabled => 'Biometric login enabled!';
+  String get biometricEnabled => 'బయోమెట్రిక్ లాగిన్ ప్రారంభించబడింది!';
 
   @override
   String failedEnableBiometric(String error) {
-    return 'Failed to enable biometrics: $error';
+    return 'బయోమెట్రిక్‌ను ప్రారంభించడంలో విఫలమైంది: $error';
   }
 
   @override
   String get biometricNotAllowed =>
-      'Biometric login not allowed. Please login online once.';
+      'బయోమెట్రిక్ లాగిన్ అనుమతించబడదు. దయచేసి ఆన్‌లైన్‌లో లాగిన్ చేయండి.';
 
   @override
   String biometricFailed(String error) {
-    return 'Biometric failed: $error';
+    return 'బయోమెట్రిక్ విఫలమైంది: $error';
   }
 
   @override
-  String get subscription => 'Subscription';
+  String get subscription => 'చందా';
 
   @override
   String get subscriptionExpired =>
-      'Your subscription has expired. Please renew to continue.';
+      'మీ చందా గడువు ముగిసింది. కొనసాగడానికి దయచేసి పునరుద్ధరించండి.';
 
   @override
   String subscriptionExpiresIn(int days) {
-    return 'Your subscription expires in $days day(s). Please renew.';
+    return 'మీ చందా $days రోజుల్లో ముగుస్తుంది. దయచేసి పునరుద్ధరించండి.';
   }
 
   @override
-  String get ok => 'OK';
+  String get ok => 'సరే';
 
   @override
   String loginError(String error) {
-    return 'Login error: $error';
+    return 'లాగిన్ లోపం: $error';
   }
 
   @override
-  String get register => 'Register';
+  String get register => 'నమోదు';
 
   @override
-  String get forgotPassword => 'Forgot password?';
+  String get forgotPassword => 'పాస్‌వర్డ్ మర్చిపోయారా?';
 
   @override
-  String get invalidCredentials => 'Invalid credentials.';
+  String get invalidCredentials => 'చెల్లని వివరాలు.';
 
   @override
   String get offlineLoginNotAllowed =>
-      'Offline login not allowed. Please connect to the internet.';
+      'ఆఫ్‌లైన్ లాగిన్ అనుమతించబడదు. దయచేసి ఇంటర్నెట్‌కు కనెక్ట్ చేయండి.';
 
   @override
-  String get mainMenuTitle => 'Menu';
+  String get mainMenuTitle => 'మెను';
 
   @override
-  String get moduleOrders => 'Orders';
+  String get moduleOrders => 'ఆర్డర్లు';
 
   @override
-  String get moduleOperations => 'Operations';
+  String get moduleOperations => 'కార్యకలాపాలు';
 
   @override
-  String get moduleInventory => 'Inventory';
+  String get moduleInventory => 'ఇన్వెంటరీ';
 
   @override
-  String get moduleFinance => 'Finance';
+  String get moduleFinance => 'ఆర్థిక';
 
   @override
-  String get moduleReports => 'Reports';
+  String get moduleReports => 'నివేదికలు';
 
   @override
-  String get moduleSettings => 'Settings';
+  String get moduleSettings => 'సెట్టింగ్‌లు';
 
   @override
-  String get moduleAttendance => 'My Attendance';
+  String get moduleAttendance => 'నా హాజరు';
 
   @override
-  String get noModulesAvailable => 'No modules available';
+  String get noModulesAvailable => 'మాడ్యూల్స్ అందుబాటులో లేవు';
 
   @override
-  String get contactAdministrator => 'Contact your administrator';
+  String get contactAdministrator => 'నిర్వాహకుడిని సంప్రదించండి';
 
   @override
-  String get firmProfile => 'Firm Profile';
+  String get firmProfile => 'కంపెనీ ప్రొఫైల్';
 
   @override
-  String get viewUpdateFirm => 'View or update your firm details';
+  String get viewUpdateFirm => 'వివరాలను వీక్షించండి/నవీకరించండి';
 
   @override
-  String get userProfile => 'User Profile';
+  String get userProfile => 'వినియోగదారు ప్రొఫైల్';
 
   @override
-  String get manageLoginPrefs => 'Manage your login and preferences';
+  String get manageLoginPrefs => 'లాగిన్ ప్రాధాన్యతలను నిర్వహించండి';
 
   @override
-  String get manageUsers => 'Manage Users';
+  String get manageUsers => 'వినియోగదారులను నిర్వహించండి';
 
   @override
-  String get manageUsersSubtitle => 'Add users and set permissions';
+  String get manageUsersSubtitle => 'వినియోగదారులను జోడించండి';
 
   @override
-  String get authMobiles => 'Authorized Mobiles';
+  String get authMobiles => 'అధీకృత మొబైల్‌లు';
 
   @override
-  String get authMobilesSubtitle => 'Manage pre-approved mobile numbers';
+  String get authMobilesSubtitle => 'మొబైల్ నంబర్లను నిర్వహించండి';
 
   @override
-  String get paymentSettings => 'Payment Settings';
+  String get paymentSettings => 'చెల్లింపు సెట్టింగ్‌లు';
 
   @override
-  String get paymentSettingsSubtitle => 'Configure payment gateways';
+  String get paymentSettingsSubtitle => 'గేట్‌వేలను కాన్ఫిగర్ చేయండి';
 
   @override
-  String get generalSettings => 'General Settings';
+  String get generalSettings => 'సాధారణ సెట్టింగ్‌లు';
 
   @override
-  String get generalSettingsSubtitle => 'Theme, Notifications, Security';
+  String get generalSettingsSubtitle => 'థీమ్, భద్రత';
 
   @override
-  String get vehicleMaster => 'Vehicle Master';
+  String get vehicleMaster => 'వాహనాలు';
 
   @override
-  String get vehicleMasterSubtitle => 'Manage fleet vehicles';
+  String get vehicleMasterSubtitle => 'వాహనాలను నిర్వహించండి';
 
   @override
-  String get utensilMaster => 'Utensil Master';
+  String get utensilMaster => 'పాత్రలు';
 
   @override
-  String get utensilMasterSubtitle => 'Manage utensils & consumables';
+  String get utensilMasterSubtitle => 'పాత్రలను నిర్వహించండి';
 
   @override
-  String get backupAWS => 'Backup to AWS';
+  String get backupAWS => 'AWS బ్యాకప్';
 
   @override
-  String get backupSubtitle => 'Upload all data to cloud';
+  String get backupSubtitle => 'క్లౌడ్‌కు అప్‌లోడ్ చేయండి';
 
   @override
-  String get auditLogs => 'Audit Logs';
+  String get auditLogs => 'ఆడిట్ లాగ్స్';
 
   @override
-  String get auditLogsSubtitle => 'View and export compliance logs';
+  String get auditLogsSubtitle => 'సమ్మతి లాగ్‌లు';
 
   @override
-  String get aboutApp => 'About RuchiServ';
+  String get aboutApp => 'యాప్ గురించి';
 
   @override
-  String get logout => 'Logout';
+  String get logout => 'లాగౌట్';
 
   @override
-  String get selectLanguage => 'Select Language';
+  String get selectLanguage => 'భాషను ఎంచుకోండి';
 
   @override
-  String get attendanceTitle => 'My Attendance';
+  String get attendanceTitle => 'నా హాజరు';
 
   @override
-  String get noStaffRecord => 'No Staff Record Found';
+  String get noStaffRecord => 'సిబ్బంది రికార్డు కనుగొనబడలేదు';
 
   @override
   String get mobileNotLinked =>
-      'Your mobile number is not linked to any staff record.\nPlease contact your administrator.';
+      'మీ మొబైల్ నంబర్ ఏ సిబ్బంది రికార్డుతోనూ లింక్ చేయబడలేదు.\nదయచేసి నిర్వాహకుడిని సంప్రదించండి.';
 
   @override
-  String get checkingLocation => 'Checking location...';
+  String get checkingLocation => 'స్థానాన్ని తనిఖీ చేస్తోంది...';
 
   @override
-  String get punchIn => 'PUNCH IN';
+  String get punchIn => 'పంచ్ ఇన్';
 
   @override
-  String get punchOut => 'PUNCH OUT';
+  String get punchOut => 'పంచ్ అవుట్';
 
   @override
-  String get punching => 'Punching...';
+  String get punching => 'నమోదు చేస్తోంది...';
 
   @override
-  String get readyToPunchIn => 'Ready to Punch In';
+  String get readyToPunchIn => 'పంచ్ ఇన్ చేయడానికి సిద్ధం';
 
   @override
   String workingSince(String time) {
-    return 'Working since $time';
+    return '$time నుండి పని చేస్తున్నారు';
   }
 
   @override
-  String get todayShiftCompleted => 'Today\'s Shift Completed';
+  String get todayShiftCompleted => 'ఈ రోజు షిఫ్ట్ పూర్తయింది';
 
   @override
   String elapsedTime(int hours, int minutes) {
-    return '${hours}h ${minutes}m elapsed';
+    return '$hours గంటలు $minutes నిమిషాలు గడిచాయి';
   }
 
   @override
-  String get todayDetails => 'Today\'s Details';
+  String get todayDetails => 'ఈ రోజు వివరాలు';
 
   @override
-  String get punchedIn => 'Punched In';
+  String get punchedIn => 'పంచ్ ఇన్ చేశారు';
 
   @override
-  String get punchedOut => 'Punched Out';
+  String get punchedOut => 'పంచ్ అవుట్ చేశారు';
 
   @override
-  String get location => 'Location';
+  String get location => 'స్థానం';
 
   @override
-  String get withinKitchen => 'Within Kitchen Area';
+  String get withinKitchen => 'వంటగది పరిధిలో';
 
   @override
-  String get outsideKitchen => 'Outside Kitchen Area';
+  String get outsideKitchen => 'వంటగది వెలుపల';
 
   @override
-  String get punchSuccess => '✅ Punched In Successfully!';
+  String get punchSuccess => '✅ విజయవంతంగా పంచ్ ఇన్ చేశారు!';
 
   @override
-  String get punchWarning => '⚠️ Punched In (Outside Kitchen Area)';
+  String get punchWarning => '⚠️ పంచ్ ఇన్ చేశారు (వంటగది వెలుపల)';
 
   @override
   String punchOutSuccess(String hours) {
-    return '✅ Punched Out - $hours hours';
+    return '✅ పంచ్ అవుట్ చేశారు - $hours గంటలు';
   }
 
   @override
-  String get refresh => 'Refresh';
+  String get refresh => 'రీఫ్రెష్';
 
   @override
-  String get loading => 'Loading...';
+  String get loading => 'లోడ్ అవుతోంది...';
 
   @override
-  String get ordersCalendarTitle => 'Orders Calendar';
+  String get ordersCalendarTitle => 'ఆర్డర్ క్యాలెండర్';
 
   @override
-  String get openSystemCalendar => 'Open System Calendar';
+  String get openSystemCalendar => 'సిస్టమ్ క్యాలెండర్ తెరవండి';
 
   @override
-  String get utilizationLow => 'Low (<50%)';
+  String get utilizationLow => 'తక్కువ (<50%)';
 
   @override
-  String get utilizationMed => 'Med (50-90%)';
+  String get utilizationMed => 'మధ్యస్థం (50-90%)';
 
   @override
-  String get utilizationHigh => 'High (>90%)';
+  String get utilizationHigh => 'అధికం (>90%)';
 
   @override
-  String get editOrder => 'Edit Order';
+  String get editOrder => 'ఆర్డర్ సవరించు';
 
   @override
-  String get addOrder => 'Add Order';
+  String get addOrder => 'ఆర్డర్ జోడించు';
 
   @override
   String dateLabel(String date) {
-    return 'Date';
+    return 'తేదీ';
   }
 
   @override
   String totalPax(int pax) {
-    return 'Total Pax: $pax';
+    return 'మొత్తం వ్యక్తులు: $pax';
   }
 
   @override
-  String get deliveryTime => 'Delivery Time';
+  String get deliveryTime => 'డెలివరీ సమయం';
 
   @override
-  String get tapToSelectTime => 'Tap to select time';
+  String get tapToSelectTime => 'సమయం ఎంచుకోవడానికి నొక్కండి';
 
   @override
-  String get customerName => 'Customer Name';
+  String get customerName => 'కస్టమర్ పేరు';
 
   @override
-  String get digitsOnly => 'Digits only';
+  String get digitsOnly => 'అంకెలు మాత్రమే';
 
   @override
-  String get mobileLengthError => 'Must be exactly 10 digits';
+  String get mobileLengthError => 'ఖచ్చితంగా 10 అంకెలు ఉండాలి';
 
   @override
-  String get mealType => 'Meal Type';
+  String get mealType => 'భోజనం రకం';
 
   @override
-  String get foodType => 'Food Type';
+  String get foodType => 'ఆహారం రకం';
 
   @override
-  String get menuItems => 'Menu Items';
+  String get menuItems => 'మెను అంశాలు';
 
   @override
-  String get addItem => 'Add Item';
+  String get addItem => 'అంశం జోడించు';
 
   @override
-  String get subtotal => 'Subtotal (₹)';
+  String get subtotal => 'మొత్తం (₹)';
 
   @override
-  String get discPercent => 'Disc %';
+  String get discPercent => 'తగ్గింపు %';
 
   @override
-  String get dishTotal => 'Dish Total:';
+  String get dishTotal => 'డిష్ మొత్తం:';
 
   @override
-  String get serviceAndCounterSetup => 'Service & Counter Setup';
+  String get serviceAndCounterSetup => 'సేవ & కౌంటర్ సెటప్';
 
   @override
-  String get serviceRequiredQuestion => 'Service Required?';
+  String get serviceRequiredQuestion => 'సేవ అవసరమా?';
 
   @override
-  String get serviceType => 'Service Type: ';
+  String get serviceType => 'సేవ రకం: ';
 
   @override
-  String get countersCount => 'No. of Counters';
+  String get countersCount => 'కౌంటర్ల సంఖ్య';
 
   @override
-  String get ratePerStaff => 'Rate/Staff (₹)';
+  String get ratePerStaff => 'ధర/సిబ్బంది (₹)';
 
   @override
-  String get staffRequired => 'Staff Required';
+  String get staffRequired => 'అవసరమైన సిబ్బంది';
 
   @override
   String costWithRupee(String cost) {
-    return 'Cost: ₹$cost';
+    return 'ధర: ₹$cost';
   }
 
   @override
-  String get counterSetupNeeded => 'Counter Setup Needed?';
+  String get counterSetupNeeded => 'కౌంటర్ సెటప్ అవసరమా?';
 
   @override
-  String get ratePerCounter => 'Rate/Counter (₹)';
+  String get ratePerCounter => 'ధర/కౌంటర్ (₹)';
 
   @override
   String counterCostWithRupee(String cost) {
-    return 'Counter Cost: ₹$cost';
+    return 'కౌంటర్ ధర: ₹$cost';
   }
 
   @override
   String discountWithPercent(String percent) {
-    return 'Discount ($percent%):';
+    return 'తగ్గింపు ($percent%):';
   }
 
   @override
-  String get serviceCost => 'Service Cost:';
+  String get serviceCost => 'సేవ ధర:';
 
   @override
-  String get counterSetup => 'Counter Setup:';
+  String get counterSetup => 'కౌంటర్ సెటప్:';
 
   @override
-  String get grandTotal => 'GRAND TOTAL:';
+  String get grandTotal => 'మొత్తం:';
 
   @override
-  String get notes => 'Notes';
+  String get notes => 'గమనికలు';
 
   @override
-  String get saveOrder => 'SAVE ORDER';
+  String get saveOrder => 'ఆర్డర్ సేవ్ చేయి';
 
   @override
-  String get orderSaved => '✅ Order saved';
+  String get orderSaved => '✅ ఆర్డర్ సేవ్ చేయబడింది';
 
   @override
   String saveOrderError(String error) {
-    return 'Error saving order: $error';
+    return 'ఆర్డర్ సేవ్ చేయడంలో లోపం: $error';
   }
 
   @override
-  String get typeDishName => 'Type dish name';
+  String get typeDishName => 'డిష్ పేరు టైప్ చేయండి';
 
   @override
-  String get rate => 'Rate';
+  String get rate => 'ధర';
 
   @override
-  String get qty => 'Qty';
+  String get qty => 'పరిమాణం';
 
   @override
-  String get cost => 'Cost';
+  String get cost => 'మొత్తం';
 
   @override
-  String get required => 'Required';
+  String get required => 'అవసరం';
 
   @override
-  String get resetCalculation => 'Reset Calculation';
+  String get resetCalculation => 'లెక్కింపు రీసెట్ చేయి';
 
   @override
-  String get breakfast => 'Breakfast';
+  String get breakfast => 'అల్పాహారం';
 
   @override
-  String get lunch => 'Lunch';
+  String get lunch => 'మధ్యాహ్న భోజనం';
 
   @override
-  String get dinner => 'Dinner';
+  String get dinner => 'రాత్రి భోజనం';
 
   @override
-  String get snacksOthers => 'Snacks/Others';
+  String get snacksOthers => 'స్నాక్స్/ఇతరము';
 
   @override
-  String get veg => 'Veg';
+  String get veg => 'శాకాహారం';
 
   @override
-  String get nonVeg => 'Non-Veg';
+  String get nonVeg => 'మాంసాహారం';
 
   @override
   String failedLoadOrders(String error) {
-    return 'Failed to load orders: $error';
+    return 'ఆర్డర్లు లోడ్ చేయడంలో విఫలమైంది: $error';
   }
 
   @override
   String errorLoadingOrders(String error) {
-    return 'Error loading orders: $error';
+    return 'లోపం: $error';
   }
 
   @override
-  String get cannotEditPastOrders => 'Cannot edit past orders.';
+  String get cannotEditPastOrders => 'గత ఆర్డర్ల సవరణ సాధ్యం కాదు.';
 
   @override
-  String get cannotDeletePastOrders => 'Cannot delete past orders.';
+  String get cannotDeletePastOrders => 'గత ఆర్డర్లను తొలగించలేరు.';
 
   @override
-  String get deleteOrderTitle => 'Delete Order?';
+  String get deleteOrderTitle => 'ఆర్డర్ తొలగించాలా?';
 
   @override
   String get deleteOrderConfirm =>
-      'This will remove the order locally. (Will sync when online)';
+      'ఇది స్థానిక కాపీని తొలగిస్తుంది. (ఆన్‌లైన్‌లో ఉన్నప్పుడు సింక్ అవుతుంది)';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => 'రద్దు చేయి';
 
   @override
-  String get delete => 'Delete';
+  String get delete => 'తొలగించు';
 
   @override
-  String get confirm => 'Confirm';
+  String get confirm => 'నిర్ధారించు';
 
   @override
-  String get requiredField => 'Required';
+  String get requiredField => 'అవసరం';
 
   @override
   String error(String error) {
-    return 'Error: $error';
+    return 'లోపం: $error';
   }
 
   @override
-  String get orderDeleted => 'Order deleted (will sync when online)';
+  String get orderDeleted => 'ఆర్డర్ తొలగించబడింది';
 
   @override
   String errorDeletingOrder(String error) {
-    return 'Error deleting order: $error';
+    return 'తొలగించడంలో లోపం: $error';
   }
 
   @override
   String ordersCount(int count) {
-    return '$count orders';
+    return '$count ఆర్డర్లు';
   }
 
   @override
-  String get noLocation => 'No location';
+  String get noLocation => 'స్థానం లేదు';
 
   @override
-  String get unnamed => 'Unnamed';
+  String get unnamed => 'పేరులేని';
 
   @override
   String ordersDateTitle(String date) {
-    return 'Orders - $date';
+    return 'ఆర్డర్లు - $date';
   }
 
   @override
-  String get dishSummary => 'Dish Summary';
+  String get dishSummary => 'డిష్ సారాంశం';
 
   @override
-  String get retry => 'Retry';
+  String get retry => 'మళ్ళీ ప్రయత్నించు';
 
   @override
-  String get noOrdersFound => 'No orders found for this date';
+  String get noOrdersFound => 'ఈ తేదీన ఆర్డర్లు లేవు';
 
   @override
   String vegCount(int count) {
-    return 'Veg: $count';
+    return 'శాకాహారం: $count';
   }
 
   @override
   String nonVegCount(int count) {
-    return 'Non-Veg: $count';
+    return 'మాంసాహారం: $count';
   }
 
   @override
   String totalCount(int count) {
-    return 'Total: $count';
+    return 'మొత్తం: $count';
   }
 
   @override
   String failedLoadSummary(String error) {
-    return 'Failed to load summary: $error';
+    return 'సారాంశం లోడ్ చేయడంలో విఫలమైంది: $error';
   }
 
   @override
   String errorLoadingSummary(String error) {
-    return 'Error loading summary: $error';
+    return 'లోపం: $error';
   }
 
   @override
   String summaryDateTitle(String date) {
-    return 'Summary - $date';
+    return 'సారాంశం - $date';
   }
 
   @override
-  String get noDishesFound => 'No dishes found for this date';
+  String get noDishesFound => 'డిష్‌లు కనుగొనబడలేదు';
 
   @override
-  String get unnamedDish => 'Unnamed dish';
+  String get unnamedDish => 'పేరులేని డిష్';
 
   @override
   String qtyWithCount(int count) {
-    return 'Qty: $count';
+    return 'పరిమాణం: $count';
   }
 
   @override
-  String get kitchenView => 'Kitchen View';
+  String get kitchenView => 'వంటగది';
 
   @override
-  String get dispatchView => 'Dispatch View';
+  String get dispatchView => 'డిస్పాచ్';
 
   @override
-  String get punchInOut => 'Punch In/Out';
+  String get punchInOut => 'పంచ్ ఇన్/అవుట్';
 
   @override
-  String get staffManagement => 'Staff Management';
+  String get staffManagement => 'సిబ్బంది నిర్వహణ';
 
   @override
-  String get adminOnly => 'Admin Only';
+  String get adminOnly => 'అడ్మిన్ మాత్రమే';
 
   @override
-  String get restrictedToAdmins => '⛔ Staff Management is restricted to Admins';
+  String get restrictedToAdmins => '⛔ అడ్మిన్లకు మాత్రమే';
 
   @override
-  String get utensils => 'Utensils';
+  String get utensils => 'పాత్రలు';
 
   @override
-  String get kitchenOperations => 'Kitchen Operations';
+  String get kitchenOperations => 'వంటగది కార్యకలాపాలు';
 
   @override
-  String get ordersView => 'Orders View';
+  String get ordersView => 'ఆర్డర్లు';
 
   @override
-  String get productionQueue => 'Production Queue';
+  String get productionQueue => 'ఉత్పత్తి క్యూ';
 
   @override
-  String get ready => 'Ready';
+  String get ready => 'సిద్ధం';
 
   @override
-  String get other => 'Other';
+  String get other => 'ఇతర';
 
   @override
-  String get internalKitchen => 'Internal Kitchen';
+  String get internalKitchen => 'అంతర్గత వంటగది';
 
   @override
-  String get subcontract => 'Subcontract';
+  String get subcontract => 'సబ్‌కాంట్రాక్ట్';
 
   @override
-  String get liveCounter => 'Live Counter';
+  String get liveCounter => 'లైవ్ కౌంటర్';
 
   @override
-  String get prepIngredients => '🔥 PREP INGREDIENTS';
+  String get prepIngredients => '🔥 పదార్థాలు సిద్ధం చేయండి';
 
   @override
-  String get live => 'LIVE';
+  String get live => 'లైవ్';
 
   @override
-  String get prep => 'Prep';
+  String get prep => 'తయారీ';
 
   @override
-  String get start => 'Start';
+  String get start => 'ప్రారంభించు';
 
   @override
-  String get prepping => 'Prepping';
+  String get prepping => 'తయారవుతోంది';
 
   @override
-  String get inQueue => 'In Queue';
+  String get inQueue => 'క్యూలో ఉంది';
 
   @override
-  String get assignEdit => 'Assign / Edit';
+  String get assignEdit => 'కేటాయించు / సవరించు';
 
   @override
-  String get productionSettings => 'Production Settings';
+  String get productionSettings => 'ఉత్పత్తి సెట్టింగ్‌లు';
 
   @override
-  String get noItemsInQueue => 'No items in production queue';
+  String get noItemsInQueue => 'క్యూలో అంశాలు లేవు';
 
   @override
-  String get done => 'Done';
+  String get done => 'పూర్తయింది';
 
   @override
-  String get noRecipeDefined => 'No recipe defined for this dish';
+  String get noRecipeDefined => 'రెసిపీ లేదు';
 
   @override
-  String get ingredientsRequired => '📋 Ingredients Required:';
+  String get ingredientsRequired => '📋 కావలసిన పదార్థాలు:';
 
   @override
-  String get noReadyItems => 'No ready items';
+  String get noReadyItems => 'సిద్ధమైన అంశాలు లేవు';
 
   @override
-  String get returnItem => 'Return';
+  String get returnItem => 'వాపసు';
 
   @override
   String paxLabel(int count) {
-    return 'Pax: $count';
+    return 'వ్యక్తులు: $count';
   }
 
   @override
   String locLabel(String location) {
-    return 'Loc: $location';
+    return 'స్థానం: $location';
   }
 
   @override
-  String get na => 'N/A';
+  String get na => 'వర్తించదు';
 
   @override
-  String get noOrdersForDispatch => 'No orders available for dispatch today';
+  String get noOrdersForDispatch => 'డిస్పాచ్ కోసం ఆర్డర్లు లేవు';
 
   @override
-  String get createDispatch => 'Create Dispatch';
+  String get createDispatch => 'డిస్పాచ్ సృష్టించు';
 
   @override
-  String get dispatchDetails => 'Dispatch Details';
+  String get dispatchDetails => 'వివరాలు';
 
   @override
-  String get driverName => 'Driver Name';
+  String get driverName => 'డ్రైవర్ పేరు';
 
   @override
-  String get vehicleNumber => 'Vehicle Number';
+  String get vehicleNumber => 'వాహనం నంబర్';
 
   @override
-  String get noPendingDispatches => 'No pending dispatches yet!';
+  String get noPendingDispatches => 'పెండింగ్ లేదు!';
 
   @override
-  String get tapToAddDispatch =>
-      'Tap the \'+\' button to create a new dispatch.';
+  String get tapToAddDispatch => '+ నొక్కి జోడించండి.';
 
   @override
   String orderFor(String name) {
-    return 'Order for: $name';
+    return 'ఆర్డర్: $name';
   }
 
   @override
   String driverWithVehicle(String driver, String vehicle) {
-    return 'Driver: $driver ($vehicle)';
+    return 'డ్రైవర్: $driver ($vehicle)';
   }
 
   @override
-  String get statusPending => 'Pending';
+  String get statusPending => 'పెండింగ్';
 
   @override
-  String get statusDispatched => 'DISPATCHED';
+  String get statusDispatched => 'పంపబడింది';
 
   @override
-  String get statusDelivered => 'DELIVERED';
+  String get statusDelivered => 'డెలివరీ చేయబడింది';
 
   @override
   String failedUpdateStatus(String error) {
-    return 'Failed to update status: $error';
+    return 'విఫలమైంది: $error';
   }
 
   @override
-  String get payroll => 'Payroll';
+  String get payroll => 'వేతనం';
 
   @override
-  String get staff => 'Staff';
+  String get staff => 'సిబ్బంది';
 
   @override
   String get today => 'Today';
 
   @override
-  String get noStaffMembers => 'No staff members';
+  String get noStaffMembers => 'సిబ్బంది లేరు';
 
   @override
-  String get tapToAddStaff => 'Tap + to add staff';
+  String get tapToAddStaff => '+ నొక్కి సిబ్బందిని జోడించు';
 
   @override
-  String get unknown => 'Unknown';
+  String get unknown => 'తెలియదు';
 
   @override
-  String get noMobile => 'No mobile';
+  String get noMobile => 'మొబైల్ లేదు';
 
   @override
-  String get permanent => 'Permanent';
+  String get permanent => 'శాశ్వత';
 
   @override
-  String get dailyWage => 'Daily Wage';
+  String get dailyWage => 'రోజువారీ కూలీ';
 
   @override
-  String get contractor => 'Contractor';
+  String get contractor => 'కాంట్రాక్ట్';
 
   @override
-  String get alreadyPunchedIn => 'Already punched in today!';
+  String get alreadyPunchedIn => 'ఈ రోజు ఇప్పటికే పంచ్ ఇన్ చేశారు!';
 
   @override
-  String get couldNotGetLocation => 'Could not get location';
+  String get couldNotGetLocation => 'స్థానం పొందలేకపోయాము';
 
   @override
-  String get punchedInGeo => '✓ Punched In (Within Geo-fence)';
+  String get punchedInGeo => '✓ పంచ్ ఇన్ (పరిధిలో)';
 
   @override
-  String get punchedInNoGeo => '⚠️ Punched In (Outside Geo-fence)';
+  String get punchedInNoGeo => '⚠️ పంచ్ ఇన్ (పరిధి బయట)';
 
   @override
   String punchedOutMsg(String hours, String ot) {
-    return 'Punched Out - $hours hrs$ot';
+    return 'పంచ్ అవుట్ - $hours గంటలు $ot';
   }
 
   @override
-  String get totalStaff => 'Total Staff';
+  String get totalStaff => 'మొత్తం సిబ్బంది';
 
   @override
-  String get present => 'Present';
+  String get present => 'హాజరు';
 
   @override
-  String get absent => 'Absent';
+  String get absent => 'గైర్హాజరు';
 
   @override
-  String get noAttendanceToday => 'No attendance records today';
+  String get noAttendanceToday => 'ఈ రోజు హాజరు లేదు';
 
   @override
-  String get workingStatus => 'working';
+  String get workingStatus => 'పని చేస్తున్నారు';
 
   @override
   String get otLabel => 'OT';
 
   @override
-  String get addStaff => 'Add Staff';
+  String get addStaff => 'సిబ్బందిని జోడించు';
 
   @override
-  String get staffDetails => 'Staff Details';
+  String get staffDetails => 'సిబ్బంది వివరాలు';
 
   @override
   String tapToPhoto(String action) {
-    return 'Tap to $action photo';
+    return 'ఫోటో $action నొక్కండి';
   }
 
   @override
-  String get basicInfo => 'Basic Information';
+  String get basicInfo => 'ప్రాథమిక సమాచారం';
 
   @override
-  String get fullName => 'Full Name *';
+  String get fullName => 'పూర్తి పేరు *';
 
   @override
-  String get roleDesignation => 'Role/Designation';
+  String get roleDesignation => 'హోదా';
 
   @override
-  String get staffType => 'Staff Type';
+  String get staffType => 'రకం';
 
   @override
-  String get email => 'Email';
+  String get email => 'ఇమెయిల్';
 
   @override
-  String get salaryRates => 'Salary & Rates';
+  String get salaryRates => 'జీతం వివరాలు';
 
   @override
-  String get monthlySalary => 'Monthly Salary (₹)';
+  String get monthlySalary => 'నెల జీతం (₹)';
 
   @override
-  String get payoutFrequency => 'Payout Frequency';
+  String get payoutFrequency => 'చెల్లింపు విధానం';
 
   @override
-  String get dailyWageLabel => 'Daily Wage (₹)';
+  String get dailyWageLabel => 'రోజువారీ కూలీ (₹)';
 
   @override
-  String get hourlyRate => 'Hourly Rate (₹)';
+  String get hourlyRate => 'గంటకు (₹)';
 
   @override
-  String get bankIdDetails => 'Bank & ID Details';
+  String get bankIdDetails => 'బ్యాంక్ & ID వివరాలు';
 
   @override
-  String get bankName => 'Bank Name';
+  String get bankName => 'బ్యాంక్ పేరు';
 
   @override
-  String get accountNumber => 'Account Number';
+  String get accountNumber => 'ఖాతా నంబర్';
 
   @override
-  String get ifscCode => 'IFSC Code';
+  String get ifscCode => 'IFSC కోడ్';
 
   @override
-  String get aadharNumber => 'Aadhar Number';
+  String get aadharNumber => 'ఆధార్ నంబర్';
 
   @override
-  String get emergencyContact => 'Emergency Contact';
+  String get emergencyContact => 'అత్యవసర పరిచయం';
 
   @override
-  String get contactName => 'Contact Name';
+  String get contactName => 'పేరు';
 
   @override
-  String get contactNumber => 'Contact Number';
+  String get contactNumber => 'నంబర్';
 
   @override
-  String get address => 'Address';
+  String get address => 'చిరునామా';
 
   @override
-  String get addStaffBtn => 'ADD STAFF';
+  String get addStaffBtn => 'జోడించు';
 
   @override
-  String get saveChanges => 'SAVE CHANGES';
+  String get saveChanges => 'మార్పులు సేవ్ చేయి';
 
   @override
-  String get advances => 'Advances';
+  String get advances => 'అడ్వాన్స్';
 
   @override
-  String get attendance => 'Attendance';
+  String get attendance => 'హాజరు';
 
   @override
-  String get totalAdvances => 'Total Advances';
+  String get totalAdvances => 'మొత్తం అడ్వాన్స్';
 
   @override
-  String get pendingDeduction => 'Pending Deduction';
+  String get pendingDeduction => 'పెండింగ్ మినహాయింపు';
 
   @override
-  String get addAdvance => 'Add Advance';
+  String get addAdvance => 'అడ్వాన్స్ జోడించు';
 
   @override
-  String get noAdvances => 'No advances recorded';
+  String get noAdvances => 'అడ్వాన్స్ లేదు';
 
   @override
-  String get deducted => 'Deducted';
+  String get deducted => 'మినహాయించబడింది';
 
   @override
-  String get pending => 'Pending';
+  String get pending => 'పెండింగ్‌లో ఉంది';
 
   @override
   String reason(String reason) {
@@ -864,565 +863,563 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
-  String get deleteStaff => 'Delete Staff';
+  String get deleteStaff => 'సిబ్బందిని తొలగించు';
 
   @override
   String get deleteStaffConfirm =>
-      'Are you sure you want to delete this staff member? This cannot be undone.';
+      'ఖచ్చితంగా తొలగించాలా? దీన్ని వెనక్కి తీసుకోలేము.';
 
   @override
-  String get staffDeleted => 'Staff deleted';
+  String get staffDeleted => 'తొలగించబడింది';
 
   @override
-  String get staffAdded => 'Staff added!';
+  String get staffAdded => 'జోడించబడింది!';
 
   @override
-  String get staffUpdated => 'Staff updated!';
+  String get staffUpdated => 'నవీకరించబడింది!';
 
   @override
-  String get selectPhoto => 'Select Photo';
+  String get selectPhoto => 'ఫోటో ఎంచుకోండి';
 
   @override
-  String get camera => 'Camera';
+  String get camera => 'కెమెరా';
 
   @override
-  String get gallery => 'Gallery';
+  String get gallery => 'గ్యాలరీ';
 
   @override
-  String get photoSelectedWeb => 'Photo selected (Web Mode)';
+  String get photoSelectedWeb => 'ఫోటో ఎంచుకోబడింది';
 
   @override
-  String get photoUpdated => 'Photo updated';
+  String get photoUpdated => 'నవీకరించబడింది';
 
   @override
-  String get amountRupee => 'Amount (₹)';
+  String get amountRupee => 'మొత్తం (₹)';
 
   @override
-  String get staffPayroll => 'Staff Payroll';
+  String get staffPayroll => 'సిబ్బంది పేరోల్';
 
   @override
-  String get basePay => 'Base Pay';
+  String get basePay => 'మూల వేతనం';
 
   @override
-  String get otPay => 'OT Pay';
+  String get otPay => 'OT చెల్లింపు';
 
   @override
-  String get netPay => 'Net Pay';
+  String get netPay => 'నికర వేతనం';
 
   @override
-  String get noStaffData => 'No staff data';
+  String get noStaffData => 'డేటా లేదు';
 
   @override
-  String get processPayroll => 'Process Payroll';
+  String get processPayroll => 'జీతం లెక్కించు';
 
   @override
   String processPayrollConfirm(String name, String date) {
-    return 'Mark all pending advances as deducted for $name for $date?';
+    return '$name యొక్క అడ్వాన్స్ మినహాయించి జీతం వేయాలా ($date)?';
   }
 
   @override
   String payrollProcessed(String name) {
-    return 'Payroll processed for $name';
+    return '$name కు జీతం లెక్కించబడింది';
   }
 
   @override
-  String get advanceDeduction => 'Advance Deduction';
+  String get advanceDeduction => 'అడ్వాన్స్ మినహాయింపు';
 
   @override
-  String get netPayable => 'Net Payable';
+  String get netPayable => 'చెల్లించవలసినది';
 
   @override
-  String get markAdvancesDeducted => 'Mark Advances Deducted';
+  String get markAdvancesDeducted => 'మినహాయించినట్లు మార్క్ చేయి';
 
   @override
   String otMultiplierInfo(String rate) {
-    return 'OT Multiplier: ${rate}x | OT = hours > 8 × hourly rate × $rate';
+    return 'OT గుణకం: ${rate}x | 8 గంటల పైన';
   }
 
   @override
-  String get utensilsTracking => 'Utensils Tracking';
+  String get utensilsTracking => 'పాత్రల ట్రాకింగ్';
 
   @override
-  String get noUtensilsAdded => 'No utensils added yet';
+  String get noUtensilsAdded => 'పాత్రలు లేవు';
 
   @override
-  String get addFirstUtensil => 'Add First Utensil';
+  String get addFirstUtensil => 'మొదటి పాత్రను జోడించు';
 
   @override
-  String get addUtensil => 'Add Utensil';
+  String get addUtensil => 'పాత్ర జోడించు';
 
   @override
-  String get utensilName => 'Utensil Name';
+  String get utensilName => 'పాత్ర పేరు';
 
   @override
-  String get utensilNameHint => 'e.g., Plates, Spoons, Cups';
+  String get utensilNameHint => 'ఉదా. ప్లేటు, కప్పు';
 
   @override
-  String get totalStock => 'Total Stock';
+  String get totalStock => 'మొత్తం స్టాక్';
 
   @override
-  String get enterQuantity => 'Enter quantity';
+  String get enterQuantity => 'సంఖ్య నమోదు చేయి';
 
   @override
-  String get availableStock => 'Available Stock';
+  String get availableStock => 'అందుబాటులో ఉన్న స్టాక్';
 
   @override
-  String get enterUtensilName => 'Please enter utensil name';
+  String get enterUtensilName => 'పేరు నమోదు చేయి';
 
   @override
-  String get utensilAdded => '✅ Utensil added';
+  String get utensilAdded => '✅ జోడించబడింది';
 
   @override
-  String get utensilUpdated => '✅ Utensil updated';
+  String get utensilUpdated => '✅ నవీకరించబడింది';
 
   @override
-  String get utensilDeleted => 'Utensil deleted';
+  String get utensilDeleted => 'తొలగించబడింది';
 
   @override
   String editUtensil(String name) {
-    return 'Edit: $name';
+    return 'సవరించు: $name';
   }
 
   @override
-  String get deleteUtensil => 'Delete Utensil?';
+  String get deleteUtensil => 'తొలగించాలా?';
 
   @override
   String deleteUtensilConfirm(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return '\"$name\" ను తొలగించాలా?';
   }
 
   @override
-  String get save => 'Save';
+  String get save => 'సేవ్ చేయి';
 
   @override
-  String get add => 'Add';
+  String get add => 'జోడించు';
 
   @override
   String availableCount(int available, int total) {
-    return 'Available: $available / $total';
+    return 'అందుబాటులో: $available / $total';
   }
 
   @override
   String issuedCount(int issued, String percent) {
-    return 'Issued: $issued ($percent% utilized)';
+    return 'ఇచ్చినవి: $issued ($percent%)';
   }
 
   @override
-  String get inventoryHub => 'Inventory Hub';
+  String get inventoryHub => 'ఇన్వెంటరీ హబ్';
 
   @override
-  String get ingredients => 'Ingredients';
+  String get ingredients => 'పదార్థాలు';
 
   @override
-  String get masterList => 'Master List';
+  String get masterList => 'మాస్టర్ లిస్ట్';
 
   @override
   String get bom => 'BOM';
 
   @override
-  String get recipeMapping => 'Recipe Mapping';
+  String get recipeMapping => 'రెసిపీ మ్యాపింగ్';
 
   @override
-  String get mrpRun => 'MRP Run';
+  String get mrpRun => 'MRP రన్';
 
   @override
-  String get calculate => 'Calculate';
+  String get calculate => 'లెక్కించు';
 
   @override
-  String get purchaseOrders => 'Purchase Orders';
+  String get purchaseOrders => 'కొనుగోలు ఆర్డర్లు';
 
   @override
   String get purchaseOrderShort => 'PO';
 
   @override
-  String get trackOrders => 'Track Orders';
+  String get trackOrders => 'ట్రాక్ ఆర్డర్లు';
 
   @override
-  String get suppliers => 'Suppliers';
+  String get suppliers => 'సరఫరాదారులు';
 
   @override
-  String get vendors => 'Vendors';
+  String get vendors => 'విక్రేతలు';
 
   @override
-  String get subcontractors => 'Subcontractors';
+  String get subcontractors => 'సబ్‌కాంట్రాక్టర్లు';
 
   @override
-  String get kitchens => 'Kitchens';
+  String get kitchens => 'వంటగదులు';
 
   @override
-  String get ingredientsMaster => 'Ingredients Master';
+  String get ingredientsMaster => 'పదార్థాల మాస్టర్';
 
   @override
-  String get ingredientName => 'Ingredient Name';
+  String get ingredientName => 'పదార్థం పేరు';
 
   @override
-  String get skuBrandOptional => 'SKU / Brand Name (Optional)';
+  String get skuBrandOptional => 'SKU / బ్రాండ్ (ఐచ్ఛికం)';
 
   @override
-  String get costPerUnit => 'Cost per Unit (₹)';
+  String get costPerUnit => 'యూనిట్ ధర (₹)';
 
   @override
-  String get category => 'Category';
+  String get category => 'వర్గం';
 
   @override
-  String get unit => 'Unit';
+  String get unit => 'యూనిట్';
 
   @override
-  String get unitKg => 'Kilogram (kg)';
+  String get unitKg => 'కిలో (kg)';
 
   @override
-  String get unitG => 'Gram (g)';
+  String get unitG => 'గ్రాము (g)';
 
   @override
-  String get unitL => 'Liter';
+  String get unitL => 'లీటర్';
 
   @override
-  String get unitMl => 'Milliliter (ml)';
+  String get unitMl => 'మిల్లీ లీటర్ (ml)';
 
   @override
-  String get unitNos => 'Numbers (nos)';
+  String get unitNos => 'సంఖ్య (nos)';
 
   @override
-  String get unitBunch => 'Bunch';
+  String get unitBunch => 'కట్ట';
 
   @override
-  String get unitPcs => 'Pieces (pcs)';
+  String get unitPcs => 'ముక్కలు (pcs)';
 
   @override
-  String get enterIngredientName => 'Enter ingredient name';
+  String get enterIngredientName => 'పేరు నమోదు చేయి';
 
   @override
-  String get ingredientAdded => '✅ Ingredient added';
+  String get ingredientAdded => '✅ జోడించబడింది';
 
   @override
-  String get editIngredient => 'Edit Ingredient';
+  String get editIngredient => 'సవరించు';
 
   @override
-  String get ingredientUpdated => '✅ Ingredient updated';
+  String get ingredientUpdated => '✅ నవీకరించబడింది';
 
   @override
-  String get searchPlaceholder => 'Search...';
+  String get searchPlaceholder => 'వెతకండి...';
 
   @override
   String ingredientsCount(int count) {
-    return '$count ingredients';
+    return '$count పదార్థాలు';
   }
 
   @override
   String categoriesCount(int count) {
-    return '$count categories';
+    return '$count వర్గాలు';
   }
 
   @override
-  String get catAll => 'All';
+  String get catAll => 'అన్నీ';
 
   @override
-  String get catVegetable => 'Vegetable';
+  String get catVegetable => 'కూరగాయలు';
 
   @override
-  String get catMeat => 'Meat';
+  String get catMeat => 'మాంసం';
 
   @override
-  String get catSeafood => 'Seafood';
+  String get catSeafood => 'సీఫుడ్';
 
   @override
-  String get catSpice => 'Spice';
+  String get catSpice => 'మసాలా';
 
   @override
-  String get catDairy => 'Dairy';
+  String get catDairy => 'పాల ఉత్పత్తులు';
 
   @override
-  String get catGrain => 'Grain';
+  String get catGrain => 'ధాన్యం';
 
   @override
-  String get catOil => 'Oil';
+  String get catOil => 'నూనె';
 
   @override
-  String get catBeverage => 'Beverage';
+  String get catBeverage => 'పానీయం';
 
   @override
-  String get catOther => 'Other';
+  String get catOther => 'ఇతర';
 
   @override
-  String get bomManagement => 'BOM Management';
+  String get bomManagement => 'BOM నిర్వహణ';
 
   @override
-  String get bomInfo =>
-      'Define ingredients required for each dish at 100 pax standard';
+  String get bomInfo => '100 మందికి కావలసిన పదార్థాలు';
 
   @override
-  String get searchDishes => 'Search dishes...';
+  String get searchDishes => 'డిష్‌లు వెతకండి...';
 
   @override
-  String get addDishesHint => 'Add dishes in Menu Management first';
+  String get addDishesHint => 'ముందు మెనూలో డిష్‌లు జోడించండి';
 
   @override
   String itemsCount(int count) {
-    return '$count items';
+    return '$count అంశాలు';
   }
 
   @override
-  String get quantity100Pax => 'Quantity for 100 pax';
+  String get quantity100Pax => '100 మందికి పరిమాణం';
 
   @override
-  String get selectIngredient => 'Select Ingredient';
+  String get selectIngredient => 'పదార్థం ఎంచుకోండి';
 
   @override
-  String get selectIngredientHint => 'Select ingredient and enter quantity';
+  String get selectIngredientHint => 'ఎంచుకుని పరిమాణం ఇవ్వండి';
 
   @override
-  String get allIngredientsAdded => 'All ingredients already added';
+  String get allIngredientsAdded => 'అన్నీ జోడించబడ్డాయి';
 
   @override
-  String get quantityUpdated => '✅ Quantity updated';
+  String get quantityUpdated => '✅ పరిమాణం నవీకరించబడింది';
 
   @override
-  String get ingredientRemoved => 'Ingredient removed';
+  String get ingredientRemoved => 'తొలగించబడింది';
 
   @override
-  String get pax100 => '100 PAX';
+  String get pax100 => '100 మంది';
 
   @override
-  String get noIngredientsAdded => 'No ingredients added';
+  String get noIngredientsAdded => 'పదార్థాలు లేవు';
 
   @override
-  String get mrpRunScreenTitle => 'MRP Run';
+  String get mrpRunScreenTitle => 'MRP రన్';
 
   @override
-  String get changeDate => 'Change Date';
+  String get changeDate => 'తేదీ మార్చు';
 
   @override
-  String get totalOrders => 'Total Orders';
+  String get totalOrders => 'మొత్తం ఆర్డర్లు';
 
   @override
-  String get liveKitchen => 'Live Kitchen';
+  String get liveKitchen => 'లైవ్ కిచెన్';
 
   @override
-  String get subcontracted => 'Subcontracted';
+  String get subcontracted => 'సబ్‌కాంట్రాక్ట్';
 
   @override
-  String get noOrdersForDate => 'No orders for selected date';
+  String get noOrdersForDate => 'ఆర్డర్లు లేవు';
 
   @override
-  String get selectDifferentDate => 'Select Different Date';
+  String get selectDifferentDate => 'వేరే తేదీ ఎంచుకోండి';
 
   @override
-  String get runMrp => 'RUN MRP';
+  String get runMrp => 'MRP రన్ చేయి';
 
   @override
-  String get calculating => 'Calculating...';
+  String get calculating => 'లెక్కిస్తోంది...';
 
   @override
-  String get noOrdersToProcess => 'No orders to process';
+  String get noOrdersToProcess => 'ఆర్డర్లు లేవు';
 
   @override
-  String get venueNotSpecified => 'Venue not specified';
+  String get venueNotSpecified => 'స్థలం పేర్కొనలేదు';
 
   @override
-  String get selectSubcontractor => 'Select Subcontractor';
+  String get selectSubcontractor => 'సబ్‌కాంట్రాక్టర్ ఎంచుకోండి';
 
   @override
-  String get liveKitchenChip => 'Live Kitchen';
+  String get liveKitchenChip => 'లైవ్';
 
   @override
-  String get subcontractChip => 'Subcontract';
+  String get subcontractChip => 'కాంట్రాక్ట్';
 
   @override
-  String get mrpOutputTitle => 'MRP Output';
+  String get mrpOutputTitle => 'MRP అవుట్‌పుట్';
 
   @override
-  String get noIngredientsCalculated => 'No ingredients calculated';
+  String get noIngredientsCalculated => 'లెక్కించలేదు';
 
   @override
-  String get checkBomDefined => 'Check if dishes have BOM defined';
+  String get checkBomDefined => 'BOM ఉందో చూడండి';
 
   @override
-  String get total => 'total';
+  String get total => 'మొత్తం';
 
   @override
-  String get proceedToAllotment => 'PROCEED TO ALLOTMENT';
+  String get proceedToAllotment => 'కేటాయింపుకు వెళ్లు';
 
   @override
-  String get allotmentTitle => 'Allotment';
+  String get allotmentTitle => 'కేటాయింపు';
 
   @override
-  String get supplierAllotment => 'Supplier Allotment';
+  String get supplierAllotment => 'సరఫరాదారు కేటాయింపు';
 
   @override
-  String get summary => 'Summary';
+  String get summary => 'సారాంశం';
 
   @override
-  String get assignIngredientHint => 'Assign each ingredient to a supplier';
+  String get assignIngredientHint => 'సరఫరాదారులకు కేటాయించండి';
 
   @override
   String assignedStatus(int assigned, int total) {
-    return '$assigned/$total assigned';
+    return '$assigned/$total కేటాయించబడింది';
   }
 
   @override
-  String get supplier => 'Supplier';
+  String get supplier => 'సరఫరాదారు';
 
   @override
-  String get generateAndSendPos => 'GENERATE & SEND POs';
+  String get generateAndSendPos => 'PO సృష్టించి పంపు';
 
   @override
   String posWillBeGenerated(int count) {
-    return '$count POs will be generated';
+    return '$count PO సృష్టించబడతాయి';
   }
 
   @override
-  String get noAllocationsMade => 'No allocations made yet';
+  String get noAllocationsMade => 'కేటాయింపులు లేవు';
 
   @override
-  String get allocateIngredientsFirst =>
-      'Allocate ingredients to suppliers first';
+  String get allocateIngredientsFirst => 'ముందు కేటాయించండి';
 
   @override
   String posGeneratedSuccess(int count) {
-    return '✅ $count POs generated and sent';
+    return '✅ $count PO సృష్టించబడ్డాయి';
   }
 
   @override
-  String get catGrocery => 'Grocery';
+  String get catGrocery => 'కిరాణా';
 
   @override
-  String get supplierMaster => 'Supplier Master';
+  String get supplierMaster => 'సరఫరాదారులు';
 
   @override
-  String get addSupplier => 'Add Supplier';
+  String get addSupplier => 'సరఫరాదారు జోడించు';
 
   @override
-  String get editSupplier => 'Edit Supplier';
+  String get editSupplier => 'సవరించు';
 
   @override
-  String get nameRequired => 'Name *';
+  String get nameRequired => 'పేరు *';
 
   @override
-  String get mobile => 'Mobile';
+  String get mobile => 'మొబైల్';
 
   @override
-  String get gstNumber => 'GST Number';
+  String get gstNumber => 'GST నంబర్';
 
   @override
-  String get bankDetails => 'Bank Details';
+  String get bankDetails => 'బ్యాంక్ వివరాలు';
 
   @override
-  String get enterSupplierName => 'Enter supplier name';
+  String get enterSupplierName => 'పేరు నమోదు చేయి';
 
   @override
-  String get supplierUpdated => '✅ Supplier updated';
+  String get supplierUpdated => '✅ నవీకరించబడింది';
 
   @override
-  String get supplierAdded => '✅ Supplier added';
+  String get supplierAdded => '✅ జోడించబడింది';
 
   @override
-  String get noSuppliersAdded => 'No suppliers added';
+  String get noSuppliersAdded => 'సరఫరాదారులు లేరు';
 
   @override
-  String get noPhone => 'No phone';
+  String get noPhone => 'ఫోన్ లేదు';
 
   @override
-  String get subcontractorMaster => 'Subcontractor Master';
+  String get subcontractorMaster => 'సబ్‌కాంట్రాక్టర్లు';
 
   @override
-  String get editSubcontractor => 'Edit Subcontractor';
+  String get editSubcontractor => 'సవరించు';
 
   @override
-  String get addSubcontractor => 'Add Subcontractor';
+  String get addSubcontractor => 'జోడించు';
 
   @override
-  String get kitchenBusinessName => 'Kitchen/Business Name *';
+  String get kitchenBusinessName => 'పేరు *';
 
   @override
-  String get mobileRequired => 'Mobile *';
+  String get mobileRequired => 'మొబైల్ *';
 
   @override
-  String get specialization => 'Specialization';
+  String get specialization => 'స్పెషలైజేషన్';
 
   @override
-  String get specializationHint => 'e.g., Biriyani, Chinese, Sweets';
+  String get specializationHint => 'ఉదా. బిర్యానీ';
 
   @override
-  String get ratePerPax => 'Rate per Pax (₹)';
+  String get ratePerPax => 'ధర (ఒకరికి - ₹)';
 
   @override
-  String get enterNameMobile => 'Enter name and mobile';
+  String get enterNameMobile => 'పేరు మరియు నంబర్';
 
   @override
-  String get subcontractorUpdated => '✅ Subcontractor updated';
+  String get subcontractorUpdated => '✅ నవీకరించబడింది';
 
   @override
-  String get subcontractorAdded => '✅ Subcontractor added';
+  String get subcontractorAdded => '✅ జోడించబడింది';
 
   @override
-  String get noSubcontractorsAdded => 'No subcontractors added';
+  String get noSubcontractorsAdded => 'ఎవరూ లేరు';
 
   @override
-  String get perPax => 'per pax';
+  String get perPax => 'ఒకరికి';
 
   @override
-  String get purchaseOrdersTitle => 'Purchase Orders';
+  String get purchaseOrdersTitle => 'కొనుగోలు ఆర్డర్లు';
 
   @override
-  String get statusSent => 'SENT';
+  String get statusSent => 'పంపబడింది';
 
   @override
-  String get statusViewed => 'VIEWED';
+  String get statusViewed => 'చూశారు';
 
   @override
-  String get statusAccepted => 'ACCEPTED';
+  String get statusAccepted => 'అంగీకరించబడింది';
 
   @override
   String purchaseOrdersCount(int count) {
-    return '$count purchase orders';
+    return '$count కొనుగోలు ఆర్డర్లు';
   }
 
   @override
-  String get noPurchaseOrders => 'No purchase orders';
+  String get noPurchaseOrders => 'లేవు';
 
   @override
-  String get runMrpHint => 'Run MRP to generate POs';
+  String get runMrpHint => 'PO పొందడానికి MRP రన్ చేయి';
 
   @override
-  String get dispatchTitle => 'Dispatch';
+  String get dispatchTitle => 'డిస్పాచ్';
 
   @override
-  String get tabList => 'List';
+  String get tabList => 'జాబితా';
 
   @override
-  String get tabActive => 'Active';
+  String get tabActive => 'యాక్టివ్';
 
   @override
-  String get tabReturns => 'Returns';
+  String get tabReturns => 'రిటర్న్స్';
 
   @override
-  String get tabUnload => 'Unload';
+  String get tabUnload => 'అన్‌లోడ్';
 
   @override
   String noPendingOrdersDate(String date) {
-    return 'No pending orders for $date';
+    return 'పెండింగ్ ఆర్డర్లు లేవు';
   }
 
   @override
-  String get noActiveDispatches => 'No active dispatches';
+  String get noActiveDispatches => 'యాక్టివ్ లేదు';
 
   @override
-  String get noReturnTracking => 'No items for return tracking';
+  String get noReturnTracking => 'లేదు';
 
   @override
-  String get noUnloadItems => 'No items ready for unload';
+  String get noUnloadItems => 'అన్‌లోడ్ చేయడానికి ఏమీ లేదు';
 
   @override
-  String get startDispatch => 'Start Dispatch';
+  String get startDispatch => 'ప్రారంభించు';
 
   @override
-  String get waitingForKitchen => 'Waiting for Kitchen';
+  String get waitingForKitchen => 'వంటగది కోసం వేచి ఉంది';
 
   @override
-  String get track => 'Track';
+  String get track => 'ట్రాక్';
 
   @override
-  String get verify => 'Verify';
+  String get verify => 'ధృవీకరించు';
 
   @override
   String get trackReturn => 'Track Return';
@@ -1436,7 +1433,7 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
-  String get tapToViewItems => 'Tap to view loaded items →';
+  String get tapToViewItems => 'Tap to view loaded items ->';
 
   @override
   String get loadedItems => 'Loaded Items';
@@ -1445,23 +1442,22 @@ class AppLocalizationsKn extends AppLocalizations {
   String get noItemsRecorded => 'No items recorded';
 
   @override
-  String get kitchenItems => '🍳 Kitchen Items';
+  String get kitchenItems => 'Kitchen Items';
 
   @override
-  String get kitchenItemsSubtitle => 'Prepared in kitchen - tick when loaded';
+  String get kitchenItemsSubtitle => 'Prepared in kitchen';
 
   @override
-  String get subcontractItems => '🏪 Subcontract Items';
+  String get subcontractItems => 'Subcontract Items';
 
   @override
-  String get subcontractItemsSubtitle =>
-      'Optional - may come directly to venue';
+  String get subcontractItemsSubtitle => 'Direct to venue';
 
   @override
-  String get liveCookingItems => '🔥 Live Cooking Items';
+  String get liveCookingItems => 'Live Cooking Items';
 
   @override
-  String get liveCookingItemsSubtitle => 'Load ingredients for on-site cooking';
+  String get liveCookingItemsSubtitle => 'On-site cooking';
 
   @override
   String get selectVehicle => 'Select Vehicle';
@@ -1571,244 +1567,244 @@ class AppLocalizationsKn extends AppLocalizations {
   }
 
   @override
-  String get qtyLabel => 'Qty';
+  String get qtyLabel => 'పరిమాణం';
 
   @override
-  String get reportsTitle => 'Reports';
+  String get reportsTitle => 'నివేదికలు';
 
   @override
-  String get periodLabel => 'Period: ';
+  String get periodLabel => 'కాలం: ';
 
   @override
-  String get day => 'Day';
+  String get day => 'రోజు';
 
   @override
-  String get week => 'Week';
+  String get week => 'వారం';
 
   @override
-  String get month => 'Month';
+  String get month => 'నెల';
 
   @override
-  String get year => 'Year';
+  String get year => 'సంవత్సరం';
 
   @override
-  String get orders => 'Orders';
+  String get orders => 'ఆర్డర్లు';
 
   @override
-  String get kitchen => 'Kitchen';
+  String get kitchen => 'వంటగది';
 
   @override
-  String get dispatch => 'Dispatch';
+  String get dispatch => 'డిస్పాచ్';
 
   @override
   String get hr => 'HR';
 
   @override
-  String get noDataSelectedPeriod => 'No data for selected period';
+  String get noDataSelectedPeriod => 'ఎంచుకున్న కాలంలో డేటా లేదు';
 
   @override
-  String get revenue => 'Revenue';
+  String get revenue => 'ఆదాయం';
 
   @override
-  String get confirmed => 'Confirmed';
+  String get confirmed => 'ధృవీకరించబడింది';
 
   @override
-  String get completed => 'Completed';
+  String get completed => 'పూర్తయింది';
 
   @override
-  String get cancelled => 'Cancelled';
+  String get cancelled => 'రద్దు చేయబడింది';
 
   @override
-  String get inProgress => 'In Progress';
+  String get inProgress => 'పురోగతిలో ఉంది';
 
   @override
-  String get delivered => 'Delivered';
+  String get delivered => 'డెలివరీ చేయబడింది';
 
   @override
-  String get inTransit => 'In Transit';
+  String get inTransit => 'దారిలో ఉంది';
 
   @override
-  String get totalDispatches => 'Dispatches';
+  String get totalDispatches => 'మొత్తం డిస్పాచ్‌లు';
 
   @override
-  String get hours => 'Hours';
+  String get hours => 'గంటలు';
 
   @override
-  String get overtime => 'OT';
+  String get overtime => 'ఓవర్‌టైమ్';
 
   @override
-  String get staffWithOt => 'Staff with OT';
+  String get staffWithOt => 'OT చేసిన సిబ్బంది';
 
   @override
-  String get totalOt => 'Total OT';
+  String get totalOt => 'మొత్తం OT';
 
   @override
-  String get noOvertime => 'No overtime recorded';
+  String get noOvertime => 'OT లేదు';
 
   @override
-  String get financeTitle => 'Finance';
+  String get financeTitle => 'ఆర్థిక';
 
   @override
-  String get income => 'Income';
+  String get income => 'ఆదాయం';
 
   @override
-  String get expense => 'Expense';
+  String get expense => 'ఖర్చు';
 
   @override
-  String get netBalance => 'Net Balance';
+  String get netBalance => 'నికర నిల్వ';
 
   @override
-  String get transactions => 'Transactions';
+  String get transactions => ' లావాదేవీలు';
 
   @override
-  String get ledgers => 'Ledgers';
+  String get ledgers => 'లెడ్జర్లు';
 
   @override
-  String get export => 'Export';
+  String get export => 'ఎగుమతి';
 
   @override
-  String get recentTransactions => 'Recent Transactions';
+  String get recentTransactions => 'ఇటీవలి లావాదేవీలు';
 
   @override
-  String get noTransactionsFound => 'No transactions found';
+  String get noTransactionsFound => 'లావాదేవీలు లేవు';
 
   @override
-  String get exportingReport => 'Exporting Finance Report... (Mock)';
+  String get exportingReport => 'రిపోర్ట్ ఎగుమతి అవుతోంది...';
 
   @override
-  String get filterAll => 'All';
+  String get filterAll => 'అన్నీ';
 
   @override
-  String get deleteTransactionTitle => 'Delete Transaction?';
+  String get deleteTransactionTitle => 'తొలగించాలా?';
 
   @override
-  String get deleteTransactionContent => 'This cannot be undone.';
+  String get deleteTransactionContent => 'దీన్ని వెనక్కి తీసుకోలేము.';
 
   @override
-  String get customers => 'Customers';
+  String get customers => 'కస్టమర్లు';
 
   @override
-  String get comingSoon => 'Coming Soon';
+  String get comingSoon => 'త్వరలో వస్తుంది';
 
   @override
-  String get addIncome => 'Add Income';
+  String get addIncome => 'ఆదాయం జోడించు';
 
   @override
-  String get addExpense => 'Add Expense';
+  String get addExpense => 'ఖర్చు జోడించు';
 
   @override
-  String get amountLabel => 'Amount';
+  String get amountLabel => 'మొత్తం';
 
   @override
-  String get categoryLabel => 'Category';
+  String get categoryLabel => 'వర్గం';
 
   @override
-  String get paymentModeLabel => 'Payment Mode';
+  String get paymentModeLabel => 'చెల్లింపు పద్ధతి';
 
   @override
-  String get descriptionLabel => 'Description / Notes';
+  String get descriptionLabel => 'వివరణ / గమనికలు';
 
   @override
-  String get saveTransaction => 'Save Transaction';
+  String get saveTransaction => 'సేవ్ చేయి';
 
   @override
-  String get enterAmount => 'Enter amount';
+  String get enterAmount => 'మొత్తం నమోదు చేయి';
 
   @override
-  String get invalidAmount => 'Invalid amount';
+  String get invalidAmount => 'తప్పు మొత్తం';
 
   @override
-  String get transactionSaved => 'Transaction Saved';
+  String get transactionSaved => 'లావాదేవీ సేవ్ చేయబడింది';
 
   @override
-  String get collectPayment => 'Collect Payment';
+  String get collectPayment => 'చెల్లింపు తీసుకోండి';
 
   @override
-  String get selectPaymentMethod => 'Select Payment Method';
+  String get selectPaymentMethod => 'పద్ధతి ఎంచుకోండి';
 
   @override
   String get upiRazorpay => 'UPI (Razorpay)';
 
   @override
-  String get cardRazorpay => 'Credit/Debit Card (Razorpay)';
+  String get cardRazorpay => 'Card (Razorpay)';
 
   @override
   String get cash => 'Cash';
 
   @override
-  String get paymentSuccessful => 'Payment Successful!';
+  String get paymentSuccessful => 'చెల్లింపు విజయవంతం!';
 
   @override
   String paymentReceivedMsg(String amount, int orderId) {
-    return 'Payment of $amount received for Order #$orderId';
+    return '₹$amount స్వీకరించబడింది (ఆర్డర్ #$orderId)';
   }
 
   @override
   String paymentFailed(Object error) {
-    return 'Payment Failed: $error';
+    return 'విఫలమైంది: $error';
   }
 
   @override
-  String get chooseSubscription => 'Choose Subscription Plan';
+  String get chooseSubscription => 'చందా ప్లాన్ ఎంచుకోండి';
 
   @override
-  String get selectStartPlan => 'Select Your Plan';
+  String get selectStartPlan => 'ప్లాన్ ఎంచుకోండి';
 
   @override
   String payBtn(String amount) {
-    return 'Pay $amount';
+    return 'చెల్లించండి ₹$amount';
   }
 
   @override
-  String get subscriptionActivated => 'Subscription Activated!';
+  String get subscriptionActivated => 'చందా ప్రారంభించబడింది!';
 
   @override
   String planActiveUntil(String date) {
-    return 'Your plan is now active until $date.';
+    return '$date వరకు యాక్టివ్‌గా ఉంటుంది.';
   }
 
   @override
-  String get continueBtn => 'Continue';
+  String get continueBtn => 'కొనసాగించు';
 
   @override
-  String get auditReportTitle => 'Audit Report';
+  String get auditReportTitle => 'ఆడిట్ నివేదిక';
 
   @override
-  String get noLogsExport => 'No logs to export';
+  String get noLogsExport => 'ఎగుమతి చేయడానికి లాగ్‌లు లేవు';
 
   @override
   String exportFailed(Object error) {
-    return 'Export failed: $error';
+    return 'విఫలమైంది: $error';
   }
 
   @override
-  String get startDate => 'Start Date';
+  String get startDate => 'ప్రారంభ తేదీ';
 
   @override
-  String get endDate => 'End Date';
+  String get endDate => 'ముగింపు తేదీ';
 
   @override
-  String get userIdLabel => 'User ID';
+  String get userIdLabel => 'యూజర్ ID';
 
   @override
-  String get tableLabel => 'Table';
+  String get tableLabel => 'పట్టిక';
 
   @override
-  String get noAuditLogs => 'No audit logs found';
+  String get noAuditLogs => 'లాగ్‌లు లేవు';
 
   @override
   String changedFields(String fields) {
-    return 'Changed: $fields';
+    return 'మార్పులు: $fields';
   }
 
   @override
   String beforeVal(String val) {
-    return 'Before: $val';
+    return 'ముందు: $val';
   }
 
   @override
   String afterVal(String val) {
-    return 'After: $val';
+    return 'తర్వాత: $val';
   }
 
   @override
