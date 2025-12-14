@@ -95,7 +95,11 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
       final db = await DatabaseHelper().database;
       final runOrders = await db.query('mrp_run_orders', where: 'mrpRunId = ?', whereArgs: [widget.mrpRunId]);
       final orderIds = runOrders.map((o) => o['orderId'] as int).toList();
-      await DatabaseHelper().lockOrdersForMrp(widget.mrpRunId, orderIds);
+      
+      // Update orders to PO_SENT status
+      for (var orderId in orderIds) {
+        await db.update('orders', {'mrpStatus': 'PO_SENT'}, where: 'id = ?', whereArgs: [orderId]);
+      }
 
       // Update MRP run status
       await db.update('mrp_runs', {'status': 'PO_SENT', 'completedAt': DateTime.now().toIso8601String()},

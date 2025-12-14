@@ -258,19 +258,11 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
 
     return Scaffold(
       backgroundColor: Colors.grey[50], // Light background for contrast
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.ordersCalendarTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        foregroundColor: Colors.black87,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_month_outlined, color: Colors.indigo),
-            tooltip: AppLocalizations.of(context)!.openSystemCalendar,
-            onPressed: _openSystemCalendar,
-          ),
-        ],
+      // No AppBar - MainMenuScreen provides the header
+      floatingActionButton: FloatingActionButton.small(
+        onPressed: _openSystemCalendar,
+        backgroundColor: Colors.indigo,
+        child: const Icon(Icons.calendar_month_outlined, color: Colors.white),
       ),
       body: Column(
         children: [
