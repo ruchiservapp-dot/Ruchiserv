@@ -38,9 +38,17 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
     for (final item in items) {
       final id = item['id'] as int;
       final loaded = (item['loadedQty'] as int?) ?? 0;
-      // Use saved returnedQty if exists, otherwise default to loaded (for new returns)
-      final savedReturnedQty = (item['returnedQty'] as int?) ?? loaded;
-      _returnedValues[id] = savedReturnedQty;
+      final status = item['status'] as String? ?? 'LOADED';
+      final savedReturnedQty = (item['returnedQty'] as int?) ?? 0;
+
+      // User Request: Default to FULL quantity if not yet returned (Status == LOADED)
+      // Otherwise use the saved value (Status == RETURNED)
+      if (status == 'LOADED') {
+        _returnedValues[id] = loaded;
+      } else {
+        _returnedValues[id] = savedReturnedQty;
+      }
+      
       _maxValues[id] = loaded;
     }
 

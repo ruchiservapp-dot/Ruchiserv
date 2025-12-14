@@ -34,8 +34,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   // All possible menu items
   final List<Map<String, dynamic>> _allMenuItems = [
     {'icon': Icons.receipt_long, 'label': 'Orders', 'module': 'ORDERS', 'tier': 'BASIC'},
-    {'icon': Icons.settings_suggest, 'label': 'Operations', 'module': 'KITCHEN', 'tier': 'BASIC'},
     {'icon': Icons.inventory_2, 'label': 'Inventory', 'module': 'INVENTORY', 'tier': 'BASIC'},
+    {'icon': Icons.settings_suggest, 'label': 'Operations', 'module': 'KITCHEN', 'tier': 'BASIC'},
     {'icon': Icons.account_balance_wallet, 'label': 'Finance', 'module': 'FINANCE', 'tier': 'PRO'},
     {'icon': Icons.bar_chart_rounded, 'label': 'Reports', 'module': 'REPORTS', 'tier': 'BASIC'},
     {'icon': Icons.settings, 'label': 'Settings', 'module': 'SETTINGS', 'tier': 'BASIC'},
@@ -43,8 +43,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   final List<Widget> _allScreens = const [
     OrderCalendarScreen(),
-    OperationsScreen(),
     InventoryScreen(),
+    OperationsScreen(),
     FinanceScreen(),
     ReportsScreen(),
     SettingsScreen(),

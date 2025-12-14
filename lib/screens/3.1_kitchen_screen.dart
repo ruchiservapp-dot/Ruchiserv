@@ -412,7 +412,21 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
     );
   }
 
-  void _showDishOptions(Map<String, dynamic> dish) {
+  void _showDishOptions(Map<String, dynamic> dish) async {
+    // Check if locked by MRP/PO
+    final isLocked = await DatabaseHelper().isDishLocked(dish['id']);
+    if (!mounted) return;
+
+    if (isLocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.orderLockedCannotModify),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     showModalBottomSheet(context: context, builder: (_) {
       return Padding(
         padding: const EdgeInsets.all(16.0),

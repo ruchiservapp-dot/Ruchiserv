@@ -40,6 +40,7 @@ dependencies:
   share_plus: ^10.0.0 # COMPLIANCE: Audit Export (Task B)
   pdf: ^3.10.0     # COMPLIANCE: PDF Generation (Task B)
   printing: ^5.11.0 # COMPLIANCE: PDF Printing/Sharing (Task B)
+  excel: ^4.0.3     # Reports: Excel Export
 
   # Biometrics & app info
   local_auth: ^3.0.0

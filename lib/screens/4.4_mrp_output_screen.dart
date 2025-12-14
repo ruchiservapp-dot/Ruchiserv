@@ -35,9 +35,12 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
   Widget build(BuildContext context) {
     // Group by category
     final grouped = <String, List<Map<String, dynamic>>>{};
+    double grandTotal = 0;
+    
     for (var item in _output) {
       final cat = item['category'] ?? 'Other';
       grouped.putIfAbsent(cat, () => []).add(item);
+      grandTotal += (item['totalCost'] as num? ?? 0).toDouble();
     }
 
     return Scaffold(
@@ -53,15 +56,30 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.green.shade50,
-            child: Row(
+            child: Column(
               children: [
-                const Icon(Icons.check_circle, color: Colors.green),
-                const SizedBox(width: 8),
-                Text('MRP Run #${widget.mrpRunId}', 
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-                const Spacer(),
-                Text(AppLocalizations.of(context)!.ingredientsCount(_output.length),
-                  style: TextStyle(color: Colors.grey.shade600)),
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text('MRP Run #${widget.mrpRunId}', 
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    Text(AppLocalizations.of(context)!.ingredientsCount(_output.length),
+                      style: TextStyle(color: Colors.grey.shade600)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Est. Total Cost:', style: TextStyle(fontWeight: FontWeight.w500)),
+                    Text(
+                      '₹${grandTotal.toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -90,10 +108,11 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
                           final category = grouped.keys.elementAt(index);
                           final items = grouped[category]!;
                           final totalQty = items.fold<double>(0, (sum, i) => sum + (i['requiredQty'] ?? 0));
+                          final totalCatCost = items.fold<double>(0, (sum, i) => sum + (i['totalCost'] ?? 0));
                           
                           return ExpansionTile(
                             title: Text(category, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text(AppLocalizations.of(context)!.itemsCount(items.length)),
+                            subtitle: Text('${AppLocalizations.of(context)!.itemsCount(items.length)} • ₹${totalCatCost.toStringAsFixed(0)}'),
                             trailing: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                               decoration: BoxDecoration(
@@ -106,47 +125,77 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
                               ),
                             ),
                             initiallyExpanded: true,
-                            children: items.map((item) => ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _getCategoryColor(category).withOpacity(0.2),
-                                child: Text(item['ingredientName']?[0]?.toUpperCase() ?? '?',
-                                  style: TextStyle(color: _getCategoryColor(category))),
-                              ),
-                              title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
-                              trailing: Text(
-                                '${(item['requiredQty'] as num?)?.toStringAsFixed(2) ?? '0'} ${item['unit'] ?? 'kg'}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                            )).toList(),
+                            children: items.map((item) {
+                                final qty = (item['requiredQty'] as num?)?.toDouble() ?? 0;
+                                final rate = (item['rate'] as num?)?.toDouble() ?? 0;
+                                final cost = (item['totalCost'] as num?)?.toDouble() ?? 0;
+                                final unit = item['unit'] ?? 'kg';
+
+                                return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: _getCategoryColor(category).withOpacity(0.2),
+                                  child: Text(item['ingredientName']?[0]?.toUpperCase() ?? '?',
+                                    style: TextStyle(color: _getCategoryColor(category))),
+                                ),
+                                title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
+                                subtitle: Text(
+                                  '${qty.toStringAsFixed(2)} $unit x ₹${rate.toStringAsFixed(2)}',
+                                  style: TextStyle(color: Colors.grey.shade700),
+                                ),
+                                trailing: Text(
+                                  '₹${cost.toStringAsFixed(2)}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                              );
+                            }).toList(),
                           );
                         },
                       ),
           ),
           
-          // Proceed to Allotment
+          // Bottom Summary & Action
           if (_output.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => AllotmentScreen(
-                        mrpRunId: widget.mrpRunId,
-                        firmId: widget.firmId,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, -2))],
+              ),
+              child: Column(
+                children: [
+                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Grand Total:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(
+                        '₹${grandTotal.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
                       ),
-                    ));
-                  },
-                  icon: const Icon(Icons.assignment),
-                  label: Text(AppLocalizations.of(context)!.proceedToAllotment),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => AllotmentScreen(
+                            mrpRunId: widget.mrpRunId,
+                            firmId: widget.firmId,
+                          ),
+                        ));
+                      },
+                      icon: const Icon(Icons.assignment),
+                      label: Text(AppLocalizations.of(context)!.proceedToAllotment),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

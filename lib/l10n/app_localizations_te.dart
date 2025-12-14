@@ -1103,6 +1103,9 @@ class AppLocalizationsTe extends AppLocalizations {
   String get searchPlaceholder => 'వెతకండి...';
 
   @override
+  String get noResultsFound => 'ఫలితాలు లేవు';
+
+  @override
   String ingredientsCount(int count) {
     return '$count పదార్థాలు';
   }
@@ -1224,6 +1227,10 @@ class AppLocalizationsTe extends AppLocalizations {
 
   @override
   String get subcontractChip => 'కాంట్రాక్ట్';
+
+  @override
+  String get orderLockedCannotModify =>
+      'Order is finalized/locked. Cannot modify.';
 
   @override
   String get mrpOutputTitle => 'MRP అవుట్‌పుట్';

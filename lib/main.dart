@@ -12,6 +12,8 @@ import 'screens/main_menu_screen.dart'; // Proper menu navigation
 import 'screens/0.0_splash_screen.dart';
 import 'db/seed_test_user.dart'; // DEVELOPMENT: Test user seeding
 
+import 'db/seed_november_data.dart'; // November 2025 Data Seeding
+
 // COMPLIANCE: Initialize encryption before any database operations
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +23,7 @@ Future<void> main() async {
   
   // DEVELOPMENT: Seed test user (remove in production)
   await seedTestUser();
+  await seedNovember2025Data(); // Populate Nov 2025 data for testing
   
   runApp(const RuchiServApp());
 }

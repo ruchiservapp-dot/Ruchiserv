@@ -44,72 +44,81 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
   }
 
   Future<void> _generatePOs() async {
-    // Group allocations by supplier
-    final supplierGroups = <int, List<Map<String, dynamic>>>{};
-    
-    for (var item in _mrpOutput) {
-      final ingredientId = item['ingredientId'] as int;
-      final supplierId = _allocations[ingredientId];
+    try {
+      // Group allocations by supplier
+      final supplierGroups = <int, List<Map<String, dynamic>>>{};
       
-      if (supplierId != null) {
-        supplierGroups.putIfAbsent(supplierId, () => []).add(item);
+      for (var item in _mrpOutput) {
+        final ingredientId = item['ingredientId'] as int;
+        final supplierId = _allocations[ingredientId];
+        
+        if (supplierId != null) {
+          supplierGroups.putIfAbsent(supplierId, () => []).add(item);
+        }
+      }
+
+      if (supplierGroups.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.allocateIngredientsFirst), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+
+      // Create PO for each supplier
+      for (var entry in supplierGroups.entries) {
+        final supplierId = entry.key;
+        final items = entry.value;
+        final supplier = _suppliers.firstWhere((s) => s['id'] == supplierId, orElse: () => {});
+        
+        final poNumber = await DatabaseHelper().generatePoNumber(widget.firmId);
+        final poId = await DatabaseHelper().createPurchaseOrder({
+          'firmId': widget.firmId,
+          'mrpRunId': widget.mrpRunId,
+          'poNumber': poNumber,
+          'type': 'SUPPLIER',
+          'vendorId': supplierId,
+          'vendorName': supplier['name'] ?? AppLocalizations.of(context)!.unknown,
+          'totalItems': items.length,
+          'status': 'SENT',
+        });
+
+        // Add PO items (itemType removed - not in schema)
+        await DatabaseHelper().addPoItems(poId, items.map((i) => {
+          'itemId': i['ingredientId'],
+          'itemName': i['ingredientName'],
+          'quantity': i['requiredQty'],
+          'unit': i['unit'],
+        }).toList());
+      }
+
+      // Lock orders
+      final db = await DatabaseHelper().database;
+      final runOrders = await db.query('mrp_run_orders', where: 'mrpRunId = ?', whereArgs: [widget.mrpRunId]);
+      final orderIds = runOrders.map((o) => o['orderId'] as int).toList();
+      await DatabaseHelper().lockOrdersForMrp(widget.mrpRunId, orderIds);
+
+      // Update MRP run status
+      await db.update('mrp_runs', {'status': 'PO_SENT', 'completedAt': DateTime.now().toIso8601String()},
+        where: 'id = ?', whereArgs: [widget.mrpRunId]);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.posGeneratedSuccess(supplierGroups.length)), 
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+        Navigator.pop(context); // Go back to MRP Run
+      }
+    } catch (e) {
+      print('ERROR Generating POs: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error generating POs: $e'), backgroundColor: Colors.red),
+        );
       }
     }
-
-    if (supplierGroups.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.allocateIngredientsFirst), backgroundColor: Colors.orange),
-      );
-      return;
-    }
-
-    // Create PO for each supplier
-    for (var entry in supplierGroups.entries) {
-      final supplierId = entry.key;
-      final items = entry.value;
-      final supplier = _suppliers.firstWhere((s) => s['id'] == supplierId, orElse: () => {});
-      
-      final poNumber = await DatabaseHelper().generatePoNumber(widget.firmId);
-      final poId = await DatabaseHelper().createPurchaseOrder({
-        'firmId': widget.firmId,
-        'mrpRunId': widget.mrpRunId,
-        'poNumber': poNumber,
-        'type': 'SUPPLIER',
-        'vendorId': supplierId,
-        'vendorName': supplier['name'] ?? AppLocalizations.of(context)!.unknown,
-        'totalItems': items.length,
-        'status': 'SENT',
-      });
-
-      // Add PO items
-      await DatabaseHelper().addPoItems(poId, items.map((i) => {
-        'itemType': 'INGREDIENT',
-        'itemId': i['ingredientId'],
-        'itemName': i['ingredientName'],
-        'quantity': i['requiredQty'],
-        'unit': i['unit'],
-      }).toList());
-    }
-
-    // Lock orders
-    final db = await DatabaseHelper().database;
-    final runOrders = await db.query('mrp_run_orders', where: 'mrpRunId = ?', whereArgs: [widget.mrpRunId]);
-    final orderIds = runOrders.map((o) => o['orderId'] as int).toList();
-    await DatabaseHelper().lockOrdersForMrp(widget.mrpRunId, orderIds);
-
-    // Update MRP run status
-    await db.update('mrp_runs', {'status': 'PO_SENT', 'completedAt': DateTime.now().toIso8601String()},
-      where: 'id = ?', whereArgs: [widget.mrpRunId]);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.posGeneratedSuccess(supplierGroups.length)), 
-        backgroundColor: Colors.green,
-      ),
-    );
-
-    Navigator.pop(context);
-    Navigator.pop(context); // Go back to MRP Run
   }
 
   @override
@@ -179,24 +188,25 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                   return ListTile(
                     title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
                     subtitle: Text('${(item['requiredQty'] as num?)?.toStringAsFixed(2) ?? '0'} ${item['unit'] ?? 'kg'}'),
-                    trailing: SizedBox(
-                      width: 150,
+                      trailing: SizedBox(
+                        width: 130, // Reduced slightly to fit better
                         child: DropdownButtonFormField<int>(
-                        value: _allocations[ingredientId],
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.supplier,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                          border: const OutlineInputBorder(),
+                          isExpanded: true, // Fix: Prevent overflow by truncating text
+                          value: _allocations[ingredientId],
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(context)!.supplier,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 4), // Reduced padding
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: _suppliers.map((s) => DropdownMenuItem<int>(
+                            value: s['id'],
+                            child: Text(s['name'] ?? AppLocalizations.of(context)!.unknown, overflow: TextOverflow.ellipsis),
+                          )).toList(),
+                          onChanged: (v) {
+                            setState(() => _allocations[ingredientId] = v);
+                          },
                         ),
-                        items: _suppliers.map((s) => DropdownMenuItem<int>(
-                          value: s['id'],
-                          child: Text(s['name'] ?? AppLocalizations.of(context)!.unknown, overflow: TextOverflow.ellipsis),
-                        )).toList(),
-                        onChanged: (v) {
-                          setState(() => _allocations[ingredientId] = v);
-                        },
                       ),
-                    ),
                   );
                 }).toList(),
               );

@@ -11,9 +11,9 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 // Optional but useful if you already added these in your project
 // If not present, you can safely remove these two imports.
 import '../services/connectivity_service.dart';
-import '../services/connectivity_service.dart';
 import '../db/aws/aws_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'schema_manager.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -23,17 +23,21 @@ class DatabaseHelper {
   static Database? _database;
 
   Future<Database> get database async {
-    _database ??= await _initDB("ruchiserv.db");
+    if (_database != null) return _database!;
+    _database = await _initDatabase();
     return _database!;
   }
 
-  Future<Database> _initDB(String fileName) async {
+  Future<Database> _initDatabase() async {
+    String fileName = 'ruchiserv.db';
+    
+    Database db;
     if (kIsWeb) {
-      // Web-specific: Set global factory and use simple path
+      // Web initialization
       databaseFactory = databaseFactoryFfiWeb;
-      return await openDatabase(
+      db = await openDatabase(
         fileName,
-        version: 28, // v28: Add all missing tables defensively
+        version: 31, // v31: Add mrpRunId to purchase_orders
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -41,449 +45,28 @@ class DatabaseHelper {
       // Mobile/Desktop initialization
       final dir = await getApplicationDocumentsDirectory();
       final path = join(dir.path, fileName);
-      return await openDatabase(
+      db = await openDatabase(
         path,
-        version: 28, // v28: Add all missing tables defensively
+        version: 31, // v31: Add mrpRunId to purchase_orders
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
     }
+    
+    // Always sync schema on startup to ensure all columns exist
+    // This fixes "missing column" issues even if version didn't change (e.g. dev builds)
+    await SchemaManager.syncSchema(db);
+    
+    return db;
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // === ORDERS ====================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL DEFAULT 'DEFAULT',
-        date TEXT NOT NULL,
-        customerName TEXT NOT NULL,
-        mobile TEXT,
-        email TEXT,
-        location TEXT,
-        mealType TEXT,
-        foodType TEXT,
-        time TEXT,
-        notes TEXT,
-        beforeDiscount REAL DEFAULT 0,
-        discountPercent REAL DEFAULT 0,
-        discountAmount REAL DEFAULT 0,
-        finalAmount REAL DEFAULT 0,
-        totalPax INTEGER DEFAULT 0,
-        isLocked INTEGER DEFAULT 0,
-        serviceRequired INTEGER DEFAULT 0,
-        serviceType TEXT,
-        counterCount INTEGER DEFAULT 1,
-        staffCount INTEGER DEFAULT 0,
-        staffRate REAL DEFAULT 0,
-        counterSetupRequired INTEGER DEFAULT 0,
-        counterSetupRate REAL DEFAULT 0,
-        serviceCost REAL DEFAULT 0,
-        counterSetupCost REAL DEFAULT 0,
-        grandTotal REAL DEFAULT 0,
-        dispatchStatus TEXT,
-        dispatchedAt TEXT,
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-    ''');
-
-    // === LOCAL USERS (offline login cache) =========================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS local_users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        firm_id INTEGER,
-        username TEXT,
-        email TEXT,
-        password TEXT,
-        role TEXT,
-        is_active INTEGER DEFAULT 1,
-        last_login TEXT
-      );
-    ''');
-
-    // === DISHES ====================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS dishes(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        orderId INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        foodType TEXT,
-        pax INTEGER DEFAULT 0,
-        rate INTEGER DEFAULT 0,
-        manualCost INTEGER DEFAULT 0,
-        cost INTEGER DEFAULT 0,
-        category TEXT,
-        productionStatus TEXT DEFAULT 'PENDING', -- PENDING, QUEUED, COMPLETED
-        productionType TEXT DEFAULT 'INTERNAL', -- INTERNAL, SUBCONTRACT, LIVE
-        subcontractorId TEXT,
-        readyAt TEXT,
-        createdAt TEXT,
-        FOREIGN KEY(orderId) REFERENCES orders(id) ON DELETE CASCADE
-      );
-    ''');
-
-    // === FIRMS =====================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS firms(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT UNIQUE NOT NULL,
-        firmName TEXT NOT NULL,
-        contactPerson TEXT,
-        mobile TEXT,
-        primaryMobile TEXT,
-        alternateMobile TEXT,
-        email TEXT,
-        primaryEmail TEXT,
-        alternateEmail TEXT,
-        address TEXT,
-        gst TEXT,
-        gstNumber TEXT,
-        ownerName TEXT,
-        website TEXT,
-        subscriptionPlan TEXT,
-        subscriptionTier TEXT DEFAULT 'BASIC',
-        subscriptionStart TEXT,
-        subscriptionEnd TEXT,
-        subscriptionExpiry TEXT,
-        subscriptionStatus TEXT DEFAULT 'Active',
-        enabledFeatures TEXT,
-        allowedModules TEXT,
-        maxUsers INTEGER DEFAULT 5,
-        capacity INTEGER DEFAULT 500,
-        billingCycle TEXT,
-        paymentMode TEXT,
-        lastRenewalTxnId TEXT,
-        kitchenLatitude REAL,
-        kitchenLongitude REAL,
-        geoFenceRadius INTEGER DEFAULT 100,
-        otMultiplier REAL DEFAULT 1.5,
-        showUniversalData INTEGER DEFAULT 1,
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-    ''');
-
-    // === USERS =====================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL,
-        userId TEXT UNIQUE NOT NULL,
-        username TEXT NOT NULL,
-        passwordHash TEXT NOT NULL,
-        role TEXT DEFAULT 'User',
-        permissions TEXT,
-        moduleAccess TEXT,
-        showRates INTEGER DEFAULT 1,
-        mobile TEXT,
-        email TEXT,
-        isActive INTEGER DEFAULT 1,
-        biometricEnabled INTEGER DEFAULT 0,
-        lastLogin TEXT,
-        createdAt TEXT,
-        updatedAt TEXT,
-        FOREIGN KEY(firmId) REFERENCES firms(firmId)
-      );
-    ''');
-
-    // === AUTH LOGS =================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS auth_logs(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
-        action TEXT,
-        description TEXT,
-        timestamp TEXT
-      );
-    ''');
+    print('📦 [DB] Creating new database with version $version');
     
-    // === AUDIT LOG (v26) ===========================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS audit_log (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        table_name TEXT,
-        record_id INTEGER,
-        action TEXT,
-        user_id TEXT,
-        firm_id TEXT,
-        notes TEXT,
-        timestamp TEXT
-      );
-    ''');
-
-    // === PENDING SYNC (offline queue) ==============================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS pending_sync (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        table_name TEXT,
-        data TEXT,          -- JSON blob
-        action TEXT,        -- INSERT | UPDATE | DELETE
-        timestamp TEXT
-      );
-    ''');
-
-    // === AUTHORIZED MOBILES (Mobile Authorization) ================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS authorized_mobiles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL,
-        mobile TEXT NOT NULL,
-        type TEXT NOT NULL,
-        name TEXT,
-        isActive INTEGER DEFAULT 1,
-        addedBy TEXT,
-        addedAt TEXT,
-        UNIQUE(firmId, mobile)
-      );
-    ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_firm ON authorized_mobiles(firmId);');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_mobile ON authorized_mobiles(firmId, mobile);');
-
-    // NOTE: dish_master is now defined later with v19 schema (includes region, base_pax)
-
-    // === VEHICLES (for Dispatch module) ================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS vehicles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL,
-        vehicleNo TEXT NOT NULL,
-        vehicleType TEXT, -- Tempo, Van, Truck, Auto etc.
-        type TEXT DEFAULT 'INHOUSE', -- INHOUSE / OUTSIDE
-        driverName TEXT,
-        driverMobile TEXT,
-        capacity INTEGER DEFAULT 0,
-        isActive INTEGER DEFAULT 1,
-        isModified INTEGER DEFAULT 0,
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-    ''');
-
-    // === DISPATCHES ====================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS dispatches (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        orderId INTEGER NOT NULL,
-        vehicleId INTEGER,
-        dispatchTime TEXT,
-        dispatchStatus TEXT DEFAULT 'PENDING', -- PENDING, LOADING, DISPATCHED, DELIVERED, RETURNING, COMPLETED
-        returnVehicleId INTEGER,
-        returnTime TEXT,
-        driverLat REAL,
-        driverLng REAL,
-        lastLocationUpdate TEXT,
-        notes TEXT,
-        createdAt TEXT,
-        updatedAt TEXT,
-        FOREIGN KEY(orderId) REFERENCES orders(id),
-        FOREIGN KEY(vehicleId) REFERENCES vehicles(id)
-      );
-    ''');
-
-    // === DISPATCH ITEMS (Dishes + Utensils + Consumables) ==============
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS dispatch_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        dispatchId INTEGER NOT NULL,
-        itemType TEXT NOT NULL, -- DISH, UTENSIL, CONSUMABLE
-        itemName TEXT NOT NULL,
-        quantity INTEGER DEFAULT 0,
-        loadedQty INTEGER DEFAULT 0,
-        returnedQty INTEGER DEFAULT 0,
-        unloadedQty INTEGER DEFAULT 0,
-        status TEXT DEFAULT 'PENDING', -- PENDING, LOADED, RETURNED, VERIFIED, MISSING
-        notes TEXT,
-        FOREIGN KEY(dispatchId) REFERENCES dispatches(id)
-      );
-    ''');
-
-    // === UTENSILS MASTER ===============================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS utensils (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL,
-        name TEXT NOT NULL,
-        category TEXT DEFAULT 'SERVING', -- SERVING, COOKING, CUTLERY, CONSUMABLE
-        totalStock INTEGER DEFAULT 0,
-        availableStock INTEGER DEFAULT 0,
-        isReturnable INTEGER DEFAULT 1,
-        isModified INTEGER DEFAULT 0,
-        createdAt TEXT,
-        updatedAt TEXT,
-        UNIQUE(firmId, name)
-      );
-    ''');
-
-    // === STAFF MANAGEMENT ================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS staff (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL,
-        name TEXT NOT NULL,
-        role TEXT,
-        mobile TEXT,
-        email TEXT,
-        salary REAL DEFAULT 0,
-        joinDate TEXT,
-        isActive INTEGER DEFAULT 1,
-        staffType TEXT DEFAULT 'PERMANENT',
-        dailyWageRate REAL DEFAULT 0,
-        hourlyRate REAL DEFAULT 0,
-        payoutFrequency TEXT DEFAULT 'MONTHLY',
-        bankAccountNo TEXT,
-        bankIfsc TEXT,
-        bankName TEXT,
-        aadharNumber TEXT,
-        emergencyContact TEXT,
-        emergencyContactName TEXT,
-        address TEXT,
-        photoUrl TEXT,
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-    ''');
-
-    // === ATTENDANCE ======================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS attendance (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        staffId INTEGER NOT NULL,
-        date TEXT NOT NULL,
-        punchInTime TEXT,
-        punchOutTime TEXT,
-        punchInLat REAL,
-        punchInLng REAL,
-        punchOutLat REAL,
-        punchOutLng REAL,
-        isWithinGeoFence INTEGER DEFAULT 0,
-        hoursWorked REAL DEFAULT 0,
-        overtime REAL DEFAULT 0,
-        location TEXT,
-        status TEXT DEFAULT 'Present',
-        notes TEXT,
-        createdAt TEXT,
-        FOREIGN KEY(staffId) REFERENCES staff(id)
-      );
-    ''');
-
-    // === STAFF ASSIGNMENTS ===============================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS staff_assignments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        orderId INTEGER NOT NULL,
-        staffId INTEGER NOT NULL,
-        role TEXT,
-        assignedAt TEXT,
-        status TEXT DEFAULT 'ASSIGNED',
-        FOREIGN KEY(orderId) REFERENCES orders(id),
-        FOREIGN KEY(staffId) REFERENCES staff(id)
-      );
-    ''');
-
-    // === STAFF ADVANCES ==================================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS staff_advances (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        staffId INTEGER NOT NULL,
-        amount REAL DEFAULT 0,
-        reason TEXT,
-        date TEXT,
-        deductedFromPayroll INTEGER DEFAULT 0,
-        payrollDate TEXT,
-        createdAt TEXT,
-        FOREIGN KEY(staffId) REFERENCES staff(id)
-      );
-    ''');
-
-    // === TRANSACTIONS (Finance Module) =================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL,
-        date TEXT NOT NULL,
-        type TEXT NOT NULL, -- INCOME, EXPENSE, TRANSFER, ADJUSTMENT
-        amount REAL DEFAULT 0,
-        category TEXT,
-        description TEXT,
-        mode TEXT, -- Cash, UPI, Bank
-        relatedEntityId INTEGER,
-        relatedEntityType TEXT, -- SUPPLIER, ORDER, STAFF
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-    ''');
-
-    // === INGREDIENTS MASTER (v22) ================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS ingredients_master (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL DEFAULT 'SEED',
-        baseId INTEGER,
-        name TEXT NOT NULL,
-        sku_name TEXT,
-        unit_of_measure TEXT,
-        cost_per_unit REAL DEFAULT 0,
-        category TEXT,
-        isModified INTEGER DEFAULT 0,
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-    ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_ingredients_firmId ON ingredients_master(firmId);');
-
-    // === DISH MASTER (v22) ================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS dish_master (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL DEFAULT 'SEED',
-        baseId INTEGER,
-        name TEXT NOT NULL,
-        region TEXT,
-        category TEXT,
-        base_pax INTEGER DEFAULT 1,
-        rate INTEGER DEFAULT 0,
-        foodType TEXT DEFAULT 'Veg',
-        isModified INTEGER DEFAULT 0,
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-    ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_dish_firmId ON dish_master(firmId);');
-
-    // === RECIPE DETAIL / BOM (v22) ================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS recipe_detail (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        firmId TEXT NOT NULL DEFAULT 'SEED',
-        baseId INTEGER,
-        dish_id INTEGER NOT NULL,
-        ing_id INTEGER NOT NULL,
-        quantity_per_base_pax REAL NOT NULL,
-        unit_override TEXT,
-        isModified INTEGER DEFAULT 0,
-        FOREIGN KEY(dish_id) REFERENCES dish_master(id),
-        FOREIGN KEY(ing_id) REFERENCES ingredients_master(id)
-      );
-    ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_recipe_firmId ON recipe_detail(firmId);');
-
-    // === CONTENT TRANSLATIONS (v21) ================================
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS content_translations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        entity_type TEXT NOT NULL,
-        entity_id INTEGER NOT NULL,
-        language_code TEXT NOT NULL,
-        field_name TEXT DEFAULT 'name',
-        translated_text TEXT NOT NULL,
-        created_at TEXT,
-        UNIQUE(entity_type, entity_id, language_code, field_name)
-      );
-    ''');
+    // Use SchemaManager to create all tables from central definition
+    await SchemaManager.createAllTables(db);
     
-    // Load seed data (ingredients, dishes, BOM)
+    // Seed initial data
     await _loadSeeds(db);
   }
 
@@ -542,9 +125,7 @@ class DatabaseHelper {
             'addedBy': 'SYSTEM_MIGRATION',
             'addedAt': DateTime.now().toIso8601String(),
           });
-        } catch (_) {
-          // Ignore duplicates
-        }
+        } catch (_) {}
       }
     }
 
@@ -1314,6 +895,13 @@ class DatabaseHelper {
       } catch (_) {}
     }
 
+    // Upgrade to v25: Add mrpRunId to purchase_orders for MRP integration
+    if (oldVersion < 25) {
+      try {
+        await db.execute("ALTER TABLE purchase_orders ADD COLUMN mrpRunId INTEGER;");
+      } catch (_) {}
+    }
+
     // Upgrade to v25: Add dispatch status fields to orders
     if (oldVersion < 25) {
       try {
@@ -1358,6 +946,11 @@ class DatabaseHelper {
 
     // === DEFENSIVE: Always ensure critical tables exist (for any DB version) ===
     // This fixes issues where tables were added in migrations but not in _onCreate
+    
+    // Ensure purchase_orders has mrpRunId column (may be missing in older DBs)
+    try {
+      await db.execute("ALTER TABLE purchase_orders ADD COLUMN mrpRunId INTEGER;");
+    } catch (_) {}
     
     // Staff table (missed in some DBs)
     await db.execute('''
@@ -1549,6 +1142,54 @@ class DatabaseHelper {
         UNIQUE(firmId, rateType)
       );
     ''');
+
+    // MRP tables (defensive - ensure they exist for all DBs)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS mrp_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        firmId TEXT NOT NULL,
+        runDate TEXT NOT NULL,
+        targetDate TEXT NOT NULL,
+        status TEXT DEFAULT 'DRAFT',
+        totalOrders INTEGER DEFAULT 0,
+        totalPax INTEGER DEFAULT 0,
+        createdBy TEXT,
+        createdAt TEXT,
+        completedAt TEXT
+      );
+    ''');
+    
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS mrp_run_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mrpRunId INTEGER NOT NULL,
+        orderId INTEGER NOT NULL,
+        pax INTEGER NOT NULL,
+        isSubcontracted INTEGER DEFAULT 0,
+        subcontractorId INTEGER,
+        UNIQUE(mrpRunId, orderId)
+      );
+    ''');
+    
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS mrp_output (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mrpRunId INTEGER NOT NULL,
+        ingredientId INTEGER NOT NULL,
+        requiredQty REAL NOT NULL,
+        unit TEXT NOT NULL,
+        category TEXT,
+        subcategory TEXT,
+        allocatedQty REAL DEFAULT 0,
+        status TEXT DEFAULT 'PENDING'
+      );
+    ''');
+
+    // Add missing columns to orders table for reports
+    try { await db.execute("ALTER TABLE orders ADD COLUMN isCancelled INTEGER DEFAULT 0;"); } catch (_) {}
+    try { await db.execute("ALTER TABLE orders ADD COLUMN status TEXT DEFAULT 'Confirmed';"); } catch (_) {}
+    try { await db.execute("ALTER TABLE orders ADD COLUMN venue TEXT;"); } catch (_) {}
+    await SchemaManager.syncSchema(db);
   }
 
   // ---------- SEED DATA LOADER ----------
@@ -1812,12 +1453,59 @@ class DatabaseHelper {
     final db = await database;
     return await db.query(
       'dishes',
-      where:
-          "orderId = ? AND name IS NOT NULL AND name != '' AND name != 'Unnamed'",
+      where: "orderId = ? AND name IS NOT NULL AND name != '' AND name != 'Unnamed'",
       whereArgs: [orderId],
       orderBy: 'id ASC',
     );
   }
+
+  /// Toggle subcontract status for a specific dish
+  Future<bool> toggleDishSubcontract(int dishId, bool isSubcontracted, {int? subcontractorId}) async {
+    if (await isDishLocked(dishId)) return false;
+
+    final db = await database;
+    await db.update(
+      'dishes',
+      {
+        'isSubcontracted': isSubcontracted ? 1 : 0,
+        'subcontractorId': isSubcontracted ? subcontractorId : null,
+        'productionType': isSubcontracted ? 'SUBCONTRACT' : 'INTERNAL',
+      },
+      where: 'id = ?',
+      whereArgs: [dishId],
+    );
+    
+    // Auto Sync
+    await _syncOrQueue(
+      table: 'dishes',
+      data: {
+        'id': dishId, 
+        'isSubcontracted': isSubcontracted ? 1 : 0, 
+        'subcontractorId': subcontractorId,
+        'productionType': isSubcontracted ? 'SUBCONTRACT' : 'INTERNAL',
+      },
+      action: 'UPDATE',
+      filters: {'id': dishId}
+    );
+    
+    return true;
+  }
+
+  /// Check if a dish is locked (via its order being locked for MRP/PO)
+  Future<bool> isDishLocked(int dishId) async {
+    final db = await database;
+    // Join dishes -> orders to check lock status
+    final res = await db.rawQuery('''
+      SELECT o.isLocked 
+      FROM dishes d
+      JOIN orders o ON d.orderId = o.id
+      WHERE d.id = ?
+    ''', [dishId]);
+    
+    if (res.isEmpty) return false;
+    return (res.first['isLocked'] as int?) == 1;
+  }
+
 
   Future<Map<String, int>> getTotalPaxForDate(String date) async {
     try {
@@ -1833,18 +1521,21 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> getAllOrdersWithPax() async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        o.date,
-        SUM(CASE WHEN o.foodType = 'Veg' THEN o.totalPax ELSE 0 END) AS vegPax,
-        SUM(CASE WHEN o.foodType = 'Non-Veg' THEN o.totalPax ELSE 0 END) AS nonVegPax,
-        SUM(o.totalPax) AS totalPax
-      FROM orders o
-      GROUP BY o.date
-      ORDER BY o.date ASC
-    ''');
-  }
+  final db = await database;
+  // Fixed: Sum BOTH 'pax' (new schema) and 'totalPax' (legacy schema) to support all data
+  // Using COALESCE to handle NULLs safely
+  return await db.rawQuery('''
+    SELECT 
+      o.date,
+      0 AS vegPax,
+      0 AS nonVegPax,
+      SUM(COALESCE(o.pax, 0) + COALESCE(o.totalPax, 0)) AS totalPax
+    FROM orders o
+    WHERE o.date IS NOT NULL
+    GROUP BY o.date
+    ORDER BY o.date ASC
+  ''');
+}
 
   // Simple getter for all orders by date (used by your UI)
   Future<List<Map<String, dynamic>>> getOrdersByDate(String date) async {
@@ -1852,6 +1543,28 @@ class DatabaseHelper {
     return db.query(
       'orders',
       where: 'date = ?',
+      whereArgs: [date],
+      orderBy: 'time ASC',
+    );
+  }
+
+  /// Get orders eligible for MRP Run (STRICT: Only PENDING status)
+  Future<List<Map<String, dynamic>>> getPendingOrdersForMrp(String date) async {
+    final db = await database;
+    return db.query(
+      'orders',
+      where: "date = ? AND (mrpStatus IS NULL OR mrpStatus = 'PENDING')",
+      whereArgs: [date],
+      orderBy: 'time ASC',
+    );
+  }
+
+  /// Get already processed orders (for display only - not selectable for MRP)
+  Future<List<Map<String, dynamic>>> getProcessedOrdersForMrp(String date) async {
+    final db = await database;
+    return db.query(
+      'orders',
+      where: "date = ? AND mrpStatus IS NOT NULL AND mrpStatus != 'PENDING'",
       whereArgs: [date],
       orderBy: 'time ASC',
     );
@@ -2793,6 +2506,24 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       ORDER BY totalOT DESC
     ''', [startDate, endDate]);
   }
+
+  /// Get attendance records for a specific staff member
+  Future<List<Map<String, dynamic>>> getAttendanceForStaff(int staffId, String startDate, String endDate) async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT 
+        date,
+        checkIn,
+        checkOut,
+        hoursWorked,
+        overtime,
+        status,
+        isWithinGeoFence
+      FROM attendance
+      WHERE staffId = ? AND date BETWEEN ? AND ?
+      ORDER BY date DESC
+    ''', [staffId, startDate, endDate]);
+  }
   
   // ============== STAFF ASSIGNMENTS ==============
   
@@ -2957,11 +2688,11 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       SELECT 
         o.date,
         COUNT(DISTINCT d.id) as totalDispatches,
-        SUM(CASE WHEN d.status = 'Delivered' THEN 1 ELSE 0 END) as delivered,
-        SUM(CASE WHEN d.status = 'In Transit' THEN 1 ELSE 0 END) as inTransit,
-        SUM(CASE WHEN d.status = 'Pending' OR d.status IS NULL THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN d.dispatchStatus = 'DELIVERED' THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN d.dispatchStatus = 'DISPATCHED' THEN 1 ELSE 0 END) as inTransit,
+        SUM(CASE WHEN d.dispatchStatus = 'PENDING' OR d.dispatchStatus IS NULL THEN 1 ELSE 0 END) as pending,
         COUNT(DISTINCT o.id) as ordersCount
-      FROM dispatch d
+      FROM dispatches d
       JOIN orders o ON d.orderId = o.id
       WHERE o.date BETWEEN ? AND ?
       GROUP BY o.date
@@ -2998,13 +2729,13 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT 
-        COALESCE(address, 'Unknown') as location,
+        COALESCE(location, venue, 'Unknown') as location,
         COUNT(*) as orderCount,
         SUM(totalPax) as totalPax,
         SUM(CASE WHEN isCancelled = 0 OR isCancelled IS NULL THEN finalAmount ELSE 0 END) as revenue
       FROM orders
       WHERE date BETWEEN ? AND ?
-      GROUP BY address
+      GROUP BY location
       ORDER BY revenue DESC
       LIMIT 10
     ''', [startDate, endDate]);
@@ -3225,27 +2956,35 @@ whereArgs: [firmId],
     );
 
     // 2. Get Seed Data (excluding overridden)
-  bool showUniversal = await getFirmUniversalDataVisibility(firmId);
-  if (!showUniversal) {
-     return firmData;
-  }
+    bool showUniversal = await getFirmUniversalDataVisibility(firmId);
+    if (!showUniversal) {
+       return firmData;
+    }
 
-  final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
-  
-  String seedWhere = "firmId = 'SEED'";
-  if (customizedBaseIds.isNotEmpty) {
-    seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
+    // Collect both baseIds and names from firm data to properly exclude duplicates
+    final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
+    final firmDishNames = firmData.map((r) => (r['name'] as String?)?.toLowerCase()).where((n) => n != null).toSet();
+    
+    String seedWhere = "firmId = 'SEED'";
+    if (customizedBaseIds.isNotEmpty) {
+      seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
+    }
+    
+    final seedData = await db.rawQuery(
+      'SELECT * FROM dish_master WHERE $seedWhere ORDER BY category, name',
+    );
+    
+    // Also filter out SEED dishes whose names match firm dishes (case-insensitive)
+    final filteredSeedData = seedData.where((sd) {
+      final seedName = (sd['name'] as String?)?.toLowerCase();
+      return seedName == null || !firmDishNames.contains(seedName);
+    }).toList();
+    
+    final combined = [...firmData, ...filteredSeedData];
+    combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+    
+    return combined;
   }
-  
-  final seedData = await db.rawQuery(
-    'SELECT * FROM dish_master WHERE $seedWhere ORDER BY category, name',
-  );
-  
-  final combined = [...firmData, ...seedData];
-  combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
-  
-  return combined;
-}
 
 // === VISIBILITY SETTINGS ===
 Future<bool> getFirmUniversalDataVisibility(String firmId) async {
@@ -3293,30 +3032,38 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     );
 
     // 2. Get Seed Data (excluding overridden)
-  // Check if firm allows universal data
-  bool showUniversal = await getFirmUniversalDataVisibility(firmId);
-  if (!showUniversal) {
-    // If not showing universal, just return firm data
-    return firmData;
-  }
+    // Check if firm allows universal data
+    bool showUniversal = await getFirmUniversalDataVisibility(firmId);
+    if (!showUniversal) {
+      // If not showing universal, just return firm data
+      return firmData;
+    }
 
-  final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
-  
-  String seedWhere = "firmId = 'SEED'";
-  if (customizedBaseIds.isNotEmpty) {
-    seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
-  }
+    // Collect both baseIds and names from firm data to properly exclude duplicates
+    final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
+    final firmIngNames = firmData.map((r) => (r['name'] as String?)?.toLowerCase()).where((n) => n != null).toSet();
+    
+    String seedWhere = "firmId = 'SEED'";
+    if (customizedBaseIds.isNotEmpty) {
+      seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
+    }
 
-  final seedData = await db.rawQuery(
-    'SELECT * FROM ingredients_master WHERE $seedWhere ORDER BY category, name',
-  );
-  
-  // 3. Merge & Sort
-  final combined = [...firmData, ...seedData];
-  combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
-  
-  return combined;
-}
+    final seedData = await db.rawQuery(
+      'SELECT * FROM ingredients_master WHERE $seedWhere ORDER BY category, name',
+    );
+    
+    // Also filter out SEED ingredients whose names match firm ingredients (case-insensitive)
+    final filteredSeedData = seedData.where((sd) {
+      final seedName = (sd['name'] as String?)?.toLowerCase();
+      return seedName == null || !firmIngNames.contains(seedName);
+    }).toList();
+    
+    // 3. Merge & Sort
+    final combined = [...firmData, ...filteredSeedData];
+    combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+    
+    return combined;
+  }
 
   Future<int> insertIngredient(Map<String, dynamic> data) async {
     final db = await database;
@@ -3358,9 +3105,9 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   // --- BOM ---
   Future<List<Map<String, dynamic>>> getBomForDish(String firmId, int dishId) async {
     final db = await database;
-    // V19: Use recipe_detail joined with ingredients_master
-    // Also return quantityPer100Pax for UI convenience
-    return await db.rawQuery('''
+    
+    // First try firm-specific BOM (uses actual dish_id)
+    var result = await db.rawQuery('''
       SELECT rd.*, 
              i.name as ingredientName, 
              i.category, 
@@ -3368,9 +3115,35 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
              (rd.quantity_per_base_pax * 100) as quantityPer100Pax
       FROM recipe_detail rd
       JOIN ingredients_master i ON rd.ing_id = i.id
-      WHERE rd.dish_id = ?
+      WHERE rd.dish_id = ? AND rd.firmId = ?
       ORDER BY i.category, i.name
-    ''', [dishId]);
+    ''', [dishId, firmId]);
+    
+    // If no firm-specific BOM, fallback to SEED data
+    // NOTE: SEED BOM uses baseId values for dish_id and ing_id, NOT auto-generated ids
+    if (result.isEmpty) {
+      // Get the dish's baseId (if it's a seed dish)
+      final dish = await db.query('dish_master', where: 'id = ?', whereArgs: [dishId]);
+      if (dish.isNotEmpty) {
+        final baseId = dish.first['baseId'];
+        if (baseId != null) {
+          // Query SEED BOM using baseId and join ingredients by baseId
+          result = await db.rawQuery('''
+            SELECT rd.*, 
+                   i.name as ingredientName, 
+                   i.category, 
+                   COALESCE(rd.unit_override, i.unit_of_measure) as unit,
+                   (rd.quantity_per_base_pax * 100) as quantityPer100Pax
+            FROM recipe_detail rd
+            JOIN ingredients_master i ON rd.ing_id = i.baseId AND i.firmId = 'SEED'
+            WHERE rd.dish_id = ? AND rd.firmId = 'SEED'
+            ORDER BY i.category, i.name
+          ''', [baseId]);
+        }
+      }
+    }
+    
+    return result;
   }
 
   /// Get recipe ingredients for a dish by NAME (for Kitchen Production view)
@@ -3383,37 +3156,137 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   final firmId = sp.getString('last_firm') ?? 'DEFAULT';
   final showUniversal = await getFirmUniversalDataVisibility(firmId);
   
-  // Step 1: Find dish_master ID by name
+  print('🔍 [BOM] Looking up recipe for: "$dishName" (pax: $paxQty, firmId: $firmId, showUniversal: $showUniversal)');
+  
+  // Step 1: Find dish_master by name
   // Prioritize FIRM specific dish over SEED dish
-  final where = "name = ? AND (firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
-  final args = [dishName.trim(), firmId];
+  // First try exact match, then fallback to LIKE match
+  var where = "name = ? AND (firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
+  var args = <Object>[dishName.trim(), firmId];
 
-  final dishMaster = await db.query(
+  var dishMaster = await db.query(
     'dish_master',
-    columns: ['id', 'base_pax', 'firmId'],
+    columns: ['id', 'baseId', 'base_pax', 'firmId', 'name'],
     where: where,
     whereArgs: args,
     orderBy: "CASE WHEN firmId = '$firmId' THEN 0 ELSE 1 END", // Firm first
     limit: 1,
   );
+  
+  print('🔍 [BOM] Exact match query: $where, args: $args');
+  print('🔍 [BOM] Exact match result: ${dishMaster.length} dishes found');
+  
+  // Fallback: Try case-insensitive LIKE match if exact match fails
+  if (dishMaster.isEmpty) {
+    where = "name LIKE ? AND (firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
+    args = ['%${dishName.trim()}%', firmId];
+    dishMaster = await db.query(
+      'dish_master',
+      columns: ['id', 'baseId', 'base_pax', 'firmId', 'name'],
+      where: where,
+      whereArgs: args,
+      orderBy: "CASE WHEN firmId = '$firmId' THEN 0 ELSE 1 END",
+      limit: 1,
+    );
+    print('🔍 [BOM] LIKE match query: $where, args: $args');
+    print('🔍 [BOM] LIKE match result: ${dishMaster.length} dishes found');
+  }
 
-  if (dishMaster.isEmpty) return [];
+  if (dishMaster.isEmpty) {
+    print('❌ [BOM] No dish found in dish_master for "$dishName"');
+    return [];
+  }
   
   final dishId = dishMaster.first['id'] as int;
+  final baseId = dishMaster.first['baseId'];
   final basePax = (dishMaster.first['base_pax'] as int?) ?? 1;
+  final isSeedDish = dishMaster.first['firmId'] == 'SEED';
+  final foundName = dishMaster.first['name'] as String;
   
-  // Step 2: Get recipe_detail for this dish_id, scaled by paxQty
-  final recipe = await db.rawQuery('''
+  print('✅ [BOM] Found dish: id=$dishId, baseId=$baseId, basePax=$basePax, isSeed=$isSeedDish, name="$foundName"');
+  
+  // Step 2: First try firm-specific BOM
+  var recipe = await db.rawQuery('''
     SELECT rd.*, 
            i.name as ingredientName, 
+           i.id as ing_id,
            i.category, 
+           COALESCE(i.cost_per_unit, 0) as cost_per_unit,
            COALESCE(rd.unit_override, i.unit_of_measure) as unit,
            (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
     FROM recipe_detail rd
     JOIN ingredients_master i ON rd.ing_id = i.id
-    WHERE rd.dish_id = ?
+    WHERE rd.dish_id = ? AND rd.firmId = ?
     ORDER BY i.category, i.name
-  ''', [paxQty, basePax, dishId]);
+  ''', [paxQty, basePax, dishId, firmId]);
+  
+  print('🔍 [BOM] Firm-specific BOM query (dish_id=$dishId, firmId=$firmId): ${recipe.length} ingredients');
+  
+  // Step 3: If no firm-specific BOM, try SEED BOM
+  if (recipe.isEmpty) {
+    // First, if it's a SEED dish with baseId, use that
+    if (isSeedDish && baseId != null) {
+      print('🔍 [BOM] Trying SEED BOM with baseId=$baseId');
+      recipe = await db.rawQuery('''
+        SELECT rd.*, 
+               i.name as ingredientName, 
+               i.id as ing_id,
+               i.category, 
+               COALESCE(i.cost_per_unit, 0) as cost_per_unit,
+               COALESCE(rd.unit_override, i.unit_of_measure) as unit,
+               (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
+        FROM recipe_detail rd
+        JOIN ingredients_master i ON rd.ing_id = i.baseId AND i.firmId = 'SEED'
+        WHERE rd.dish_id = ? AND rd.firmId = 'SEED'
+        ORDER BY i.category, i.name
+      ''', [paxQty, basePax, baseId]);
+      print('🔍 [BOM] SEED BOM query result: ${recipe.length} ingredients');
+    }
+    
+    // If still empty AND it's a firm dish, try finding SEED dish by name
+    if (recipe.isEmpty && !isSeedDish && showUniversal) {
+      print('🔍 [BOM] Firm dish has no BOM, trying to find SEED dish by name...');
+      // Look for a SEED dish with the same name
+      final seedDish = await db.query(
+        'dish_master',
+        columns: ['id', 'baseId', 'base_pax'],
+        where: "name = ? AND firmId = 'SEED'",
+        whereArgs: [foundName.trim()],
+        limit: 1,
+      );
+      
+      if (seedDish.isNotEmpty) {
+        final seedBaseId = seedDish.first['baseId'];
+        final seedBasePax = (seedDish.first['base_pax'] as int?) ?? 1;
+        print('✅ [BOM] Found SEED dish with baseId=$seedBaseId');
+        
+        if (seedBaseId != null) {
+          recipe = await db.rawQuery('''
+            SELECT rd.*, 
+                   i.name as ingredientName, 
+                   i.id as ing_id,
+                   i.category, 
+                   COALESCE(i.cost_per_unit, 0) as cost_per_unit,
+                   COALESCE(rd.unit_override, i.unit_of_measure) as unit,
+                   (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
+            FROM recipe_detail rd
+            JOIN ingredients_master i ON rd.ing_id = i.baseId AND i.firmId = 'SEED'
+            WHERE rd.dish_id = ? AND rd.firmId = 'SEED'
+            ORDER BY i.category, i.name
+          ''', [paxQty, seedBasePax, seedBaseId]);
+          print('🔍 [BOM] SEED BOM (by name) query result: ${recipe.length} ingredients');
+        }
+      } else {
+        print('⚠️ [BOM] No SEED dish found with name "$foundName"');
+      }
+    }
+  }
+  
+  if (recipe.isEmpty) {
+    print('⚠️ [BOM] No ingredients found for "$dishName"');
+  } else {
+    print('✅ [BOM] Found ${recipe.length} ingredients for "$dishName"');
+  }
   
   return recipe;
 }
@@ -3421,26 +3294,19 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   Future<int> insertBomItem(Map<String, dynamic> data) async {
     final db = await database;
     // Map old 'bom' fields to 'recipe_detail' fields if necessary
-    // data: { dishId, ingredientId, quantityPer100Pax, unit }
-    // recipe_detail: { dish_id, ing_id, quantity_per_base_pax, unit_override }
+    // data: { firmId, dishId, ingredientId, quantityPer100Pax, unit }
+    // recipe_detail: { firmId, dish_id, ing_id, quantity_per_base_pax, unit_override }
     // Note: BOM screen inputs "Quantity for 100 pax".
     // recipe_detail stores "quantity_per_base_pax". dish_master base_pax is usually 1.
-    // If we want to store per 1 pax: data['quantityPer100Pax'] / 100.
-    // However, the prompt/previous context implies 'quantity_per_base_pax' might be what's stored.
-    // Let's assume for now we store exactly what is passed or normalized. 
-    // Actually, looking at seed data, it's float quantities.
-    // Let's standardise: The UI asks for "Quantity for 100 pax".
-    // We should probably store it normalized or as is. 
-    // Let's check `dish_master.base_pax`. Currently it defaults to 1.
-    // To match legacy behavior where we might want per-pax or per-100-pax:
     // For V19, let's store per-pax. So input / 100.
     
     return await db.insert('recipe_detail', {
+      'firmId': data['firmId'] ?? 'SEED', // Include firmId for proper firm-specific BOM
       'dish_id': data['dishId'],
       'ing_id': data['ingredientId'],
       'quantity_per_base_pax': (data['quantityPer100Pax'] as num) / 100.0, // Normalize to 1 pax
       'unit_override': data['unit'], 
-      // 'id' is auto-increment or explicit. Here auto-increment.
+      'isModified': 1, // Mark as modified for sync
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -3545,9 +3411,12 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   Future<List<Map<String, dynamic>>> getMrpOutput(int mrpRunId) async {
     final db = await database;
     return await db.rawQuery('''
-      SELECT mo.*, i.name as ingredientName
+      SELECT mo.*, 
+             i.name as ingredientName,
+             COALESCE(i.cost_per_unit, 0) as rate,
+             (mo.requiredQty * COALESCE(i.cost_per_unit, 0)) as totalCost
       FROM mrp_output mo
-      JOIN ingredients i ON mo.ingredientId = i.id
+      JOIN ingredients_master i ON mo.ingredientId = i.id
       WHERE mo.mrpRunId = ?
       ORDER BY mo.category, i.name
     ''', [mrpRunId]);
@@ -3559,6 +3428,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     for (var orderId in orderIds) {
       await db.update('orders', {
         'mrpRunId': mrpRunId,
+        'mrpStatus': 'MRP_DONE', // STRICT: Mark as processed
         'isLocked': 1,
         'lockedAt': now,
       }, where: 'id = ?', whereArgs: [orderId]);
@@ -3657,4 +3527,5 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     )) ?? 0;
     return '$prefix-${(count + 1).toString().padLeft(3, '0')}';
   }
+
 }

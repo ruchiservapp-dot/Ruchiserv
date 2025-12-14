@@ -343,12 +343,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    // Black background as requested (replacing Blue)
-    const bgColor = Colors.black;
+    // Black background with white fonts
     const textColor = Colors.white;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E88E5), // Blue Background
+      backgroundColor: Colors.black, // Black Background
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

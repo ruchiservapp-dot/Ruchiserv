@@ -1,8 +1,9 @@
 // MODULE: REPORTS SCREEN - COMPREHENSIVE
-// Last Updated: 2025-12-08 | Features: Orders, Kitchen, Dispatch, HR Reports
+// Last Updated: 2025-12-13 | Features: Orders, Kitchen, Dispatch, HR Reports + Export
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
+import '../services/report_export_service.dart';
 import '3.3.2_staff_payroll_screen.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -19,6 +20,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String _selectedSubReport = 'Summary';
   List<Map<String, dynamic>> _reportData = [];
   bool _isLoading = true;
+  
+  // For expandable detail rows
+  final Set<String> _expandedItems = {};
+  Map<String, List<Map<String, dynamic>>> _drillDownData = {};
 
   // Sub-report options per category
   final Map<String, List<String>> _subReports = {
@@ -28,6 +33,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     'HR': ['Attendance', 'Overtime'],
   };
 
+  DateTime _customStartDate = DateTime.now().subtract(const Duration(days: 7));
+  DateTime _customEndDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +43,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   String get _startDate {
+    if (_selectedTimeline == 'Custom') {
+      return DateFormat('yyyy-MM-dd').format(_customStartDate);
+    }
     final now = DateTime.now();
     DateTime startDate;
     switch (_selectedTimeline) {
@@ -46,7 +57,37 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return DateFormat('yyyy-MM-dd').format(startDate);
   }
 
-  String get _endDate => DateFormat('yyyy-MM-dd').format(DateTime.now());
+  String get _endDate {
+    if (_selectedTimeline == 'Custom') {
+      return DateFormat('yyyy-MM-dd').format(_customEndDate);
+    }
+    return DateFormat('yyyy-MM-dd').format(DateTime.now());
+  }
+
+  Future<void> _pickDate(bool isStart) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: isStart ? _customStartDate : _customEndDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _customStartDate = picked;
+          if (_customStartDate.isAfter(_customEndDate)) {
+             _customEndDate = _customStartDate;
+          }
+        } else {
+          _customEndDate = picked;
+           if (_customEndDate.isBefore(_customStartDate)) {
+             _customStartDate = _customEndDate;
+          }
+        }
+      });
+      _loadReportData();
+    }
+  }
 
   Future<void> _loadReportData() async {
     setState(() => _isLoading = true);
@@ -126,14 +167,187 @@ class _ReportsScreenState extends State<ReportsScreen> {
     setState(() {
       _selectedCategory = category;
       _selectedSubReport = _subReports[category]!.first;
+      _expandedItems.clear();
+      _drillDownData.clear();
     });
     _loadReportData();
+  }
+
+  void _showExportDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Export $_selectedCategory - $_selectedSubReport',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Period: $_startDate to $_endDate',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.green.shade100,
+                child: const Icon(Icons.table_chart, color: Colors.green),
+              ),
+              title: const Text('Export to Excel'),
+              subtitle: const Text('Download as .xlsx spreadsheet'),
+              onTap: () async {
+                Navigator.pop(context);
+                final exportService = ReportExportService();
+                final headers = _getExportHeaders();
+                final rows = _getExportRows();
+                final file = await exportService.exportToExcel(
+                  title: '$_selectedCategory - $_selectedSubReport ($_startDate to $_endDate)',
+                  headers: headers,
+                  rows: rows,
+                );
+                if (file != null && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Excel saved: ${file.path}'), backgroundColor: Colors.green),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.red.shade100,
+                child: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              ),
+              title: const Text('Preview PDF'),
+              subtitle: const Text('Preview and print report'),
+              onTap: () async {
+                Navigator.pop(context);
+                final exportService = ReportExportService();
+                final headers = _getExportHeaders();
+                final rows = _getExportRows();
+                await exportService.previewPdf(
+                  title: '$_selectedCategory - $_selectedSubReport',
+                  headers: headers,
+                  rows: rows,
+                  subtitle: 'Period: $_startDate to $_endDate',
+                );
+              },
+            ),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.blue.shade100,
+                child: const Icon(Icons.share, color: Colors.blue),
+              ),
+              title: const Text('Share Report'),
+              subtitle: const Text('Share via email or other apps'),
+              onTap: () async {
+                Navigator.pop(context);
+                final exportService = ReportExportService();
+                final headers = _getExportHeaders();
+                final rows = _getExportRows();
+                await exportService.quickSharePdf(
+                  title: '$_selectedCategory - $_selectedSubReport',
+                  headers: headers,
+                  rows: rows,
+                  subtitle: 'Period: $_startDate to $_endDate',
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<String> _getExportHeaders() {
+    switch (_selectedCategory) {
+      case 'Orders':
+        switch (_selectedSubReport) {
+          case 'Summary': return ['Date', 'Total Orders', 'Confirmed', 'Completed', 'Cancelled', 'Total Pax', 'Revenue'];
+          case 'By Food Type': return ['Food Type', 'Order Count', 'Total Pax', 'Revenue'];
+          case 'By Meal Type': return ['Meal Type', 'Order Count', 'Total Pax', 'Revenue'];
+          case 'By Time Slot': return ['Time Slot', 'Order Count', 'Total Pax'];
+          case 'Top Locations': return ['Location', 'Order Count', 'Total Pax', 'Revenue'];
+        }
+        break;
+      case 'Kitchen':
+        switch (_selectedSubReport) {
+          case 'Production': return ['Date', 'Total Dishes', 'Completed', 'In Progress', 'Pending', 'Total Pax'];
+          case 'Top Dishes': return ['Rank', 'Dish Name', 'Category', 'Order Count', 'Total Pax', 'Revenue'];
+          case 'By Category': return ['Category', 'Dish Count', 'Revenue'];
+        }
+        break;
+      case 'Dispatch':
+        switch (_selectedSubReport) {
+          case 'Delivery Status': return ['Date', 'Total Dispatches', 'Delivered', 'In Transit', 'Pending', 'Orders'];
+          case 'Capacity': return ['Date', 'Total Pax', 'Veg', 'Non-Veg', 'Orders'];
+        }
+        break;
+      case 'HR':
+        switch (_selectedSubReport) {
+          case 'Attendance': return ['Staff Name', 'Days Present', 'Total Hours', 'Overtime', 'Geo-Compliant'];
+          case 'Overtime': return ['Staff Name', 'Overtime Hours', 'OT Pay'];
+        }
+        break;
+    }
+    return [];
+  }
+
+  List<List<dynamic>> _getExportRows() {
+    return _reportData.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+      switch (_selectedCategory) {
+        case 'Orders':
+          switch (_selectedSubReport) {
+            case 'Summary': return [item['date'], item['totalOrders'], item['confirmed'], item['completed'], item['cancelled'], item['totalPax'], item['revenue']];
+            case 'By Food Type': return [item['foodType'], item['orderCount'], item['totalPax'], item['revenue']];
+            case 'By Meal Type': return [item['mealType'], item['orderCount'], item['totalPax'], item['revenue']];
+            case 'By Time Slot': return [item['timeSlot'], item['orderCount'], item['totalPax']];
+            case 'Top Locations': return [item['location'], item['orderCount'], item['totalPax'], item['revenue']];
+          }
+          break;
+        case 'Kitchen':
+          switch (_selectedSubReport) {
+            case 'Production': return [item['date'], item['totalDishes'], item['completed'], item['inProgress'], item['pending'], item['totalPax']];
+            case 'Top Dishes': return [index + 1, item['name'], item['category'], item['orderCount'], item['totalPax'], item['totalRevenue']];
+            case 'By Category': return [item['category'], item['dishCount'], item['totalRevenue']];
+          }
+          break;
+        case 'Dispatch':
+          switch (_selectedSubReport) {
+            case 'Delivery Status': return [item['date'], item['totalDispatches'], item['delivered'], item['inTransit'], item['pending'], item['ordersCount']];
+            case 'Capacity': return [item['date'], item['totalPax'], item['vegPax'], item['nonVegPax'], item['orderCount']];
+          }
+          break;
+        case 'HR':
+          switch (_selectedSubReport) {
+            case 'Attendance': return [item['name'], item['daysPresent'], item['totalHours'], item['totalOvertime'], item['geoFenceCompliant']];
+            case 'Overtime': return [item['name'], item['totalOT'], item['otPay']];
+          }
+          break;
+      }
+      return [];
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
+      floatingActionButton: _reportData.isNotEmpty ? FloatingActionButton.extended(
+        onPressed: _showExportDialog,
+        icon: const Icon(Icons.download),
+        label: const Text('Export'),
+        backgroundColor: _getCategoryColor(_selectedCategory),
+      ) : null,
       body: Column(
         children: [
           // Controls Section
@@ -144,28 +358,39 @@ class _ReportsScreenState extends State<ReportsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Timeline Selector
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppLocalizations.of(context)!.periodLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 8),
-                    DropdownButton<String>(
-                      value: _selectedTimeline,
-                      underline: const SizedBox(),
-                      items: [
-                        AppLocalizations.of(context)!.day,
-                        AppLocalizations.of(context)!.week,
-                        AppLocalizations.of(context)!.month,
-                        AppLocalizations.of(context)!.year
-                      ]
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() => _selectedTimeline = val);
-                          _loadReportData();
-                        }
-                      },
-                    ),
+                    Row(
+                      children: [
+                        Text(AppLocalizations.of(context)!.periodLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        DropdownButton<String>(
+                          value: _selectedTimeline,
+                          underline: const SizedBox(),
+                          items: [
+                            AppLocalizations.of(context)!.day,
+                            AppLocalizations.of(context)!.week,
+                            AppLocalizations.of(context)!.month,
+                            AppLocalizations.of(context)!.year,
+                            'Custom',
+                          ]
+                              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _selectedTimeline = val);
+                              if (val != 'Custom') {
+                                 _loadReportData();
+                              }
+                            }
+                          },
+                        ),
+                        if (_selectedTimeline != 'Custom') ...[
+                           const SizedBox(width: 12),
+                           Text('$_startDate to $_endDate', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                        ],
+
                     const Spacer(),
                     if (_selectedCategory == 'HR')
                       TextButton.icon(
@@ -180,6 +405,39 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     ),
                   ],
                 ),
+                if (_selectedTimeline == 'Custom')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () => _pickDate(true),
+                          icon: const Icon(Icons.calendar_today, size: 16),
+                          label: Text(DateFormat('dd MMM yyyy').format(_customStartDate)),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          child: Text('to'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => _pickDate(false),
+                          icon: const Icon(Icons.calendar_today, size: 16),
+                          label: Text(DateFormat('dd MMM yyyy').format(_customEndDate)),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: _loadReportData,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _getCategoryColor(_selectedCategory),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Filter'),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
                 const Divider(height: 16),
                 
                 // Category Selector
@@ -347,19 +605,63 @@ class _ReportsScreenState extends State<ReportsScreen> {
               final completed = (item['completed'] as num?)?.toInt() ?? 0;
               final revenue = (item['revenue'] as num?)?.toDouble() ?? 0;
               final pax = (item['totalPax'] as num?)?.toInt() ?? 0;
+              final isExpanded = _expandedItems.contains(date);
               
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: ListTile(
+                child: ExpansionTile(
+                  key: Key(date),
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      if (expanded) {
+                        _expandedItems.add(date);
+                        _loadOrdersForDate(date);
+                      } else {
+                        _expandedItems.remove(date);
+                      }
+                    });
+                  },
                   leading: CircleAvatar(
                     backgroundColor: Colors.blue,
                     child: Text(DateFormat('dd').format(DateTime.parse(date)),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
                   title: Text(DateFormat('EEE, MMM d').format(DateTime.parse(date))),
                   subtitle: Text('$orders orders | $pax pax | $completed completed'),
-                  trailing: Text('₹${revenue.toStringAsFixed(0)}', 
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('₹${revenue.toStringAsFixed(0)}', 
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                      const SizedBox(width: 8),
+                      Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                    ],
+                  ),
+                  children: [
+                    if (_drillDownData.containsKey(date))
+                      ..._drillDownData[date]!.map((order) => ListTile(
+                        dense: true,
+                        leading: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text('#${order['id']}', style: TextStyle(fontSize: 10, color: Colors.blue.shade800)),
+                        ),
+                        title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontSize: 13)),
+                        subtitle: Text('${order['totalPax'] ?? 0} pax | ${order['venue'] ?? order['location'] ?? 'N/A'}', 
+                          style: const TextStyle(fontSize: 11)),
+                        trailing: Text('₹${(order['finalAmount'] ?? 0).toStringAsFixed(0)}',
+                          style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 12)),
+                      )).toList()
+                    else
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                      ),
+                  ],
                 ),
               );
             },
@@ -367,6 +669,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _loadOrdersForDate(String date) async {
+    if (_drillDownData.containsKey(date)) return;
+    final orders = await DatabaseHelper().getOrdersByDate(date);
+    if (mounted) {
+      setState(() {
+        _drillDownData[date] = orders;
+      });
+    }
   }
 
   Widget _buildFoodTypeReport() {
@@ -516,21 +828,81 @@ class _ReportsScreenState extends State<ReportsScreen> {
         final orders = (item['orderCount'] as num?)?.toInt() ?? 0;
         final pax = (item['totalPax'] as num?)?.toInt() ?? 0;
         final revenue = (item['totalRevenue'] as num?)?.toDouble() ?? 0;
+        final dishKey = 'dish_$name';
+        final isExpanded = _expandedItems.contains(dishKey);
         
         return Card(
-          child: ListTile(
+          child: ExpansionTile(
+            key: Key(dishKey),
+            initiallyExpanded: isExpanded,
+            onExpansionChanged: (expanded) {
+              setState(() {
+                if (expanded) {
+                  _expandedItems.add(dishKey);
+                  _loadIngredientsForDish(name, dishKey);
+                } else {
+                  _expandedItems.remove(dishKey);
+                }
+              });
+            },
             leading: CircleAvatar(
               backgroundColor: Colors.orange,
               child: Text('${index + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
             title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('$category | $orders orders | $pax pax'),
-            trailing: Text('₹${revenue.toStringAsFixed(0)}', 
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('₹${revenue.toStringAsFixed(0)}', 
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                const SizedBox(width: 8),
+                Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+              ],
+            ),
+            children: [
+              Container(
+                color: Colors.orange.shade50,
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Ingredients (per pax)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.orange.shade800)),
+                    const SizedBox(height: 8),
+                    if (_drillDownData.containsKey(dishKey))
+                      ..._drillDownData[dishKey]!.map((ing) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          children: [
+                            Icon(Icons.eco, size: 12, color: Colors.green.shade600),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(ing['ingredientName'] ?? 'Unknown', style: const TextStyle(fontSize: 12))),
+                            Text('${(ing['scaledQuantity'] as num?)?.toStringAsFixed(2) ?? '?'} ${ing['unit'] ?? 'kg'}',
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
+                          ],
+                        ),
+                      )).toList()
+                    else
+                      const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  Future<void> _loadIngredientsForDish(String dishName, String key) async {
+    if (_drillDownData.containsKey(key)) return;
+    // Load ingredients for 1 pax
+    final ingredients = await DatabaseHelper().getRecipeForDishByName(dishName, 1);
+    if (mounted) {
+      setState(() {
+        _drillDownData[key] = ingredients;
+      });
+    }
   }
 
   Widget _buildCategoryReport() {
@@ -698,24 +1070,83 @@ class _ReportsScreenState extends State<ReportsScreen> {
             itemCount: _reportData.length,
             itemBuilder: (context, index) {
               final item = _reportData[index];
+              final staffId = item['staffId'] ?? item['id'];
               final name = item['name'] ?? 'Unknown';
               final days = (item['daysPresent'] as num?)?.toInt() ?? 0;
               final hours = (item['totalHours'] as num?)?.toDouble() ?? 0;
               final ot = (item['totalOvertime'] as num?)?.toDouble() ?? 0;
               final geoCompliant = (item['geoFenceCompliant'] as num?)?.toInt() ?? 0;
+              final staffKey = 'staff_$staffId';
+              final isExpanded = _expandedItems.contains(staffKey);
               
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: ListTile(
+                child: ExpansionTile(
+                  key: Key(staffKey),
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      if (expanded) {
+                        _expandedItems.add(staffKey);
+                        _loadAttendanceForStaff(staffId, staffKey);
+                      } else {
+                        _expandedItems.remove(staffKey);
+                      }
+                    });
+                  },
                   leading: CircleAvatar(
                     backgroundColor: Colors.purple,
                     child: Text(name[0].toUpperCase(), style: const TextStyle(color: Colors.white)),
                   ),
                   title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text('$days days | ${hours.toStringAsFixed(1)}h${ot > 0 ? ' (+${ot.toStringAsFixed(1)} OT)' : ''}'),
-                  trailing: geoCompliant > 0
-                      ? Icon(Icons.location_on, color: geoCompliant == days ? Colors.green : Colors.orange)
-                      : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (geoCompliant > 0)
+                        Icon(Icons.location_on, size: 18, color: geoCompliant == days ? Colors.green : Colors.orange),
+                      const SizedBox(width: 4),
+                      Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                    ],
+                  ),
+                  children: [
+                    Container(
+                      color: Colors.purple.shade50,
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Attendance Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purple.shade800)),
+                          const SizedBox(height: 8),
+                          if (_drillDownData.containsKey(staffKey))
+                            ..._drillDownData[staffKey]!.take(10).map((att) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.calendar_today, size: 12, color: Colors.purple.shade400),
+                                  const SizedBox(width: 8),
+                                  Text(att['date']?.toString() ?? '', style: const TextStyle(fontSize: 12)),
+                                  const Spacer(),
+                                  Text('${att['checkIn'] ?? '?'} - ${att['checkOut'] ?? '?'}',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
+                                  const SizedBox(width: 8),
+                                  Text('${(att['hoursWorked'] as num?)?.toStringAsFixed(1) ?? '0'}h',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green.shade700)),
+                                ],
+                              ),
+                            )).toList()
+                          else
+                            const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                          if (_drillDownData.containsKey(staffKey) && _drillDownData[staffKey]!.length > 10)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text('...and ${_drillDownData[staffKey]!.length - 10} more records', 
+                                style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontStyle: FontStyle.italic)),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -723,6 +1154,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _loadAttendanceForStaff(dynamic staffId, String key) async {
+    if (_drillDownData.containsKey(key)) return;
+    if (staffId == null) return;
+    final attendance = await DatabaseHelper().getAttendanceForStaff(staffId is int ? staffId : int.tryParse(staffId.toString()) ?? 0, _startDate, _endDate);
+    if (mounted) {
+      setState(() {
+        _drillDownData[key] = attendance;
+      });
+    }
   }
 
   Widget _buildHROvertimeReport() {

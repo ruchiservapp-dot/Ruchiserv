@@ -2116,6 +2116,12 @@ abstract class AppLocalizations {
   /// **'Search...'**
   String get searchPlaceholder;
 
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noResultsFound;
+
   /// No description provided for @ingredientsCount.
   ///
   /// In en, this message translates to:
@@ -2349,6 +2355,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subcontract'**
   String get subcontractChip;
+
+  /// No description provided for @orderLockedCannotModify.
+  ///
+  /// In en, this message translates to:
+  /// **'Order is finalized/locked. Cannot modify.'**
+  String get orderLockedCannotModify;
 
   /// No description provided for @mrpOutputTitle.
   ///

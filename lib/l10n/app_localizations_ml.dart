@@ -1105,6 +1105,9 @@ class AppLocalizationsMl extends AppLocalizations {
   String get searchPlaceholder => 'തിരയുക...';
 
   @override
+  String get noResultsFound => 'ഫലങ്ങൾ ഇല്ല';
+
+  @override
   String ingredientsCount(int count) {
     return '$count ചേരുവകൾ';
   }
@@ -1226,6 +1229,10 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get subcontractChip => 'സബ് കോൺട്രാക്ട്';
+
+  @override
+  String get orderLockedCannotModify =>
+      'Order is finalized/locked. Cannot modify.';
 
   @override
   String get mrpOutputTitle => 'MRP ഔട്ട്പുട്ട്';

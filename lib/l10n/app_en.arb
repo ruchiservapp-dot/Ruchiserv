@@ -692,6 +692,7 @@
   "selectSubcontractor": "Select Subcontractor",
   "liveKitchenChip": "Live Kitchen",
   "subcontractChip": "Subcontract",
+  "orderLockedCannotModify": "Order is finalized/locked. Cannot modify.",
   "mrpOutputTitle": "MRP Output",
   "noIngredientsCalculated": "No ingredients calculated",
   "checkBomDefined": "Check if dishes have BOM defined",
