@@ -3307,13 +3307,13 @@ abstract class AppLocalizations {
   /// No description provided for @upiRazorpay.
   ///
   /// In en, this message translates to:
-  /// **'UPI (Razorpay)'**
+  /// **'UPI (0% fee)'**
   String get upiRazorpay;
 
   /// No description provided for @cardRazorpay.
   ///
   /// In en, this message translates to:
-  /// **'Credit/Debit Card (Razorpay)'**
+  /// **'Credit/Debit Card'**
   String get cardRazorpay;
 
   /// No description provided for @cash.

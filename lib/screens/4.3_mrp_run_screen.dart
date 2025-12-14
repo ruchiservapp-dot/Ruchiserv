@@ -99,6 +99,45 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
     setState(() => _isCalculating = true);
 
     try {
+      // VERIFY: Check if any orders already have MRP runs (double-check before proceeding)
+      final db = await DatabaseHelper().database;
+      for (var order in _orders) {
+        final orderId = order['id'] as int;
+        final check = await db.query('orders', 
+          columns: ['mrpStatus', 'mrpRunId'],
+          where: 'id = ?', 
+          whereArgs: [orderId],
+        );
+        if (check.isNotEmpty) {
+          final status = check.first['mrpStatus'];
+          final existingRunId = check.first['mrpRunId'];
+          if (status != null && status != 'PENDING' && existingRunId != null) {
+            // Order already has an MRP run - offer to view it instead
+            setState(() => _isCalculating = false);
+            if (mounted) {
+              final goToExisting = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Order Already Processed'),
+                  content: Text('This order was already included in MRP Run #$existingRunId.\n\nWould you like to view that run instead?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('View Run')),
+                  ],
+                ),
+              );
+              if (goToExisting == true) {
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => MrpOutputScreen(mrpRunId: existingRunId as int, firmId: _firmId!),
+                ));
+              }
+              await _loadData(); // Refresh to remove the order from list
+            }
+            return;
+          }
+        }
+      }
+
       // Create MRP Run
       final mrpRunId = await DatabaseHelper().createMrpRun({
         'firmId': _firmId,

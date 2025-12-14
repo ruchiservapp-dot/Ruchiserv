@@ -452,6 +452,7 @@
   "selectSubcontractor": "സബ് കോൺട്രാക്ടറെ തിരഞ്ഞെടുക്കുക",
   "liveKitchenChip": "ലൈവ് കിച്ചൺ",
   "subcontractChip": "സബ് കോൺട്രാക്ട്",
+  "orderLockedCannotModify": "ഓർഡർ അന്തിമമാക്കി/ലോക്ക് ചെയ്തു. മാറ്റാൻ കഴിയില്ല.",
   "mrpOutputTitle": "MRP ഔട്ട്പുട്ട്",
   "noIngredientsCalculated": "ചേരുവകൾ കണക്കാക്കിയില്ല",
   "checkBomDefined": "BOM ചേർത്തിട്ടുണ്ടോ എന്ന് പരിശോധിക്കുക",

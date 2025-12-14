@@ -231,12 +231,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 final exportService = ReportExportService();
                 final headers = _getExportHeaders();
                 final rows = _getExportRows();
-                await exportService.previewPdf(
+                final success = await exportService.previewPdf(
                   title: '$_selectedCategory - $_selectedSubReport',
                   headers: headers,
                   rows: rows,
                   subtitle: 'Period: $_startDate to $_endDate',
                 );
+                if (!success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('PDF preview failed. Check console for details.'), backgroundColor: Colors.red),
+                  );
+                }
               },
             ),
             ListTile(

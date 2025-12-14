@@ -37,7 +37,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       db = await openDatabase(
         fileName,
-        version: 31, // v31: Add mrpRunId to purchase_orders
+        version: 32, // v32: MRP allocation status tracking
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -47,7 +47,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       db = await openDatabase(
         path,
-        version: 31, // v31: Add mrpRunId to purchase_orders
+        version: 32, // v32: MRP allocation status tracking
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -3365,9 +3365,40 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   }
 
   // --- MRP ---
+  /// Creates a new MRP run with auto-generated runName like "Dec-1", "Dec-2", etc.
+  /// runNumber resets to 1 at the start of each month
   Future<int> createMrpRun(Map<String, dynamic> data) async {
     final db = await database;
-    data['createdAt'] = DateTime.now().toIso8601String();
+    final now = DateTime.now();
+    data['createdAt'] = now.toIso8601String();
+    
+    // Get firmId from data
+    final firmId = data['firmId'] as String?;
+    
+    // Calculate the run number for this month
+    final monthStart = DateTime(now.year, now.month, 1).toIso8601String().substring(0, 10);
+    final monthEnd = DateTime(now.year, now.month + 1, 0).toIso8601String().substring(0, 10);
+    
+    final existingRuns = await db.rawQuery('''
+      SELECT MAX(runNumber) as maxNum 
+      FROM mrp_runs 
+      WHERE firmId = ? 
+        AND date(runDate) >= date(?)
+        AND date(runDate) <= date(?)
+    ''', [firmId, monthStart, monthEnd]);
+    
+    int runNumber = 1;
+    if (existingRuns.isNotEmpty && existingRuns.first['maxNum'] != null) {
+      runNumber = (existingRuns.first['maxNum'] as int) + 1;
+    }
+    
+    // Generate month abbreviation
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final runName = '${monthNames[now.month - 1]}-$runNumber';
+    
+    data['runNumber'] = runNumber;
+    data['runName'] = runName;
+    
     return await db.insert('mrp_runs', data);
   }
 
@@ -3414,24 +3445,175 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       SELECT mo.*, 
              i.name as ingredientName,
              COALESCE(i.cost_per_unit, 0) as rate,
-             (mo.requiredQty * COALESCE(i.cost_per_unit, 0)) as totalCost
+             (mo.requiredQty * COALESCE(i.cost_per_unit, 0)) as totalCost,
+             s.name as supplierName
       FROM mrp_output mo
       JOIN ingredients_master i ON mo.ingredientId = i.id
+      LEFT JOIN suppliers s ON mo.supplierId = s.id
       WHERE mo.mrpRunId = ?
       ORDER BY mo.category, i.name
     ''', [mrpRunId]);
   }
 
+  /// Get MRP output for allotment screen - only shows PENDING and ALLOCATED items (not already PO'd)
+  Future<List<Map<String, dynamic>>> getMrpOutputForAllotment(int mrpRunId) async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT mo.*, 
+             i.name as ingredientName,
+             COALESCE(i.cost_per_unit, 0) as rate,
+             (mo.requiredQty * COALESCE(i.cost_per_unit, 0)) as totalCost,
+             s.name as supplierName
+      FROM mrp_output mo
+      JOIN ingredients_master i ON mo.ingredientId = i.id
+      LEFT JOIN suppliers s ON mo.supplierId = s.id
+      WHERE mo.mrpRunId = ? 
+        AND (mo.allocationStatus IS NULL OR mo.allocationStatus != 'PO_SENT')
+      ORDER BY mo.category, i.name
+    ''', [mrpRunId]);
+  }
+
+  /// Update allocation for a single ingredient in MRP output
+  Future<void> updateMrpOutputAllocation(int mrpOutputId, int? supplierId) async {
+    final db = await database;
+    await db.update('mrp_output', {
+      'supplierId': supplierId,
+      'allocationStatus': supplierId != null ? 'ALLOCATED' : 'PENDING',
+      'allocatedQty': supplierId != null 
+          ? (await db.query('mrp_output', where: 'id = ?', whereArgs: [mrpOutputId])).first['requiredQty']
+          : 0,
+    }, where: 'id = ?', whereArgs: [mrpOutputId]);
+  }
+
+  /// Bulk update allocations - called when user toggles suppliers in allotment screen
+  Future<void> updateMrpOutputAllocations(int mrpRunId, Map<int, int?> allocations) async {
+    final db = await database;
+    final batch = db.batch();
+    
+    for (var entry in allocations.entries) {
+      final ingredientId = entry.key;
+      final supplierId = entry.value;
+      
+      // Find the mrp_output record for this ingredient in this run
+      final outputs = await db.query('mrp_output', 
+        where: 'mrpRunId = ? AND ingredientId = ?', 
+        whereArgs: [mrpRunId, ingredientId],
+      );
+      
+      if (outputs.isNotEmpty) {
+        final outputId = outputs.first['id'] as int;
+        final requiredQty = outputs.first['requiredQty'];
+        
+        batch.update('mrp_output', {
+          'supplierId': supplierId,
+          'allocationStatus': supplierId != null ? 'ALLOCATED' : 'PENDING',
+          'allocatedQty': supplierId != null ? requiredQty : 0,
+        }, where: 'id = ?', whereArgs: [outputId]);
+      }
+    }
+    
+    await batch.commit(noResult: true);
+  }
+
+  /// Mark MRP output items as PO_SENT after PO generation - links to the PO and prevents re-processing
+  Future<void> markMrpOutputAsPOSent(int mrpRunId, int poId, List<int> ingredientIds) async {
+    final db = await database;
+    for (var ingredientId in ingredientIds) {
+      await db.update('mrp_output', {
+        'allocationStatus': 'PO_SENT',
+        'poId': poId,
+        'purchaseQty': (await db.query('mrp_output', 
+          columns: ['requiredQty'],
+          where: 'mrpRunId = ? AND ingredientId = ?', 
+          whereArgs: [mrpRunId, ingredientId],
+        )).firstOrNull?['requiredQty'] ?? 0,
+      }, where: 'mrpRunId = ? AND ingredientId = ?', whereArgs: [mrpRunId, ingredientId]);
+    }
+  }
+
+  /// Get existing allocations for an MRP run (for restoring state in AllotmentScreen)
+  Future<Map<int, int?>> getExistingAllocations(int mrpRunId) async {
+    final db = await database;
+    final results = await db.query('mrp_output',
+      columns: ['ingredientId', 'supplierId'],
+      where: 'mrpRunId = ? AND supplierId IS NOT NULL',
+      whereArgs: [mrpRunId],
+    );
+    
+    return Map.fromEntries(
+      results.map((r) => MapEntry(r['ingredientId'] as int, r['supplierId'] as int?)),
+    );
+  }
+
+  /// Lock orders for MRP - only sets mrpRunId if not already set
+  /// This prevents overwriting when user accidentally re-runs MRP
   Future<void> lockOrdersForMrp(int mrpRunId, List<int> orderIds) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
     for (var orderId in orderIds) {
-      await db.update('orders', {
-        'mrpRunId': mrpRunId,
-        'mrpStatus': 'MRP_DONE', // STRICT: Mark as processed
-        'isLocked': 1,
-        'lockedAt': now,
-      }, where: 'id = ?', whereArgs: [orderId]);
+      // Check if order already has an mrpRunId
+      final existing = await db.query('orders', 
+        columns: ['mrpRunId', 'mrpStatus'],
+        where: 'id = ?', 
+        whereArgs: [orderId],
+      );
+      
+      if (existing.isNotEmpty) {
+        final currentMrpRunId = existing.first['mrpRunId'];
+        final currentStatus = existing.first['mrpStatus'];
+        
+        // Only update if order doesn't already have an MRP run assigned
+        // OR if it's still in PENDING status
+        if (currentMrpRunId == null || currentStatus == 'PENDING' || currentStatus == null) {
+          await db.update('orders', {
+            'mrpRunId': mrpRunId,
+            'mrpStatus': 'MRP_DONE',
+            'isLocked': 1,
+            'lockedAt': now,
+          }, where: 'id = ?', whereArgs: [orderId]);
+        }
+        // If already has mrpRunId, don't overwrite - just ensure it's locked
+        else {
+          await db.update('orders', {
+            'isLocked': 1,
+            'lockedAt': now,
+          }, where: 'id = ?', whereArgs: [orderId]);
+        }
+      }
+    }
+  }
+
+  /// Update order status to PO_SENT only when ALL ingredients for that order's MRP run have been PO'd
+  Future<void> updateOrderStatusIfAllItemsPOd(int mrpRunId) async {
+    final db = await database;
+    
+    // Check if there are any items still not PO_SENT for this run
+    final pendingItems = await db.query('mrp_output',
+      where: "mrpRunId = ? AND (allocationStatus IS NULL OR allocationStatus != 'PO_SENT')",
+      whereArgs: [mrpRunId],
+    );
+    
+    // If all items are PO_SENT, update orders and MRP run status
+    if (pendingItems.isEmpty) {
+      // Get all orders linked to this MRP run
+      final runOrders = await db.query('mrp_run_orders', 
+        columns: ['orderId'],
+        where: 'mrpRunId = ?', 
+        whereArgs: [mrpRunId],
+      );
+      
+      // Update each order to PO_SENT
+      for (var ro in runOrders) {
+        await db.update('orders', {
+          'mrpStatus': 'PO_SENT',
+        }, where: 'id = ?', whereArgs: [ro['orderId']]);
+      }
+      
+      // Update MRP run status
+      await db.update('mrp_runs', {
+        'status': 'PO_SENT',
+        'completedAt': DateTime.now().toIso8601String(),
+      }, where: 'id = ?', whereArgs: [mrpRunId]);
     }
   }
 
@@ -3473,6 +3655,16 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   Future<List<Map<String, dynamic>>> getPoItems(int poId) async {
     final db = await database;
     return await db.query('po_items', where: 'poId = ?', whereArgs: [poId]);
+  }
+
+  /// Get purchase orders for a specific MRP run (for Allotment Screen Summary)
+  Future<List<Map<String, dynamic>>> getPurchaseOrdersByMrpRun(int mrpRunId) async {
+    final db = await database;
+    return await db.query('purchase_orders',
+      where: 'mrpRunId = ?',
+      whereArgs: [mrpRunId],
+      orderBy: 'createdAt DESC',
+    );
   }
 
   Future<int> updatePoStatus(int poId, String status) async {

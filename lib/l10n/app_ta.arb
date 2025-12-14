@@ -452,6 +452,7 @@
   "selectSubcontractor": "ஒப்பந்தக்காரரைத் தேர்ந்தெடு",
   "liveKitchenChip": "லைவ்",
   "subcontractChip": "ஒப்பந்தம்",
+  "orderLockedCannotModify": "ஆர்டர் இறுதியானது/பூட்டப்பட்டது. மாற்ற இயலாது.",
   "mrpOutputTitle": "MRP வெளியீடு",
   "noIngredientsCalculated": "கணக்கிடப்படவில்லை",
   "checkBomDefined": "BOM உள்ளதா எனப் பார்",

@@ -9,7 +9,7 @@ class PaymentSettingsScreen extends StatefulWidget {
 }
 
 class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
-  bool _razorpayEnabled = true;
+  bool _cashfreeEnabled = true;
   bool _upiEnabled = true;
   bool _cardEnabled = true;
   bool _isLoading = true;
@@ -23,7 +23,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
   Future<void> _loadSettings() async {
     final sp = await SharedPreferences.getInstance();
     setState(() {
-      _razorpayEnabled = sp.getBool('payment_razorpay') ?? true;
+      _cashfreeEnabled = sp.getBool('payment_cashfree') ?? true;
       _upiEnabled = sp.getBool('payment_upi') ?? true;
       _cardEnabled = sp.getBool('payment_card') ?? true;
       _isLoading = false;
@@ -42,19 +42,45 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text("Payment Gateways", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Payment Gateway", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          // Cashfree info banner
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green.shade700),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Cashfree", style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text("0% UPI fees • Integrated", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           SwitchListTile(
-            title: const Text("Razorpay"),
-            subtitle: const Text("Enable Razorpay for customer payments"),
-            value: _razorpayEnabled,
+            title: const Text("Cashfree Payments"),
+            subtitle: const Text("Enable Cashfree for customer payments"),
+            value: _cashfreeEnabled,
             onChanged: (val) {
-               setState(() => _razorpayEnabled = val);
-               _saveSetting('payment_razorpay', val);
+               setState(() => _cashfreeEnabled = val);
+               _saveSetting('payment_cashfree', val);
             },
           ),
           SwitchListTile(
-            title: const Text("UPI"),
-            subtitle: const Text("Enable UPI payments"),
+            title: const Text("UPI (0% fee)"),
+            subtitle: const Text("Enable UPI payments via Cashfree"),
             value: _upiEnabled,
             onChanged: (val) {
                setState(() => _upiEnabled = val);
@@ -63,7 +89,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
           ),
           SwitchListTile(
             title: const Text("Card Payments"),
-            subtitle: const Text("Accept Credit/Debit cards"),
+            subtitle: const Text("Accept Credit/Debit cards (1.9% fee)"),
             value: _cardEnabled,
             onChanged: (val) {
                setState(() => _cardEnabled = val);
@@ -80,8 +106,8 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text("Payment Successful!"),
-                  content: const Text("Mock payment gateway: Transaction ID #MOCK123456"),
+                  title: const Text("Test Mode Active"),
+                  content: const Text("Cashfree SDK is in sandbox mode. Use test card 4111 1111 1111 1111 for testing."),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK")),
                   ],
@@ -89,7 +115,7 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
               );
             },
             icon: const Icon(Icons.payment),
-            label: const Text("Test Payment (Mock)"),
+            label: const Text("Test Payment Info"),
           ),
         ],
       ),

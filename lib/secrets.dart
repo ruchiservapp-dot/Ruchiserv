@@ -1,21 +1,33 @@
 // lib/secrets.dart
-/// 🔐 Put your real API keys here.
+// ⚠️ DEPRECATED: This file is kept for backward compatibility only.
+// All new code should use AppConfig from lib/config/app_config.dart
+// 
+// For production builds, use --dart-define flags:
+// flutter build appbundle --dart-define=CASHFREE_APP_ID=xxx ...
+// 
+// See .env.example for all available configuration options.
 
-// 2Factor.in OTP Service
-const String twoFactorApiKey = '383edc87-bd32-11f0-bdde-0200cd936042';
+import 'config/app_config.dart';
 
-// SendGrid (Optional - for Email notifications)
-const String sendgridApiKey = 'YOUR_SENDGRID_API_KEY'; // Get from sendgrid.com
+/// @deprecated Use [AppConfig.twoFactorApiKey] instead
+String get twoFactorApiKey => AppConfig.twoFactorApiKey;
 
-// Meta WhatsApp Business Platform API (Official WhatsApp Integration)
-const String metaWhatsAppToken = 'YOUR_META_ACCESS_TOKEN'; // Get from Meta Developer Portal
-const String metaWhatsAppPhoneId = 'YOUR_PHONE_NUMBER_ID'; // Get from WhatsApp Business API Setup
+/// @deprecated Use [AppConfig.cashfreeAppId] instead
+String get cashfreeAppId => AppConfig.cashfreeAppId;
 
-// Twilio (Alternative - for WhatsApp notifications via Twilio)
-const String twilioAccountSid = 'YOUR_TWILIO_ACCOUNT_SID';
-const String twilioAuthToken = 'YOUR_TWILIO_AUTH_TOKEN';
-const String twilioWhatsAppNumber = 'whatsapp:+14155238886'; // Twilio sandbox number
+/// @deprecated Use [AppConfig.cashfreeSecretKey] instead
+String get cashfreeSecretKey => AppConfig.cashfreeSecretKey;
 
-// Razorpay (Optional - for Payments)
-const String razorpayKeyId = 'YOUR_RAZORPAY_KEY_ID';
-const String razorpayKeySecret = 'YOUR_RAZORPAY_KEY_SECRET';
+/// @deprecated Use [AppConfig.cashfreeSandbox] instead
+bool get cashfreeSandboxMode => AppConfig.cashfreeSandbox;
+
+/// @deprecated Use [AppConfig.sendgridApiKey] instead
+String get sendgridApiKey => AppConfig.sendgridApiKey;
+
+/// @deprecated Use [AppConfig.metaWhatsAppToken] instead
+String get metaWhatsAppToken => AppConfig.metaWhatsAppToken;
+
+/// @deprecated Use [AppConfig.metaWhatsAppPhoneId] instead
+String get metaWhatsAppPhoneId => AppConfig.metaWhatsAppPhoneId;
+
+// Twilio is no longer used - removed

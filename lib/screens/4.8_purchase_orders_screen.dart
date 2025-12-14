@@ -100,7 +100,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                     children: [
                       const Icon(Icons.business, size: 20),
                       const SizedBox(width: 8),
-                      Text(po['vendorName'] ?? AppLocalizations.of(context)!.unknown, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Expanded(child: Text(po['vendorName'] ?? AppLocalizations.of(context)!.unknown, style: const TextStyle(fontWeight: FontWeight.bold))),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -113,8 +113,24 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                         : AppLocalizations.of(context)!.unknown),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0), style: TextStyle(color: Colors.grey.shade600)),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0), style: TextStyle(color: Colors.grey.shade600)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '₹${((po['totalAmount'] as num?) ?? 0).toStringAsFixed(2)}',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green.shade800),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -125,15 +141,21 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                 itemCount: items.length,
                 itemBuilder: (context, index) {
                   final item = items[index];
+                  final rate = (item['rate'] as num?)?.toDouble() ?? 0;
+                  final amount = (item['amount'] as num?)?.toDouble() ?? 0;
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.grey.shade200,
                       child: Text('${index + 1}'),
                     ),
                     title: Text(item['itemName'] ?? AppLocalizations.of(context)!.unknown),
+                    subtitle: Text(
+                      '${item['quantity']} ${item['unit'] ?? 'kg'} × ₹${rate.toStringAsFixed(2)}',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
                     trailing: Text(
-                      '${item['quantity']} ${item['unit'] ?? 'kg'}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      '₹${amount.toStringAsFixed(2)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                   );
                 },
@@ -216,8 +238,16 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                                 backgroundColor: _getStatusColor(po['status'] ?? 'SENT').withOpacity(0.2),
                                 child: Icon(Icons.receipt, color: _getStatusColor(po['status'] ?? 'SENT')),
                               ),
-                              title: Text(po['poNumber'] ?? 'PO',
-                                style: const TextStyle(fontWeight: FontWeight.bold)),
+                              title: Row(
+                                children: [
+                                  Text(po['poNumber'] ?? 'PO', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  const Spacer(),
+                                  Text(
+                                    '₹${((po['totalAmount'] as num?) ?? 0).toStringAsFixed(0)}',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green.shade700),
+                                  ),
+                                ],
+                              ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [

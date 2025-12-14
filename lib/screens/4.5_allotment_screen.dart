@@ -18,6 +18,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
   late TabController _tabController;
   List<Map<String, dynamic>> _mrpOutput = [];
   List<Map<String, dynamic>> _suppliers = [];
+  List<Map<String, dynamic>> _releasedPOs = []; // POs already generated for this MRP run
   bool _isLoading = true;
   
   // Track allocation: ingredientId -> supplierId
@@ -38,8 +39,19 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    _mrpOutput = await DatabaseHelper().getMrpOutput(widget.mrpRunId);
+    
+    // Use new method that filters out already PO'd items
+    _mrpOutput = await DatabaseHelper().getMrpOutputForAllotment(widget.mrpRunId);
     _suppliers = await DatabaseHelper().getAllSuppliers(widget.firmId);
+    
+    // Load already-released POs for this MRP run (for Summary tab)
+    _releasedPOs = await DatabaseHelper().getPurchaseOrdersByMrpRun(widget.mrpRunId);
+    
+    // Restore existing allocations from database
+    final existingAllocations = await DatabaseHelper().getExistingAllocations(widget.mrpRunId);
+    _allocations.clear();
+    _allocations.addAll(existingAllocations);
+    
     setState(() => _isLoading = false);
   }
 
@@ -70,6 +82,14 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
         final items = entry.value;
         final supplier = _suppliers.firstWhere((s) => s['id'] == supplierId, orElse: () => {});
         
+        // Calculate total amount for this PO
+        double totalAmount = 0;
+        for (var i in items) {
+          final rate = (i['rate'] as num?)?.toDouble() ?? 0;
+          final qty = (i['requiredQty'] as num?)?.toDouble() ?? 0;
+          totalAmount += rate * qty;
+        }
+        
         final poNumber = await DatabaseHelper().generatePoNumber(widget.firmId);
         final poId = await DatabaseHelper().createPurchaseOrder({
           'firmId': widget.firmId,
@@ -79,31 +99,31 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
           'vendorId': supplierId,
           'vendorName': supplier['name'] ?? AppLocalizations.of(context)!.unknown,
           'totalItems': items.length,
+          'totalAmount': totalAmount,
           'status': 'SENT',
         });
 
-        // Add PO items (itemType removed - not in schema)
-        await DatabaseHelper().addPoItems(poId, items.map((i) => {
-          'itemId': i['ingredientId'],
-          'itemName': i['ingredientName'],
-          'quantity': i['requiredQty'],
-          'unit': i['unit'],
+        // Add PO items with rate and amount
+        await DatabaseHelper().addPoItems(poId, items.map((i) {
+          final rate = (i['rate'] as num?)?.toDouble() ?? 0;
+          final qty = (i['requiredQty'] as num?)?.toDouble() ?? 0;
+          return {
+            'itemId': i['ingredientId'],
+            'itemName': i['ingredientName'],
+            'quantity': qty,
+            'unit': i['unit'] ?? 'kg',
+            'rate': rate,
+            'amount': rate * qty,
+          };
         }).toList());
+        
+        // Mark MRP output items as PO_SENT to prevent re-processing
+        final ingredientIds = items.map((i) => i['ingredientId'] as int).toList();
+        await DatabaseHelper().markMrpOutputAsPOSent(widget.mrpRunId, poId, ingredientIds);
       }
 
-      // Lock orders
-      final db = await DatabaseHelper().database;
-      final runOrders = await db.query('mrp_run_orders', where: 'mrpRunId = ?', whereArgs: [widget.mrpRunId]);
-      final orderIds = runOrders.map((o) => o['orderId'] as int).toList();
-      
-      // Update orders to PO_SENT status
-      for (var orderId in orderIds) {
-        await db.update('orders', {'mrpStatus': 'PO_SENT'}, where: 'id = ?', whereArgs: [orderId]);
-      }
-
-      // Update MRP run status
-      await db.update('mrp_runs', {'status': 'PO_SENT', 'completedAt': DateTime.now().toIso8601String()},
-        where: 'id = ?', whereArgs: [widget.mrpRunId]);
+      // Check if ALL items are now PO'd - only then update order/run status
+      await DatabaseHelper().updateOrderStatusIfAllItemsPOd(widget.mrpRunId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -112,8 +132,15 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
-        Navigator.pop(context); // Go back to MRP Run
+        
+        // Reload data to show remaining items (if any)
+        await _loadData();
+        
+        // If no more items to allocate, go back
+        if (_mrpOutput.isEmpty) {
+          Navigator.pop(context);
+          Navigator.pop(context); // Go back to MRP Run
+        }
       }
     } catch (e) {
       print('ERROR Generating POs: $e');
@@ -171,8 +198,15 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
               const Icon(Icons.info_outline),
               const SizedBox(width: 8),
               Expanded(child: Text(AppLocalizations.of(context)!.assignIngredientHint)),
-              Text(AppLocalizations.of(context)!.assignedStatus(_allocations.values.where((v) => v != null).length, _mrpOutput.length),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+              // Only count allocations for items still showing (not PO'd)
+              Builder(builder: (context) {
+                final currentIngredientIds = _mrpOutput.map((i) => i['ingredientId'] as int).toSet();
+                final allocatedCount = _allocations.entries
+                    .where((e) => e.value != null && currentIngredientIds.contains(e.key))
+                    .length;
+                return Text(AppLocalizations.of(context)!.assignedStatus(allocatedCount, _mrpOutput.length),
+                  style: const TextStyle(fontWeight: FontWeight.bold));
+              }),
             ],
           ),
         ),
@@ -206,8 +240,13 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                             value: s['id'],
                             child: Text(s['name'] ?? AppLocalizations.of(context)!.unknown, overflow: TextOverflow.ellipsis),
                           )).toList(),
-                          onChanged: (v) {
+                          onChanged: (v) async {
                             setState(() => _allocations[ingredientId] = v);
+                            // Persist allocation immediately to database
+                            await DatabaseHelper().updateMrpOutputAllocations(
+                              widget.mrpRunId, 
+                              {ingredientId: v},
+                            );
                           },
                         ),
                       ),
@@ -239,38 +278,92 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
   }
 
   Widget _buildSummaryTab() {
-    // Group allocations by supplier
-    final supplierGroups = <int, List<Map<String, dynamic>>>{};
+    // Group pending allocations by supplier (items still to be PO'd)
+    final pendingGroups = <int, List<Map<String, dynamic>>>{};
     for (var item in _mrpOutput) {
       final ingredientId = item['ingredientId'] as int;
       final supplierId = _allocations[ingredientId];
       if (supplierId != null) {
-        supplierGroups.putIfAbsent(supplierId, () => []).add(item);
+        pendingGroups.putIfAbsent(supplierId, () => []).add(item);
       }
     }
+
+    final hasPending = pendingGroups.isNotEmpty;
+    final hasReleased = _releasedPOs.isNotEmpty;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(AppLocalizations.of(context)!.posWillBeGenerated(supplierGroups.length), 
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        ...supplierGroups.entries.map((entry) {
-          final supplier = _suppliers.firstWhere((s) => s['id'] == entry.key, orElse: () => {});
-          return Card(
-            child: ExpansionTile(
-              leading: const CircleAvatar(child: Icon(Icons.local_shipping)),
-              title: Text(supplier['name'] ?? AppLocalizations.of(context)!.unknown),
-              subtitle: Text(AppLocalizations.of(context)!.itemsCount(entry.value.length)),
-              children: entry.value.map((item) => ListTile(
-                dense: true,
-                title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
-                trailing: Text('${(item['requiredQty'] as num?)?.toStringAsFixed(2) ?? '0'} ${item['unit']}'),
-              )).toList(),
+        // Section 1: Pending Allocations (items ready to generate POs)
+        if (hasPending) ...[
+          Text(AppLocalizations.of(context)!.posWillBeGenerated(pendingGroups.length), 
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          ...pendingGroups.entries.map((entry) {
+            final supplier = _suppliers.firstWhere((s) => s['id'] == entry.key, orElse: () => {});
+            return Card(
+              child: ExpansionTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.orange.shade100,
+                  child: Icon(Icons.pending_actions, color: Colors.orange.shade700),
+                ),
+                title: Text(supplier['name'] ?? AppLocalizations.of(context)!.unknown),
+                subtitle: Text(AppLocalizations.of(context)!.itemsCount(entry.value.length)),
+                children: entry.value.map((item) => ListTile(
+                  dense: true,
+                  title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
+                  trailing: Text('${(item['requiredQty'] as num?)?.toStringAsFixed(2) ?? '0'} ${item['unit']}'),
+                )).toList(),
+              ),
+            );
+          }),
+          if (hasReleased) const SizedBox(height: 24),
+        ],
+
+        // Section 2: Already Released POs
+        if (hasReleased) ...[
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade600, size: 24),
+              const SizedBox(width: 8),
+              Text('${_releasedPOs.length} POs Released', 
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green.shade700)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ..._releasedPOs.map((po) => Card(
+            color: Colors.green.shade50,
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.green.shade100,
+                child: Icon(Icons.receipt_long, color: Colors.green.shade700),
+              ),
+              title: Text(po['poNumber'] ?? 'PO', style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(po['vendorName'] ?? AppLocalizations.of(context)!.unknown),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(po['status'] ?? 'SENT',
+                      style: TextStyle(fontSize: 11, color: Colors.green.shade800, fontWeight: FontWeight.bold)),
+                  ),
+                  Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                ],
+              ),
+              onTap: () => _viewPoDetails(po),
             ),
-          );
-        }),
-        if (supplierGroups.isEmpty)
+          )),
+        ],
+
+        // Empty state: no pending and no released
+        if (!hasPending && !hasReleased)
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
@@ -284,6 +377,112 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
             ),
           ),
       ],
+    );
+  }
+
+  Future<void> _viewPoDetails(Map<String, dynamic> po) async {
+    final items = await DatabaseHelper().getPoItems(po['id']);
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.85,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade600,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.receipt, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(po['poNumber'] ?? 'PO', 
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(po['status'] ?? 'SENT',
+                      style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.business, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(po['vendorName'] ?? AppLocalizations.of(context)!.unknown, 
+                        style: const TextStyle(fontWeight: FontWeight.bold))),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0), 
+                        style: TextStyle(color: Colors.grey.shade600)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '₹${((po['totalAmount'] as num?) ?? 0).toStringAsFixed(2)}',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green.shade800),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  final rate = (item['rate'] as num?)?.toDouble() ?? 0;
+                  final amount = (item['amount'] as num?)?.toDouble() ?? 0;
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey.shade200,
+                      child: Text('${index + 1}'),
+                    ),
+                    title: Text(item['itemName'] ?? AppLocalizations.of(context)!.unknown),
+                    subtitle: Text(
+                      '${item['quantity']} ${item['unit'] ?? 'kg'} × ₹${rate.toStringAsFixed(2)}',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    trailing: Text(
+                      '₹${amount.toStringAsFixed(2)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

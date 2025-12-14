@@ -1229,7 +1229,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get orderLockedCannotModify =>
-      'Order is finalized/locked. Cannot modify.';
+      'ஆர்டர் இறுதியானது/பூட்டப்பட்டது. மாற்ற இயலாது.';
 
   @override
   String get mrpOutputTitle => 'MRP வெளியீடு';

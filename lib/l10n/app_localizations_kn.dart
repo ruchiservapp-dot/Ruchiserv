@@ -1230,7 +1230,7 @@ class AppLocalizationsKn extends AppLocalizations {
 
   @override
   String get orderLockedCannotModify =>
-      'Order is finalized/locked. Cannot modify.';
+      'ఆర్డర్ ఖరారు/లాక్ చేయబడింది. మార్చలేరు.';
 
   @override
   String get mrpOutputTitle => 'MRP అవుట్‌పుట్';

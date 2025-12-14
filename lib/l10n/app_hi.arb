@@ -452,6 +452,7 @@
   "selectSubcontractor": "उपठेकेदार चुनें",
   "liveKitchenChip": "लाइव",
   "subcontractChip": "ठेका",
+  "orderLockedCannotModify": "ऑर्डर अंतिम/लॉक है। संशोधित नहीं कर सकते।",
   "mrpOutputTitle": "एमआरपी आउटपुट",
   "noIngredientsCalculated": "गणना नहीं की गई",
   "checkBomDefined": "बीओएम की जांच करें",

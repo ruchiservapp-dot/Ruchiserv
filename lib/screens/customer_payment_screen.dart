@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruchiserv/db/database_helper.dart';
-import 'package:ruchiserv/services/payment_service.dart';
+import 'package:ruchiserv/services/cashfree_payment_service.dart';
 import 'package:intl/intl.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -20,14 +20,14 @@ class CustomerPaymentScreen extends StatefulWidget {
 
 class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
   String _selectedMethod = 'UPI';
-  late PaymentService _paymentService;
+  late CashfreePaymentService _paymentService;
   bool _isLoading = false;
   Map<String, dynamic>? _orderDetails;
 
   @override
   void initState() {
     super.initState();
-    _paymentService = PaymentService(
+    _paymentService = CashfreePaymentService(
       onSuccess: _handlePaymentSuccess,
       onFailure: _handlePaymentError,
     );
@@ -56,23 +56,21 @@ class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
     if (_selectedMethod == 'Cash') {
       _recordTransaction(mode: 'Cash');
     } else {
-      // Razorpay
+      // Cashfree Payment
       setState(() => _isLoading = true);
-      _paymentService.openCheckout(
+      _paymentService.initiatePayment(
         amount: widget.orderAmount,
+        customerEmail: _orderDetails!['email'] ?? 'customer@example.com',
+        customerPhone: _orderDetails!['mobile'] ?? '9999999999',
+        customerName: _orderDetails!['customerName'] ?? 'Customer',
         description: 'Payment for Order #${widget.orderId}',
-        mobile: _orderDetails!['mobile'] ?? '9999999999',
-        email: _orderDetails!['email'] ?? 'customer@example.com',
-        // Optional: Pass orderId as external reference if needed, 
-        // but Razorpay `order_id` is for their backend ID. 
-        // We can put our orderId in notes/description.
       );
     }
   }
 
-  Future<void> _handlePaymentSuccess(String paymentId, String? orderId, String? signature) async {
-    // Razorpay Success
-    await _recordTransaction(mode: 'Razorpay', txnRef: paymentId);
+  Future<void> _handlePaymentSuccess(String orderId, String? paymentId) async {
+    // Cashfree Success
+    await _recordTransaction(mode: 'Cashfree', txnRef: paymentId ?? orderId);
   }
 
   void _handlePaymentError(String code, String message) {
@@ -162,14 +160,16 @@ class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
                         value: 'UPI',
                         groupValue: _selectedMethod,
                         onChanged: (val) => setState(() => _selectedMethod = val!),
-                        title: Text(AppLocalizations.of(context)!.upiRazorpay),
+                        title: const Text('UPI (0% fee)'),
+                        subtitle: const Text('GPay, PhonePe, Paytm'),
                         secondary: const Icon(Icons.qr_code),
                       ),
                       RadioListTile<String>(
                         value: 'Card',
                         groupValue: _selectedMethod,
                         onChanged: (val) => setState(() => _selectedMethod = val!),
-                        title: Text(AppLocalizations.of(context)!.cardRazorpay),
+                        title: const Text('Card'),
+                        subtitle: const Text('Credit/Debit Card'),
                         secondary: const Icon(Icons.credit_card),
                       ),
                       RadioListTile<String>(

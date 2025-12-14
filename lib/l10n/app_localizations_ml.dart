@@ -1232,7 +1232,7 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get orderLockedCannotModify =>
-      'Order is finalized/locked. Cannot modify.';
+      'ഓർഡർ അന്തിമമാക്കി/ലോക്ക് ചെയ്തു. മാറ്റാൻ കഴിയില്ല.';
 
   @override
   String get mrpOutputTitle => 'MRP ഔട്ട്പുട്ട്';

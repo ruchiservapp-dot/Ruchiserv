@@ -452,6 +452,7 @@
   "selectSubcontractor": "సబ్‌కాంట్రాక్టర్ ఎంచుకోండి",
   "liveKitchenChip": "లైవ్",
   "subcontractChip": "కాంట్రాక్ట్",
+  "orderLockedCannotModify": "ఆర్డర్ ఫైనల్/లాక్ చేయబడింది. మార్పులు చేయలేరు.",
   "mrpOutputTitle": "MRP అవుట్‌పుట్",
   "noIngredientsCalculated": "లెక్కించలేదు",
   "checkBomDefined": "BOM ఉందో చూడండి",

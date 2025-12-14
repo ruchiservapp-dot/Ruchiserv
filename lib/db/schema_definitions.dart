@@ -335,6 +335,8 @@ class AppSchema {
       columns: {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'firmId': 'TEXT NOT NULL',
+        'runName': 'TEXT', // v32: User-friendly name like "Dec-1", "Dec-2"
+        'runNumber': 'INTEGER DEFAULT 1', // v32: Sequential within month, resets each month
         'runDate': 'TEXT NOT NULL',
         'targetDate': 'TEXT NOT NULL',
         'status': 'TEXT DEFAULT "DRAFT"',
@@ -374,6 +376,9 @@ class AppSchema {
         'allocatedQty': 'REAL DEFAULT 0',
         'purchaseQty': 'REAL DEFAULT 0',
         'inStockQty': 'REAL DEFAULT 0', // v19
+        'allocationStatus': 'TEXT DEFAULT "PENDING"', // v27: PENDING, ALLOCATED, PO_SENT
+        'supplierId': 'INTEGER', // v27: Assigned supplier ID
+        'poId': 'INTEGER', // v27: Link to purchase_orders.id
       },
     ),
 

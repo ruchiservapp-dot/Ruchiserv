@@ -1734,10 +1734,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectPaymentMethod => 'Select Payment Method';
 
   @override
-  String get upiRazorpay => 'UPI (Razorpay)';
+  String get upiRazorpay => 'UPI (0% fee)';
 
   @override
-  String get cardRazorpay => 'Credit/Debit Card (Razorpay)';
+  String get cardRazorpay => 'Credit/Debit Card';
 
   @override
   String get cash => 'Cash';

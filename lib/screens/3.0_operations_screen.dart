@@ -1,5 +1,5 @@
 // MODULE: OPERATIONS HUB (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
-// Last Locked: 2025-12-08 | Features: Role-Based Access, Kitchen, Dispatch, My Attendance, Staff (Admin), Utensils
+// Last Updated: 2025-12-14 | Features: Role-Based Access, Kitchen, Dispatch, My Attendance, Staff (Admin)
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
@@ -8,7 +8,7 @@ import '3.1_kitchen_screen.dart';
 import '5.0_dispatch_hub_screen.dart';
 import '3.3_staff_screen.dart';
 import '3.3.3_my_attendance_screen.dart';
-import '3.4_utensils_screen.dart';
+
 
 class OperationsScreen extends StatefulWidget {
   const OperationsScreen({super.key});
@@ -107,7 +107,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
             ),
             const SizedBox(height: 16),
             
-            // Row 2: My Attendance (always visible), Staff Management (admin only), Utensils
+            // Row 2: My Attendance (always visible), Staff Management (admin only)
             Expanded(
               child: Row(
                 children: [
@@ -145,20 +145,6 @@ class _OperationsScreenState extends State<OperationsScreen> {
                             subtitle: AppLocalizations.of(context)!.adminOnly,
                             icon: Icons.people,
                           ),
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Utensils
-                  Expanded(
-                    child: _buildOperationCard(
-                      context,
-                      title: AppLocalizations.of(context)!.utensils,
-                      icon: Icons.inventory_2,
-                      color: Colors.purple,
-                      onTap: () => Navigator.of(context, rootNavigator: true).push(
-                        MaterialPageRoute(builder: (_) => const UtensilsScreen(), fullscreenDialog: true),
-                      ),
-                    ),
                   ),
                 ],
               ),

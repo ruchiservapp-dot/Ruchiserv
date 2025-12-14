@@ -4,3 +4,4 @@ output-localization-file: app_localizations.dart
 output-class: AppLocalizations
 preferred-supported-locales: [en, ml, ta, kn, hi, te]
 nullable-getter: false
+untranslated-messages-file: untranslated.txt

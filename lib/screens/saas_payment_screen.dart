@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruchiserv/db/database_helper.dart';
-import 'package:ruchiserv/services/payment_service.dart';
+import 'package:ruchiserv/services/cashfree_payment_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
@@ -15,7 +15,7 @@ class SaaSPaymentScreen extends StatefulWidget {
 class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
   String _selectedPlan = 'Monthly';
   bool _isLoading = false;
-  late PaymentService _paymentService;
+  late CashfreePaymentService _paymentService;
 
   final Map<String, Map<String, dynamic>> _plans = {
     'Monthly': {'price': 999.0, 'duration': '1 Month'},
@@ -25,7 +25,7 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
   @override
   void initState() {
     super.initState();
-    _paymentService = PaymentService(
+    _paymentService = CashfreePaymentService(
       onSuccess: _handlePaymentSuccess,
       onFailure: _handlePaymentError,
     );
@@ -44,27 +44,20 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
     final sp = await SharedPreferences.getInstance();
     final mobile = sp.getString('last_mobile') ?? '9999999999';
     final email = sp.getString('last_email') ?? 'user@example.com'; 
+    final name = sp.getString('last_name') ?? 'User';
     
-    // 2. Mock Create Subscription (Backend Simulation)
+    // 2. Initiate Subscription via Cashfree
     final planName = _selectedPlan;
-    final subID = await _paymentService.mockCreateSubscription(planName);
-
-    // 3. Open Checkout
-    _paymentService.openCheckout(
+    _paymentService.initiateSubscription(
+      planName: planName,
       amount: _plans[planName]!['price'] as double,
-      description: 'Subscription for $planName Plan',
-      mobile: mobile,
-      email: email,
-      isRecurring: true,
-      subscriptionId: subID,
+      customerEmail: email,
+      customerPhone: mobile,
+      customerName: name,
     );
-    
-    // Loading state remains true until callback (or we can set false if sync, but Razorpay is async UI)
-    // Actually, Razorpay opens an activity/overlay. We can reset loading now or keep it until success/failure.
-    // Keeping it true might block UI behind the overlay which is fine.
   }
 
-  Future<void> _handlePaymentSuccess(String paymentId, String? orderId, String? signature) async {
+  Future<void> _handlePaymentSuccess(String orderId, String? paymentId) async {
     if (!mounted) return;
     
     try {
@@ -72,8 +65,6 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
       final firmId = sp.getString('last_firm') ?? 'DEFAULT';
       
       // Calculate new dates
-      // For now, assume current expiry is NOW if not found, or fetch from DB.
-      // Ideally fetch current expiry from DB to extend it.
       String currentEndStr = DateTime.now().toIso8601String();
       final firmDetails = await DatabaseHelper().getFirmDetails(firmId);
       if (firmDetails != null && firmDetails['subscriptionEnd'] != null) {
@@ -86,20 +77,21 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
         currentEnd = DateTime.now();
       }
       
-      final newEnd = PaymentService.calculateNewSubscriptionEndDate(
+      final newEnd = CashfreePaymentService.calculateNewSubscriptionEndDate(
         currentEndDate: currentEnd,
         planType: _selectedPlan
       );
       
       final newEndStr = DateFormat('yyyy-MM-dd').format(newEnd);
+      final txnRef = paymentId ?? orderId;
       
       // Update DB - Subscription
       await DatabaseHelper().updateFirmSubscription(
         firmId: firmId,
         plan: _selectedPlan,
-        endDate: newEndStr, // Store as yyyy-MM-dd for consistency with Auth check
+        endDate: newEndStr,
         status: 'Active',
-        txnId: paymentId
+        txnId: txnRef
       );
       
       // Log Transaction (Expense for Firm)
@@ -109,9 +101,9 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
         'type': 'EXPENSE',
         'amount': _plans[_selectedPlan]!['price'],
         'category': 'Subscription',
-        'description': 'Paid for $_selectedPlan Plan (Txn: $paymentId)',
-        'mode': 'UPI', // Assuming Razorpay UPI for now
-        'paymentMode': 'Razorpay',
+        'description': 'Paid for $_selectedPlan Plan (Txn: $txnRef)',
+        'mode': 'UPI',
+        'paymentMode': 'Cashfree',
         'relatedEntityType': 'PLATFORM',
         'relatedEntityId': null,
       });
@@ -167,6 +159,24 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
                 Text(
                   AppLocalizations.of(context)!.selectStartPlan,
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                // UPI Benefits banner
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.check_circle, color: Colors.green, size: 18),
+                      SizedBox(width: 8),
+                      Text('0% UPI Transaction fees', style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ..._plans.entries.map((entry) {

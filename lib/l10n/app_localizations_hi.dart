@@ -1230,7 +1230,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get orderLockedCannotModify =>
-      'Order is finalized/locked. Cannot modify.';
+      'ऑर्डर अंतिम/लॉक है। संशोधित नहीं कर सकते।';
 
   @override
   String get mrpOutputTitle => 'एमआरपी आउटपुट';

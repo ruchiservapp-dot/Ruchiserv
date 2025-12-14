@@ -17,6 +17,7 @@ class MrpOutputScreen extends StatefulWidget {
 
 class _MrpOutputScreenState extends State<MrpOutputScreen> {
   List<Map<String, dynamic>> _output = [];
+  Map<String, dynamic>? _runInfo;
   bool _isLoading = true;
 
   @override
@@ -28,6 +29,14 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     _output = await DatabaseHelper().getMrpOutput(widget.mrpRunId);
+    
+    // Load run info to get runName
+    final db = await DatabaseHelper().database;
+    final runs = await db.query('mrp_runs', where: 'id = ?', whereArgs: [widget.mrpRunId]);
+    if (runs.isNotEmpty) {
+      _runInfo = runs.first;
+    }
+    
     setState(() => _isLoading = false);
   }
 
@@ -42,6 +51,9 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
       grouped.putIfAbsent(cat, () => []).add(item);
       grandTotal += (item['totalCost'] as num? ?? 0).toDouble();
     }
+    
+    // Get display name for run
+    final runDisplayName = _runInfo?['runName'] ?? 'Run #${widget.mrpRunId}';
 
     return Scaffold(
       appBar: AppBar(
@@ -62,7 +74,7 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.green),
                     const SizedBox(width: 8),
-                    Text('MRP Run #${widget.mrpRunId}', 
+                    Text('MRP $runDisplayName', 
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                     const Spacer(),
                     Text(AppLocalizations.of(context)!.ingredientsCount(_output.length),
@@ -130,17 +142,60 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
                                 final rate = (item['rate'] as num?)?.toDouble() ?? 0;
                                 final cost = (item['totalCost'] as num?)?.toDouble() ?? 0;
                                 final unit = item['unit'] ?? 'kg';
+                                final allocationStatus = item['allocationStatus'] ?? 'PENDING';
+                                final supplierName = item['supplierName'];
+
+                                // Status color coding
+                                Color statusColor;
+                                IconData statusIcon;
+                                String statusText;
+                                switch (allocationStatus) {
+                                  case 'ALLOCATED':
+                                    statusColor = Colors.blue;
+                                    statusIcon = Icons.assignment_turned_in;
+                                    statusText = 'Allocated';
+                                    break;
+                                  case 'PO_SENT':
+                                    statusColor = Colors.green;
+                                    statusIcon = Icons.check_circle;
+                                    statusText = 'PO Sent';
+                                    break;
+                                  default: // PENDING
+                                    statusColor = Colors.orange;
+                                    statusIcon = Icons.pending;
+                                    statusText = 'Pending';
+                                }
 
                                 return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: _getCategoryColor(category).withOpacity(0.2),
-                                  child: Text(item['ingredientName']?[0]?.toUpperCase() ?? '?',
-                                    style: TextStyle(color: _getCategoryColor(category))),
+                                  backgroundColor: statusColor.withOpacity(0.2),
+                                  child: Icon(statusIcon, color: statusColor, size: 20),
                                 ),
-                                title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
-                                subtitle: Text(
-                                  '${qty.toStringAsFixed(2)} $unit x ₹${rate.toStringAsFixed(2)}',
-                                  style: TextStyle(color: Colors.grey.shade700),
+                                title: Row(
+                                  children: [
+                                    Expanded(child: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown)),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(statusText, 
+                                        style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${qty.toStringAsFixed(2)} $unit x ₹${rate.toStringAsFixed(2)}',
+                                      style: TextStyle(color: Colors.grey.shade700),
+                                    ),
+                                    if (supplierName != null)
+                                      Text('→ $supplierName', 
+                                        style: TextStyle(fontSize: 11, color: Colors.blue.shade700, fontWeight: FontWeight.w500)),
+                                  ],
                                 ),
                                 trailing: Text(
                                   '₹${cost.toStringAsFixed(2)}',
@@ -184,7 +239,7 @@ class _MrpOutputScreenState extends State<MrpOutputScreen> {
                             mrpRunId: widget.mrpRunId,
                             firmId: widget.firmId,
                           ),
-                        ));
+                        )).then((_) => _loadData()); // Refresh on return
                       },
                       icon: const Icon(Icons.assignment),
                       label: Text(AppLocalizations.of(context)!.proceedToAllotment),

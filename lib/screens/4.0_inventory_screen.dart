@@ -1,12 +1,12 @@
 // MODULE: INVENTORY HUB
-// Last Updated: 2025-12-09 | Features: Navigation tiles for Inventory sub-modules
+// Last Updated: 2025-12-14 | Features: Navigation tiles for Inventory sub-modules (6 modules)
 import 'package:flutter/material.dart';
 import '4.1_ingredients_screen.dart';
 import '4.2_bom_screen.dart';
-import '4.3_mrp_run_screen.dart';
+import '4.0_mrp_hub_screen.dart';
 import '4.6_supplier_screen.dart';
 import '4.7_subcontractor_screen.dart';
-import '4.8_purchase_orders_screen.dart';
+import '3.4_utensils_screen.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class InventoryScreen extends StatelessWidget {
@@ -61,7 +61,7 @@ class InventoryScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 
-                // Row 2: MRP Run & Purchase Orders
+                // Row 2: MRP Planning (Hub) & Suppliers
                 SizedBox(
                   height: tileHeight,
                   child: Row(
@@ -69,38 +69,16 @@ class InventoryScreen extends StatelessWidget {
                       Expanded(
                         child: _buildTile(
                           context,
-                          title: AppLocalizations.of(context)!.mrpRun,
-                          subtitle: AppLocalizations.of(context)!.calculate,
-                          icon: Icons.calculate,
+                          title: 'MRP Planning',
+                          subtitle: 'Run, Output, Allotment, POs',
+                          icon: Icons.analytics,
                           color: Colors.orange,
                           onTap: () => Navigator.of(context, rootNavigator: true).push(
-                            MaterialPageRoute(builder: (_) => const MrpRunScreen(), fullscreenDialog: true),
+                            MaterialPageRoute(builder: (_) => const MrpHubScreen(), fullscreenDialog: true),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildTile(
-                          context,
-                          title: AppLocalizations.of(context)!.purchaseOrderShort,
-                          subtitle: AppLocalizations.of(context)!.trackOrders,
-                          icon: Icons.shopping_cart,
-                          color: Colors.purple,
-                          onTap: () => Navigator.of(context, rootNavigator: true).push(
-                            MaterialPageRoute(builder: (_) => const PurchaseOrdersScreen(), fullscreenDialog: true),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                
-                // Row 3: Suppliers & Subcontractors
-                SizedBox(
-                  height: tileHeight,
-                  child: Row(
-                    children: [
                       Expanded(
                         child: _buildTile(
                           context,
@@ -113,7 +91,16 @@ class InventoryScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Row 3: Subcontractors & Utensils
+                SizedBox(
+                  height: tileHeight,
+                  child: Row(
+                    children: [
                       Expanded(
                         child: _buildTile(
                           context,
@@ -123,6 +110,19 @@ class InventoryScreen extends StatelessWidget {
                           color: Colors.indigo,
                           onTap: () => Navigator.of(context, rootNavigator: true).push(
                             MaterialPageRoute(builder: (_) => const SubcontractorScreen(), fullscreenDialog: true),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildTile(
+                          context,
+                          title: AppLocalizations.of(context)!.utensils,
+                          subtitle: AppLocalizations.of(context)!.utensilMaster,
+                          icon: Icons.inventory_2,
+                          color: Colors.purple,
+                          onTap: () => Navigator.of(context, rootNavigator: true).push(
+                            MaterialPageRoute(builder: (_) => const UtensilsScreen(), fullscreenDialog: true),
                           ),
                         ),
                       ),
