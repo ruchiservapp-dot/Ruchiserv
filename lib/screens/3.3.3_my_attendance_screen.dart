@@ -1,11 +1,12 @@
-// MODULE: MY ATTENDANCE (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
-// Last Locked: 2025-12-08 | Features: Staff Self-Service Punch In/Out, GPS Verify, Geo-fence Check
+// MODULE: MY ATTENDANCE
+// Features: Staff Self-Service Punch In/Out, GPS Verify, Geo-fence Check, Calendar History
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import '../services/geo_fence_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
+import '3.3.1_staff_detail_screen.dart';
 
 class MyAttendanceScreen extends StatefulWidget {
   const MyAttendanceScreen({super.key});
@@ -14,7 +15,8 @@ class MyAttendanceScreen extends StatefulWidget {
   State<MyAttendanceScreen> createState() => _MyAttendanceScreenState();
 }
 
-class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
+class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool _isLoading = true;
   bool _isPunching = false;
   
@@ -30,11 +32,22 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
   int _geoFenceRadius = 100;
   bool? _isWithinGeoFence;
   String? _locationMessage;
+  
+  // Calendar
+  DateTime _currentMonth = DateTime.now();
+  Map<String, Map<String, dynamic>> _attendanceByDate = {};
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -72,6 +85,9 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
       if (attendance.isNotEmpty) {
         _todayAttendance = attendance.first;
       }
+      
+      // Load calendar data
+      await _loadCalendarData();
     }
     
     // Load firm GPS settings
@@ -90,9 +106,49 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
     setState(() => _isLoading = false);
   }
 
+  Future<void> _loadCalendarData() async {
+    if (_staffRecord == null) return;
+    
+    final db = await DatabaseHelper().database;
+    final firstDay = DateTime(_currentMonth.year, _currentMonth.month, 1);
+    final lastDay = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
+    
+    final startStr = DateFormat('yyyy-MM-dd').format(firstDay);
+    final endStr = DateFormat('yyyy-MM-dd').format(lastDay);
+    
+    final records = await db.query(
+      'attendance',
+      where: 'staffId = ? AND date >= ? AND date <= ?',
+      whereArgs: [_staffRecord!['id'], startStr, endStr],
+      orderBy: 'date ASC',
+    );
+    
+    final Map<String, Map<String, dynamic>> byDate = {};
+    for (var record in records) {
+      final dateStr = record['date'] as String;
+      byDate[dateStr] = record;
+    }
+    
+    setState(() => _attendanceByDate = byDate);
+  }
+
+  void _previousMonth() {
+    setState(() {
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+    });
+    _loadCalendarData();
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+    });
+    _loadCalendarData();
+  }
+
   Future<void> _checkLocation() async {
     if (_kitchenLat == null || _kitchenLng == null) {
-      _locationMessage = '⚠️ Kitchen location not configured'; // Not critical to translate debug strings
+      _locationMessage = '⚠️ Kitchen location not configured';
       return;
     }
     
@@ -132,11 +188,6 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
     } else {
       _locationMessage = '⚠️ You are ${geoService.formatDistance(distance)} away from kitchen. Punch will be marked as "Outside Location".';
     }
-  }
-
-  String _getLocationMessage(BuildContext context) {
-      if (_locationMessage != null) return _locationMessage!;
-      return AppLocalizations.of(context)!.checkingLocation;
   }
 
   bool get _hasPunchedIn => _todayAttendance != null;
@@ -257,14 +308,45 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.attendanceTitle),
         actions: [
+          if (_staffRecord != null)
+            IconButton(
+              icon: const Icon(Icons.person),
+              tooltip: AppLocalizations.of(context)!.profile,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => StaffDetailScreen(staffId: _staffRecord!['id']),
+                  ),
+                );
+              },
+            ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
+        bottom: _staffRecord != null
+            ? TabBar(
+                controller: _tabController,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                indicatorColor: Colors.white,
+                tabs: [
+                  Tab(text: AppLocalizations.of(context)!.today, icon: const Icon(Icons.today)),
+                  Tab(text: AppLocalizations.of(context)!.history, icon: const Icon(Icons.calendar_month)),
+                ],
+              )
+            : null,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _staffRecord == null
               ? _buildNoStaffRecord()
-              : _buildAttendanceView(),
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildTodayTab(),
+                    _buildCalendarTab(),
+                  ],
+                ),
     );
   }
 
@@ -295,7 +377,7 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
     );
   }
 
-  Widget _buildAttendanceView() {
+  Widget _buildTodayTab() {
     final name = _staffRecord!['name'] ?? 'Staff';
     final role = _staffRecord!['role'] ?? '';
     final today = DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now());
@@ -395,9 +477,245 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
     );
   }
 
+  Widget _buildCalendarTab() {
+    final monthName = DateFormat('MMMM yyyy').format(_currentMonth);
+    final daysInMonth = DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
+    final firstWeekday = DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+    
+    // Calculate stats
+    int totalPresent = _attendanceByDate.length;
+    double totalHours = _attendanceByDate.values.fold(0, (sum, a) => sum + ((a['hoursWorked'] as num?)?.toDouble() ?? 0));
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        children: [
+          // Stats Header
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatCard(AppLocalizations.of(context)!.present, '$totalPresent', Icons.check_circle, Colors.green),
+                _buildStatCard(AppLocalizations.of(context)!.totalHours, totalHours.toStringAsFixed(1), Icons.access_time, Colors.blue),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Month Navigation
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: _previousMonth,
+              ),
+              Text(
+                monthName,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: _nextMonth,
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Weekday Headers
+          Row(
+            children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+                .map((d) => Expanded(
+                      child: Center(
+                        child: Text(
+                          d,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: d == 'S' ? Colors.grey.shade700 : Colors.grey.shade700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 4),
+          
+          // Calendar Grid
+          _buildCalendarGrid(daysInMonth, firstWeekday),
+          
+          const SizedBox(height: 16),
+          
+          // Legend
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildLegendItem(Colors.green, 'Present'),
+                _buildLegendItem(Colors.red, 'Absent'),
+                _buildLegendItem(Colors.purple, 'Holiday'),
+                _buildLegendItem(Colors.amber, 'Missing'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarGrid(int daysInMonth, int firstWeekday) {
+    final offset = firstWeekday - 1;
+    final totalCells = offset + daysInMonth;
+    final rows = (totalCells / 7).ceil();
+    
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        childAspectRatio: 0.85,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemCount: rows * 7,
+      itemBuilder: (context, index) {
+        final dayNum = index - offset + 1;
+        
+        if (dayNum < 1 || dayNum > daysInMonth) {
+          return Container();
+        }
+        
+        return _buildDayCell(dayNum);
+      },
+    );
+  }
+
+  Widget _buildDayCell(int day) {
+    final dateStr = DateFormat('yyyy-MM-dd').format(
+      DateTime(_currentMonth.year, _currentMonth.month, day),
+    );
+    final attendance = _attendanceByDate[dateStr];
+    final isToday = DateTime.now().year == _currentMonth.year &&
+        DateTime.now().month == _currentMonth.month &&
+        DateTime.now().day == day;
+    final isFuture = DateTime(_currentMonth.year, _currentMonth.month, day).isAfter(DateTime.now());
+    final isSunday = DateTime(_currentMonth.year, _currentMonth.month, day).weekday == 7;
+    
+    final isPresent = attendance != null;
+    final punchIn = attendance?['punchInTime']?.toString();
+    final punchOut = attendance?['punchOutTime']?.toString();
+    final hoursWorked = (attendance?['hoursWorked'] as num?)?.toDouble() ?? 0;
+    
+    // Check if punch is missing (present but no punch in or no punch out)
+    final hasMissingPunch = isPresent && (punchIn == null || punchOut == null);
+    
+    Color bandColor;
+    if (isFuture) {
+      bandColor = Colors.grey.shade300;
+    } else if (isSunday && !isPresent) {
+      bandColor = Colors.purple;
+    } else if (isPresent && hasMissingPunch) {
+      bandColor = Colors.amber;
+    } else if (isPresent) {
+      bandColor = Colors.green;
+    } else {
+      bandColor = Colors.red;
+    }
+    
+    return GestureDetector(
+      onTap: isFuture ? null : () => _showDayDetails(day, attendance, isSunday),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isToday ? Colors.blue : Colors.grey.shade300,
+            width: isToday ? 2 : 1,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            // Color band at top with date
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              color: bandColor,
+              child: Center(
+                child: Text(
+                  '$day',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: isFuture ? Colors.grey : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            // Content area - punch times
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!isFuture && isPresent) ...[
+                      Text(
+                        punchIn ?? '-',
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        punchOut ?? '-',
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (hoursWorked > 0)
+                        Text(
+                          '${hoursWorked.toStringAsFixed(1)}h',
+                          style: TextStyle(
+                            fontSize: 7,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                    ] else if (!isFuture && !isPresent && isSunday) ...[
+                      Text(
+                        'Off',
+                        style: TextStyle(fontSize: 8, color: Colors.purple.shade300),
+                      ),
+                    ] else if (!isFuture && !isPresent) ...[
+                      Icon(Icons.remove, size: 10, color: Colors.grey.shade400),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPunchSection() {
     if (!_hasPunchedIn) {
-      // Not yet punched in
       return Column(
         children: [
           Icon(Icons.login, size: 60, color: Colors.green.shade300),
@@ -424,7 +742,6 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
         ],
       );
     } else if (!_hasPunchedOut) {
-      // Punched in, not yet out
       final punchInTime = _todayAttendance!['punchInTime'] ?? '--:--';
       return Column(
         children: [
@@ -454,7 +771,6 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
         ],
       );
     } else {
-      // Already completed
       final punchInTime = _todayAttendance!['punchInTime'] ?? '--:--';
       final punchOutTime = _todayAttendance!['punchOutTime'] ?? '--:--';
       final hoursWorked = (_todayAttendance!['hoursWorked'] as num?)?.toDouble() ?? 0;
@@ -558,6 +874,112 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> {
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+      ],
+    );
+  }
+  void _showDayDetails(int day, Map<String, dynamic>? attendance, bool isSunday) {
+    var dateStr = DateFormat('d MMM yyyy').format(
+      DateTime(_currentMonth.year, _currentMonth.month, day),
+    );
+    
+    String status;
+    Color statusColor;
+    final punchIn = attendance?['punchInTime']?.toString();
+    final punchOut = attendance?['punchOutTime']?.toString();
+    final hoursWorked = (attendance?['hoursWorked'] as num?)?.toDouble() ?? 0;
+    
+    if (attendance == null && isSunday) {
+      status = 'Holiday';
+      statusColor = Colors.purple;
+    } else if (attendance == null) {
+      status = 'Absent';
+      statusColor = Colors.red;
+    } else if (punchIn == null || punchOut == null) {
+      status = 'Missing Punch';
+      statusColor = Colors.amber;
+    } else {
+      status = 'Present';
+      statusColor = Colors.green;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(dateStr),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(status, style: TextStyle(fontWeight: FontWeight.bold, color: statusColor)),
+              ],
+            ),
+            if (attendance != null) ...[
+              const SizedBox(height: 16),
+              _buildDetailRow('Punch In:', punchIn ?? '-'),
+              const SizedBox(height: 8),
+              _buildDetailRow('Punch Out:', punchOut ?? '-'),
+              const SizedBox(height: 8),
+              _buildDetailRow('Total Hours:', '${hoursWorked.toStringAsFixed(1)} hrs'),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 11)),
+      ],
     );
   }
 }

@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../services/permission_service.dart';
 import '../services/feature_gate_service.dart';
-import '../services/feature_gate_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import '2.0_orders_calendar_screen.dart';
 import '3.0_operations_screen.dart';
@@ -31,7 +30,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   List<Map<String, dynamic>> _visibleMenuItems = [];
   List<Widget> _visibleScreens = [];
 
-  // All possible menu items
+  // All possible menu items (including ATTENDANCE for Staff/Driver assignment)
   final List<Map<String, dynamic>> _allMenuItems = [
     {'icon': Icons.receipt_long, 'label': 'Orders', 'module': 'ORDERS', 'tier': 'BASIC'},
     {'icon': Icons.inventory_2, 'label': 'Inventory', 'module': 'INVENTORY', 'tier': 'BASIC'},
@@ -39,6 +38,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     {'icon': Icons.account_balance_wallet, 'label': 'Finance', 'module': 'FINANCE', 'tier': 'PRO'},
     {'icon': Icons.bar_chart_rounded, 'label': 'Reports', 'module': 'REPORTS', 'tier': 'BASIC'},
     {'icon': Icons.settings, 'label': 'Settings', 'module': 'SETTINGS', 'tier': 'BASIC'},
+    {'icon': Icons.fingerprint, 'label': 'My Attendance', 'module': 'ATTENDANCE', 'tier': 'BASIC'},
   ];
 
   final List<Widget> _allScreens = const [
@@ -48,6 +48,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     FinanceScreen(),
     ReportsScreen(),
     SettingsScreen(),
+    MyAttendanceScreen(),
   ];
 
   @override
@@ -61,41 +62,41 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final allowedModules = await PermissionService.instance.getAllowedModules();
     final tier = await FeatureGateService.instance.getCurrentTier();
     
-    // Filter menu items based on permissions
+    // Filter menu items based on Admin-assigned permissions for ALL roles
     List<Map<String, dynamic>> visible = [];
     List<Widget> screens = [];
     
-    // Special case: Staff only sees My Attendance
-    if (role == 'Staff' || role == 'Driver') {
-      visible = [
-        {'icon': Icons.fingerprint, 'label': 'My Attendance', 'module': 'ATTENDANCE', 'tier': 'BASIC'},
-      ];
-      screens = [const MyAttendanceScreen()];
-    } else {
-      // For other roles, filter based on module access
-      for (int i = 0; i < _allMenuItems.length; i++) {
-        final item = _allMenuItems[i];
-        final module = item['module'] as String;
-        
-        // Check if user can access this module
-        bool hasAccess = role == 'Admin' || 
-            allowedModules.contains(module) || 
-            allowedModules.contains('ALL');
-        
-        // Check tier requirements
-        final requiredTier = item['tier'] as String;
-        bool hasTier = _checkTierAccess(tier, requiredTier);
-        
-        if (hasAccess && hasTier) {
-          visible.add(item);
-          screens.add(_allScreens[i]);
-        }
-      }
+    // For ALL roles (including Staff, Driver, Vendor, Subcontractor), 
+    // filter based on module access assigned by Admin
+    for (int i = 0; i < _allMenuItems.length; i++) {
+      final item = _allMenuItems[i];
+      final module = item['module'] as String;
       
-      // If nothing visible, at least show Orders
-      if (visible.isEmpty) {
-        visible.add(_allMenuItems[0]);
+      // Check if user can access this module
+      bool hasAccess = role == 'Admin' || 
+          allowedModules.contains(module) || 
+          allowedModules.contains('ALL');
+      
+      // Check tier requirements
+      final requiredTier = item['tier'] as String;
+      bool hasTier = _checkTierAccess(tier, requiredTier);
+      
+      if (hasAccess && hasTier) {
+        visible.add(item);
+        screens.add(_allScreens[i]);
+      }
+    }
+    
+    // Fallback: If nothing visible, show My Attendance for non-Admin roles
+    // or Orders for Admin
+    if (visible.isEmpty) {
+      if (role == 'Admin') {
+        visible.add(_allMenuItems[0]); // Orders
         screens.add(_allScreens[0]);
+      } else {
+        // Show Attendance as minimum for Staff/Driver/Vendor/Subcontractor
+        visible.add(_allMenuItems[6]); // Attendance
+        screens.add(_allScreens[6]);
       }
     }
     

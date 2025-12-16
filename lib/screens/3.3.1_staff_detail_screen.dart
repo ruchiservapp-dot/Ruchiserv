@@ -1,5 +1,5 @@
-// MODULE: STAFF DETAIL (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
-// Last Locked: 2025-12-08 | Features: Profile View/Edit, Bank Details, Advances, Photo Upload, Attendance History
+// MODULE: STAFF PROFILE
+// Features: Profile View/Edit, Bank Details, Photo Upload
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -20,8 +20,7 @@ class StaffDetailScreen extends StatefulWidget {
   State<StaffDetailScreen> createState() => _StaffDetailScreenState();
 }
 
-class _StaffDetailScreenState extends State<StaffDetailScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _StaffDetailScreenState extends State<StaffDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   
   bool _isLoading = true;
@@ -52,23 +51,17 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> with SingleTicker
   // Photo
   String? _photoUrl;
   
-  // Advances
-  List<Map<String, dynamic>> _advances = [];
-  
-  // Attendance History
-  List<Map<String, dynamic>> _attendanceHistory = [];
+
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: widget.staffId != null ? 3 : 1, vsync: this);
     _isNew = widget.staffId == null;
     _loadData();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _nameController.dispose();
     _roleController.dispose();
     _mobileController.dispose();
@@ -115,23 +108,6 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> with SingleTicker
         _payoutFrequency = staff['payoutFrequency']?.toString() ?? 'MONTHLY';
         _photoUrl = staff['photoUrl']?.toString();
       }
-      
-      // Load advances
-      _advances = await db.query(
-        'staff_advances',
-        where: 'staffId = ?',
-        whereArgs: [widget.staffId],
-        orderBy: 'advanceDate DESC',
-      );
-      
-      // Load attendance history
-      _attendanceHistory = await db.query(
-        'attendance',
-        where: 'staffId = ?',
-        whereArgs: [widget.staffId],
-        orderBy: 'date DESC',
-        limit: 30,
-      );
     }
     
     setState(() => _isLoading = false);
@@ -190,53 +166,6 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> with SingleTicker
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  Future<void> _addAdvance() async {
-    final amountController = TextEditingController();
-    final reasonController = TextEditingController();
-    
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.addAdvance),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountController,
-              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.amountRupee, prefixText: '₹ '),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(labelText: 'Reason'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLocalizations.of(context)!.add),
-          ),
-        ],
-      ),
-    );
-    
-    if (result == true && amountController.text.isNotEmpty) {
-      final db = await DatabaseHelper().database;
-      await db.insert('staff_advances', {
-        'staffId': widget.staffId,
-        'amount': double.tryParse(amountController.text) ?? 0,
-        'advanceDate': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-        'reason': reasonController.text,
-        'deductedFromPayroll': 0,
-        'createdAt': DateTime.now().toIso8601String(),
-      });
-      _loadData();
     }
   }
 
@@ -350,32 +279,10 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> with SingleTicker
               onPressed: _deleteStaff,
             ),
         ],
-        bottom: widget.staffId != null
-            ? TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                indicatorColor: Colors.white,
-                tabs: [
-                  Tab(text: 'Profile'),
-                  Tab(text: 'Advances'),
-                  Tab(text: 'Attendance'),
-                ],
-              )
-            : null,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : widget.staffId != null
-              ? TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildProfileTab(),
-                    _buildAdvancesTab(),
-                    _buildAttendanceTab(),
-                  ],
-                )
-              : _buildProfileTab(),
+          : _buildProfileTab(),
     );
   }
 
@@ -602,159 +509,6 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> with SingleTicker
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildAdvancesTab() {
-    final totalAdvances = _advances.fold<double>(0, (sum, a) => sum + ((a['amount'] as num?) ?? 0));
-    final pendingAdvances = _advances.where((a) => a['deductedFromPayroll'] != 1).fold<double>(0, (sum, a) => sum + ((a['amount'] as num?) ?? 0));
-    
-    return Column(
-      children: [
-        // Summary
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.orange.withOpacity(0.1),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Column(
-                children: [
-                  Text('₹${totalAdvances.toStringAsFixed(0)}', 
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text(AppLocalizations.of(context)!.totalAdvances, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-              Column(
-                children: [
-                  Text('₹${pendingAdvances.toStringAsFixed(0)}', 
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange)),
-                  Text(AppLocalizations.of(context)!.pendingDeduction, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-            ],
-          ),
-        ),
-        
-        // Add Advance Button
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: ElevatedButton.icon(
-            onPressed: _addAdvance,
-            icon: const Icon(Icons.add),
-            label: Text(AppLocalizations.of(context)!.addAdvance),
-          ),
-        ),
-        
-        // Advances List
-        Expanded(
-          child: _advances.isEmpty
-              ? Center(child: Text(AppLocalizations.of(context)!.noAdvances))
-              : ListView.builder(
-                  itemCount: _advances.length,
-                  itemBuilder: (context, index) {
-                    final advance = _advances[index];
-                    final isDeducted = advance['deductedFromPayroll'] == 1;
-                    
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isDeducted ? Colors.green : Colors.orange,
-                          child: Icon(
-                            isDeducted ? Icons.check : Icons.pending,
-                            color: Colors.white,
-                          ),
-                        ),
-                        title: Text('₹${(advance['amount'] as num).toStringAsFixed(0)}'),
-                        subtitle: Text('${advance['advanceDate']}${advance['reason'] != null && advance['reason'].isNotEmpty ? ' - ${advance['reason']}' : ''}'),
-                        trailing: isDeducted
-                            ? Chip(label: Text(AppLocalizations.of(context)!.deducted, style: const TextStyle(fontSize: 10)))
-                            : Chip(label: Text(AppLocalizations.of(context)!.pending, style: const TextStyle(fontSize: 10)), backgroundColor: Colors.orange),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAttendanceTab() {
-    final totalDays = _attendanceHistory.length;
-    final totalHours = _attendanceHistory.fold<double>(0, (sum, a) => sum + ((a['hoursWorked'] as num?) ?? 0));
-    final totalOT = _attendanceHistory.fold<double>(0, (sum, a) => sum + ((a['overtime'] as num?) ?? 0));
-    
-    return Column(
-      children: [
-        // Stats
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.blue.withOpacity(0.1),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Column(
-                children: [
-                  Text('$totalDays', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const Text('Days (30)', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-              Column(
-                children: [
-                  Text('${totalHours.toStringAsFixed(1)}', 
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue)),
-                  const Text('Total Hours', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-              Column(
-                children: [
-                  Text('${totalOT.toStringAsFixed(1)}', 
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange)),
-                  const Text('OT Hours', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-            ],
-          ),
-        ),
-        
-        // Attendance List
-        Expanded(
-          child: _attendanceHistory.isEmpty
-              ? const Center(child: Text('No attendance records'))
-              : ListView.builder(
-                  itemCount: _attendanceHistory.length,
-                  itemBuilder: (context, index) {
-                    final record = _attendanceHistory[index];
-                    final isWithinGeoFence = record['isWithinGeoFence'] == 1;
-                    
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isWithinGeoFence ? Colors.green : Colors.orange,
-                          child: Text(
-                            DateFormat('dd').format(DateTime.parse(record['date'])),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        title: Text(DateFormat('EEEE, MMM d').format(DateTime.parse(record['date']))),
-                        subtitle: Text(
-                          'In: ${record['punchInTime'] ?? '-'} | Out: ${record['punchOutTime'] ?? '-'}'
-                          '\n${((record['hoursWorked'] as num?) ?? 0).toStringAsFixed(1)} hrs'
-                          '${((record['overtime'] as num?) ?? 0) > 0 ? ' (+${((record['overtime'] as num?) ?? 0).toStringAsFixed(1)} OT)' : ''}',
-                        ),
-                        isThreeLine: true,
-                        trailing: Icon(
-                          isWithinGeoFence ? Icons.location_on : Icons.location_off,
-                          color: isWithinGeoFence ? Colors.green : Colors.orange,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
     );
   }
 }

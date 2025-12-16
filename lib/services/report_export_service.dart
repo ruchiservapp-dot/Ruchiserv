@@ -1,6 +1,6 @@
 // lib/services/report_export_service.dart
 // Export service for Reports - Excel, PDF, Share
-// UPDATED: 2025-12-14 - Fixed Excel save location and PDF deadlock issues
+// UPDATED: 2025-12-14 - Opens files in default apps for preview before saving
 import 'dart:async';
 import 'dart:io';
 import 'package:excel/excel.dart';
@@ -16,14 +16,37 @@ class ReportExportService {
   factory ReportExportService() => _instance;
   ReportExportService._internal();
 
-  /// Export data to Excel file and automatically open share sheet
+  /// Open file in default system application
+  /// On macOS: opens in Preview (PDF), Numbers/Excel (xlsx)
+  /// User can then view and save using Cmd+S or File → Save As
+  Future<bool> _openInDefaultApp(String filePath) async {
+    try {
+      if (Platform.isMacOS) {
+        final result = await Process.run('open', [filePath]);
+        return result.exitCode == 0;
+      } else if (Platform.isWindows) {
+        final result = await Process.run('start', ['', filePath], runInShell: true);
+        return result.exitCode == 0;
+      } else if (Platform.isLinux) {
+        final result = await Process.run('xdg-open', [filePath]);
+        return result.exitCode == 0;
+      }
+      return false;
+    } catch (e) {
+      print('❌ Failed to open file: $e');
+      return false;
+    }
+  }
+
+  /// Export data to Excel file and open in default app (Numbers/Excel)
+  /// User can view the data and save to desired location using Cmd+S
   /// Returns the file if successful, null otherwise
   Future<File?> exportToExcel({
     required String title,
     required List<String> headers,
     required List<List<dynamic>> rows,
     String? filename,
-    bool autoShare = true, // Automatically open share sheet for visibility
+    bool openInApp = true, // Open in default app for viewing
   }) async {
     try {
       print('📊 Excel: Starting export...');
@@ -75,21 +98,23 @@ class ReportExportService {
         return null;
       }
       
-      final dir = await getApplicationDocumentsDirectory();
-      final fname = filename ?? 'report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      // Save to temp directory with readable filename
+      final dir = await getTemporaryDirectory();
+      final fname = filename ?? 'RuchiServ_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.xlsx';
       final file = File('${dir.path}/$fname');
       await file.writeAsBytes(bytes);
       
       print('✅ Excel: File saved to ${file.path}');
       print('📊 Excel: ${rows.length} rows exported');
       
-      // Automatically open share sheet so user can save to visible location
-      if (autoShare) {
-        print('📤 Excel: Opening share sheet...');
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: title,
-        );
+      // Open in default app (Numbers/Excel) so user can view and save
+      if (openInApp) {
+        print('📂 Excel: Opening in default app...');
+        final opened = await _openInDefaultApp(file.path);
+        if (!opened) {
+          print('⚠️ Excel: Failed to open, falling back to share sheet...');
+          await Share.shareXFiles([XFile(file.path)], subject: title);
+        }
       }
       
       return file;
@@ -217,11 +242,9 @@ class ReportExportService {
     }
   }
 
-  /// Preview/Share PDF - uses Printing.sharePdf to avoid macOS deadlock
+  /// Preview PDF - opens in Preview app (macOS) or default PDF viewer
+  /// User can view the report and save/print using Cmd+S or Cmd+P
   /// Returns true if successful, false otherwise
-  /// 
-  /// NOTE: Changed from Printing.layoutPdf to Printing.sharePdf to fix
-  /// macOS deadlock issue where knowsPageRange semaphore wait blocks forever.
   Future<bool> previewPdf({
     required String title,
     required List<String> headers,
@@ -291,16 +314,22 @@ class ReportExportService {
         ),
       );
       
-      print('📄 PDF Preview: Document built, generating bytes...');
+      print('📄 PDF Preview: Document built, saving to file...');
       final bytes = await pdf.save();
       
-      // Use Printing.sharePdf instead of layoutPdf to avoid macOS deadlock
-      // layoutPdf causes knowsPageRange semaphore deadlock on macOS
-      print('📄 PDF Preview: Opening share/print dialog...');
-      await Printing.sharePdf(
-        bytes: bytes,
-        filename: 'report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf',
-      );
+      // Save to temp directory and open in Preview app
+      final dir = await getTemporaryDirectory();
+      final fname = 'RuchiServ_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
+      final file = File('${dir.path}/$fname');
+      await file.writeAsBytes(bytes);
+      
+      print('📂 PDF Preview: Opening in Preview app...');
+      final opened = await _openInDefaultApp(file.path);
+      
+      if (!opened) {
+        print('⚠️ PDF Preview: Failed to open in Preview, falling back to share...');
+        await Printing.sharePdf(bytes: bytes, filename: fname);
+      }
       
       print('✅ PDF Preview: Complete!');
       return true;
@@ -347,12 +376,12 @@ class ReportExportService {
     required List<String> headers,
     required List<List<dynamic>> rows,
   }) async {
-    // exportToExcel now auto-shares by default
+    // exportToExcel now opens in default app for viewing
     await exportToExcel(
       title: title,
       headers: headers,
       rows: rows,
-      autoShare: true,
+      openInApp: true,
     );
   }
 }

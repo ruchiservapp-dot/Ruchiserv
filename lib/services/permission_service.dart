@@ -28,7 +28,7 @@ class PermissionService {
   // Module definitions
   static const allModules = [
     'ORDERS', 'CALENDAR', 'KITCHEN', 'DISPATCH', 'INVENTORY',
-    'FINANCE', 'REPORTS', 'SETTINGS', 'STAFF', 'SUBSCRIPTION',
+    'FINANCE', 'REPORTS', 'SETTINGS', 'STAFF', 'SUBSCRIPTION', 'ATTENDANCE',
   ];
 
   /// Initialize permissions after login

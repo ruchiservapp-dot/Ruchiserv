@@ -4,7 +4,16 @@ import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final String? initialPartyType;
+  final String? initialPartyName;
+  final int? initialPartyId;
+
+  const AddTransactionScreen({
+    super.key, 
+    this.initialPartyType,
+    this.initialPartyName,
+    this.initialPartyId,
+  });
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -20,6 +29,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final TextEditingController _descriptionCtrl = TextEditingController();
   final TextEditingController _partyCtrl = TextEditingController();
   
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialPartyType != null) {
+      _partyType = widget.initialPartyType!;
+      // Ensure the type is in our dropdown list
+      if (!_partyTypes.contains(_partyType)) {
+        _partyType = 'Other';
+      }
+    }
+    if (widget.initialPartyName != null) {
+      _partyCtrl.text = widget.initialPartyName!;
+      _selectedEntityName = widget.initialPartyName;
+    }
+    if (widget.initialPartyId != null) {
+      _selectedEntityId = widget.initialPartyId;
+    }
+  }
+
   String _paymentMode = 'Cash';
   DateTime _date = DateTime.now();
   
@@ -284,7 +312,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         } else if (_partyType == 'Subcontractor') {
           list = await db.getAllSubcontractors('DEFAULT');
         } else if (_partyType == 'Customer') {
-          list = await db.getDistinctCustomers(); 
+          list = await db.getAllCustomers('DEFAULT'); 
         }
         
         return list.where((e) {

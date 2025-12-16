@@ -292,6 +292,12 @@ class AppLocalizationsMl extends AppLocalizations {
   String get addOrder => 'ഓർഡർ ചേർക്കുക';
 
   @override
+  String get viewOrder => 'View Order';
+
+  @override
+  String get viewOnlyMode => 'Viewing order details. Editing is not available.';
+
+  @override
   String dateLabel(String date) {
     return 'തീയതി';
   }
@@ -1821,4 +1827,97 @@ class AppLocalizationsMl extends AppLocalizations {
 
   @override
   String get noIngredientsFound => 'No ingredients found';
+
+  @override
+  String get totalHours => 'Total Hours';
+
+  @override
+  String get history => 'History';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get orderDetails => 'Order Details';
+
+  @override
+  String get unlockToEdit => 'Unlock to Edit';
+
+  @override
+  String get editModeActive => 'Edit Mode Active';
+
+  @override
+  String get editModeEnabled =>
+      'Edit mode enabled! You can now modify the order.';
+
+  @override
+  String get adminPasswordRequired =>
+      'Admin authentication required to modify locked orders.';
+
+  @override
+  String get incorrectPassword => 'Incorrect password. Please try again.';
+
+  @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get rerunMRPTitle => 'Re-run MRP Required';
+
+  @override
+  String get rerunMRPMessage =>
+      'Saving changes to this order will require re-running MRP. This will:';
+
+  @override
+  String get cancelOldPOs => 'Cancel all existing Purchase Orders';
+
+  @override
+  String get notifySuppliers => 'Notify suppliers about cancellation';
+
+  @override
+  String get notifyCustomer => 'Notify customer about order changes';
+
+  @override
+  String get generateNewPOs =>
+      'Generate new Purchase Orders after next MRP run';
+
+  @override
+  String get rerunMRP => 'Re-run MRP';
+
+  @override
+  String get saveAndRerunMRP => 'Save & Re-run MRP';
+
+  @override
+  String get orderUpdatedRerunMRP =>
+      'Order updated! Please run MRP again to generate new POs.';
+
+  @override
+  String get poSentStatus => 'Purchase Orders Sent';
+
+  @override
+  String get mrpProcessedStatus => 'MRP Processed - Locked';
+
+  @override
+  String get pendingStatus => 'Pending MRP';
+
+  @override
+  String get editModeActiveMessage =>
+      'Edit mode active - changes will require MRP re-run';
+
+  @override
+  String get orderInformation => 'Order Information';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get dishes => 'Dishes';
+
+  @override
+  String get noDishes => 'No dishes in this order';
+
+  @override
+  String get pricingSummary => 'Pricing Summary';
+
+  @override
+  String get counterSetupCost => 'Counter Setup';
 }

@@ -634,6 +634,18 @@ abstract class AppLocalizations {
   /// **'Add Order'**
   String get addOrder;
 
+  /// No description provided for @viewOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'View Order'**
+  String get viewOrder;
+
+  /// No description provided for @viewOnlyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing order details. Editing is not available.'**
+  String get viewOnlyMode;
+
   /// No description provided for @dateLabel.
   ///
   /// In en, this message translates to:
@@ -2917,7 +2929,7 @@ abstract class AppLocalizations {
   /// No description provided for @items.
   ///
   /// In en, this message translates to:
-  /// **'Items'**
+  /// **'items'**
   String get items;
 
   /// No description provided for @noUtensilsReturn.
@@ -3453,6 +3465,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No ingredients found'**
   String get noIngredientsFound;
+
+  /// No description provided for @totalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Hours'**
+  String get totalHours;
+
+  /// No description provided for @history.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get history;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @orderDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Details'**
+  String get orderDetails;
+
+  /// No description provided for @unlockToEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock to Edit'**
+  String get unlockToEdit;
+
+  /// No description provided for @editModeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Mode Active'**
+  String get editModeActive;
+
+  /// No description provided for @editModeEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit mode enabled! You can now modify the order.'**
+  String get editModeEnabled;
+
+  /// No description provided for @adminPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin authentication required to modify locked orders.'**
+  String get adminPasswordRequired;
+
+  /// No description provided for @incorrectPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password. Please try again.'**
+  String get incorrectPassword;
+
+  /// No description provided for @unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// No description provided for @rerunMRPTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-run MRP Required'**
+  String get rerunMRPTitle;
+
+  /// No description provided for @rerunMRPMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving changes to this order will require re-running MRP. This will:'**
+  String get rerunMRPMessage;
+
+  /// No description provided for @cancelOldPOs.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel all existing Purchase Orders'**
+  String get cancelOldPOs;
+
+  /// No description provided for @notifySuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify suppliers about cancellation'**
+  String get notifySuppliers;
+
+  /// No description provided for @notifyCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify customer about order changes'**
+  String get notifyCustomer;
+
+  /// No description provided for @generateNewPOs.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate new Purchase Orders after next MRP run'**
+  String get generateNewPOs;
+
+  /// No description provided for @rerunMRP.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-run MRP'**
+  String get rerunMRP;
+
+  /// No description provided for @saveAndRerunMRP.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Re-run MRP'**
+  String get saveAndRerunMRP;
+
+  /// No description provided for @orderUpdatedRerunMRP.
+  ///
+  /// In en, this message translates to:
+  /// **'Order updated! Please run MRP again to generate new POs.'**
+  String get orderUpdatedRerunMRP;
+
+  /// No description provided for @poSentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Orders Sent'**
+  String get poSentStatus;
+
+  /// No description provided for @mrpProcessedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'MRP Processed - Locked'**
+  String get mrpProcessedStatus;
+
+  /// No description provided for @pendingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending MRP'**
+  String get pendingStatus;
+
+  /// No description provided for @editModeActiveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit mode active - changes will require MRP re-run'**
+  String get editModeActiveMessage;
+
+  /// No description provided for @orderInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Information'**
+  String get orderInformation;
+
+  /// No description provided for @date.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// No description provided for @dishes.
+  ///
+  /// In en, this message translates to:
+  /// **'Dishes'**
+  String get dishes;
+
+  /// No description provided for @noDishes.
+  ///
+  /// In en, this message translates to:
+  /// **'No dishes in this order'**
+  String get noDishes;
+
+  /// No description provided for @pricingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Summary'**
+  String get pricingSummary;
+
+  /// No description provided for @counterSetupCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter Setup'**
+  String get counterSetupCost;
 }
 
 class _AppLocalizationsDelegate

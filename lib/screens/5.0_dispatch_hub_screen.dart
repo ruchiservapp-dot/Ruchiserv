@@ -15,6 +15,7 @@ import '../services/feature_gate_service.dart';
 import '../widgets/access_widgets.dart';
 import '5.4_return_tracking_screen.dart';
 import '5.5_unload_verify_screen.dart';
+import '5.0.1_dispatch_tracking_screen.dart';
 
 class DispatchScreen extends StatefulWidget {
   const DispatchScreen({super.key});
@@ -325,7 +326,23 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(AppLocalizations.of(context)!.tapToViewItems, style: TextStyle(fontSize: 11, color: Colors.indigo.shade400)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _trackDispatch(d),
+                          icon: const Icon(Icons.gps_fixed, size: 16),
+                          label: const Text('Track GPS'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.indigo,
+                            side: const BorderSide(color: Colors.indigo),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(AppLocalizations.of(context)!.tapToViewItems, style: TextStyle(fontSize: 11, color: Colors.indigo.shade400)),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -467,6 +484,18 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                     child: ElevatedButton.icon(
                       onPressed: () {
                         Navigator.pop(ctx);
+                        _trackDispatch(dispatch);
+                      },
+                      icon: const Icon(Icons.gps_fixed),
+                      label: const Text('Track GPS'),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
                         _trackReturn(dispatch);
                       },
                       icon: const Icon(Icons.assignment_return),
@@ -481,6 +510,13 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
         ),
       ),
     );
+  }
+
+  void _trackDispatch(Map<String, dynamic> dispatch) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DispatchTrackingScreen(dispatch: dispatch)),
+    ).then((_) => _loadAllData());
   }
 
   void _trackReturn(Map<String, dynamic> dispatch) {

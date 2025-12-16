@@ -478,5 +478,43 @@ class AppSchema {
         'timestamp': 'TEXT',
       },
     ),
+    
+    // 24. Dispatches (v34: Driver Portal Enhancement)
+    TableSchema(
+      tableName: 'dispatches',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'orderId': 'INTEGER NOT NULL',
+        'vehicleId': 'INTEGER',
+        'dispatchTime': 'TEXT',
+        'dispatchStatus': 'TEXT DEFAULT "PENDING"',
+        'returnVehicleId': 'INTEGER',
+        'returnTime': 'TEXT',
+        'driverLat': 'REAL',
+        'driverLng': 'REAL',
+        'lastLocationUpdate': 'TEXT',
+        'notes': 'TEXT',
+        'createdAt': 'TEXT',
+        'updatedAt': 'TEXT',
+        // Driver Portal columns (v34)
+        'driverId': 'INTEGER', // FK to users/staff
+        'assignmentStatus': 'TEXT DEFAULT "PENDING"', // PENDING, ACCEPTED, REJECTED
+        'assignedAt': 'TEXT',
+        'acceptedAt': 'TEXT',
+        'rejectedAt': 'TEXT',
+        'rejectionReason': 'TEXT',
+        // KM Tracking columns
+        'sourceLocation': 'TEXT',
+        'destinationLocation': 'TEXT',
+        'kmForward': 'REAL DEFAULT 0',
+        'kmReturn': 'REAL DEFAULT 0',
+        // Driver Earnings columns
+        'driverShare': 'REAL DEFAULT 0',
+        'rateType': 'TEXT DEFAULT "FLAT"', // FLAT, PER_KM
+        'ratePerKm': 'REAL DEFAULT 0',
+        'isPaid': 'INTEGER DEFAULT 0',
+        'paidAt': 'TEXT',
+      },
+    ),
   ];
 }

@@ -346,7 +346,10 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
       case 'REPORTS': return 'Analytics & reports';
       case 'SETTINGS': return 'System settings';
       case 'DISPATCH': return 'Delivery management';
-      case 'STAFF': return 'Staff & attendance';
+      case 'STAFF': return 'Staff & attendance admin';
+      case 'ATTENDANCE': return 'Personal attendance & punch';
+      case 'CALENDAR': return 'Calendar view';
+      case 'SUBSCRIPTION': return 'Subscription management';
       default: return '';
     }
   }

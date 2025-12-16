@@ -39,6 +39,10 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
 
   // pax map keyed by 'yyyy-MM-dd'
   final Map<String, int> _dailyPax = {};
+  
+  // MRP status maps keyed by 'yyyy-MM-dd'
+  final Map<String, bool> _dailyMrpRun = {};  // true if any order has MRP run
+  final Map<String, bool> _dailyPOSent = {};  // true if all orders have PO sent
 
   // month stats
   int _monthTotalPax = 0;
@@ -127,6 +131,8 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
     final monthEnd = DateTime(monthAnchor.year, monthAnchor.month + 1, 0);
 
     final Map<String, int> fresh = {};
+    final Map<String, bool> mrpMap = {};
+    final Map<String, bool> poMap = {};
 
     try {
       // 1) Local DB (reliable)
@@ -149,6 +155,12 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
 
         final k = _keyOf(d);
         fresh[k] = (fresh[k] ?? 0) + pax;
+        
+        // Track MRP status
+        final hasMrp = (row['hasMrpRun'] ?? 0) == 1;
+        final hasPO = (row['hasPOSent'] ?? 0) == 1;
+        if (hasMrp) mrpMap[k] = true;
+        if (hasPO) poMap[k] = true;
       }
 
       // 2) (Optional) AWS overlay if you later enable it.
@@ -205,6 +217,12 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
         _dailyPax
           ..clear()
           ..addAll(fresh);
+        _dailyMrpRun
+          ..clear()
+          ..addAll(mrpMap);
+        _dailyPOSent
+          ..clear()
+          ..addAll(poMap);
         _monthTotalPax = total;
         _monthUtilization = util.clamp(0.0, 1.0);
       });
@@ -341,17 +359,39 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
                   ),
                 ),
                 
-                const SizedBox(height: 20),
-                // Legend / Info
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildLegendDot(Colors.green[100]!, AppLocalizations.of(context)!.utilizationLow),
-                    const SizedBox(width: 16),
-                    _buildLegendDot(Colors.orange[100]!, AppLocalizations.of(context)!.utilizationMed),
-                    const SizedBox(width: 16),
-                    _buildLegendDot(Colors.red[100]!, AppLocalizations.of(context)!.utilizationHigh),
-                  ],
+                const SizedBox(height: 16),
+                // Legend / Info - Pax Load on left, MRP on right
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Pax Load Legends (Left)
+                      Flexible(
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 6,
+                          children: [
+                            _buildLegendDot(Colors.green[100]!, AppLocalizations.of(context)!.utilizationLow),
+                            _buildLegendDot(Colors.orange[100]!, AppLocalizations.of(context)!.utilizationMed),
+                            _buildLegendDot(Colors.red[100]!, AppLocalizations.of(context)!.utilizationHigh),
+                          ],
+                        ),
+                      ),
+                      // MRP Status Legends (Right)
+                      Flexible(
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 6,
+                          alignment: WrapAlignment.end,
+                          children: [
+                            _buildMrpLegend(Icons.pending_actions, Colors.blue.shade600, 'MRP'),
+                            _buildMrpLegend(Icons.check_circle, Colors.green.shade700, 'PO'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -363,13 +403,25 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
   
   Widget _buildLegendDot(Color color, String label) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 12, height: 12,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 11, fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+  
+  Widget _buildMrpLegend(IconData icon, Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -378,6 +430,8 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
   Widget _buildDayCell(BuildContext context, DateTime day, DateTime focusedMonth) {
     final dateKey = _keyOf(day);
     final pax = _dailyPax[dateKey] ?? 0;
+    final hasMrpRun = _dailyMrpRun[dateKey] ?? false;
+    final hasPOSent = _dailyPOSent[dateKey] ?? false;
     final isOutside = day.month != focusedMonth.month;
     final isToday = isSameDay(day, _today);
     // final isPastDay = _isPast(day); // Optional: dim past days?
@@ -435,6 +489,17 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
               ),
             ),
           ),
+          // MRP Indicator (Top Right) - shows if MRP run or PO sent
+          if (!isOutside && hasMrpRun)
+            Positioned(
+              top: 4,
+              right: 6,
+              child: Icon(
+                hasPOSent ? Icons.check_circle : Icons.pending_actions,
+                size: 14,
+                color: hasPOSent ? Colors.green.shade700 : Colors.blue.shade600,
+              ),
+            ),
           // Pax (Center)
           if (!isOutside && pax > 0)
             Center(

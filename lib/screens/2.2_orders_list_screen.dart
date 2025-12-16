@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import '2.1_add_order_screen.dart';
+import '2.1.1_order_fullscreen_view_screen.dart';
 import '2.3_summary_screen.dart';
 
 class OrdersListScreen extends StatefulWidget {
@@ -84,29 +85,68 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     return pageDate.isBefore(today);
   }
 
-  Future<void> _editOrder(Map<String, dynamic> order) async {
-    if (_isPastDate) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.cannotEditPastOrders)),
+  /// Check if order is locked (MRP run completed)
+  bool _isOrderLocked(Map<String, dynamic> order) {
+    final isLocked = order['isLocked'] == 1;
+    final mrpStatus = order['mrpStatus']?.toString() ?? '';
+    // Order is locked if isLocked flag is set OR if mrpStatus is beyond PENDING
+    return isLocked || (mrpStatus.isNotEmpty && mrpStatus != 'PENDING');
+  }
+
+  Future<void> _viewOrEditOrder(Map<String, dynamic> order, bool viewOnly) async {
+    final isLocked = _isOrderLocked(order);
+    
+    // For MRP-locked orders, open full-screen view with admin edit capability
+    if (isLocked) {
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OrderFullScreenViewScreen(
+            order: order,
+            date: widget.date,
+          ),
+        ),
       );
+      if (result == true) await _loadOrders();
       return;
     }
+    
+    // For non-locked orders, use the regular add/edit screen
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => AddOrderScreen(date: widget.date, existingOrder: order),
+        builder: (_) => AddOrderScreen(
+          date: widget.date, 
+          existingOrder: order,
+          viewOnly: viewOnly,
+        ),
       ),
     );
     if (result == true) await _loadOrders();
   }
 
-  Future<void> _deleteOrder(int orderId) async {
+  Future<void> _deleteOrder(Map<String, dynamic> order) async {
+    final orderId = order['id'] as int?;
+    if (orderId == null) return;
+    
     if (_isPastDate) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.cannotDeletePastOrders)),
       );
       return;
     }
+    
+    // Check if order is locked (MRP processed)
+    if (_isOrderLocked(order)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.orderLockedCannotModify),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -127,7 +167,6 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         data: {"id": orderId},
         action: 'DELETE',
       );
-      await _loadOrders();
       await _loadOrders();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,10 +197,12 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
           ),
         ),
         ...orders.map((order) {
-          final orderId = order['id'] as int?;
           final isVeg = order['foodType'] == 'Veg';
           final pax = order['totalPax'] ?? order['pax'] ?? 0;
           final amount = order['finalAmount'] ?? 0;
+          final isLocked = _isOrderLocked(order);
+          final mrpStatus = order['mrpStatus']?.toString() ?? '';
+          
           return Card(
             elevation: 1.5,
             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -171,7 +212,46 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 backgroundColor: isVeg ? Colors.green.shade600 : Colors.red.shade600,
                 child: Icon(isVeg ? Icons.eco : Icons.restaurant, color: Colors.white),
               ),
-              title: Text(order['customerName']?.toString() ?? AppLocalizations.of(context)!.unnamed, style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      order['customerName']?.toString() ?? AppLocalizations.of(context)!.unnamed, 
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // MRP Status Badge
+                  if (isLocked)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      margin: const EdgeInsets.only(left: 6),
+                      decoration: BoxDecoration(
+                        color: mrpStatus == 'PO_SENT' ? Colors.green.shade100 : Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            mrpStatus == 'PO_SENT' ? Icons.check_circle : Icons.lock,
+                            size: 12,
+                            color: mrpStatus == 'PO_SENT' ? Colors.green.shade700 : Colors.blue.shade700,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            mrpStatus == 'PO_SENT' ? 'PO' : 'MRP',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: mrpStatus == 'PO_SENT' ? Colors.green.shade700 : Colors.blue.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -195,9 +275,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                         style: const TextStyle(fontSize: 11, color: Colors.redAccent)),
                 ],
               ),
-              onTap: _isPastDate ? null : () => _editOrder(order),
-              onLongPress: (_isPastDate || orderId == null) ? null : () => _deleteOrder(orderId),
-              tileColor: _isPastDate ? Colors.grey.shade50 : null, // Visual cue for disabled
+              onTap: () => _viewOrEditOrder(order, isLocked || _isPastDate),
+              onLongPress: (_isPastDate || isLocked) ? null : () => _deleteOrder(order),
+              tileColor: (_isPastDate || isLocked) ? Colors.grey.shade50 : null, // Visual cue for read-only
             ),
           );
         }),

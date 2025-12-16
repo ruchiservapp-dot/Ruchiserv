@@ -13,11 +13,13 @@ import '../services/master_data_sync_service.dart';
 class AddOrderScreen extends StatefulWidget {
   final DateTime date;
   final Map<String, dynamic>? existingOrder;
+  final bool viewOnly;
 
   const AddOrderScreen({
     super.key,
     required this.date,
     this.existingOrder,
+    this.viewOnly = false,
   });
 
   @override
@@ -526,11 +528,22 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   Widget build(BuildContext context) {
     final isEdit = widget.existingOrder != null;
     final dateStr = '${widget.date.day}/${widget.date.month}/${widget.date.year}';
+    
+    // Check if order is locked (MRP processed) or explicitly view-only
+    final isOrderLocked = isEdit && (
+      widget.existingOrder!['isLocked'] == 1 ||
+      (widget.existingOrder!['mrpStatus']?.toString() ?? '').isNotEmpty &&
+      widget.existingOrder!['mrpStatus']?.toString() != 'PENDING'
+    );
+    final isViewOnly = widget.viewOnly || isOrderLocked;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? AppLocalizations.of(context)!.editOrder : AppLocalizations.of(context)!.addOrder),
-        centerTitle: true,
+        title: Text(
+          isViewOnly 
+            ? AppLocalizations.of(context)!.viewOrder 
+            : (isEdit ? AppLocalizations.of(context)!.editOrder : AppLocalizations.of(context)!.addOrder)
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -539,6 +552,31 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           autovalidateMode: AutovalidateMode.onUserInteraction,
           child: ListView(
             children: [
+              // Info banner if view-only mode
+              if (isViewOnly)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(isOrderLocked ? Icons.lock : Icons.visibility, color: Colors.blue.shade700),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          isOrderLocked 
+                            ? AppLocalizations.of(context)!.orderLockedCannotModify
+                            : AppLocalizations.of(context)!.viewOnlyMode,
+                          style: TextStyle(color: Colors.blue.shade900, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               // --- Header Info ---
               Row(
                 children: [
@@ -970,12 +1008,15 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                   : SizedBox(
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: _saveOrder,
+                        onPressed: isViewOnly ? null : _saveOrder,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
+                          backgroundColor: isViewOnly ? Colors.grey : Colors.blueAccent,
                           foregroundColor: Colors.white,
                         ),
-                        child: Text(AppLocalizations.of(context)!.saveOrder, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          isViewOnly ? AppLocalizations.of(context)!.orderLockedCannotModify : AppLocalizations.of(context)!.saveOrder, 
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
               const SizedBox(height: 40),

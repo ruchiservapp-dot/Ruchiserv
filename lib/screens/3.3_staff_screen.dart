@@ -1,5 +1,5 @@
-// MODULE: STAFF MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
-// Last Locked: 2025-12-08 | Features: Tabbed Layout, GPS Attendance, Staff Types, Punch In/Out
+// MODULE: STAFF MANAGEMENT
+// Features: Tabbed Layout, GPS Attendance, Staff Types, Punch In/Out, Calendar View
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +7,7 @@ import '../db/database_helper.dart';
 import '../services/geo_fence_service.dart';
 import '3.3.1_staff_detail_screen.dart';
 import '3.3.2_staff_payroll_screen.dart';
+import '3.3.4_staff_attendance_calendar_screen.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class StaffScreen extends StatefulWidget {
@@ -407,7 +408,8 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                 else
                   const Icon(Icons.check_circle, color: Colors.blue),
                 IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                  icon: const Icon(Icons.person_outline, size: 20),
+                  tooltip: AppLocalizations.of(context)!.profile,
                   onPressed: () async {
                     final result = await Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
@@ -419,13 +421,16 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                 ),
               ],
             ),
-            onTap: () async {
-              final result = await Navigator.of(context, rootNavigator: true).push(
+            // Tap on card → Attendance Calendar
+            onTap: () {
+              Navigator.of(context, rootNavigator: true).push(
                 MaterialPageRoute(
-                  builder: (_) => StaffDetailScreen(staffId: staff['id']),
+                  builder: (_) => StaffAttendanceCalendarScreen(
+                    staffId: staff['id'],
+                    staffName: staff['name'] ?? AppLocalizations.of(context)!.unknown,
+                  ),
                 ),
               );
-              if (result == true) _loadData();
             },
           ),
         );

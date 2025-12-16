@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
-import '../services/report_export_service.dart';
+import 'report_preview_page.dart';
 import '3.3.2_staff_payroll_screen.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -174,98 +174,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   void _showExportDialog() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Export $_selectedCategory - $_selectedSubReport',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Period: $_startDate to $_endDate',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.green.shade100,
-                child: const Icon(Icons.table_chart, color: Colors.green),
-              ),
-              title: const Text('Export to Excel'),
-              subtitle: const Text('Download as .xlsx spreadsheet'),
-              onTap: () async {
-                Navigator.pop(context);
-                final exportService = ReportExportService();
-                final headers = _getExportHeaders();
-                final rows = _getExportRows();
-                final file = await exportService.exportToExcel(
-                  title: '$_selectedCategory - $_selectedSubReport ($_startDate to $_endDate)',
-                  headers: headers,
-                  rows: rows,
-                );
-                if (file != null && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Excel saved: ${file.path}'), backgroundColor: Colors.green),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.red.shade100,
-                child: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              ),
-              title: const Text('Preview PDF'),
-              subtitle: const Text('Preview and print report'),
-              onTap: () async {
-                Navigator.pop(context);
-                final exportService = ReportExportService();
-                final headers = _getExportHeaders();
-                final rows = _getExportRows();
-                final success = await exportService.previewPdf(
-                  title: '$_selectedCategory - $_selectedSubReport',
-                  headers: headers,
-                  rows: rows,
-                  subtitle: 'Period: $_startDate to $_endDate',
-                );
-                if (!success && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PDF preview failed. Check console for details.'), backgroundColor: Colors.red),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.blue.shade100,
-                child: const Icon(Icons.share, color: Colors.blue),
-              ),
-              title: const Text('Share Report'),
-              subtitle: const Text('Share via email or other apps'),
-              onTap: () async {
-                Navigator.pop(context);
-                final exportService = ReportExportService();
-                final headers = _getExportHeaders();
-                final rows = _getExportRows();
-                await exportService.quickSharePdf(
-                  title: '$_selectedCategory - $_selectedSubReport',
-                  headers: headers,
-                  rows: rows,
-                  subtitle: 'Period: $_startDate to $_endDate',
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
+    final headers = _getExportHeaders();
+    final rows = _getExportRows();
+    
+    // Navigate to preview page showing report data first
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReportPreviewPage(
+          title: '$_selectedCategory - $_selectedSubReport',
+          subtitle: 'Period: $_startDate to $_endDate',
+          headers: headers,
+          rows: rows,
+          accentColor: _getCategoryColor(_selectedCategory),
         ),
       ),
     );
@@ -306,41 +227,110 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   List<List<dynamic>> _getExportRows() {
-    return _reportData.asMap().entries.map((entry) {
-      final index = entry.key;
-      final item = entry.value;
+    List<List<dynamic>> rows = [];
+    
+    for (var index = 0; index < _reportData.length; index++) {
+      final item = _reportData[index];
+      final date = item['date'] ?? '';
+      
+      // 1. Add Parent Row
+      List<dynamic> parentRow = [];
       switch (_selectedCategory) {
         case 'Orders':
           switch (_selectedSubReport) {
-            case 'Summary': return [item['date'], item['totalOrders'], item['confirmed'], item['completed'], item['cancelled'], item['totalPax'], item['revenue']];
-            case 'By Food Type': return [item['foodType'], item['orderCount'], item['totalPax'], item['revenue']];
-            case 'By Meal Type': return [item['mealType'], item['orderCount'], item['totalPax'], item['revenue']];
-            case 'By Time Slot': return [item['timeSlot'], item['orderCount'], item['totalPax']];
-            case 'Top Locations': return [item['location'], item['orderCount'], item['totalPax'], item['revenue']];
+            case 'Summary': parentRow = [item['date'], item['totalOrders'], item['confirmed'], item['completed'], item['cancelled'], item['totalPax'], item['revenue']]; break;
+            case 'By Food Type': parentRow = [item['foodType'], item['orderCount'], item['totalPax'], item['revenue']]; break;
+            case 'By Meal Type': parentRow = [item['mealType'], item['orderCount'], item['totalPax'], item['revenue']]; break;
+            case 'By Time Slot': parentRow = [item['timeSlot'], item['orderCount'], item['totalPax']]; break;
+            case 'Top Locations': parentRow = [item['location'], item['orderCount'], item['totalPax'], item['revenue']]; break;
           }
           break;
         case 'Kitchen':
           switch (_selectedSubReport) {
-            case 'Production': return [item['date'], item['totalDishes'], item['completed'], item['inProgress'], item['pending'], item['totalPax']];
-            case 'Top Dishes': return [index + 1, item['name'], item['category'], item['orderCount'], item['totalPax'], item['totalRevenue']];
-            case 'By Category': return [item['category'], item['dishCount'], item['totalRevenue']];
+            case 'Production': parentRow = [item['date'], item['totalDishes'], item['completed'], item['inProgress'], item['pending'], item['totalPax']]; break;
+            case 'Top Dishes': parentRow = [index + 1, item['name'], item['category'], item['orderCount'], item['totalPax'], item['totalRevenue']]; break;
+            case 'By Category': parentRow = [item['category'], item['dishCount'], item['totalRevenue']]; break;
           }
           break;
         case 'Dispatch':
-          switch (_selectedSubReport) {
-            case 'Delivery Status': return [item['date'], item['totalDispatches'], item['delivered'], item['inTransit'], item['pending'], item['ordersCount']];
-            case 'Capacity': return [item['date'], item['totalPax'], item['vegPax'], item['nonVegPax'], item['orderCount']];
+           switch (_selectedSubReport) {
+            case 'Delivery Status': parentRow = [item['date'], item['totalDispatches'], item['delivered'], item['inTransit'], item['pending'], item['ordersCount']]; break;
+            case 'Capacity': parentRow = [item['date'], item['totalPax'], item['vegPax'], item['nonVegPax'], item['orderCount']]; break;
           }
           break;
         case 'HR':
           switch (_selectedSubReport) {
-            case 'Attendance': return [item['name'], item['daysPresent'], item['totalHours'], item['totalOvertime'], item['geoFenceCompliant']];
-            case 'Overtime': return [item['name'], item['totalOT'], item['otPay']];
+            case 'Attendance': parentRow = [item['name'], item['daysPresent'], item['totalHours'], item['totalOvertime'], item['geoFenceCompliant']]; break;
+             case 'Overtime': parentRow = [item['name'], item['totalOT'], item['otPay']]; break;
           }
           break;
       }
-      return [];
-    }).toList();
+      if (parentRow.isNotEmpty) rows.add(parentRow);
+
+      // 2. Add Child Rows (if expanded)
+      if (_selectedCategory == 'Orders' && _selectedSubReport == 'Summary' && _expandedItems.contains(date)) {
+        if (_drillDownData.containsKey(date)) {
+          for (var order in _drillDownData[date]!) {
+            rows.add([
+              '', // Indent
+              '#${order['id']} - ${order['customerName']}',
+              order['mealType'] ?? '',
+              order['venue'] ?? '',
+              '',
+              order['totalPax'] ?? 0,
+              order['finalAmount'] ?? 0
+            ]);
+            
+            // 3. Add Grandchild Rows (Dishes)
+            final orderKey = 'order_${order['id']}';
+            if (_expandedItems.contains(orderKey) && _drillDownData.containsKey(orderKey)) {
+              for (var dish in _drillDownData[orderKey]!) {
+                 rows.add([
+                  '', '', // Double Indent
+                  'Dish: ${dish['name']}',
+                  dish['foodType'] ?? '',
+                  '',
+                  dish['pax'] ?? 0,
+                  ''
+                ]);
+              }
+            }
+          }
+        }
+      } 
+      else if (_selectedCategory == 'Kitchen' && _selectedSubReport == 'Production' && _expandedItems.contains(date)) {
+        final key = 'kitchen_$date';
+        if (_drillDownData.containsKey(key)) {
+          for (var dish in _drillDownData[key]!) {
+             final status = dish['orderStatus'] == 'Completed' ? 'Completed' : 'Pending';
+             rows.add([
+              '',
+              dish['name'],
+              status,
+              '',
+              '',
+              dish['pax'] ?? 0
+            ]);
+          }
+        }
+      }
+      else if (_selectedCategory == 'Dispatch' && _selectedSubReport == 'Delivery Status' && _expandedItems.contains(date)) {
+        final key = 'dispatch_$date';
+         if (_drillDownData.containsKey(key)) {
+          for (var dispatch in _drillDownData[key]!) {
+             rows.add([
+              '',
+              '#${dispatch['id']} - ${dispatch['location']}',
+              dispatch['status'] ?? 'PENDING',
+              '',
+              '',
+              ''
+            ]);
+          }
+        }
+      }
+    }
+    return rows;
   }
 
   @override
@@ -566,6 +556,22 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  void _toggleExpandAll() {
+    final allKeys = _reportData.map((e) => e['date']?.toString() ?? '').where((e) => e.isNotEmpty).toSet();
+    final allExpanded = _expandedItems.containsAll(allKeys);
+    
+    setState(() {
+      if (allExpanded) {
+        _expandedItems.removeAll(allKeys);
+      } else {
+        _expandedItems.addAll(allKeys);
+        for (var date in allKeys) {
+          _loadOrdersForDate(date);
+        }
+      }
+    });
+  }
+
   Widget _buildOrderSummaryReport() {
     // Calculate totals
     int totalOrders = 0, totalConfirmed = 0, totalCompleted = 0, totalCancelled = 0;
@@ -580,6 +586,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       totalRevenue += (item['revenue'] as num?)?.toDouble() ?? 0;
       totalPax += (item['totalPax'] as num?)?.toInt() ?? 0;
     }
+
+    final allKeys = _reportData.map((e) => e['date']?.toString() ?? '').where((e) => e.isNotEmpty).toSet();
+    final allExpanded = _reportData.isNotEmpty && _expandedItems.containsAll(allKeys);
     
     return Column(
       children: [
@@ -592,11 +601,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Text(AppLocalizations.of(context)!.totalPax(totalPax), style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 16),
               Text('${AppLocalizations.of(context)!.revenue}: ₹${totalRevenue.toStringAsFixed(0)}', 
                 style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: _toggleExpandAll,
+                icon: Icon(allExpanded ? Icons.unfold_less : Icons.unfold_more, size: 18),
+                label: Text(allExpanded ? 'Collapse All' : 'Expand All'),
+              ),
             ],
           ),
         ),
@@ -645,22 +660,96 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                   children: [
                     if (_drillDownData.containsKey(date))
-                      ..._drillDownData[date]!.map((order) => ListTile(
-                        dense: true,
-                        leading: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(4),
+                      ..._drillDownData[date]!.map((order) {
+                        final orderId = order['id'];
+                        final orderKey = 'order_$orderId';
+                        final isOrderExpanded = _expandedItems.contains(orderKey);
+
+                        return ExpansionTile(
+                          key: Key(orderKey),
+                          initiallyExpanded: isOrderExpanded,
+                          onExpansionChanged: (expanded) {
+                            setState(() {
+                              if (expanded) {
+                                _expandedItems.add(orderKey);
+                                _loadDishesForOrder(orderId, orderKey);
+                              } else {
+                                _expandedItems.remove(orderKey);
+                              }
+                            });
+                          },
+                          leading: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade100,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text('#$orderId', style: TextStyle(fontSize: 10, color: Colors.blue.shade800)),
                           ),
-                          child: Text('#${order['id']}', style: TextStyle(fontSize: 10, color: Colors.blue.shade800)),
-                        ),
-                        title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontSize: 13)),
-                        subtitle: Text('${order['totalPax'] ?? 0} pax | ${order['venue'] ?? order['location'] ?? 'N/A'}', 
-                          style: const TextStyle(fontSize: 11)),
-                        trailing: Text('₹${(order['finalAmount'] ?? 0).toStringAsFixed(0)}',
-                          style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 12)),
-                      )).toList()
+                          title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${order['totalPax'] ?? 0} pax | ${order['mealType'] ?? 'N/A'}', 
+                                style: const TextStyle(fontSize: 11)),
+                              if (order['venue'] != null)
+                                Text('Venue: ${order['venue']}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('₹${(order['finalAmount'] ?? 0).toStringAsFixed(0)}',
+                                style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 12)),
+                              Icon(isOrderExpanded ? Icons.expand_less : Icons.expand_more),
+                            ],
+                          ),
+                          children: [
+                             if (_drillDownData.containsKey(orderKey))
+                              Container(
+                                color: Colors.grey.shade50,
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                child: Column(
+                                  children: [
+                                    const Row(
+                                      children: [
+                                        Expanded(child: Text('Dish', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                                        Text('Type', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                        SizedBox(width: 16),
+                                        Text('Pax', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                      ],
+                                    ),
+                                    const Divider(height: 8),
+                                    ..._drillDownData[orderKey]!.map((dish) => Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                      child: Row(
+                                        children: [
+                                          Expanded(child: Text(dish['name'] ?? 'Unknown', style: const TextStyle(fontSize: 12))),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: (dish['foodType'] == 'Non-Veg') ? Colors.red.shade100 : Colors.green.shade100,
+                                              borderRadius: BorderRadius.circular(2),
+                                            ),
+                                            child: Text(dish['foodType'] ?? 'Veg', 
+                                              style: TextStyle(fontSize: 10, color: (dish['foodType'] == 'Non-Veg') ? Colors.red : Colors.green)),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Text('${dish['pax'] ?? 0}', style: const TextStyle(fontSize: 12)),
+                                        ],
+                                      ),
+                                    )).toList(),
+                                  ],
+                                ),
+                              )
+                            else
+                              const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
+                              ),
+                          ],
+                        );
+                      }).toList()
                     else
                       const Padding(
                         padding: EdgeInsets.all(16),
@@ -682,6 +771,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
     if (mounted) {
       setState(() {
         _drillDownData[date] = orders;
+      });
+    }
+  }
+
+  Future<void> _loadDishesForOrder(int orderId, String key) async {
+    if (_drillDownData.containsKey(key)) return;
+    final dishes = await DatabaseHelper().getDishesForOrder(orderId);
+    if (mounted) {
+      setState(() {
+        _drillDownData[key] = dishes;
       });
     }
   }
@@ -772,6 +871,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       inProgress += (item['inProgress'] as num?)?.toInt() ?? 0;
       pending += (item['pending'] as num?)?.toInt() ?? 0;
     }
+
+    final allKeys = _reportData.map((e) => e['date']?.toString() ?? '').where((e) => e.isNotEmpty).toSet();
+    final allExpanded = _reportData.isNotEmpty && _expandedItems.containsAll(allKeys);
     
     return Column(
       children: [
@@ -781,6 +883,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
           _SummaryItem(AppLocalizations.of(context)!.inProgress, inProgress.toString(), Icons.pending, Colors.orange),
           _SummaryItem(AppLocalizations.of(context)!.pending, pending.toString(), Icons.schedule, Colors.grey),
         ]),
+         Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: _toggleExpandAll,
+                icon: Icon(allExpanded ? Icons.unfold_less : Icons.unfold_more, size: 18),
+                label: Text(allExpanded ? 'Collapse All' : 'Expand All'),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: ListView.builder(
             itemCount: _reportData.length,
@@ -790,12 +905,25 @@ class _ReportsScreenState extends State<ReportsScreen> {
               final total = (item['totalDishes'] as num?)?.toInt() ?? 0;
               final done = (item['completed'] as num?)?.toInt() ?? 0;
               final pax = (item['totalPax'] as num?)?.toInt() ?? 0;
+               final isExpanded = _expandedItems.contains(date);
               
               final progress = total > 0 ? done / total : 0.0;
               
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: ListTile(
+                child: ExpansionTile(
+                  key: Key('prod_$date'), // Unique key prefix
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      if (expanded) {
+                        _expandedItems.add(date);
+                        _loadProductionDetails(date);
+                      } else {
+                        _expandedItems.remove(date);
+                      }
+                    });
+                  },
                   leading: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -809,10 +937,46 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   ),
                   title: Text(DateFormat('EEE, MMM d').format(DateTime.parse(date))),
                   subtitle: Text('$done/$total dishes | $pax pax'),
-                  trailing: Icon(
-                    progress == 1 ? Icons.check_circle : Icons.pending,
-                    color: progress == 1 ? Colors.green : Colors.orange,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                       Icon(
+                        progress == 1 ? Icons.check_circle : Icons.pending,
+                        color: progress == 1 ? Colors.green : Colors.orange,
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                    ],
                   ),
+                  children: [
+                    if (_drillDownData.containsKey('kitchen_$date'))
+                      Container(
+                        height: 200, // Limit height
+                         color: Colors.grey.shade50,
+                        child: ListView.builder(
+                          itemCount: _drillDownData['kitchen_$date']!.length,
+                          itemBuilder: (ctx, i) {
+                            final dish = _drillDownData['kitchen_$date']![i];
+                            final status = dish['orderStatus'] == 'Completed' ? 'Completed' : 'Pending';
+                             return ListTile(
+                              dense: true,
+                              title: Text(dish['name'] ?? 'Unknown Dish'),
+                              subtitle: Text('${dish['customerName'] ?? 'Unknown'} | ${dish['pax'] ?? 0} pax'),
+                              trailing: Chip(
+                                label: Text(status, style: const TextStyle(fontSize: 10)),
+                                backgroundColor: status == 'Completed' ? Colors.green.shade100 : Colors.orange.shade100,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                      ),
+                  ],
                 ),
               );
             },
@@ -820,6 +984,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _loadProductionDetails(String date) async {
+    final key = 'kitchen_$date';
+    if (_drillDownData.containsKey(key)) return;
+    final dishes = await DatabaseHelper().getDishesForDate(date);
+    if (mounted) {
+      setState(() {
+        _drillDownData[key] = dishes;
+      });
+    }
   }
 
   Widget _buildTopDishesReport() {
@@ -937,6 +1112,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildDeliveryStatusReport() {
+    int totalDishes = 0, completed = 0, inProgress = 0, pending = 0;
     int totalDispatches = 0, delivered = 0, inTransit = 0, pendingD = 0;
     
     for (var item in _reportData) {
@@ -945,6 +1121,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       inTransit += (item['inTransit'] as num?)?.toInt() ?? 0;
       pendingD += (item['pending'] as num?)?.toInt() ?? 0;
     }
+
+    final allKeys = _reportData.map((e) => e['date']?.toString() ?? '').where((e) => e.isNotEmpty).toSet();
+    final allExpanded = _reportData.isNotEmpty && _expandedItems.containsAll(allKeys);
     
     return Column(
       children: [
@@ -954,6 +1133,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
           _SummaryItem(AppLocalizations.of(context)!.inTransit, inTransit.toString(), Icons.directions_car, Colors.orange),
           _SummaryItem(AppLocalizations.of(context)!.pending, pendingD.toString(), Icons.pending, Colors.grey),
         ]),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: _toggleExpandAll,
+                icon: Icon(allExpanded ? Icons.unfold_less : Icons.unfold_more, size: 18),
+                label: Text(allExpanded ? 'Collapse All' : 'Expand All'),
+              ),
+            ],
+          ),
+        ),
         Expanded(
           child: ListView.builder(
             itemCount: _reportData.length,
@@ -963,20 +1155,67 @@ class _ReportsScreenState extends State<ReportsScreen> {
               final total = (item['totalDispatches'] as num?)?.toInt() ?? 0;
               final done = (item['delivered'] as num?)?.toInt() ?? 0;
               final orders = (item['ordersCount'] as num?)?.toInt() ?? 0;
+              final isExpanded = _expandedItems.contains(date);
               
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: ListTile(
+                child: ExpansionTile(
+                  key: Key('dispatch_$date'),
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      if (expanded) {
+                        _expandedItems.add(date);
+                        _loadDispatchDetails(date);
+                      } else {
+                        _expandedItems.remove(date);
+                      }
+                    });
+                  },
                   leading: CircleAvatar(
                     backgroundColor: Colors.green,
                     child: Icon(Icons.local_shipping, color: Colors.white),
                   ),
                   title: Text(DateFormat('EEE, MMM d').format(DateTime.parse(date))),
                   subtitle: Text('$total dispatches | $orders orders'),
-                  trailing: Chip(
-                    label: Text('$done delivered'),
-                    backgroundColor: Colors.green.withOpacity(0.2),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Chip(
+                        label: Text('$done delivered'),
+                        backgroundColor: Colors.green.withOpacity(0.2),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                    ],
                   ),
+                  children: [
+                    if (_drillDownData.containsKey('dispatch_$date'))
+                      Container(
+                        color: Colors.grey.shade50,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _drillDownData['dispatch_$date']!.length,
+                          itemBuilder: (ctx, i) {
+                            final dispatch = _drillDownData['dispatch_$date']![i];
+                            final status = dispatch['status'] ?? 'PENDING';
+                            return ListTile(
+                              dense: true,
+                              title: Text('Dispatch #${dispatch['id']}'),
+                              subtitle: Text('${dispatch['customerName'] ?? 'Unknown'} | ${dispatch['location'] ?? 'N/A'}'),
+                              trailing: Text(status, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                      ),
+                  ],
                 ),
               );
             },
@@ -985,6 +1224,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ],
     );
   }
+
+  Future<void> _loadDispatchDetails(String date) async {
+    final key = 'dispatch_$date';
+    if (_drillDownData.containsKey(key)) return;
+    final dispatches = await DatabaseHelper().getDispatchesForDate(date);
+    if (mounted) {
+      setState(() {
+        _drillDownData[key] = dispatches;
+      });
+    }
+  }
+
 
   Widget _buildCapacityReport() {
     int totalPax = 0, vegPax = 0, nonVegPax = 0, totalOrders = 0;

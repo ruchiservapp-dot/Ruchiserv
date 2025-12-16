@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '5.2_transactions_screen.dart';
 import '5.3_ledger_screen.dart';
+import 'report_preview_page.dart';
 import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -26,6 +27,44 @@ class _FinanceScreenState extends State<FinanceScreen> {
     super.initState();
     _loadData();
   }
+  Future<void> _pickDate(bool isStart) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: isStart ? _startDate : _endDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    
+    if (picked != null) {
+      setState(() {
+        if (isStart) {
+          _startDate = picked;
+           // If start date is after end date, move end date to start date
+          if (_startDate.isAfter(_endDate)) {
+            _endDate = _startDate;
+          }
+        } else {
+          _endDate = picked;
+          // If end date is before start date, move start date to end date
+          if (_endDate.isBefore(_startDate)) {
+            _startDate = _endDate;
+          }
+        }
+      });
+      _loadData();
+    }
+  }
+
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
@@ -59,27 +98,70 @@ class _FinanceScreenState extends State<FinanceScreen> {
             children: [
               // Date Filter
               Card(
-                child: ListTile(
-                  leading: const Icon(Icons.calendar_today),
-                  title: Text("${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d').format(_endDate)}"),
-                  trailing: const Icon(Icons.arrow_drop_down),
-                  onTap: () async {
-                    final picked = await showDateRangePicker(
-                      context: context,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _startDate = picked.start;
-                        _endDate = picked.end;
-                      });
-                      _loadData();
-                    }
-                  },
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _pickDate(true),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                                    const SizedBox(width: 4),
+                                    Text("From", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat('MMM d, yyyy').format(_startDate),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(width: 1, height: 40, color: Colors.grey.shade300),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _pickDate(false),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.event, size: 14, color: Colors.grey[600]),
+                                    const SizedBox(width: 4),
+                                    Text("To", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat('MMM d, yyyy').format(_endDate),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+
               const SizedBox(height: 16),
 
               // Summary Cards
@@ -149,11 +231,63 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     AppLocalizations.of(context)!.export,
                     Icons.file_download,
                     Colors.teal,
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(AppLocalizations.of(context)!.exportingReport)),
+                    () async {
+                      // Show loading indicator
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (ctx) => const Center(child: CircularProgressIndicator()),
                       );
-                      // In real app, generate PDF/Excel here
+
+                      try {
+                        final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
+                        final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
+
+                        final transactions = await DatabaseHelper().getTransactions(
+                          startDate: startStr,
+                          endDate: endStr,
+                        );
+
+                        if (!context.mounted) return;
+                        Navigator.pop(context); // Close loading
+
+                        if (transactions.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(AppLocalizations.of(context)!.noTransactionsFound)),
+                          );
+                          return;
+                        }
+
+                        final headers = ['Date', 'Type', 'Category', 'Mode', 'Description', 'Amount'];
+                        final rows = transactions.map((t) => [
+                          t['date'],
+                          t['type'],
+                          t['category'] ?? '-',
+                          t['mode'] ?? '-',
+                          t['description'] ?? '-',
+                          t['amount']
+                        ]).toList();
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ReportPreviewPage(
+                              title: 'Finance Report',
+                              subtitle: '$startStr to $endStr',
+                              headers: headers,
+                              rows: rows,
+                              accentColor: Colors.teal,
+                            ),
+                          ),
+                        );
+                      } catch (e) {
+                        if (context.mounted) {
+                          Navigator.pop(context); // Close loading if error
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error generating report: $e')),
+                          );
+                        }
+                      }
                     },
                   ),
                 ],

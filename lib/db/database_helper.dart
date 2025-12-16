@@ -37,7 +37,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       db = await openDatabase(
         fileName,
-        version: 32, // v32: MRP allocation status tracking
+        version: 34, // v34: Driver Portal - km tracking, earnings, assignment status
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -47,7 +47,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       db = await openDatabase(
         path,
-        version: 32, // v32: MRP allocation status tracking
+        version: 34, // v34: Driver Portal - km tracking, earnings, assignment status
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -1189,6 +1189,36 @@ class DatabaseHelper {
     try { await db.execute("ALTER TABLE orders ADD COLUMN isCancelled INTEGER DEFAULT 0;"); } catch (_) {}
     try { await db.execute("ALTER TABLE orders ADD COLUMN status TEXT DEFAULT 'Confirmed';"); } catch (_) {}
     try { await db.execute("ALTER TABLE orders ADD COLUMN venue TEXT;"); } catch (_) {}
+    
+    // === DEFENSIVE: Ensure default vehicles exist (User Request) ===
+    // These are SEED vehicles available to all firms for basic dispatch without full vehicle setup
+    final now = DateTime.now().toIso8601String();
+    try {
+      await db.insert('vehicles', {
+        'firmId': 'SEED',
+        'vehicleNo': 'Customer Vehicle',
+        'vehicleType': 'OTHER',
+        'status': 'AVAILABLE',
+        'driverName': 'Customer Arranged',
+        'isActive': 1,
+        'isModified': 0,
+        'createdAt': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    } catch (_) {}
+    
+    try {
+      await db.insert('vehicles', {
+        'firmId': 'SEED',
+        'vehicleNo': 'Own Vehicle',
+        'vehicleType': 'OTHER',
+        'status': 'AVAILABLE',
+        'driverName': 'Company Driver',
+        'isActive': 1,
+        'isModified': 0,
+        'createdAt': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    } catch (_) {}
+    
     await SchemaManager.syncSchema(db);
   }
 
@@ -1247,6 +1277,31 @@ class DatabaseHelper {
           'isModified': 0,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
+
+      // Load Default Vehicles (User Request: "Customer Vehicle" and "Own Vehicle" as defaults)
+      // These are global defaults available to all firms
+      final now = DateTime.now().toIso8601String();
+      batch.insert('vehicles', {
+        'firmId': 'SEED',
+        'vehicleNo': 'Customer Vehicle',
+        'vehicleType': 'OTHER',
+        'status': 'AVAILABLE',
+        'driverName': 'Customer Arranged',
+        'isActive': 1,
+        'isModified': 0,
+        'createdAt': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      
+      batch.insert('vehicles', {
+        'firmId': 'SEED',
+        'vehicleNo': 'Own Vehicle',
+        'vehicleType': 'OTHER',
+        'status': 'AVAILABLE',
+        'driverName': 'Company Driver',
+        'isActive': 1,
+        'isModified': 0,
+        'createdAt': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
       await batch.commit(noResult: true);
       print('✅ Seed Data Loaded Successfully!');
@@ -1524,12 +1579,15 @@ class DatabaseHelper {
   final db = await database;
   // Fixed: Sum BOTH 'pax' (new schema) and 'totalPax' (legacy schema) to support all data
   // Using COALESCE to handle NULLs safely
+  // Added: hasMrpRun flag for calendar indicators
   return await db.rawQuery('''
     SELECT 
       o.date,
       0 AS vegPax,
       0 AS nonVegPax,
-      SUM(COALESCE(o.pax, 0) + COALESCE(o.totalPax, 0)) AS totalPax
+      SUM(COALESCE(o.pax, 0) + COALESCE(o.totalPax, 0)) AS totalPax,
+      MAX(CASE WHEN o.mrpRunId IS NOT NULL THEN 1 ELSE 0 END) AS hasMrpRun,
+      MAX(CASE WHEN o.mrpStatus = 'PO_SENT' THEN 1 ELSE 0 END) AS hasPOSent
     FROM orders o
     WHERE o.date IS NOT NULL
     GROUP BY o.date
@@ -1645,6 +1703,35 @@ class DatabaseHelper {
       GROUP BY d.name, d.foodType, o.mealType
       ORDER BY o.mealType, d.name
     ''', [date]);
+  }
+
+  // Get all dishes for a date with status (for Reports)
+  Future<List<Map<String, dynamic>>> getDishesForDate(String date) async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT d.*, o.customerName, o.status as orderStatus, o.time
+      FROM dishes d
+      JOIN orders o ON d.orderId = o.id
+      WHERE o.date = ?
+      ORDER BY o.time, o.id
+    ''', [date]);
+  }
+
+  // Get dispatches for a date (for Reports)
+  Future<List<Map<String, dynamic>>> getDispatchesForDate(String date) async {
+    final db = await database;
+    // Check if dispatch table exists first (defensive)
+    try {
+      return await db.rawQuery('''
+        SELECT d.*, o.customerName, o.totalPax, o.location
+        FROM dispatch d
+        JOIN orders o ON d.orderId = o.id
+        WHERE d.date = ?
+        ORDER BY d.timeOut
+      ''', [date]);
+    } catch (_) {
+      return [];
+    }
   }
 
   // ---------- DISH MASTER (Autocomplete Suggestions) ----------
@@ -3342,6 +3429,22 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     return await db.update('suppliers', data, where: 'id = ?', whereArgs: [id]);
   }
 
+  // --- CUSTOMERS ---
+  Future<List<Map<String, dynamic>>> getAllCustomers(String firmId) async {
+    final db = await database;
+    return await db.query('customers',
+      where: 'firmId = ?',
+      whereArgs: [firmId],
+      orderBy: 'name',
+    );
+  }
+
+  Future<int> insertCustomer(Map<String, dynamic> data) async {
+    final db = await database;
+    data['createdAt'] = DateTime.now().toIso8601String();
+    return await db.insert('customers', data);
+  }
+
   // --- SUBCONTRACTORS ---
   Future<List<Map<String, dynamic>>> getAllSubcontractors(String firmId) async {
     final db = await database;
@@ -3718,6 +3821,73 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       [firmId, '$prefix%'],
     )) ?? 0;
     return '$prefix-${(count + 1).toString().padLeft(3, '0')}';
+  }
+
+  // --- MRP RE-RUN SUPPORT ---
+  
+  /// Cancel all POs for a specific order (soft-delete with status = 'CANCELLED')
+  /// Returns list of cancelled PO IDs for notification purposes
+  Future<List<Map<String, dynamic>>> cancelPOsForOrder(int orderId) async {
+    final db = await database;
+    
+    // Find all POs that include this order
+    final allPOs = await db.query('purchase_orders');
+    final cancelledPOs = <Map<String, dynamic>>[];
+    
+    for (final po in allPOs) {
+      final orderIds = po['orderIds']?.toString() ?? '';
+      if (orderIds.split(',').map((s) => s.trim()).contains(orderId.toString())) {
+        // Skip already cancelled POs
+        if (po['status'] == 'CANCELLED') continue;
+        
+        // Update PO status to CANCELLED
+        await db.update(
+          'purchase_orders',
+          {
+            'status': 'CANCELLED',
+            'cancelledAt': DateTime.now().toIso8601String(),
+            'cancelReason': 'Order updated - MRP re-run required',
+          },
+          where: 'id = ?',
+          whereArgs: [po['id']],
+        );
+        
+        cancelledPOs.add(po);
+      }
+    }
+    
+    print('📦 [DB] Cancelled ${cancelledPOs.length} POs for order $orderId');
+    return cancelledPOs;
+  }
+
+  /// Reset order MRP status to allow re-running MRP
+  Future<void> resetOrderForMRP(int orderId) async {
+    final db = await database;
+    
+    await db.update(
+      'orders',
+      {
+        'mrpStatus': 'PENDING',
+        'mrpRunId': null,
+        'isLocked': 0,
+        'lockedAt': null,
+      },
+      where: 'id = ?',
+      whereArgs: [orderId],
+    );
+    
+    print('📦 [DB] Reset order $orderId for MRP re-run');
+  }
+
+  /// Get all POs for an order (both active and cancelled) for history view
+  Future<List<Map<String, dynamic>>> getPurchaseOrdersForOrder(int orderId) async {
+    final db = await database;
+    final allPOs = await db.query('purchase_orders', orderBy: 'createdAt DESC');
+    
+    return allPOs.where((po) {
+      final orderIds = po['orderIds']?.toString() ?? '';
+      return orderIds.split(',').map((s) => s.trim()).contains(orderId.toString());
+    }).toList();
   }
 
 }
