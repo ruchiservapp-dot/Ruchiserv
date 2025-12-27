@@ -3,7 +3,9 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/aws/aws_api.dart'; // you already have this
 import '../db/database_helper.dart';
+import 'package:sqflite/sqflite.dart'; // For ConflictAlgorithm
 import 'master_data_sync_service.dart';
+import 'cloud_sync_service.dart'; // Full operational data sync
 
 /// Central place for login/registration/password APIs + local expiry rules.
 class AuthService {
@@ -51,8 +53,16 @@ class AuthService {
         try {
           await MasterDataSyncService().syncFromAWS();
         } catch (e) {
-          print('⚠️ Initial Sync Failed: $e');
+          print('⚠️ Master Data Sync Failed: $e');
         }
+        
+        // SYNC OPERATIONAL DATA (Orders, Dispatches, Staff, etc.)
+        try {
+          await CloudSyncService().fullSyncFromCloud();
+        } catch (e) {
+          print('⚠️ Cloud Sync Failed: $e');
+        }
+
 
         return true;
       }
@@ -171,36 +181,143 @@ class AuthService {
     required String mobile,
     required String password,
   }) async {
-    print('AuthService.loginOffline: Checking credentials for $firmId / $mobile');
+    final result = await loginOfflineWithDetails(firmId: firmId, mobile: mobile, password: password);
+    return result['success'] == true;
+  }
+  
+  /// Verify credentials with detailed error info
+  /// Returns: {'success': bool, 'error': 'firm_not_found' | 'mobile_not_found' | 'wrong_password' | 'access_revoked' | null}
+  static Future<Map<String, dynamic>> loginOfflineWithDetails({
+    required String firmId,
+    required String mobile,
+    required String password,
+  }) async {
+    print('AuthService.loginOfflineWithDetails: Checking credentials for $firmId / $mobile');
     final db = DatabaseHelper();
-    final users = await db.getUsersByFirm(firmId);
-    print('AuthService.loginOffline: Found ${users.length} users for firm $firmId');
     
+    // Check if firm exists locally
+    final database = await db.database;
+    var firms = await database.query('firms', where: 'firmId = ?', whereArgs: [firmId]);
+    
+    // If firm not found locally, try to fetch from AWS
+    if (firms.isEmpty) {
+      print('⚠️ Firm not found locally, checking AWS...');
+      try {
+        final resp = await AwsApi.callDbHandler(
+          method: 'GET',
+          table: 'firms',
+          filters: {'firmid': firmId.toLowerCase()}, // DynamoDB uses lowercase
+        );
+        
+        if ((resp['status'] == 'success') && (resp['data'] is List) && (resp['data'] as List).isNotEmpty) {
+          final awsFirm = (resp['data'] as List).first as Map<String, dynamic>;
+          print('✅ Found firm in AWS: $awsFirm');
+          
+          // Store in local DB
+          await database.insert('firms', {
+            'firmId': firmId,
+            'firmName': awsFirm['firmName'] ?? awsFirm['name'] ?? 'Unknown',
+            'mobile': awsFirm['mobile'] ?? '',
+            'address': awsFirm['address'] ?? '',
+            'gstin': awsFirm['gstin'] ?? '',
+            'subscriptionStatus': awsFirm['subscriptionStatus'] ?? 'ACTIVE',
+            'subscriptionPlan': awsFirm['subscriptionPlan'] ?? 'FREE_TRIAL',
+            'subscriptionExpiry': awsFirm['subscriptionExpiry'] ?? '',
+            'createdAt': awsFirm['createdAt'] ?? DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+          
+          // Also fetch and store user from AWS
+          final userResp = await AwsApi.callDbHandler(
+            method: 'GET',
+            table: 'users',
+            filters: {'firmid': firmId.toLowerCase(), 'mobile': mobile},
+          );
+          
+          if ((userResp['status'] == 'success') && (userResp['data'] is List) && (userResp['data'] as List).isNotEmpty) {
+            final awsUser = (userResp['data'] as List).first as Map<String, dynamic>;
+            print('✅ Found user in AWS: $awsUser');
+            
+            await database.insert('users', {
+              'userId': awsUser['userId'] ?? awsUser['userid'] ?? 'USR_${firmId}_$mobile',
+              'firmId': firmId,
+              'name': awsUser['name'] ?? 'User',
+              'mobile': mobile,
+              'role': awsUser['role'] ?? 'Admin',
+              'permissions': awsUser['permissions'] ?? 'ALL',
+              'passwordHash': awsUser['passwordHash'] ?? '',
+              'isActive': 1,
+              'createdAt': awsUser['createdAt'] ?? DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+            
+            // Also add to authorized_mobiles
+            await database.insert('authorized_mobiles', {
+              'firmId': firmId,
+              'mobile': mobile,
+              'role': awsUser['role'] ?? 'Admin',
+              'name': awsUser['name'] ?? 'User',
+              'isActive': 1,
+              'addedBy': 'AWS_SYNC',
+              'addedAt': DateTime.now().toIso8601String(),
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+          
+          // Re-check firms after insert
+          firms = await database.query('firms', where: 'firmId = ?', whereArgs: [firmId]);
+        }
+      } catch (e) {
+        print('⚠️ AWS fetch failed: $e');
+      }
+    }
+    
+    if (firms.isEmpty) {
+      print('✗ Firm not found: $firmId');
+      return {'success': false, 'error': 'firm_not_found'};
+    }
+    
+    // Check if mobile exists in this firm
+    final users = await db.getUsersByFirm(firmId);
+    print('AuthService.loginOfflineWithDetails: Found ${users.length} users for firm $firmId');
+    
+    bool mobileFound = false;
     for (var u in users) {
       final m = u['mobile']?.toString() ?? '';
       final p = u['passwordHash']?.toString() ?? '';
       print(' - User: mobile=$m, passwordHash=$p (checking against: $password)');
-      if (m == mobile && p == password) {
-        print('✓ Password match!');
-        
-        // Check if mobile is still authorized
-        final isAuthorized = await db.isMobileAuthorized(firmId, mobile);
-        if (!isAuthorized) {
-          print('✗ Mobile not authorized/deactivated');
-          throw Exception('Access revoked. Contact your firm admin.');
+      
+      if (m == mobile) {
+        mobileFound = true;
+        if (p == password) {
+          print('✓ Password match!');
+          
+          // Check if mobile is still authorized
+          final isAuthorized = await db.isMobileAuthorized(firmId, mobile);
+          if (!isAuthorized) {
+            print('✗ Mobile not authorized/deactivated');
+            return {'success': false, 'error': 'access_revoked'};
+          }
+          
+          // COMPLIANCE: Save user_id for audit trail (Rule C.2)
+          final sp = await SharedPreferences.getInstance();
+          final userId = u['userId']?.toString() ?? 'U-$mobile';
+          await sp.setString('user_id', userId);
+          
+          return {'success': true, 'error': null};
+        } else {
+          print('✗ Password mismatch');
+          return {'success': false, 'error': 'wrong_password'};
         }
-        
-        
-        // COMPLIANCE: Save user_id for audit trail (Rule C.2)
-        final sp = await SharedPreferences.getInstance();
-        final userId = u['userId']?.toString() ?? 'U-$mobile';
-        await sp.setString('user_id', userId);
-        
-        return true;
       }
     }
+    
+    if (!mobileFound) {
+      print('✗ Mobile not found in firm');
+      return {'success': false, 'error': 'mobile_not_found'};
+    }
+    
     print('✗ No matching user/password found');
-    return false;
+    return {'success': false, 'error': 'wrong_password'};
   }
 
   /// Variant used by biometric quick-login path.
@@ -518,5 +635,53 @@ class AuthService {
     ));
     
     return {'success': true};
+  }
+
+  /// Register new firm + admin to AWS (called after local registration)
+  static Future<bool> registerFirmToAws({
+    required String firmId,
+    required Map<String, dynamic> firmData,
+    required Map<String, dynamic> adminData,
+  }) async {
+    try {
+      // Add lowercase 'firmid' for DynamoDB primary key
+      final awsFirmData = Map<String, dynamic>.from(firmData);
+      awsFirmData['firmid'] = firmId; // DynamoDB uses lowercase
+      
+      // 1. Create firm in AWS (using PUT for insert/update)
+      final firmResp = await AwsApi.callDbHandler(
+        method: 'PUT',
+        table: 'firms',
+        data: awsFirmData,
+      );
+      
+      print('AWS firm sync response: $firmResp');
+      if (firmResp['error'] != null) {
+        print('⚠️ Failed to sync firm to AWS: ${firmResp['error']}');
+      }
+
+      // Add lowercase 'userid' for DynamoDB primary key
+      final awsUserData = Map<String, dynamic>.from(adminData);
+      awsUserData['userid'] = adminData['userId']; // DynamoDB uses lowercase
+      awsUserData['firmid'] = firmId;
+      
+      // 2. Create user in AWS (using PUT for insert/update)
+      final userResp = await AwsApi.callDbHandler(
+        method: 'PUT',
+        table: 'users',
+        data: awsUserData,
+      );
+      
+      print('AWS user sync response: $userResp');
+      if (userResp['error'] != null) {
+        print('⚠️ Failed to sync user to AWS: ${userResp['error']}');
+      }
+
+      print('✅ Firm registration synced to AWS');
+      return true;
+    } catch (e) {
+      print('🔴 AWS sync failed (will retry later): $e');
+      return false;
+    }
   }
 }

@@ -210,7 +210,7 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
       final userData = {
         'userId': userId,
         'firmId': _generatedFirmId,
-        'name': _adminNameCtrl.text.trim(),
+        'username': _adminNameCtrl.text.trim(), // FIX: DB uses 'username' not 'name'
         'mobile': _adminMobileCtrl.text.trim(),
         'role': 'Admin',
         'permissions': 'ORDERS,INVENTORY,KITCHEN,FINANCE,REPORTS,SETTINGS',
@@ -239,15 +239,22 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
       print('DEBUG: Authorized mobile inserted successfully');
 
       // 4. Sync to AWS (if online)
+      print('🔄 Attempting AWS sync for firm: $_generatedFirmId');
       try {
-        await AuthService.registerFirmToAws(
+        final awsSyncResult = await AuthService.registerFirmToAws(
           firmId: _generatedFirmId!,
           firmData: firmData,
           adminData: userData,
         );
-      } catch (e) {
-        // Offline - will sync later
-        print('⚠️ AWS sync pending: $e');
+        if (awsSyncResult) {
+          print('✅ AWS sync SUCCESSFUL for firm: $_generatedFirmId');
+        } else {
+          print('⚠️ AWS sync returned false for firm: $_generatedFirmId');
+        }
+      } catch (e, stack) {
+        // Offline or CORS error - will sync later
+        print('🔴 AWS sync FAILED: $e');
+        print('🔴 Stack trace: $stack');
       }
 
       _showSuccess('Firm created successfully!');
