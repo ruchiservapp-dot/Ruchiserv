@@ -44,11 +44,12 @@ class AppConfig {
   static bool get isCashfreeConfigured => 
       cashfreeAppId.isNotEmpty && cashfreeSecretKey.isNotEmpty;
 
-  // ========== 2FACTOR OTP SERVICE ==========
-  
   /// 2Factor.in API Key
-  static String get twoFactorApiKey => 
-      const String.fromEnvironment('TWOFACTOR_API_KEY', defaultValue: '');
+  static String get twoFactorApiKey {
+    const envKey = String.fromEnvironment('TWOFACTOR_API_KEY', defaultValue: '');
+    // Fallback to hardcoded key for development builds
+    return envKey.isNotEmpty ? envKey : '383edc87-bd32-11f0-bdde-0200cd936042';
+  }
 
   /// Check if 2Factor is properly configured
   static bool get isTwoFactorConfigured => twoFactorApiKey.isNotEmpty;
