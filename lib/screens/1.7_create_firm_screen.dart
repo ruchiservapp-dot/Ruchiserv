@@ -1,0 +1,884 @@
+// lib/screens/1.7_create_firm_screen.dart
+// New Firm Registration - Self-service firm creation with OTP verification
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/otp_service.dart';
+import '../services/auth_service.dart';
+import '../db/database_helper.dart';
+
+class CreateFirmScreen extends StatefulWidget {
+  const CreateFirmScreen({super.key});
+
+  @override
+  State<CreateFirmScreen> createState() => _CreateFirmScreenState();
+}
+
+class _CreateFirmScreenState extends State<CreateFirmScreen> {
+  final _formKey = GlobalKey<FormState>();
+  int _currentStep = 0;
+  bool _isLoading = false;
+  String? _otpSessionId;
+  String? _generatedFirmId;
+
+  // Step 1: Firm Details
+  final _firmNameCtrl = TextEditingController();
+  final _firmMobileCtrl = TextEditingController();
+  final _firmAddressCtrl = TextEditingController();
+  final _firmGstinCtrl = TextEditingController();
+  final _firmEmailCtrl = TextEditingController();
+  String _businessType = 'Caterer';
+
+  // Step 2: Admin Details
+  final _adminNameCtrl = TextEditingController();
+  final _adminMobileCtrl = TextEditingController();
+
+  // Step 3: OTP
+  final _otpCtrl = TextEditingController();
+
+  // Step 4: Password
+  final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
+  final List<String> _businessTypes = [
+    'Caterer',
+    'Restaurant',
+    'Cloud Kitchen',
+    'Event Management',
+    'Food Truck',
+    'Tiffin Service',
+    'Other',
+  ];
+
+  @override
+  void dispose() {
+    _firmNameCtrl.dispose();
+    _firmMobileCtrl.dispose();
+    _firmAddressCtrl.dispose();
+    _firmGstinCtrl.dispose();
+    _firmEmailCtrl.dispose();
+    _adminNameCtrl.dispose();
+    _adminMobileCtrl.dispose();
+    _otpCtrl.dispose();
+    _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Generate unique Firm ID (RUCH + 4 random alphanumeric)
+  String _generateFirmId() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random();
+    final suffix = List.generate(4, (_) => chars[random.nextInt(chars.length)]).join();
+    return 'RUCH$suffix';
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccess(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  /// Step 1 → Step 2: Validate firm details
+  Future<void> _proceedToAdminDetails() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    // Generate Firm ID
+    _generatedFirmId = _generateFirmId();
+    
+    // Pre-fill admin mobile with firm mobile if same person
+    if (_adminMobileCtrl.text.isEmpty) {
+      _adminMobileCtrl.text = _firmMobileCtrl.text;
+    }
+
+    setState(() => _currentStep = 1);
+  }
+
+  /// Step 2 → Step 3: Send OTP
+  Future<void> _sendOtp() async {
+    if (_adminNameCtrl.text.trim().isEmpty) {
+      _showError('Please enter admin name');
+      return;
+    }
+    if (_adminMobileCtrl.text.trim().length < 10) {
+      _showError('Please enter valid mobile number');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final otpId = await OtpService.sendOtp(mobile: _adminMobileCtrl.text.trim());
+      if (otpId == null || otpId.isEmpty) {
+        _showError('Failed to send OTP. Please try again.');
+        return;
+      }
+
+      _otpSessionId = otpId;
+      _showSuccess('OTP sent to ${_adminMobileCtrl.text}');
+      setState(() => _currentStep = 2);
+    } catch (e) {
+      _showError('Error sending OTP: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /// Step 3 → Step 4: Verify OTP
+  Future<void> _verifyOtp() async {
+    if (_otpCtrl.text.trim().length < 4) {
+      _showError('Please enter valid OTP');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final verified = await OtpService.verifyOtp(
+        sessionId: _otpSessionId!,
+        otp: _otpCtrl.text.trim(),
+      );
+
+      if (!verified) {
+        _showError('Invalid OTP. Please try again.');
+        return;
+      }
+
+      _showSuccess('Mobile verified successfully!');
+      setState(() => _currentStep = 3);
+    } catch (e) {
+      _showError('Error verifying OTP: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /// Step 4: Create Firm & Admin
+  Future<void> _createFirmAndAdmin() async {
+    final password = _passwordCtrl.text.trim();
+    final confirmPassword = _confirmPasswordCtrl.text.trim();
+
+    if (password.length < 4) {
+      _showError('Password must be at least 4 characters');
+      return;
+    }
+    if (password != confirmPassword) {
+      _showError('Passwords do not match');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final db = DatabaseHelper();
+      final now = DateTime.now().toIso8601String();
+      final trialEnd = DateTime.now().add(const Duration(days: 7)).toIso8601String();
+
+      // 1. Create Firm - use only columns that exist in schema
+      final firmData = {
+        'firmId': _generatedFirmId,
+        'firmName': _firmNameCtrl.text.trim(), // FIX: Use firmName not name
+        'mobile': _firmMobileCtrl.text.trim(),
+        'address': _firmAddressCtrl.text.trim(),
+        'gstin': _firmGstinCtrl.text.trim(),
+        'subscriptionStatus': 'ACTIVE',
+        'subscriptionPlan': 'FREE_TRIAL',
+        'subscriptionExpiry': trialEnd,
+        'createdAt': now,
+        'updatedAt': now,
+      };
+
+      print('DEBUG: Inserting firm: $firmData');
+      await db.insertFirm(firmData);
+      print('DEBUG: Firm inserted successfully');
+
+      // 2. Create Admin User
+      final userId = 'USR${_generatedFirmId}_ADMIN';
+      final userData = {
+        'userId': userId,
+        'firmId': _generatedFirmId,
+        'name': _adminNameCtrl.text.trim(),
+        'mobile': _adminMobileCtrl.text.trim(),
+        'role': 'Admin',
+        'permissions': 'ORDERS,INVENTORY,KITCHEN,FINANCE,REPORTS,SETTINGS',
+        'passwordHash': password, // Used by auth_service for login
+        'isActive': 1,
+        'createdAt': now,
+        'updatedAt': now,
+      };
+
+      print('DEBUG: Inserting user: $userData');
+      final database = await db.database;
+      await database.insert('users', userData);
+      print('DEBUG: User inserted successfully');
+
+      // 3. Add to authorized_mobiles for this firm
+      final authMobile = {
+        'firmId': _generatedFirmId,
+        'mobile': _adminMobileCtrl.text.trim(),
+        'role': 'Admin',
+        'name': _adminNameCtrl.text.trim(),
+        'isActive': 1, // Required for login authorization check
+        'addedBy': 'SELF_REGISTRATION',
+        'addedAt': now,
+      };
+      print('DEBUG: Inserting authorized_mobile: $authMobile');
+      await database.insert('authorized_mobiles', authMobile);
+      print('DEBUG: Authorized mobile inserted successfully');
+
+      // 4. Sync to AWS (if online)
+      try {
+        await AuthService.registerFirmToAws(
+          firmId: _generatedFirmId!,
+          firmData: firmData,
+          adminData: userData,
+        );
+      } catch (e) {
+        // Offline - will sync later
+        print('⚠️ AWS sync pending: $e');
+      }
+
+      _showSuccess('Firm created successfully!');
+
+      if (!mounted) return;
+
+      // Show success dialog with Firm ID and copy option
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 32),
+              SizedBox(width: 12),
+              Expanded(child: Text('Registration Complete!')),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade300),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.warning_amber, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '⚠️ SAVE THESE CREDENTIALS!\nYou will need them to login.',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _credentialRow(ctx, 'Firm ID', _generatedFirmId!),
+                      const Divider(),
+                      _credentialRow(ctx, 'Mobile', _adminMobileCtrl.text),
+                      const Divider(),
+                      _credentialRow(ctx, 'Password', password),
+                      const Divider(),
+                      _infoRow('Trial Ends', '${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().add(const Duration(days: 7)).month}/${DateTime.now().add(const Duration(days: 7)).year}'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Copy All Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      final text = '''
+RuchiServ Login Credentials
+Firm ID: $_generatedFirmId
+Mobile: ${_adminMobileCtrl.text}
+Password: $password
+Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().add(const Duration(days: 7)).month}/${DateTime.now().add(const Duration(days: 7)).year}
+''';
+                      Clipboard.setData(ClipboardData(text: text));
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(
+                          content: Text('✓ Credentials copied to clipboard!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_all),
+                    label: const Text('Copy All Credentials'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton.icon(
+              onPressed: () async {
+                // Save credentials for auto-fill on login screen
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('pending_login_firmId', _generatedFirmId!);
+                await prefs.setString('pending_login_mobile', _adminMobileCtrl.text.trim());
+                await prefs.setString('pending_login_password', password);
+                
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx); // Close dialog
+                Navigator.pop(context, true); // Return to login
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              icon: const Icon(Icons.login),
+              label: const Text('Go to Login'),
+            ),
+          ],
+        ),
+      );
+
+    } catch (e) {
+      _showError('Error creating firm: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        SelectableText(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _credentialRow(BuildContext ctx, String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+        IconButton(
+          icon: const Icon(Icons.copy, size: 20),
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: value));
+            ScaffoldMessenger.of(ctx).showSnackBar(
+              SnackBar(
+                content: Text('$label copied!'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
+          tooltip: 'Copy $label',
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Your Firm'),
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // Progress indicator
+          _buildProgressBar(),
+          
+          // Form content
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: _buildCurrentStep(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    final steps = ['Firm', 'Admin', 'OTP', 'Password'];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      color: Theme.of(context).primaryColor.withOpacity(0.1),
+      child: Row(
+        children: List.generate(steps.length, (index) {
+          final isActive = index <= _currentStep;
+          final isComplete = index < _currentStep;
+          return Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                  ),
+                  child: Center(
+                    child: isComplete
+                        ? const Icon(Icons.check, size: 16, color: Colors.white)
+                        : Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              color: isActive ? Colors.white : Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                  ),
+                ),
+                if (index < steps.length - 1)
+                  Expanded(
+                    child: Container(
+                      height: 3,
+                      color: isComplete ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        return _buildFirmDetailsStep();
+      case 1:
+        return _buildAdminDetailsStep();
+      case 2:
+        return _buildOtpStep();
+      case 3:
+        return _buildPasswordStep();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildFirmDetailsStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Step 1: Business Details',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Enter your business information to get started',
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 24),
+
+        // Firm Name
+        TextFormField(
+          controller: _firmNameCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Business Name *',
+            hintText: 'e.g., Shree Krishna Caterers',
+            prefixIcon: Icon(Icons.business),
+            border: OutlineInputBorder(),
+          ),
+          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+          textCapitalization: TextCapitalization.words,
+        ),
+        const SizedBox(height: 16),
+
+        // Business Type
+        DropdownButtonFormField<String>(
+          value: _businessType,
+          decoration: const InputDecoration(
+            labelText: 'Business Type',
+            prefixIcon: Icon(Icons.category),
+            border: OutlineInputBorder(),
+          ),
+          items: _businessTypes.map((type) => DropdownMenuItem(
+            value: type,
+            child: Text(type),
+          )).toList(),
+          onChanged: (v) => setState(() => _businessType = v ?? 'Caterer'),
+        ),
+        const SizedBox(height: 16),
+
+        // Mobile
+        TextFormField(
+          controller: _firmMobileCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Business Mobile *',
+            hintText: '10-digit mobile number',
+            prefixIcon: Icon(Icons.phone),
+            prefixText: '+91 ',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.phone,
+          maxLength: 10,
+          validator: (v) => (v == null || v.trim().length != 10) ? 'Enter valid 10-digit mobile' : null,
+        ),
+        const SizedBox(height: 16),
+
+        // Email (Optional)
+        TextFormField(
+          controller: _firmEmailCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Email (Optional)',
+            hintText: 'business@example.com',
+            prefixIcon: Icon(Icons.email),
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.emailAddress,
+        ),
+        const SizedBox(height: 16),
+
+        // Address (Optional)
+        TextFormField(
+          controller: _firmAddressCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Business Address (Optional)',
+            hintText: 'Street, City, State',
+            prefixIcon: Icon(Icons.location_on),
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 2,
+        ),
+        const SizedBox(height: 16),
+
+        // GSTIN (Optional)
+        TextFormField(
+          controller: _firmGstinCtrl,
+          decoration: const InputDecoration(
+            labelText: 'GSTIN (Optional)',
+            hintText: '22AAAAA0000A1Z5',
+            prefixIcon: Icon(Icons.receipt_long),
+            border: OutlineInputBorder(),
+          ),
+          textCapitalization: TextCapitalization.characters,
+          maxLength: 15,
+        ),
+        const SizedBox(height: 32),
+
+        // Next Button
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: _proceedToAdminDetails,
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('NEXT: Admin Details'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdminDetailsStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Step 2: Admin Details',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'This will be the primary admin account',
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 24),
+
+        // Generated Firm ID Preview
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.green.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.verified, color: Colors.green.shade700),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Your Firm ID', style: TextStyle(fontSize: 12)),
+                  Text(
+                    _generatedFirmId ?? 'Generating...',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Admin Name
+        TextFormField(
+          controller: _adminNameCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Admin Name *',
+            hintText: 'Your full name',
+            prefixIcon: Icon(Icons.person),
+            border: OutlineInputBorder(),
+          ),
+          textCapitalization: TextCapitalization.words,
+        ),
+        const SizedBox(height: 16),
+
+        // Admin Mobile
+        TextFormField(
+          controller: _adminMobileCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Admin Mobile *',
+            hintText: 'OTP will be sent here',
+            prefixIcon: Icon(Icons.phone_android),
+            prefixText: '+91 ',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.phone,
+          maxLength: 10,
+        ),
+        const SizedBox(height: 32),
+
+        // Buttons
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => setState(() => _currentStep = 0),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Back'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _sendOtp,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.sms),
+                label: Text(_isLoading ? 'Sending...' : 'Send OTP'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtpStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Step 3: Verify Mobile',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Enter the OTP sent to ${_adminMobileCtrl.text}',
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 24),
+
+        // OTP Field
+        TextFormField(
+          controller: _otpCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Enter OTP *',
+            hintText: '6-digit code',
+            prefixIcon: Icon(Icons.lock_clock),
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+
+        // Resend OTP
+        TextButton.icon(
+          onPressed: _isLoading ? null : _sendOtp,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Resend OTP'),
+        ),
+        const SizedBox(height: 32),
+
+        // Buttons
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => setState(() => _currentStep = 1),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Back'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _verifyOtp,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.verified),
+                label: Text(_isLoading ? 'Verifying...' : 'Verify OTP'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Step 4: Set Password',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Create a secure password for your account',
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 24),
+
+        // Password
+        TextFormField(
+          controller: _passwordCtrl,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: 'Password *',
+            hintText: 'Minimum 4 characters',
+            prefixIcon: const Icon(Icons.lock),
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Confirm Password
+        TextFormField(
+          controller: _confirmPasswordCtrl,
+          obscureText: _obscureConfirmPassword,
+          decoration: InputDecoration(
+            labelText: 'Confirm Password *',
+            hintText: 'Re-enter password',
+            prefixIcon: const Icon(Icons.lock_outline),
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
+              onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+
+        // Create Firm Button
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: _isLoading ? null : _createFirmAndAdmin,
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.rocket_launch),
+            label: Text(_isLoading ? 'Creating...' : 'CREATE FIRM & START TRIAL'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Terms
+        Text(
+          'By creating an account, you agree to our Terms of Service and Privacy Policy.',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}

@@ -24,7 +24,7 @@ class AppSchema {
       columns: {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'firmId': 'TEXT NOT NULL UNIQUE',
-        'name': 'TEXT NOT NULL DEFAULT "My Firm"',
+        'firmName': 'TEXT NOT NULL DEFAULT \"My Firm\"',
         'mobile': 'TEXT',
         'address': 'TEXT',
         'gstin': 'TEXT',
@@ -47,6 +47,7 @@ class AppSchema {
         'firmId': 'TEXT NOT NULL',
         'name': 'TEXT NOT NULL DEFAULT "User"',
         'mobile': 'TEXT NOT NULL',
+        'passwordHash': 'TEXT', // For local login authentication
         'role': 'TEXT NOT NULL', // ADMIN, MANAGER, STAFF
         'permissions': 'TEXT', // JSON array of permissions
         'isActive': 'INTEGER DEFAULT 1',
@@ -65,6 +66,7 @@ class AppSchema {
         'mobile': 'TEXT NOT NULL',
         'role': 'TEXT',
         'name': 'TEXT',
+        'isActive': 'INTEGER DEFAULT 1', // Required for isMobileAuthorized check
         'addedBy': 'TEXT',
         'addedAt': 'TEXT',
       },
@@ -164,8 +166,10 @@ class AppSchema {
         'updatedAt': 'TEXT',
         'lockedAt': 'TEXT',
         'mrpRunId': 'INTEGER',
-        'mrpStatus': 'TEXT DEFAULT "PENDING"', // PENDING, MRP_DONE, PO_SENT, PROCESSED
+        'mrpStatus': 'TEXT DEFAULT "PENDING"', // PENDING, MRP_DONE, PO_SENT, CANCELLED
         'isLocked': 'INTEGER DEFAULT 0',
+        'cancelReason': 'TEXT', // v35: For MRP cancel with reason
+        'cancelledAt': 'TEXT', // v35: Timestamp of cancellation
         
         // Legacy Columns (Active in Code)
         'date': 'TEXT', 
@@ -186,6 +190,7 @@ class AppSchema {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'orderId': 'INTEGER NOT NULL',
         'dishId': 'INTEGER', // Optional/Deprecated in favor of name?
+        'dishMasterId': 'INTEGER', // v35: Link to dish_master.id for ID-based BOM lookup
         'dishName': 'TEXT NOT NULL DEFAULT "Dish"',
         'category': 'TEXT',
         'pax': 'INTEGER',
@@ -359,7 +364,10 @@ class AppSchema {
         'isSubcontracted': 'INTEGER DEFAULT 0',
         'subcontractorId': 'INTEGER',
       },
-      constraints: ['UNIQUE(mrpRunId, orderId)'],
+      constraints: [
+        'UNIQUE(mrpRunId, orderId)',
+        'UNIQUE(orderId)', // v35: Prevent same order in multiple runs
+      ],
     ),
 
     // 18. MRP Output
@@ -379,6 +387,9 @@ class AppSchema {
         'allocationStatus': 'TEXT DEFAULT "PENDING"', // v27: PENDING, ALLOCATED, PO_SENT
         'supplierId': 'INTEGER', // v27: Assigned supplier ID
         'poId': 'INTEGER', // v27: Link to purchase_orders.id
+        // v35: Audit/debugging columns
+        'originalQty': 'REAL', // Before normalization
+        'roundedQty': 'REAL', // After rounding (for audit)
       },
     ),
 
@@ -393,10 +404,13 @@ class AppSchema {
         'mobile': 'TEXT',
         'email': 'TEXT',
         'address': 'TEXT',
-        'gstin': 'TEXT',
+        'gstNumber': 'TEXT',
         'category': 'TEXT',
         'notes': 'TEXT',
         'rating': 'REAL DEFAULT 0',
+        'bankAccountNo': 'TEXT',
+        'bankIfsc': 'TEXT',
+        'bankName': 'TEXT',
         'isActive': 'INTEGER DEFAULT 1',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
@@ -515,6 +529,83 @@ class AppSchema {
         'isPaid': 'INTEGER DEFAULT 0',
         'paidAt': 'TEXT',
       },
+    ),
+
+    // 25. Invoices (GST-Compliant Billing)
+    TableSchema(
+      tableName: 'invoices',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'firmId': 'TEXT NOT NULL',
+        'invoiceNumber': 'TEXT NOT NULL', // Format: inv-YYYY-MM-NNN
+        'orderId': 'INTEGER', // Link to orders table (auto-generated from order)
+        'customerId': 'INTEGER NOT NULL',
+        'customerName': 'TEXT',
+        'customerAddress': 'TEXT',
+        'customerGstin': 'TEXT',
+        'customerMobile': 'TEXT',
+        'invoiceDate': 'TEXT NOT NULL',
+        'dueDate': 'TEXT', // Invoice date + 7 days
+        'subtotal': 'REAL DEFAULT 0',
+        'cgst': 'REAL DEFAULT 0', // Central GST (intra-state)
+        'sgst': 'REAL DEFAULT 0', // State GST (intra-state)
+        'igst': 'REAL DEFAULT 0', // Integrated GST (inter-state)
+        'totalAmount': 'REAL DEFAULT 0',
+        'amountPaid': 'REAL DEFAULT 0',
+        'balanceDue': 'REAL DEFAULT 0',
+        'status': 'TEXT DEFAULT "UNPAID"', // DRAFT, UNPAID, PARTIAL, PAID, CANCELLED
+        'paymentMode': 'TEXT', // Cash, UPI, Bank Transfer, etc.
+        'notes': 'TEXT',
+        'termsAndConditions': 'TEXT',
+        'createdAt': 'TEXT',
+        'updatedAt': 'TEXT',
+      },
+      constraints: ['UNIQUE(firmId, invoiceNumber)'],
+    ),
+
+    // 26. Invoice Items (Line Items)
+    TableSchema(
+      tableName: 'invoice_items',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'invoiceId': 'INTEGER NOT NULL',
+        'description': 'TEXT NOT NULL', // Dish name, service description
+        'hsnCode': 'TEXT', // HSN/SAC code for GST
+        'quantity': 'REAL DEFAULT 1',
+        'unit': 'TEXT DEFAULT "pcs"', // pcs, kg, plates, etc.
+        'rate': 'REAL DEFAULT 0', // Price per unit
+        'amount': 'REAL DEFAULT 0', // quantity * rate
+        'gstRate': 'REAL DEFAULT 18', // 0, 5, 12, 18, 28%
+        'cgst': 'REAL DEFAULT 0',
+        'sgst': 'REAL DEFAULT 0',
+        'igst': 'REAL DEFAULT 0',
+        'totalAmount': 'REAL DEFAULT 0', // amount + taxes
+      },
+      constraints: ['FOREIGN KEY(invoiceId) REFERENCES invoices(id) ON DELETE CASCADE'],
+    ),
+
+    // 27. Salary Disbursements (Salary Payment Tracking)
+    TableSchema(
+      tableName: 'salary_disbursements',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'firmId': 'TEXT NOT NULL',
+        'staffId': 'INTEGER NOT NULL',
+        'monthYear': 'TEXT NOT NULL', // Format: 2024-12
+        'basePay': 'REAL DEFAULT 0',
+        'otPay': 'REAL DEFAULT 0',
+        'deductions': 'REAL DEFAULT 0',
+        'netPay': 'REAL DEFAULT 0',
+        'status': 'TEXT DEFAULT "PENDING"', // PENDING, PAID
+        'paymentMode': 'TEXT', // CASH, BANK, UPI
+        'paymentRef': 'TEXT', // Transaction reference
+        'paidAt': 'TEXT',
+        'paidBy': 'TEXT',
+        'notes': 'TEXT',
+        'createdAt': 'TEXT',
+        'updatedAt': 'TEXT',
+      },
+      constraints: ['UNIQUE(staffId, monthYear)'],
     ),
   ];
 }

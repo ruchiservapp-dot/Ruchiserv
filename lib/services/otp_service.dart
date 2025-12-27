@@ -17,24 +17,30 @@ class OtpService {
     String? templateName,   // optional, if you use a custom template name
   }) async {
     final apiKey = twoFactorApiKey; // from secrets.dart
+    
+    // MOCK MODE: If API key not configured, return mock session for testing
+    // Users can verify with OTP "1234"
     if (apiKey.isEmpty) {
-      debugPrint('OtpService: missing 2Factor API key');
-      return null;
+      debugPrint('🔶 OtpService: 2Factor API key not configured. Using MOCK mode.');
+      debugPrint('🔶 OtpService: Enter OTP "1234" to verify.');
+      return 'MOCK_SESSION_${DateTime.now().millisecondsSinceEpoch}';
     }
 
     // AUTOGEN endpoint: /{APIKEY}/SMS/{MOBILE}/AUTOGEN[/TEMPLATE]
-    // If you don’t use a template, omit it.
+    // If you don't use a template, omit it.
     final path = templateName == null || templateName.trim().isEmpty
         ? '$_base/$apiKey/SMS/$mobile/AUTOGEN'
         : '$_base/$apiKey/SMS/$mobile/AUTOGEN/$templateName';
 
-    print('OtpService: Sending OTP to $mobile via $path');
+    print('OtpService: Sending OTP to $mobile via 2Factor.in');
     try {
       final resp = await http.get(Uri.parse(path)); // 2Factor often prefers GET
-      print('OtpService: Response ${resp.statusCode} body: ${resp.body}');
+      print('OtpService: Response ${resp.statusCode}');
+      print('OtpService: Response Body: ${resp.body}'); // DEBUG: Full response
 
       if (resp.statusCode == 200) {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;
+        print('OtpService: Status=${json['Status']}, Details=${json['Details']}'); // DEBUG
         if ((json['Status'] ?? '').toString().toLowerCase() == 'success') {
           return json['Details']?.toString(); // <-- sessionId
         } else {
@@ -52,11 +58,17 @@ class OtpService {
     required String sessionId,
     required String otp,
   }) async {
-    final apiKey = twoFactorApiKey;
-    if (apiKey.isEmpty) return false;
+    // MOCK MODE: Allow 1234 for testing (must check BEFORE api key check)
+    if (otp == '1234') {
+      debugPrint('🔶 OtpService: Mock OTP "1234" accepted');
+      return true;
+    }
 
-    // MOCK: Allow 1234 for testing
-    if (otp == '1234') return true;
+    final apiKey = twoFactorApiKey;
+    if (apiKey.isEmpty) {
+      debugPrint('🔴 OtpService: API key not configured and OTP was not "1234"');
+      return false;
+    }
 
     // VERIFY endpoint: /{APIKEY}/SMS/VERIFY/{SESSION}/{OTP}
     final url = '$_base/$apiKey/SMS/VERIFY/$sessionId/$otp';
