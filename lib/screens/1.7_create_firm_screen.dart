@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/otp_service.dart';
 import '../services/auth_service.dart';
 import '../db/database_helper.dart';
+import 'package:sqflite/sqflite.dart'; // For ConflictAlgorithm
 
 class CreateFirmScreen extends StatefulWidget {
   const CreateFirmScreen({super.key});
@@ -200,7 +201,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
       };
 
       print('DEBUG: Inserting firm: $firmData');
-      await db.insertFirm(firmData);
+      final database = await db.database;
+      await database.insert('firms', firmData, conflictAlgorithm: ConflictAlgorithm.replace);
       print('DEBUG: Firm inserted successfully');
 
       // 2. Create Admin User
@@ -219,8 +221,7 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
       };
 
       print('DEBUG: Inserting user: $userData');
-      final database = await db.database;
-      await database.insert('users', userData);
+      await database.insert('users', userData, conflictAlgorithm: ConflictAlgorithm.replace);
       print('DEBUG: User inserted successfully');
 
       // 3. Add to authorized_mobiles for this firm
@@ -234,7 +235,7 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
         'addedAt': now,
       };
       print('DEBUG: Inserting authorized_mobile: $authMobile');
-      await database.insert('authorized_mobiles', authMobile);
+      await database.insert('authorized_mobiles', authMobile, conflictAlgorithm: ConflictAlgorithm.replace);
       print('DEBUG: Authorized mobile inserted successfully');
 
       // 4. Sync to AWS (if online)
