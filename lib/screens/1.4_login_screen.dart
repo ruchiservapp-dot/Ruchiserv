@@ -15,6 +15,7 @@ import '2.0_orders_calendar_screen.dart';
 import 'main_menu_screen.dart';
 import '1.6_register_choice.dart';
 import '1.7_forgot_password.dart';
+import '1.7_create_firm_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,7 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _biometricAvailable = false;
 
   @override
-  @override
   void initState() {
     super.initState();
     _initAsync();
@@ -46,6 +46,41 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _prefill() async {
     final sp = await SharedPreferences.getInstance();
+    
+    // Check for pending registration credentials (highest priority)
+    final pendingFirmId = sp.getString('pending_login_firmId');
+    final pendingMobile = sp.getString('pending_login_mobile');
+    final pendingPassword = sp.getString('pending_login_password');
+    
+    if (pendingFirmId != null && pendingFirmId.isNotEmpty) {
+      // Auto-fill from recent registration
+      _firmCtrl.text = pendingFirmId;
+      if (pendingMobile != null && pendingMobile.isNotEmpty) {
+        _mobileCtrl.text = pendingMobile;
+      }
+      if (pendingPassword != null && pendingPassword.isNotEmpty) {
+        _passCtrl.text = pendingPassword;
+      }
+      
+      // Clear pending credentials after use (one-time auto-fill)
+      await sp.remove('pending_login_firmId');
+      await sp.remove('pending_login_mobile');
+      await sp.remove('pending_login_password');
+      
+      if (!mounted) return;
+      
+      // Show hint that credentials are pre-filled
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Credentials pre-filled. Tap Login to continue.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+    
+    // Fallback to last login credentials
     final lastMobile = sp.getString('auth_mobile');
     final lastFirm = sp.getString('last_firm');
     final lastMobileBiometric = sp.getString('last_mobile');
@@ -143,13 +178,51 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
+      String? errorType;
+      
+      if (!allowed) {
+        // Get detailed error info (and attempt AWS sync if firm missing)
+        final result = await AuthService.loginOfflineWithDetails(
+          firmId: firmId,
+          mobile: mobile,
+          password: pass,
+        );
+        
+        if (result['success'] == true) {
+          allowed = true; // Sync succeeded and password matched!
+          await AuthService.stampLocalLogin(online: online);
+        } else {
+           errorType = result['error']?.toString();
+        }
+      }
+
       if (!allowed) {
         if (!mounted) return;
+        
+        String errorMessage;
+        switch (errorType) {
+          case 'firm_not_found':
+            errorMessage = 'Firm ID "$firmId" not found. Please check the Firm ID.';
+            break;
+          case 'mobile_not_found':
+            errorMessage = 'Mobile number not registered for this firm.';
+            break;
+          case 'wrong_password':
+            errorMessage = 'Incorrect password. Please try again.';
+            break;
+          case 'access_revoked':
+            errorMessage = 'Access revoked. Contact your firm admin.';
+            break;
+          default:
+            errorMessage = online
+                ? AppLocalizations.of(context)!.invalidCredentials
+                : AppLocalizations.of(context)!.offlineLoginNotAllowed;
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(online
-                ? AppLocalizations.of(context)!.invalidCredentials
-                : AppLocalizations.of(context)!.offlineLoginNotAllowed),
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
           ),
         );
         return;
@@ -339,6 +412,90 @@ class _LoginScreenState extends State<LoginScreen> {
     return sp.getBool('biometric_enabled') ?? false;
   }
 
+  /// Show dialog for registration options: Create New Firm or Join Existing
+  void _showRegistrationChoiceDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Choose Registration Type',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Are you a new business or joining an existing one?',
+              style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            
+            // Option 1: Create New Firm
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.add_business, color: Colors.green.shade700, size: 28),
+              ),
+              title: const Text('Create New Firm', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Start fresh with 7-day free trial'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateFirmScreen()),
+                );
+              },
+            ),
+            const Divider(height: 24),
+            
+            // Option 2: Join Existing Firm
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.group_add, color: Colors.blue.shade700, size: 28),
+              ),
+              title: const Text('Join Existing Firm', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('You have a Firm ID from admin'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterChoiceScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -380,6 +537,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Firm ID
                     TextFormField(
+                      key: const Key('firmIdField'),
                       controller: _firmCtrl,
                       textInputAction: TextInputAction.next,
                       style: TextStyle(color: textColor),
@@ -409,6 +567,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Mobile
                     TextFormField(
+                      key: const Key('mobileField'),
                       controller: _mobileCtrl,
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
@@ -438,6 +597,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Password
                     TextFormField(
+                      key: const Key('passwordField'),
                       controller: _passCtrl,
                       obscureText: true,
                       style: TextStyle(color: textColor),
@@ -469,6 +629,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         : SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
+                              key: const Key('loginBtn'),
                               onPressed: _login,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
@@ -516,12 +677,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const RegisterChoiceScreen()),
-                            );
-                          },
+                          onPressed: () => _showRegistrationChoiceDialog(),
                           child: Text(AppLocalizations.of(context)!.register, style: TextStyle(color: textColor)),
                         ),
                         TextButton(

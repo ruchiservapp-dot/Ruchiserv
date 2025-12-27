@@ -45,7 +45,7 @@ class AppSchema {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'userId': 'TEXT NOT NULL UNIQUE',
         'firmId': 'TEXT NOT NULL',
-        'name': 'TEXT NOT NULL DEFAULT "User"',
+        'username': 'TEXT NOT NULL DEFAULT "User"',
         'mobile': 'TEXT NOT NULL',
         'passwordHash': 'TEXT', // For local login authentication
         'role': 'TEXT NOT NULL', // ADMIN, MANAGER, STAFF
