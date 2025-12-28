@@ -382,7 +382,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       };
 
       // prepare dishes payload
-      final dishRows = allValidDishes.map((d) => {
+      final dishRows = allValidDishes.map((d) {
+        return {
             'name': d['name'],
             'foodType': d['foodType'] ?? _foodType,
             'pax': _parseInt(d['pax']) ?? 0, // Pax is int
@@ -390,7 +391,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
             'manualCost': 0,
             'cost': d['cost'] ?? 0, // Maintain double precision
             'category': d['category'],
-          }).toList();
+          };
+      }).toList();
 
       if (widget.existingOrder != null) {
         await DatabaseHelper().updateOrder(

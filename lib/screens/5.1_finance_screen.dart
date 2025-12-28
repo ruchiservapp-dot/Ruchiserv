@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '5.2_transactions_screen.dart';
 import '5.3_ledger_screen.dart';
+import '5.4_invoices_screen.dart';
 import 'report_preview_page.dart';
 import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
@@ -19,8 +21,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
   
   double _totalIncome = 0;
   double _totalExpense = 0;
+  double _totalAR = 0; // Accounts Receivable
+  double _totalAP = 0; // Accounts Payable
   List<Map<String, dynamic>> _recentTransactions = [];
   bool _isLoading = true;
+  String _firmId = 'DEFAULT';
 
   @override
   void initState() {
@@ -68,15 +73,26 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+    
+    // Load firm ID
+    final prefs = await SharedPreferences.getInstance();
+    _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
+    
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
 
-    final summary = await DatabaseHelper().getFinanceSummary('DEFAULT', startStr, endStr);
+    final summary = await DatabaseHelper().getFinanceSummary(_firmId, startStr, endStr);
     final recent = await DatabaseHelper().getTransactions(limit: 5);
+    
+    // Load AR/AP totals
+    final arTotal = await DatabaseHelper().getTotalAR(_firmId);
+    final apTotal = await DatabaseHelper().getTotalAP(_firmId);
 
     setState(() {
       _totalIncome = summary['income'] ?? 0;
       _totalExpense = summary['expense'] ?? 0;
+      _totalAR = arTotal;
+      _totalAP = apTotal;
       _recentTransactions = recent;
       _isLoading = false;
     });
@@ -203,12 +219,83 @@ class _FinanceScreenState extends State<FinanceScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // AR/AP Summary Cards
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      color: Colors.blue.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.arrow_downward, color: Colors.blue.shade700, size: 18),
+                                const SizedBox(width: 4),
+                                Text('Receivables', style: TextStyle(color: Colors.blue.shade700, fontSize: 12)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "₹${_totalAR.toStringAsFixed(0)}",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade800),
+                            ),
+                            Text('Outstanding AR', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Card(
+                      color: Colors.orange.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.arrow_upward, color: Colors.orange.shade700, size: 18),
+                                const SizedBox(width: 4),
+                                Text('Payables', style: TextStyle(color: Colors.orange.shade700, fontSize: 12)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "₹${_totalAP.toStringAsFixed(0)}",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+                            ),
+                            Text('Outstanding AP', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
 
-              // Quick Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              // Quick Actions - Now 4 buttons in 2 rows
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.spaceEvenly,
                 children: [
+                  _buildActionButton(
+                    'Invoices',
+                    Icons.receipt_long,
+                    Colors.indigo,
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const InvoicesScreen()),
+                    ).then((_) => _loadData()),
+                  ),
                   _buildActionButton(
                     AppLocalizations.of(context)!.transactions,
                     Icons.list_alt,

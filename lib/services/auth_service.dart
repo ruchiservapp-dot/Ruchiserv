@@ -1,5 +1,8 @@
 // @locked
 // lib/services/auth_service.dart
+// Version: 2.0.0 | Date: 2025-12-28
+// Cross-Platform Sync Fix: Case-sensitivity, username column, AWS user fallback
+// DO NOT MODIFY without explicit approval - critical auth/sync logic
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/aws/aws_api.dart'; // you already have this
 import '../db/database_helper.dart';
@@ -67,6 +70,7 @@ class AuthService {
         return true;
       }
     } catch (e) {
+      print('⚠️ Login Online Failed: $e');
       // fall through to false
     }
     return false;
@@ -203,14 +207,22 @@ class AuthService {
     if (firms.isEmpty) {
       print('⚠️ Firm not found locally, checking AWS...');
       try {
-        final resp = await AwsApi.callDbHandler(
-          method: 'GET',
-          table: 'firms',
-          filters: {'firmid': firmId.toLowerCase()}, // DynamoDB uses lowercase
-        );
+          final resp = await AwsApi.callDbHandler(
+            method: 'GET',
+            table: 'firms',
+            filters: {'firmid': firmId}, // Preserve case - DynamoDB is case-sensitive
+          );
+          print('🔍 AWS Firm Fetch Response: $resp'); // DEBUG log
         
+        Map<String, dynamic>? awsFirm;
         if ((resp['status'] == 'success') && (resp['data'] is List) && (resp['data'] as List).isNotEmpty) {
-          final awsFirm = (resp['data'] as List).first as Map<String, dynamic>;
+          awsFirm = (resp['data'] as List).first as Map<String, dynamic>;
+        } else if (resp['error'] == null && (resp['firmId'] != null || resp['firmid'] != null)) {
+           // Handle direct object return
+           awsFirm = resp;
+        }
+
+        if (awsFirm != null) {
           print('✅ Found firm in AWS: $awsFirm');
           
           // Store in local DB
@@ -231,17 +243,23 @@ class AuthService {
           final userResp = await AwsApi.callDbHandler(
             method: 'GET',
             table: 'users',
-            filters: {'firmid': firmId.toLowerCase(), 'mobile': mobile},
+            filters: {'ruchiserv-firms': firmId, 'mobile': mobile},
           );
           
+          Map<String, dynamic>? awsUser;
           if ((userResp['status'] == 'success') && (userResp['data'] is List) && (userResp['data'] as List).isNotEmpty) {
-            final awsUser = (userResp['data'] as List).first as Map<String, dynamic>;
+             awsUser = (userResp['data'] as List).first as Map<String, dynamic>;
+          } else if (userResp['error'] == null && (userResp['userId'] != null || userResp['userid'] != null)) {
+             awsUser = userResp;
+          }
+
+          if (awsUser != null) {
             print('✅ Found user in AWS: $awsUser');
             
             await database.insert('users', {
               'userId': awsUser['userId'] ?? awsUser['userid'] ?? 'USR_${firmId}_$mobile',
               'firmId': firmId,
-              'name': awsUser['name'] ?? 'User',
+              'username': awsUser['username'] ?? awsUser['name'] ?? 'User',
               'mobile': mobile,
               'role': awsUser['role'] ?? 'Admin',
               'permissions': awsUser['permissions'] ?? 'ALL',
@@ -312,6 +330,72 @@ class AuthService {
     }
     
     if (!mobileFound) {
+      print('✗ Mobile not found locally, checking AWS...');
+      
+      // Try AWS fallback for user
+      try {
+        final userResp = await AwsApi.callDbHandler(
+          method: 'GET',
+          table: 'users',
+          filters: {'ruchiserv-firms': firmId, 'mobile': mobile},
+        );
+        
+        Map<String, dynamic>? awsUser;
+        if ((userResp['status'] == 'success') && (userResp['data'] is List) && (userResp['data'] as List).isNotEmpty) {
+           awsUser = (userResp['data'] as List).first as Map<String, dynamic>;
+        } else if (userResp['error'] == null && (userResp['userId'] != null || userResp['userid'] != null)) {
+           awsUser = userResp;
+        }
+
+        if (awsUser != null) {
+          print('✅ Found user in AWS: $awsUser');
+          
+          // Insert user locally
+          final database = await db.database;
+          await database.insert('users', {
+            'userId': awsUser['userId'] ?? awsUser['userid'] ?? 'USR_${firmId}_$mobile',
+            'firmId': firmId,
+            'username': awsUser['username'] ?? awsUser['name'] ?? 'User',
+            'mobile': mobile,
+            'role': awsUser['role'] ?? 'Admin',
+            'permissions': awsUser['permissions'] ?? 'ALL',
+            'passwordHash': awsUser['passwordHash'] ?? '',
+            'isActive': 1,
+            'createdAt': awsUser['createdAt'] ?? DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+          
+          // Also add to authorized_mobiles
+          await database.insert('authorized_mobiles', {
+            'firmId': firmId,
+            'mobile': mobile,
+            'role': awsUser['role'] ?? 'Admin',
+            'name': awsUser['username'] ?? awsUser['name'] ?? 'User',
+            'isActive': 1,
+            'addedBy': 'AWS_SYNC',
+            'addedAt': DateTime.now().toIso8601String(),
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+          
+          // Now verify password
+          final awsPassword = awsUser['passwordHash']?.toString() ?? '';
+          if (awsPassword == password) {
+            print('✓ Password match from AWS!');
+            
+            // COMPLIANCE: Save user_id for audit trail
+            final sp = await SharedPreferences.getInstance();
+            final userId = awsUser['userId']?.toString() ?? awsUser['userid']?.toString() ?? 'U-$mobile';
+            await sp.setString('user_id', userId);
+            
+            return {'success': true, 'error': null};
+          } else {
+            print('✗ Password mismatch (AWS)');
+            return {'success': false, 'error': 'wrong_password'};
+          }
+        }
+      } catch (e) {
+        print('⚠️ AWS user fetch failed: $e');
+      }
+      
       print('✗ Mobile not found in firm');
       return {'success': false, 'error': 'mobile_not_found'};
     }
@@ -452,11 +536,14 @@ class AuthService {
         final resp = await AwsApi.callDbHandler(
           method: 'GET',
           table: 'firms',
-          filters: {'firmId': firmId},
+          filters: {'firmid': firmId}, // Preserve case - DynamoDB is case-sensitive
         );
         if ((resp['status'] == 'success') &&
             (resp['data'] is List) &&
             (resp['data'] as List).isNotEmpty) {
+          firmFound = true;
+        } else if (resp['error'] == null && (resp['firmId'] != null || resp['firmid'] != null)) {
+          // Direct object return
           firmFound = true;
         }
       } catch (e) {
@@ -474,12 +561,14 @@ class AuthService {
       final resp = await AwsApi.callDbHandler(
         method: 'GET',
         table: 'users',
-        filters: {'firmId': firmId, 'mobile': mobile},
+        filters: {'ruchiserv-firms': firmId, 'mobile': mobile},
       );
       if ((resp['status'] == 'success') &&
           (resp['data'] is List) &&
           (resp['data'] as List).isNotEmpty) {
         mobileFound = true;
+      } else if (resp['error'] == null && (resp['userId'] != null || resp['userid'] != null)) {
+         mobileFound = true;
       } else {
         // Check 'authorized_mobiles' table
         final respAuth = await AwsApi.callDbHandler(
@@ -644,11 +733,10 @@ class AuthService {
     required Map<String, dynamic> adminData,
   }) async {
     try {
-      // Add lowercase 'firmid' for DynamoDB primary key
+      // 1. Create firm in AWS (Multi-Table)
       final awsFirmData = Map<String, dynamic>.from(firmData);
-      awsFirmData['firmid'] = firmId; // DynamoDB uses lowercase
+      awsFirmData['firmid'] = firmId; // DynamoDB likely expects this
       
-      // 1. Create firm in AWS (using PUT for insert/update)
       final firmResp = await AwsApi.callDbHandler(
         method: 'PUT',
         table: 'firms',
@@ -660,12 +748,13 @@ class AuthService {
         print('⚠️ Failed to sync firm to AWS: ${firmResp['error']}');
       }
 
-      // Add lowercase 'userid' for DynamoDB primary key
+      // 2. Create user in AWS (Multi-Table)
+      // FIX: Use discovered keys: PK='ruchiserv-firms', SK='mobile'
       final awsUserData = Map<String, dynamic>.from(adminData);
-      awsUserData['userid'] = adminData['userId']; // DynamoDB uses lowercase
-      awsUserData['firmid'] = firmId;
+      awsUserData['ruchiserv-firms'] = firmId; 
+      awsUserData['mobile'] = adminData['mobile'];
+      awsUserData['userid'] = adminData['userId']; // Keeping this as attribute
       
-      // 2. Create user in AWS (using PUT for insert/update)
       final userResp = await AwsApi.callDbHandler(
         method: 'PUT',
         table: 'users',
@@ -673,12 +762,25 @@ class AuthService {
       );
       
       print('AWS user sync response: $userResp');
-      if (userResp['error'] != null) {
-        print('⚠️ Failed to sync user to AWS: ${userResp['error']}');
+      
+      bool firmSuccess = true;
+      if (firmResp['error'] != null || (firmResp['status'] != 'success' && firmResp['message'] != 'Created')) {
+        print('⚠️ Failed to sync firm to AWS: ${firmResp['error']}');
+        firmSuccess = false;
       }
 
-      print('✅ Firm registration synced to AWS');
-      return true;
+      bool userSuccess = true;
+      if (userResp['error'] != null || (userResp['status'] != 'success' && userResp['message'] != 'Created')) {
+        print('⚠️ Failed to sync user to AWS: ${userResp['error']}');
+        userSuccess = false;
+      }
+
+      if (firmSuccess && userSuccess) {
+         print('✅ Firm registration synced to AWS');
+         return true;
+      } else {
+         return false;
+      }
     } catch (e) {
       print('🔴 AWS sync failed (will retry later): $e');
       return false;

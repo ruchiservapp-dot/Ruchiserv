@@ -6,6 +6,12 @@ import '../db/database_helper.dart';
 import 'report_preview_page.dart';
 import '3.3.2_staff_payroll_screen.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
+import 'reports/kpi_dashboard_screen.dart';
+import 'reports/balance_sheet_screen.dart';
+import 'reports/cash_flow_screen.dart';
+import 'reports/pl_report_screen.dart';
+import 'reports/event_profitability_screen.dart';
+import 'finance/salary_disbursement_screen.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -31,6 +37,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     'Kitchen': ['Production', 'Top Dishes', 'By Category'],
     'Dispatch': ['Delivery Status', 'Capacity'],
     'HR': ['Attendance', 'Overtime'],
+    'Finance': ['KPI Dashboard', 'Balance Sheet', 'Cash Flow', 'P&L', 'Event Profit'],
   };
 
   DateTime _customStartDate = DateTime.now().subtract(const Duration(days: 7));
@@ -271,27 +278,28 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (_selectedCategory == 'Orders' && _selectedSubReport == 'Summary' && _expandedItems.contains(date)) {
         if (_drillDownData.containsKey(date)) {
           for (var order in _drillDownData[date]!) {
+            // Add order row with full details
             rows.add([
-              '', // Indent
+              '', // Indent indicator
               '#${order['id']} - ${order['customerName']}',
-              order['mealType'] ?? '',
+              '${order['mealType'] ?? ''} | ${order['foodType'] ?? 'Veg'}',
               order['venue'] ?? '',
-              '',
+              order['mobile'] ?? '',
               order['totalPax'] ?? 0,
-              order['finalAmount'] ?? 0
+              order['finalAmount'] ?? order['grandTotal'] ?? 0
             ]);
             
-            // 3. Add Grandchild Rows (Dishes)
+            // 3. Add Dish Rows (if order expanded)
             final orderKey = 'order_${order['id']}';
             if (_expandedItems.contains(orderKey) && _drillDownData.containsKey(orderKey)) {
               for (var dish in _drillDownData[orderKey]!) {
                  rows.add([
                   '', '', // Double Indent
-                  'Dish: ${dish['name']}',
-                  dish['foodType'] ?? '',
+                  '  ↳ ${dish['name']}',
+                  dish['foodType'] ?? 'Veg',
                   '',
                   dish['pax'] ?? 0,
-                  ''
+                  (dish['pricePerPlate'] ?? 0) * (dish['pax'] ?? 1)
                 ]);
               }
             }
@@ -439,7 +447,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: ['Orders', 'Kitchen', 'Dispatch', 'HR'].map((cat) {
+                    children: ['Orders', 'Kitchen', 'Dispatch', 'HR', 'Finance'].map((cat) {
                       final isSelected = _selectedCategory == cat;
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
@@ -519,6 +527,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       case 'Kitchen': return Icons.restaurant;
       case 'Dispatch': return Icons.local_shipping;
       case 'HR': return Icons.people;
+      case 'Finance': return Icons.account_balance;
       default: return Icons.analytics;
     }
   }
@@ -529,6 +538,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       case 'Kitchen': return Colors.orange;
       case 'Dispatch': return Colors.green;
       case 'HR': return Colors.purple;
+      case 'Finance': return Colors.indigo;
       default: return Colors.grey;
     }
   }
@@ -539,8 +549,115 @@ class _ReportsScreenState extends State<ReportsScreen> {
       case 'Kitchen': return _buildKitchenReport();
       case 'Dispatch': return _buildDispatchReport();
       case 'HR': return _buildHRReport();
+      case 'Finance': return _buildFinanceReport();
       default: return const SizedBox();
     }
+  }
+
+  // ============== FINANCE REPORTS ==============
+  
+  Widget _buildFinanceReport() {
+    // For Finance, we navigate to dedicated screens instead of showing data here
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // Finance report navigation tiles
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.2,
+              children: [
+                _buildFinanceTile(
+                  'KPI Dashboard',
+                  'Revenue, Margin, Orders',
+                  Icons.dashboard,
+                  Colors.deepPurple,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KPIDashboardScreen())),
+                ),
+                _buildFinanceTile(
+                  'Balance Sheet',
+                  'Assets & Liabilities',
+                  Icons.account_balance,
+                  Colors.indigo,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BalanceSheetScreen())),
+                ),
+                _buildFinanceTile(
+                  'Cash Flow',
+                  'Operating Cash',
+                  Icons.waterfall_chart,
+                  Colors.teal,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CashFlowScreen())),
+                ),
+                _buildFinanceTile(
+                  'P&L Report',
+                  'Profit & Loss',
+                  Icons.trending_up,
+                  Colors.green,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PLReportScreen())),
+                ),
+                _buildFinanceTile(
+                  'Event Profit',
+                  'Per-Order Analysis',
+                  Icons.event_note,
+                  Colors.purple,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EventProfitabilityScreen())),
+                ),
+                _buildFinanceTile(
+                  'Salary',
+                  'Disbursement',
+                  Icons.payments,
+                  Colors.pink,
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalaryDisbursementScreen())),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinanceTile(String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 28, color: color),
+            ),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+          ],
+        ),
+      ),
+    );
   }
 
   // ============== ORDERS REPORTS ==============
@@ -672,6 +789,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             setState(() {
                               if (expanded) {
                                 _expandedItems.add(orderKey);
+                                // Auto-load dishes when order is expanded
                                 _loadDishesForOrder(orderId, orderKey);
                               } else {
                                 _expandedItems.remove(orderKey);
@@ -686,22 +804,66 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             ),
                             child: Text('#$orderId', style: TextStyle(fontSize: 10, color: Colors.blue.shade800)),
                           ),
-                          title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                          title: Row(
+                            children: [
+                              Expanded(child: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold))),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: (order['foodType'] == 'Non-Veg') ? Colors.red.shade100 : Colors.green.shade100,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(order['foodType'] ?? 'Veg', 
+                                  style: TextStyle(fontSize: 9, color: (order['foodType'] == 'Non-Veg') ? Colors.red.shade700 : Colors.green.shade700)),
+                              ),
+                            ],
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${order['totalPax'] ?? 0} pax | ${order['mealType'] ?? 'N/A'}', 
-                                style: const TextStyle(fontSize: 11)),
-                              if (order['venue'] != null)
-                                Text('Venue: ${order['venue']}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.people, size: 12, color: Colors.grey.shade600),
+                                  const SizedBox(width: 4),
+                                  Text('${order['totalPax'] ?? 0} pax', style: const TextStyle(fontSize: 11)),
+                                  const SizedBox(width: 12),
+                                  Icon(Icons.restaurant_menu, size: 12, color: Colors.grey.shade600),
+                                  const SizedBox(width: 4),
+                                  Text('${order['mealType'] ?? 'N/A'}', style: const TextStyle(fontSize: 11)),
+                                ],
+                              ),
+                              if (order['venue'] != null && order['venue'].toString().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.location_on, size: 12, color: Colors.grey.shade600),
+                                      const SizedBox(width: 4),
+                                      Expanded(child: Text(order['venue'], style: const TextStyle(fontSize: 11, color: Colors.grey))),
+                                    ],
+                                  ),
+                                ),
+                              if (order['mobile'] != null && order['mobile'].toString().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
+                                      const SizedBox(width: 4),
+                                      Text('${order['mobile']}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
-                          trailing: Row(
+                          trailing: Column(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('₹${(order['finalAmount'] ?? 0).toStringAsFixed(0)}',
+                              Text('₹${(order['finalAmount'] ?? order['grandTotal'] ?? 0).toStringAsFixed(0)}',
                                 style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 12)),
-                              Icon(isOrderExpanded ? Icons.expand_less : Icons.expand_more),
+                              Icon(isOrderExpanded ? Icons.expand_less : Icons.expand_more, size: 18),
                             ],
                           ),
                           children: [
@@ -786,21 +948,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildFoodTypeReport() {
-    return _buildPieListReport(
+    return _buildExpandableTypeReport(
       data: _reportData,
       labelKey: 'foodType',
-      valueKey: 'orderCount',
-      secondaryKey: 'revenue',
+      typeKeyForDb: 'foodType',
       colors: {'Veg': Colors.green, 'Non-Veg': Colors.red, 'Both': Colors.orange},
     );
   }
 
   Widget _buildMealTypeReport() {
-    return _buildPieListReport(
+    return _buildExpandableTypeReport(
       data: _reportData,
       labelKey: 'mealType',
-      valueKey: 'orderCount',
-      secondaryKey: 'revenue',
+      typeKeyForDb: 'mealType',
       colors: {
         'Breakfast': Colors.amber,
         'Lunch': Colors.orange,
@@ -808,6 +968,201 @@ class _ReportsScreenState extends State<ReportsScreen> {
         'Snacks': Colors.teal,
       },
     );
+  }
+
+  /// Expandable report for Food Type / Meal Type with drill-down to orders and dishes
+  Widget _buildExpandableTypeReport({
+    required List<Map<String, dynamic>> data,
+    required String labelKey,
+    required String typeKeyForDb,
+    Map<String, Color>? colors,
+  }) {
+    // Calculate totals
+    int totalOrders = 0;
+    double totalRevenue = 0;
+    for (var item in data) {
+      totalOrders += (item['orderCount'] as num?)?.toInt() ?? 0;
+      totalRevenue += (item['revenue'] as num?)?.toDouble() ?? 0;
+    }
+
+    return Column(
+      children: [
+        // Summary header
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  Text('$totalOrders', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const Text('Total Orders', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+              Column(
+                children: [
+                  Text('₹${totalRevenue.toStringAsFixed(0)}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+                  const Text('Revenue', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // Expandable list
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              final item = data[index];
+              final label = item[labelKey]?.toString() ?? 'Unknown';
+              final orderCount = (item['orderCount'] as num?)?.toInt() ?? 0;
+              final revenue = (item['revenue'] as num?)?.toDouble() ?? 0;
+              final totalPax = (item['totalPax'] as num?)?.toInt() ?? 0;
+              final percentage = totalOrders > 0 ? (orderCount / totalOrders * 100) : 0;
+              
+              final color = colors?[label] ?? Colors.primaries[index % Colors.primaries.length];
+              final typeKey = '${typeKeyForDb}_$label';
+              final isExpanded = _expandedItems.contains(typeKey);
+
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: ExpansionTile(
+                  key: Key(typeKey),
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      if (expanded) {
+                        _expandedItems.add(typeKey);
+                        _loadOrdersByType(typeKeyForDb, label, typeKey);
+                      } else {
+                        _expandedItems.remove(typeKey);
+                      }
+                    });
+                  },
+                  leading: CircleAvatar(
+                    backgroundColor: color,
+                    child: Text('${percentage.toInt()}%', style: const TextStyle(color: Colors.white, fontSize: 11)),
+                  ),
+                  title: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LinearProgressIndicator(
+                        value: percentage / 100,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation(color),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('$orderCount orders | $totalPax pax'),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('₹${revenue.toStringAsFixed(0)}', 
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                      const SizedBox(width: 4),
+                      Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                    ],
+                  ),
+                  children: [
+                    if (_drillDownData.containsKey(typeKey))
+                      ..._drillDownData[typeKey]!.map((order) {
+                        final orderId = order['id'];
+                        final orderKey = 'type_order_$orderId';
+                        final isOrderExpanded = _expandedItems.contains(orderKey);
+
+                        return ExpansionTile(
+                          key: Key(orderKey),
+                          initiallyExpanded: isOrderExpanded,
+                          onExpansionChanged: (expanded) {
+                            setState(() {
+                              if (expanded) {
+                                _expandedItems.add(orderKey);
+                                _loadDishesForOrder(orderId, orderKey);
+                              } else {
+                                _expandedItems.remove(orderKey);
+                              }
+                            });
+                          },
+                          leading: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text('#$orderId', style: TextStyle(fontSize: 10, color: color)),
+                          ),
+                          title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontSize: 13)),
+                          subtitle: Text('${order['date']} | ${order['totalPax'] ?? 0} pax | ${order['venue'] ?? 'N/A'}',
+                            style: const TextStyle(fontSize: 11)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('₹${(order['finalAmount'] ?? 0).toStringAsFixed(0)}',
+                                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                              Icon(isOrderExpanded ? Icons.expand_less : Icons.expand_more, size: 18),
+                            ],
+                          ),
+                          children: [
+                            if (_drillDownData.containsKey(orderKey))
+                              Container(
+                                color: Colors.grey.shade50,
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  children: _drillDownData[orderKey]!.map((dish) => Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 2),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.restaurant, size: 14, color: dish['foodType'] == 'Non-Veg' ? Colors.red : Colors.green),
+                                        const SizedBox(width: 8),
+                                        Expanded(child: Text(dish['name'] ?? 'Unknown', style: const TextStyle(fontSize: 12))),
+                                        Text('${dish['pax'] ?? 0} pax', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                      ],
+                                    ),
+                                  )).toList(),
+                                ),
+                              )
+                            else
+                              const Padding(
+                                padding: EdgeInsets.all(8),
+                                child: Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
+                              ),
+                          ],
+                        );
+                      }).toList()
+                    else
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _loadOrdersByType(String typeKey, String typeValue, String key) async {
+    if (_drillDownData.containsKey(key)) return;
+    final db = await DatabaseHelper().database;
+    final orders = await db.query('orders',
+      where: "$typeKey = ? AND date BETWEEN ? AND ?",
+      whereArgs: [typeValue, _startDate, _endDate],
+      orderBy: 'date DESC',
+    );
+    if (mounted) {
+      setState(() => _drillDownData[key] = orders);
+    }
   }
 
   Widget _buildTimeSlotReport() {

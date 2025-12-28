@@ -10,7 +10,10 @@ import '4.0_inventory_screen.dart';
 import '5.1_finance_screen.dart';
 import '5.0_reports_screen.dart';
 import '6.0_settings_screen.dart';
-import '3.3.3_my_attendance_screen.dart';
+// Portal screens for external user roles (v34)
+import '7.0_driver_home_screen.dart';
+import '8.0_subcontractor_home_screen.dart';
+import '9.0_supplier_home_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -22,6 +25,8 @@ class MainMenuScreen extends StatefulWidget {
 class _MainMenuScreenState extends State<MainMenuScreen> {
   int _selectedIndex = 0;
   bool _isLoading = true;
+  bool _isExternalPortal = false; // For Driver/Subcontractor/Supplier
+  Widget? _portalScreen; // Dedicated portal for external users
   
   String _subscriptionTier = 'BASIC';
   String _userRole = 'Staff';
@@ -30,7 +35,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   List<Map<String, dynamic>> _visibleMenuItems = [];
   List<Widget> _visibleScreens = [];
 
-  // All possible menu items (including ATTENDANCE for Staff/Driver assignment)
+  // All possible menu items - My Attendance is accessed via Operations, not a standalone module
   final List<Map<String, dynamic>> _allMenuItems = [
     {'icon': Icons.receipt_long, 'label': 'Orders', 'module': 'ORDERS', 'tier': 'BASIC'},
     {'icon': Icons.inventory_2, 'label': 'Inventory', 'module': 'INVENTORY', 'tier': 'BASIC'},
@@ -38,7 +43,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     {'icon': Icons.account_balance_wallet, 'label': 'Finance', 'module': 'FINANCE', 'tier': 'PRO'},
     {'icon': Icons.bar_chart_rounded, 'label': 'Reports', 'module': 'REPORTS', 'tier': 'BASIC'},
     {'icon': Icons.settings, 'label': 'Settings', 'module': 'SETTINGS', 'tier': 'BASIC'},
-    {'icon': Icons.fingerprint, 'label': 'My Attendance', 'module': 'ATTENDANCE', 'tier': 'BASIC'},
   ];
 
   final List<Widget> _allScreens = const [
@@ -48,7 +52,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     FinanceScreen(),
     ReportsScreen(),
     SettingsScreen(),
-    MyAttendanceScreen(),
   ];
 
   @override
@@ -62,6 +65,36 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final allowedModules = await PermissionService.instance.getAllowedModules();
     final tier = await FeatureGateService.instance.getCurrentTier();
     
+    // Check for external portal users (Driver, Subcontractor, Supplier)
+    // These users get a dedicated single-screen portal instead of the standard menu
+    final roleLower = role.toLowerCase();
+    if (roleLower == 'driver') {
+      setState(() {
+        _userRole = role;
+        _isExternalPortal = true;
+        _portalScreen = const DriverHomeScreen();
+        _isLoading = false;
+      });
+      return;
+    } else if (roleLower == 'subcontractor' || roleLower == 'vendor') {
+      setState(() {
+        _userRole = role;
+        _isExternalPortal = true;
+        _portalScreen = const SubcontractorHomeScreen();
+        _isLoading = false;
+      });
+      return;
+    } else if (roleLower == 'supplier') {
+      setState(() {
+        _userRole = role;
+        _isExternalPortal = true;
+        _portalScreen = const SupplierHomeScreen();
+        _isLoading = false;
+      });
+      return;
+    }
+    
+    // Standard menu for Admin, Manager, Staff
     // Filter menu items based on Admin-assigned permissions for ALL roles
     List<Map<String, dynamic>> visible = [];
     List<Widget> screens = [];
@@ -94,9 +127,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         visible.add(_allMenuItems[0]); // Orders
         screens.add(_allScreens[0]);
       } else {
-        // Show Attendance as minimum for Staff/Driver/Vendor/Subcontractor
-        visible.add(_allMenuItems[6]); // Attendance
-        screens.add(_allScreens[6]);
+        // Show Operations as minimum for Staff (My Attendance is inside Operations)
+        visible.add(_allMenuItems[2]); // Operations
+        screens.add(_allScreens[2]);
       }
     }
     
@@ -133,7 +166,25 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       );
     }
     
-    // Handle empty state
+    // External portal mode (Driver/Subcontractor/Supplier)
+    if (_isExternalPortal && _portalScreen != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('RuchiServ • $_userRole'),
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () => _showLogoutDialog(),
+              tooltip: 'Logout',
+            ),
+          ],
+        ),
+        body: _portalScreen,
+      );
+    }
+    
+    // Handle empty state for standard menu
     if (_visibleMenuItems.isEmpty || _visibleScreens.isEmpty) {
       return Scaffold(
         body: Center(
@@ -265,6 +316,31 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ),
             )
           : null, // Hide nav bar for single item (Staff)
+    );
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // Navigate to login screen
+              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
     );
   }
 

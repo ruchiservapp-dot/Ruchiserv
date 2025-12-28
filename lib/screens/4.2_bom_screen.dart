@@ -64,6 +64,129 @@ class _BomScreenState extends State<BomScreen> {
     _loadData();
   }
 
+  Future<void> _addDish() async {
+    final nameController = TextEditingController();
+    final categoryController = TextEditingController();
+    final regionController = TextEditingController();
+    final basePaxController = TextEditingController(text: '1');
+    String foodType = 'Veg';
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(AppLocalizations.of(context)!.addDish),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: '${AppLocalizations.of(context)!.dishName} *',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.restaurant),
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: categoryController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.category,
+                    hintText: 'e.g., Main Course, Starter, Dessert',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.category),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: regionController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.region,
+                    hintText: 'e.g., Kerala, North Indian, Chinese',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.location_on),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: basePaxController,
+                  decoration: const InputDecoration(
+                    labelText: 'Base Pax (Recipe for)',
+                    hintText: 'Usually 1 or 100',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.people),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text('${AppLocalizations.of(context)!.foodType}: '),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text('Veg'),
+                      selected: foodType == 'Veg',
+                      selectedColor: Colors.green.shade200,
+                      onSelected: (_) => setDialogState(() => foodType = 'Veg'),
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text('Non-Veg'),
+                      selected: foodType == 'Non-Veg',
+                      selectedColor: Colors.red.shade200,
+                      onSelected: (_) => setDialogState(() => foodType = 'Non-Veg'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                if (nameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(AppLocalizations.of(context)!.enterDishName), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+                
+                final db = await DatabaseHelper().database;
+                await db.insert('dish_master', {
+                  'firmId': _firmId,
+                  'name': nameController.text.trim(),
+                  'category': categoryController.text.trim().isEmpty ? 'Main Course' : categoryController.text.trim(),
+                  'region': regionController.text.trim(),
+                  'base_pax': int.tryParse(basePaxController.text) ?? 1,
+                  'foodType': foodType,
+                  'isModified': 1,
+                  'createdAt': DateTime.now().toIso8601String(),
+                  'updatedAt': DateTime.now().toIso8601String(),
+                });
+                Navigator.pop(context, true);
+              },
+              label: Text(AppLocalizations.of(context)!.add),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.dishAdded), backgroundColor: Colors.green),
+      );
+      _loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _searchController.text.isEmpty
@@ -77,6 +200,11 @@ class _BomScreenState extends State<BomScreen> {
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addDish,
+        icon: const Icon(Icons.add),
+        label: Text(AppLocalizations.of(context)!.addDish),
       ),
       body: Column(
         children: [
@@ -129,6 +257,12 @@ class _BomScreenState extends State<BomScreen> {
                             const SizedBox(height: 8),
                             Text(AppLocalizations.of(context)!.addDishesHint,
                               style: const TextStyle(color: Colors.grey)),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _addDish,
+                              icon: const Icon(Icons.add),
+                              label: Text(AppLocalizations.of(context)!.addDish),
+                            ),
                           ],
                         ),
                       )
@@ -184,6 +318,7 @@ class _BomScreenState extends State<BomScreen> {
     );
   }
 }
+
 
 // --- BOM Edit Screen ---
 class BomEditScreen extends StatefulWidget {

@@ -382,5 +382,85 @@ Thank you!''',
       print('New PO notification error: $e');
     }
   }
+
+  /// Queue dispatch assignment notification to driver (v34 - Driver Portal)
+  static Future<void> queueDriverAssignmentNotification({
+    required int dispatchId,
+    required String driverName,
+    required String driverMobile,
+    required String customerName,
+    required String location,
+    required String deliveryDate,
+    required String deliveryTime,
+    required int pax,
+  }) async {
+    final sp = await SharedPreferences.getInstance();
+    final firmId = sp.getString('last_firm') ?? 'default_firm';
+
+    final payload = {
+      'type': 'DRIVER_ASSIGNMENT',
+      'action': 'ASSIGNED',
+      'dispatchId': dispatchId,
+      'firmId': firmId,
+      'mobile': driverMobile,
+      'driverName': driverName,
+      'channels': ['WHATSAPP', 'SMS'],
+      'message': '''🚗 New Delivery Assignment
+
+Customer: $customerName
+Location: $location
+Date: $deliveryDate
+Time: $deliveryTime
+Pax: $pax
+
+Please open the app to accept this delivery.''',
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    try {
+      await AwsApi.pushToQueue(payload: payload);
+    } catch (e) {
+      print('Driver assignment notification error: $e');
+    }
+  }
+
+  /// Queue subcontractor dish assignment notification (v34 - Subcontractor Portal)
+  static Future<void> queueSubcontractorAssignmentNotification({
+    required int orderId,
+    required String subcontractorName,
+    required String subcontractorMobile,
+    required String customerName,
+    required String dishName,
+    required String deliveryDate,
+    required int pax,
+  }) async {
+    final sp = await SharedPreferences.getInstance();
+    final firmId = sp.getString('last_firm') ?? 'default_firm';
+
+    final payload = {
+      'type': 'SUBCONTRACTOR_ASSIGNMENT',
+      'action': 'ASSIGNED',
+      'orderId': orderId,
+      'firmId': firmId,
+      'mobile': subcontractorMobile,
+      'subcontractorName': subcontractorName,
+      'channels': ['WHATSAPP', 'SMS'],
+      'message': '''👨‍🍳 New Order Assignment
+
+For: $customerName
+Dish: $dishName
+Date: $deliveryDate
+Pax: $pax
+
+Open the RuchiServ app for full details.''',
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    try {
+      await AwsApi.pushToQueue(payload: payload);
+    } catch (e) {
+      print('Subcontractor assignment notification error: $e');
+    }
+  }
 }
 

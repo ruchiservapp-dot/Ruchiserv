@@ -13,7 +13,6 @@ import '../db/database_helper.dart';
 import '6.7_firm_profile_screen.dart';
 import '6.8_user_profile_screen.dart'; // User Profile logic
 import '6.9_vehicle_master_screen.dart'; // Vehicle Master
-import '6.10_utensil_master_screen.dart'; // Utensil Master
 import 'dart:io'; // For sharing/local file logic
 import 'package:share_plus/share_plus.dart'; // Optional for file share
 import 'package:path/path.dart' as p;
@@ -224,15 +223,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const VehicleMasterScreen()),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.kitchen_rounded, color: Colors.indigo),
-            title: const Text("Utensil Master"),
-            subtitle: const Text("Manage utensils & consumables"),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const UtensilMasterScreen()),
             ),
           ),
           const Divider(),

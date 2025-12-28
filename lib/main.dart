@@ -10,9 +10,10 @@ import 'core/locale_provider.dart';
 import 'screens/1.4_login_screen.dart'; // Full version with biometrics
 import 'screens/main_menu_screen.dart'; // Proper menu navigation
 import 'screens/0.0_splash_screen.dart';
-import 'db/seed_test_user.dart'; // DEVELOPMENT: Test user seeding
-
-import 'db/seed_november_data.dart'; // November 2025 Data Seeding
+import 'db/seed_dishes.dart'; // Sample dishes and ingredients
+// DEV: Uncomment below for development testing
+// import 'db/seed_test_user.dart';
+// import 'db/seed_november_data.dart';
 
 // COMPLIANCE: Initialize encryption before any database operations
 Future<void> main() async {
@@ -21,9 +22,12 @@ Future<void> main() async {
   // CRITICAL: Initialize encryption before database access (Rule C.3)
   await EncryptionHelper.initialize();
   
-  // DEVELOPMENT: Seed test user (remove in production)
-  await seedTestUser();
-  await seedNovember2025Data(); // Populate Nov 2025 data for testing
+  // Seed sample dishes and ingredients (skips if already seeded)
+  await seedDishesAndIngredients();
+  
+  // DEV: Uncomment below for development testing only
+  // await seedTestUser();
+  // await seedNovember2025Data();
   
   runApp(const RuchiServApp());
 }

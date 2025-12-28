@@ -3639,6 +3639,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Counter Setup'**
   String get counterSetupCost;
+
+  /// No description provided for @addDish.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Dish'**
+  String get addDish;
+
+  /// No description provided for @dishName.
+  ///
+  /// In en, this message translates to:
+  /// **'Dish Name'**
+  String get dishName;
+
+  /// No description provided for @region.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get region;
+
+  /// No description provided for @enterDishName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter dish name'**
+  String get enterDishName;
+
+  /// No description provided for @dishAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Dish added'**
+  String get dishAdded;
 }
 
 class _AppLocalizationsDelegate

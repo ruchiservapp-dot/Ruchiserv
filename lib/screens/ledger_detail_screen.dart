@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
 import 'add_transaction_screen.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
+import '../services/report_export_service.dart';
 
 class LedgerDetailScreen extends StatefulWidget {
   final String entityName;
@@ -74,6 +75,93 @@ class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
     }
   }
 
+  Future<void> _showExportDialog() async {
+    if (_transactions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No transactions to export')),
+      );
+      return;
+    }
+
+    final format = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Export Ledger'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.table_chart, color: Colors.green),
+              title: const Text('Excel (.xlsx)'),
+              onTap: () => Navigator.pop(ctx, 'excel'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              title: const Text('PDF'),
+              onTap: () => Navigator.pop(ctx, 'pdf'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (format == null || !mounted) return;
+
+    // Prepare data for export
+    final headers = ['Date', 'Type', 'Category', 'Mode', 'Amount', 'Description'];
+    final rows = _transactions.map((t) => [
+      t['date'] ?? '',
+      t['type'] ?? '',
+      t['category'] ?? '',
+      t['paymentMode'] ?? t['mode'] ?? 'Cash',
+      (t['amount'] as num).toStringAsFixed(2),
+      t['description'] ?? '',
+    ]).toList();
+
+    // Add summary row
+    rows.add(['', '', '', '', '', '']);
+    rows.add(['', '', 'Total Debit', '', _totalExpense.toStringAsFixed(2), '']);
+    rows.add(['', '', 'Total Credit', '', _totalIncome.toStringAsFixed(2), '']);
+    rows.add(['', '', 'Net Balance', '', (_totalIncome - _totalExpense).toStringAsFixed(2), '']);
+
+    final title = '${widget.entityName} Ledger';
+    final subtitle = '${widget.entityType} • ${DateFormat('dd MMM yyyy').format(DateTime.now())}';
+
+    try {
+      final exportService = ReportExportService();
+      if (format == 'excel') {
+        await exportService.exportToExcel(
+          title: title,
+          headers: headers,
+          rows: rows,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Excel exported successfully'), backgroundColor: Colors.green),
+          );
+        }
+      } else if (format == 'pdf') {
+        await exportService.exportToPdf(
+          title: title,
+          subtitle: subtitle,
+          headers: headers,
+          rows: rows,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('PDF exported successfully'), backgroundColor: Colors.green),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final netBalance = _totalIncome - _totalExpense;
@@ -82,6 +170,13 @@ class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.entityName} Ledger"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: 'Export',
+            onPressed: _showExportDialog,
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addTransaction,

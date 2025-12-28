@@ -129,6 +129,17 @@ class PermissionService {
     return sp.getBool('show_rates') ?? false;
   }
 
+  // Roles allowed to access financial reports (Balance Sheet, Cash Flow, P&L)
+  static const financeReportRoles = ['Admin', 'Manager', 'Accountant'];
+
+  /// Check if current user can access financial reports
+  /// (Balance Sheet, Cash Flow, P&L - restricted to Owner/Manager/Accountant)
+  Future<bool> canAccessFinanceReports() async {
+    final role = await getUserRole();
+    return financeReportRoles.contains(role);
+  }
+
+
   /// Get list of allowed modules for current user
   Future<List<String>> getAllowedModules() async {
     if (_cachedModules != null) return _cachedModules!;

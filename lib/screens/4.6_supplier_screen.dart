@@ -35,6 +35,23 @@ class _SupplierScreenState extends State<SupplierScreen> {
     setState(() => _isLoading = false);
   }
 
+  // Helper to normalize category values from database to match dropdown options
+  String _normalizeCategory(String? dbCategory) {
+    if (dbCategory == null || dbCategory.isEmpty) return 'Vegetable';
+    final normalized = dbCategory.toLowerCase().trim();
+    if (normalized.startsWith('veg')) return 'Vegetable';
+    if (normalized.startsWith('meat')) return 'Meat';
+    if (normalized.startsWith('sea') || normalized.startsWith('fish')) return 'Seafood';
+    if (normalized.startsWith('groc')) return 'Grocery';
+    if (normalized.startsWith('dairy') || normalized.startsWith('milk')) return 'Dairy';
+    // Check for exact matches (case-insensitive)
+    const validCategories = ['Vegetable', 'Meat', 'Seafood', 'Grocery', 'Dairy', 'Other'];
+    for (final cat in validCategories) {
+      if (cat.toLowerCase() == normalized) return cat;
+    }
+    return 'Other';
+  }
+
   Future<void> _addOrEditSupplier([Map<String, dynamic>? existing]) async {
     final isEdit = existing != null;
     final nameController = TextEditingController(text: existing?['name'] ?? '');
@@ -45,7 +62,7 @@ class _SupplierScreenState extends State<SupplierScreen> {
     final bankAccountController = TextEditingController(text: existing?['bankAccountNo'] ?? '');
     final bankIfscController = TextEditingController(text: existing?['bankIfsc'] ?? '');
     final bankNameController = TextEditingController(text: existing?['bankName'] ?? '');
-    String category = existing?['category'] ?? 'Vegetable';
+    String category = _normalizeCategory(existing?['category']);
 
     final result = await showDialog<bool>(
       context: context,

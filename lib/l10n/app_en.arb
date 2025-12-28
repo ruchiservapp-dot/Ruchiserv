@@ -1058,5 +1058,10 @@
   "items": "items",
   "noDishes": "No dishes in this order",
   "pricingSummary": "Pricing Summary",
-  "counterSetupCost": "Counter Setup"
+  "counterSetupCost": "Counter Setup",
+  "addDish": "Add Dish",
+  "dishName": "Dish Name",
+  "region": "Region",
+  "enterDishName": "Please enter dish name",
+  "dishAdded": "✅ Dish added"
 }

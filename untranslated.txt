@@ -30,7 +30,12 @@
     "dishes",
     "noDishes",
     "pricingSummary",
-    "counterSetupCost"
+    "counterSetupCost",
+    "addDish",
+    "dishName",
+    "region",
+    "enterDishName",
+    "dishAdded"
   ],
 
   "kn": [
@@ -64,7 +69,12 @@
     "dishes",
     "noDishes",
     "pricingSummary",
-    "counterSetupCost"
+    "counterSetupCost",
+    "addDish",
+    "dishName",
+    "region",
+    "enterDishName",
+    "dishAdded"
   ],
 
   "ml": [
@@ -98,7 +108,12 @@
     "dishes",
     "noDishes",
     "pricingSummary",
-    "counterSetupCost"
+    "counterSetupCost",
+    "addDish",
+    "dishName",
+    "region",
+    "enterDishName",
+    "dishAdded"
   ],
 
   "ta": [
@@ -132,7 +147,12 @@
     "dishes",
     "noDishes",
     "pricingSummary",
-    "counterSetupCost"
+    "counterSetupCost",
+    "addDish",
+    "dishName",
+    "region",
+    "enterDishName",
+    "dishAdded"
   ],
 
   "te": [
@@ -166,6 +186,11 @@
     "dishes",
     "noDishes",
     "pricingSummary",
-    "counterSetupCost"
+    "counterSetupCost",
+    "addDish",
+    "dishName",
+    "region",
+    "enterDishName",
+    "dishAdded"
   ]
 }

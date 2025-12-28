@@ -1917,4 +1917,19 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get counterSetupCost => 'Counter Setup';
+
+  @override
+  String get addDish => 'Add Dish';
+
+  @override
+  String get dishName => 'Dish Name';
+
+  @override
+  String get region => 'Region';
+
+  @override
+  String get enterDishName => 'Please enter dish name';
+
+  @override
+  String get dishAdded => '✅ Dish added';
 }

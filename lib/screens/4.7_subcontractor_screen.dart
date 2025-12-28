@@ -42,7 +42,7 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> {
     final emailController = TextEditingController(text: existing?['email'] ?? '');
     final addressController = TextEditingController(text: existing?['address'] ?? '');
     final specializationController = TextEditingController(text: existing?['specialization'] ?? '');
-    final rateController = TextEditingController(text: existing?['perPaxRate']?.toString() ?? '');
+    final rateController = TextEditingController(text: existing?['ratePerPax']?.toString() ?? '');
 
     final result = await showDialog<bool>(
       context: context,
@@ -114,7 +114,7 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> {
                 'email': emailController.text.trim(),
                 'address': addressController.text.trim(),
                 'specialization': specializationController.text.trim(),
-                'perPaxRate': double.tryParse(rateController.text) ?? 0,
+                'ratePerPax': double.tryParse(rateController.text) ?? 0,
               };
               
               if (isEdit) {
@@ -204,7 +204,7 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('₹${sub['perPaxRate']?.toStringAsFixed(0) ?? '0'}',
+                            Text('₹${sub['ratePerPax']?.toStringAsFixed(0) ?? '0'}',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                             Text(AppLocalizations.of(context)!.perPax, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                           ],

@@ -3,13 +3,21 @@ import 'package:http/http.dart' as http;
 
 /// Minimal API client for your API Gateway (adjust base/stage).
 class AwsApi {
-  // ✅ Set your base + stage
-  static const String _baseUrl = 'https://zgcy1tisjc.execute-api.ap-south-1.amazonaws.com/prod';
+  // ✅ New cost-optimized serverless API (Dec 2024)
+  static const String _baseUrl = 'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com';
   static const String _stage = 'prod';
 
   static Uri _uri(String path) {
     final clean = path.startsWith('/') ? path.substring(1) : path;
-    return Uri.parse('$_baseUrl/$_stage/$clean');
+    
+    // HACK: Use Local Bridge for Web to fix CORS
+    // Note: In release, you MUST enable CORS on AWS Gateway.
+    bool useProxy = false; // Reverted to false: Using --disable-web-security Chrome instead
+    if (useProxy) {
+      return Uri.parse('http://localhost:9090/$clean');
+    }
+    
+    return Uri.parse('$_baseUrl/$_stage/$clean'); 
   }
 
   static Future<Map<String, dynamic>> get({required String path}) async {
@@ -23,6 +31,7 @@ class AwsApi {
     Map<String, dynamic>? query,
   }) async {
     final uri = _uri(path).replace(queryParameters: query);
+    print('🚀 AWS POST Request: $uri'); // DEBUG
     final res = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -103,12 +112,16 @@ class AwsApi {
 
 
   static Map<String, dynamic> _decode(http.Response res) {
+    print('📥 AWS Raw Response: "${res.body}" (Status: ${res.statusCode})'); // DEBUG
     try {
-      final map = jsonDecode(res.body);
-      if (map is Map<String, dynamic>) return map;
-      return {'status': 'error', 'message': 'Invalid JSON'};
-    } catch (_) {
-      return {'status': 'error', 'message': 'Decode failed', 'code': res.statusCode};
+      final decoded = jsonDecode(res.body);
+      print('🤔 Decoded Type: ${decoded.runtimeType}'); // DEBUG
+      
+      if (decoded is Map<String, dynamic>) return decoded;
+      return {'status': 'error', 'message': 'Invalid JSON format (Expected Map, got ${decoded.runtimeType})'};
+    } catch (e) {
+      print('🔴 Decode Error Body: "${res.body}"'); // DEBUG
+      return {'status': 'error', 'message': 'Decode failed: $e. Body: ${res.body}', 'code': res.statusCode};
     }
   }
 }

@@ -32,12 +32,12 @@ class DatabaseHelper {
     String fileName = 'ruchiserv.db';
     
     Database db;
-    if (kIsWeb) {
+      if (kIsWeb) {
       // Web initialization
       databaseFactory = databaseFactoryFfiWeb;
       db = await openDatabase(
         fileName,
-        version: 34, // v34: Driver Portal - km tracking, earnings, assignment status
+        version: 35, // v35: UPI Subscription Fields
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -47,7 +47,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       db = await openDatabase(
         path,
-        version: 34, // v34: Driver Portal - km tracking, earnings, assignment status
+        version: 35, // v35: UPI Subscription Fields
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -255,6 +255,19 @@ class DatabaseHelper {
     if (oldVersion < 9) {
       try {
         await db.execute("ALTER TABLE orders ADD COLUMN firmId TEXT DEFAULT 'DEFAULT';");
+      } catch (_) {}
+    }
+
+    // Upgrade to v35: Add UPI Subscription Fields (Client UPI ID)
+    if (oldVersion < 35) {
+      try {
+        await db.execute("ALTER TABLE firms ADD COLUMN client_upi_id TEXT;");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE firms ADD COLUMN subscription_end_date TEXT;");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE firms ADD COLUMN subscription_plan TEXT;");
       } catch (_) {}
     }
 
@@ -1050,11 +1063,19 @@ class DatabaseHelper {
         address TEXT,
         gstNumber TEXT,
         category TEXT DEFAULT 'GENERAL',
+        bankAccountNo TEXT,
+        bankIfsc TEXT,
+        bankName TEXT,
         isActive INTEGER DEFAULT 1,
         createdAt TEXT,
         updatedAt TEXT
       );
     ''');
+    
+    // Add bank columns if missing (for existing DBs)
+    try { await db.execute("ALTER TABLE suppliers ADD COLUMN bankAccountNo TEXT;"); } catch (_) {}
+    try { await db.execute("ALTER TABLE suppliers ADD COLUMN bankIfsc TEXT;"); } catch (_) {}
+    try { await db.execute("ALTER TABLE suppliers ADD COLUMN bankName TEXT;"); } catch (_) {}
 
     // Subcontractors table
     await db.execute('''
@@ -1074,6 +1095,9 @@ class DatabaseHelper {
         updatedAt TEXT
       );
     ''');
+    
+    // Add ratePerPax column if missing (for existing DBs)
+    try { await db.execute("ALTER TABLE subcontractors ADD COLUMN ratePerPax REAL DEFAULT 0;"); } catch (_) {}
 
     // Purchase Orders table
     await db.execute('''
@@ -1192,31 +1216,45 @@ class DatabaseHelper {
     
     // === DEFENSIVE: Ensure default vehicles exist (User Request) ===
     // These are SEED vehicles available to all firms for basic dispatch without full vehicle setup
+    // FIX: First remove duplicates if they exist, then insert only if not present
     final now = DateTime.now().toIso8601String();
     try {
-      await db.insert('vehicles', {
-        'firmId': 'SEED',
-        'vehicleNo': 'Customer Vehicle',
-        'vehicleType': 'OTHER',
-        'status': 'AVAILABLE',
-        'driverName': 'Customer Arranged',
-        'isActive': 1,
-        'isModified': 0,
-        'createdAt': now,
-      }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    } catch (_) {}
-    
-    try {
-      await db.insert('vehicles', {
-        'firmId': 'SEED',
-        'vehicleNo': 'Own Vehicle',
-        'vehicleType': 'OTHER',
-        'status': 'AVAILABLE',
-        'driverName': 'Company Driver',
-        'isActive': 1,
-        'isModified': 0,
-        'createdAt': now,
-      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      // Remove duplicates - keep only the first occurrence of each vehicleNo
+      await db.rawDelete('''
+        DELETE FROM vehicles 
+        WHERE id NOT IN (
+          SELECT MIN(id) FROM vehicles GROUP BY vehicleNo
+        )
+      ''');
+      
+      // Insert only if not exists (check by vehicleNo)
+      final existingCustomerVehicle = await db.query('vehicles', where: "vehicleNo = 'Customer Vehicle'", limit: 1);
+      if (existingCustomerVehicle.isEmpty) {
+        await db.insert('vehicles', {
+          'firmId': 'SEED',
+          'vehicleNo': 'Customer Vehicle',
+          'vehicleType': 'OTHER',
+          'status': 'AVAILABLE',
+          'driverName': 'Customer Arranged',
+          'isActive': 1,
+          'isModified': 0,
+          'createdAt': now,
+        });
+      }
+      
+      final existingOwnVehicle = await db.query('vehicles', where: "vehicleNo = 'Own Vehicle'", limit: 1);
+      if (existingOwnVehicle.isEmpty) {
+        await db.insert('vehicles', {
+          'firmId': 'SEED',
+          'vehicleNo': 'Own Vehicle',
+          'vehicleType': 'OTHER',
+          'status': 'AVAILABLE',
+          'driverName': 'Company Driver',
+          'isActive': 1,
+          'isModified': 0,
+          'createdAt': now,
+        });
+      }
     } catch (_) {}
     
     await SchemaManager.syncSchema(db);
@@ -1278,30 +1316,8 @@ class DatabaseHelper {
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
-      // Load Default Vehicles (User Request: "Customer Vehicle" and "Own Vehicle" as defaults)
-      // These are global defaults available to all firms
-      final now = DateTime.now().toIso8601String();
-      batch.insert('vehicles', {
-        'firmId': 'SEED',
-        'vehicleNo': 'Customer Vehicle',
-        'vehicleType': 'OTHER',
-        'status': 'AVAILABLE',
-        'driverName': 'Customer Arranged',
-        'isActive': 1,
-        'isModified': 0,
-        'createdAt': now,
-      }, conflictAlgorithm: ConflictAlgorithm.ignore);
-      
-      batch.insert('vehicles', {
-        'firmId': 'SEED',
-        'vehicleNo': 'Own Vehicle',
-        'vehicleType': 'OTHER',
-        'status': 'AVAILABLE',
-        'driverName': 'Company Driver',
-        'isActive': 1,
-        'isModified': 0,
-        'createdAt': now,
-      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      // NOTE: Default vehicles ("Customer Vehicle" and "Own Vehicle") are now managed
+      // in _onUpgrade to avoid duplicates. Do NOT insert them here in _loadSeeds.
 
       await batch.commit(noResult: true);
       print('✅ Seed Data Loaded Successfully!');
@@ -1336,32 +1352,54 @@ class DatabaseHelper {
   }
 
   /// Unified Sync Helper: Tries online sync, falls back to queue.
+  /// Uses DynamoDB structure: PK=firmId, SK=table#id for multi-tenancy
   Future<void> _syncOrQueue({
     required String table,
     required Map<String, dynamic> data,
     required String action, // 'INSERT', 'UPDATE', 'DELETE'
     Map<String, dynamic>? filters,
   }) async {
+    // Get firmId for multi-tenant partitioning
+    final sp = await SharedPreferences.getInstance();
+    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final recordId = data['id']?.toString() ?? '0';
+    
     // 1. Try Online Sync
     bool synced = false;
     try {
       if (await ConnectivityService().isOnline()) {
-         // Call AwsApi
-         final method = action == 'INSERT' ? 'POST' : (action == 'UPDATE' ? 'PUT' : 'DELETE');
-         
-         final resp = await AwsApi.callDbHandler(
-           method: method,
-           table: table,
-           data: data,
-           filters: filters,
-         );
-         
-         if ((resp['status']?.toString().toLowerCase() ?? '') == 'success') {
-           synced = true;
-           // print('✅ [AWS Sync] $action $table success');
-         } else {
-           // print('⚠️ [AWS Sync] $action $table failed: ${resp['message']}');
-         }
+        if (action == 'DELETE') {
+          // Delete operation
+          final resp = await AwsApi.callDbHandler(
+            method: 'DELETE',
+            table: 'ruchiserv_data',
+            filters: {
+              'pk': firmId,
+              'sk': '$table#$recordId',
+            },
+          );
+          synced = resp['error'] == null;
+        } else {
+          // INSERT or UPDATE - use PUT (upsert)
+          final awsData = Map<String, dynamic>.from(data);
+          awsData['pk'] = firmId;
+          awsData['sk'] = '$table#$recordId';
+          awsData['table_name'] = table;
+          awsData['local_id'] = data['id'];
+          awsData['firmId'] = firmId;
+          awsData['synced_at'] = DateTime.now().toIso8601String();
+          
+          final resp = await AwsApi.callDbHandler(
+            method: 'PUT',
+            table: 'ruchiserv_data',
+            data: awsData,
+          );
+          synced = resp['error'] == null;
+        }
+        
+        if (synced) {
+          // print('✅ [AWS Sync] $action $table#$recordId success');
+        }
       }
     } catch (e) {
       // print('🔶 [AWS Sync] Network error: $e');
@@ -1373,6 +1411,7 @@ class DatabaseHelper {
       await queuePendingSync(table: table, data: data, action: action);
     }
   }
+
 
   // ---------- ORDERS CRUD (LOCAL + AWS SYNC) ----------
   Future<int?> insertOrder(
@@ -1602,7 +1641,7 @@ class DatabaseHelper {
       'orders',
       where: 'date = ?',
       whereArgs: [date],
-      orderBy: 'time ASC',
+      orderBy: 'eventTime ASC',
     );
   }
 
@@ -1613,7 +1652,7 @@ class DatabaseHelper {
       'orders',
       where: "date = ? AND (mrpStatus IS NULL OR mrpStatus = 'PENDING')",
       whereArgs: [date],
-      orderBy: 'time ASC',
+      orderBy: 'eventTime ASC',
     );
   }
 
@@ -1624,7 +1663,7 @@ class DatabaseHelper {
       'orders',
       where: "date = ? AND mrpStatus IS NOT NULL AND mrpStatus != 'PENDING'",
       whereArgs: [date],
-      orderBy: 'time ASC',
+      orderBy: 'eventTime ASC',
     );
   }
 
@@ -2550,6 +2589,206 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     ''', [startDate, endDate]);
   }
   
+  // === SALARY DISBURSEMENT METHODS ===
+  
+  /// Get complete salary slip data for an employee
+  Future<Map<String, dynamic>?> getSalarySlipData(int staffId, String monthYear) async {
+    final db = await database;
+    final startDate = '$monthYear-01';
+    final endDate = '$monthYear-31';
+    
+    // Get staff details
+    final staffList = await db.query('staff', where: 'id = ?', whereArgs: [staffId], limit: 1);
+    if (staffList.isEmpty) return null;
+    final staff = staffList.first;
+    
+    // Get firm details for header
+    final firmId = staff['firmId'] as String?;
+    Map<String, dynamic>? firm;
+    if (firmId != null) {
+      firm = await getFirmDetails(firmId);
+    }
+    
+    // Get attendance summary
+    final attendance = await db.rawQuery('''
+      SELECT 
+        COUNT(*) as daysPresent,
+        COALESCE(SUM(hoursWorked), 0) as totalHours,
+        COALESCE(SUM(overtime), 0) as totalOvertime
+      FROM attendance
+      WHERE staffId = ? AND date BETWEEN ? AND ? AND status = 'Present'
+    ''', [staffId, startDate, endDate]);
+    
+    // Get pending advances
+    final advances = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM staff_advances
+      WHERE staffId = ? AND deductedFromPayroll = 0
+    ''', [staffId]);
+    
+    // Get disbursement status if exists
+    final disbursement = await db.query(
+      'salary_disbursements',
+      where: 'staffId = ? AND monthYear = ?',
+      whereArgs: [staffId, monthYear],
+      limit: 1,
+    );
+    
+    return {
+      'staff': staff,
+      'firm': firm,
+      'monthYear': monthYear,
+      'attendance': attendance.first,
+      'pendingAdvances': (advances.first['total'] as num?)?.toDouble() ?? 0,
+      'disbursement': disbursement.isNotEmpty ? disbursement.first : null,
+    };
+  }
+  
+  /// Get salary disbursement record
+  Future<Map<String, dynamic>?> getSalaryDisbursement(int staffId, String monthYear) async {
+    final db = await database;
+    final result = await db.query(
+      'salary_disbursements',
+      where: 'staffId = ? AND monthYear = ?',
+      whereArgs: [staffId, monthYear],
+      limit: 1,
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+  
+  /// Disburse salary and create ledger entry
+  Future<int> disburseSalary({
+    required String firmId,
+    required int staffId,
+    required String monthYear,
+    required double basePay,
+    required double otPay,
+    required double deductions,
+    required double netPay,
+    required String paymentMode,
+    String? paymentRef,
+    String? paidBy,
+    String? notes,
+  }) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    
+    // Insert or update disbursement record
+    final existing = await getSalaryDisbursement(staffId, monthYear);
+    
+    int id;
+    if (existing != null) {
+      await db.update(
+        'salary_disbursements',
+        {
+          'basePay': basePay,
+          'otPay': otPay,
+          'deductions': deductions,
+          'netPay': netPay,
+          'status': 'PAID',
+          'paymentMode': paymentMode,
+          'paymentRef': paymentRef,
+          'paidAt': now,
+          'paidBy': paidBy,
+          'notes': notes,
+          'updatedAt': now,
+        },
+        where: 'id = ?',
+        whereArgs: [existing['id']],
+      );
+      id = existing['id'] as int;
+    } else {
+      id = await db.insert('salary_disbursements', {
+        'firmId': firmId,
+        'staffId': staffId,
+        'monthYear': monthYear,
+        'basePay': basePay,
+        'otPay': otPay,
+        'deductions': deductions,
+        'netPay': netPay,
+        'status': 'PAID',
+        'paymentMode': paymentMode,
+        'paymentRef': paymentRef,
+        'paidAt': now,
+        'paidBy': paidBy,
+        'notes': notes,
+        'createdAt': now,
+        'updatedAt': now,
+      });
+    }
+    
+    // Get staff name for transaction
+    final staff = await db.query('staff', where: 'id = ?', whereArgs: [staffId], limit: 1);
+    final staffName = (staff.isNotEmpty ? staff.first['name'] : 'Staff') as String;
+    
+    // Create ledger transaction (expense)
+    await db.insert('transactions', {
+      'firmId': firmId,
+      'type': 'EXPENSE',
+      'category': 'Salary',
+      'amount': netPay,
+      'date': now.substring(0, 10),
+      'description': 'Salary for $staffName - $monthYear',
+      'paymentMode': paymentMode,
+      'referenceId': 'SAL-$monthYear-$staffId',
+      'createdAt': now,
+    });
+    
+    // Mark advances as deducted if any
+    if (deductions > 0) {
+      await markAdvancesDeducted(staffId, monthYear);
+    }
+    
+    return id;
+  }
+  
+  /// Get all pending disbursements for a month
+  Future<List<Map<String, dynamic>>> getPendingDisbursements(String firmId, String monthYear) async {
+    final db = await database;
+    final startDate = '$monthYear-01';
+    final endDate = '$monthYear-31';
+    
+    return await db.rawQuery('''
+      SELECT 
+        s.id,
+        s.name,
+        s.staffType,
+        s.salary,
+        s.dailyWageRate,
+        s.hourlyRate,
+        COUNT(a.id) as daysPresent,
+        COALESCE(SUM(a.hoursWorked), 0) as totalHours,
+        COALESCE(SUM(a.overtime), 0) as totalOvertime,
+        (SELECT COALESCE(SUM(amount), 0) FROM staff_advances 
+         WHERE staffId = s.id AND deductedFromPayroll = 0) as pendingAdvances,
+        sd.status as disbursementStatus,
+        sd.paidAt,
+        sd.paymentMode,
+        sd.netPay as paidAmount
+      FROM staff s
+      LEFT JOIN attendance a ON s.id = a.staffId 
+        AND a.date BETWEEN ? AND ? 
+        AND a.status = 'Present'
+      LEFT JOIN salary_disbursements sd ON s.id = sd.staffId AND sd.monthYear = ?
+      WHERE s.isActive = 1 AND s.firmId = ?
+      GROUP BY s.id
+      ORDER BY sd.status ASC, s.name
+    ''', [startDate, endDate, monthYear, firmId]);
+  }
+  
+  /// Get staff salary history
+  Future<List<Map<String, dynamic>>> getStaffSalaryHistory(int staffId, {int limit = 12}) async {
+    final db = await database;
+    return await db.query(
+      'salary_disbursements',
+      where: 'staffId = ?',
+      whereArgs: [staffId],
+      orderBy: 'monthYear DESC',
+      limit: limit,
+    );
+  }
+
+  
   /// Get HR attendance report with hours and OT
   Future<List<Map<String, dynamic>>> getHRAttendanceReport(String startDate, String endDate) async {
     final db = await database;
@@ -3420,13 +3659,17 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   Future<int> insertSupplier(Map<String, dynamic> data) async {
     final db = await database;
     data['createdAt'] = DateTime.now().toIso8601String();
-    return await db.insert('suppliers', data);
+    final id = await db.insert('suppliers', data);
+    await _syncOrQueue(table: 'suppliers', data: {...data, 'id': id}, action: 'INSERT');
+    return id;
   }
 
   Future<int> updateSupplier(int id, Map<String, dynamic> data) async {
     final db = await database;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    return await db.update('suppliers', data, where: 'id = ?', whereArgs: [id]);
+    final result = await db.update('suppliers', data, where: 'id = ?', whereArgs: [id]);
+    await _syncOrQueue(table: 'suppliers', data: {...data, 'id': id}, action: 'UPDATE');
+    return result;
   }
 
   // --- CUSTOMERS ---
@@ -3442,7 +3685,9 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   Future<int> insertCustomer(Map<String, dynamic> data) async {
     final db = await database;
     data['createdAt'] = DateTime.now().toIso8601String();
-    return await db.insert('customers', data);
+    final id = await db.insert('customers', data);
+    await _syncOrQueue(table: 'customers', data: {...data, 'id': id}, action: 'INSERT');
+    return id;
   }
 
   // --- SUBCONTRACTORS ---
@@ -3458,13 +3703,18 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   Future<int> insertSubcontractor(Map<String, dynamic> data) async {
     final db = await database;
     data['createdAt'] = DateTime.now().toIso8601String();
-    return await db.insert('subcontractors', data);
+    data['isActive'] = 1; // Ensure new subcontractors are active by default
+    final id = await db.insert('subcontractors', data);
+    await _syncOrQueue(table: 'subcontractors', data: {...data, 'id': id}, action: 'INSERT');
+    return id;
   }
 
   Future<int> updateSubcontractor(int id, Map<String, dynamic> data) async {
     final db = await database;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    return await db.update('subcontractors', data, where: 'id = ?', whereArgs: [id]);
+    final result = await db.update('subcontractors', data, where: 'id = ?', whereArgs: [id]);
+    await _syncOrQueue(table: 'subcontractors', data: {...data, 'id': id}, action: 'UPDATE');
+    return result;
   }
 
   // --- MRP ---
@@ -3502,7 +3752,9 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     data['runNumber'] = runNumber;
     data['runName'] = runName;
     
-    return await db.insert('mrp_runs', data);
+    final id = await db.insert('mrp_runs', data);
+    await _syncOrQueue(table: 'mrp_runs', data: {...data, 'id': id}, action: 'INSERT');
+    return id;
   }
 
   Future<List<Map<String, dynamic>>> getMrpRuns(String firmId) async {
@@ -3720,12 +3972,298 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     }
   }
 
+  // =====================================================
+  // MRP HARDENING FIXES (Critical for Production)
+  // =====================================================
+
+  /// Valid status constants for validation
+  static const validOrderMrpStatuses = ['PENDING', 'MRP_DONE', 'PO_SENT', 'CANCELLED'];
+  static const validMrpRunStatuses = ['DRAFT', 'MRP_DONE', 'PO_SENT', 'FAILED', 'CANCELLED'];
+  static const validMrpOutputStatuses = ['PENDING', 'ALLOCATED', 'PO_SENT', 'CANCELLED'];
+
+  /// Unit normalization - converts to canonical unit
+  /// Canonical units: KG for weight, LITRE for volume, NOS for count
+  double normalizeToCanonicalUnit(double qty, String fromUnit, String toUnit) {
+    if (fromUnit.toLowerCase() == toUnit.toLowerCase()) return qty;
+    
+    final from = fromUnit.toLowerCase();
+    final to = toUnit.toLowerCase();
+    
+    // Weight conversions (canonical: KG)
+    const weightToKg = {
+      'g': 0.001,
+      'gm': 0.001,
+      'gram': 0.001,
+      'kg': 1.0,
+      'kgs': 1.0,
+    };
+    
+    // Volume conversions (canonical: LITRE)
+    const volumeToLitre = {
+      'ml': 0.001,
+      'l': 1.0,
+      'litre': 1.0,
+      'liter': 1.0,
+    };
+    
+    // Weight normalization
+    if (weightToKg.containsKey(from) && weightToKg.containsKey(to)) {
+      return qty * weightToKg[from]! / weightToKg[to]!;
+    }
+    
+    // Volume normalization
+    if (volumeToLitre.containsKey(from) && volumeToLitre.containsKey(to)) {
+      return qty * volumeToLitre[from]! / volumeToLitre[to]!;
+    }
+    
+    // No conversion possible - return as-is
+    return qty;
+  }
+
+  /// Round quantity based on ingredient category (called after aggregation)
+  double roundByCategory(double qty, String? category) {
+    final cat = (category ?? 'other').toLowerCase();
+    switch (cat) {
+      case 'spices':
+      case 'masalas':
+      case 'flavoring':
+        return double.parse(qty.toStringAsFixed(3)); // 3 decimal places
+      case 'vegetables':
+      case 'fruits':
+      case 'meat':
+      case 'seafood':
+      case 'grocery':
+        return double.parse(qty.toStringAsFixed(2)); // 2 decimal places
+      case 'oil':
+      case 'liquid':
+      case 'dairy':
+        return double.parse(qty.toStringAsFixed(3)); // 3 decimal places
+      default:
+        return double.parse(qty.toStringAsFixed(2)); // Default 2 decimals
+    }
+  }
+
+  /// Get recipe by dish master ID (preferred over name-based lookup)
+  Future<List<Map<String, dynamic>>> getRecipeForDishById(int dishMasterId, int paxQty) async {
+    final db = await database;
+    
+    final dish = await db.query('dish_master',
+      columns: ['id', 'base_pax', 'firmId'],
+      where: 'id = ?',
+      whereArgs: [dishMasterId],
+      limit: 1,
+    );
+    
+    if (dish.isEmpty) {
+      print('❌ [BOM] Dish ID $dishMasterId not found');
+      return [];
+    }
+    
+    final basePax = (dish.first['base_pax'] as int?) ?? 1;
+    final firmId = dish.first['firmId'] as String?;
+    
+    print('🔍 [BOM-ID] Looking up recipe for dish ID: $dishMasterId (pax: $paxQty, basePax: $basePax)');
+    
+    return db.rawQuery('''
+      SELECT rd.*, 
+             i.name as ingredientName,
+             i.id as ing_id,
+             i.category,
+             i.unit_of_measure as canonical_unit,
+             COALESCE(i.cost_per_unit, 0) as cost_per_unit,
+             COALESCE(rd.unit_override, i.unit_of_measure) as unit,
+             (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
+      FROM recipe_detail rd
+      JOIN ingredients_master i ON rd.ing_id = i.id
+      WHERE rd.dish_id = ?
+      ORDER BY i.category, i.name
+    ''', [paxQty, basePax, dishMasterId]);
+  }
+
+  /// SAFE Reset for MRP re-run - checks for existing POs first
+  /// Returns false if reset is blocked due to active POs
+  Future<bool> safeResetOrderForMRP(int orderId) async {
+    final db = await database;
+    
+    // 1. Get order's MRP run ID
+    final order = await db.query('orders',
+      columns: ['mrpRunId', 'mrpStatus'],
+      where: 'id = ?',
+      whereArgs: [orderId],
+    );
+    
+    if (order.isEmpty) {
+      print('❌ [MRP Reset] Order $orderId not found');
+      return false;
+    }
+    
+    final mrpRunId = order.first['mrpRunId'];
+    
+    if (mrpRunId != null) {
+      // 2. Check for active POs (not cancelled)
+      final activePOs = await db.query('purchase_orders',
+        where: "mrpRunId = ? AND status != 'CANCELLED'",
+        whereArgs: [mrpRunId],
+      );
+      
+      if (activePOs.isNotEmpty) {
+        print('❌ [MRP Reset] Cannot reset order $orderId - ${activePOs.length} active POs exist');
+        return false; // Block reset
+      }
+      
+      // 3. Mark MRP output as CANCELLED (preserve for audit, don't delete)
+      await db.update('mrp_output', {
+        'allocationStatus': 'CANCELLED',
+      }, where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
+      
+      // 4. Remove link from mrp_run_orders
+      await db.delete('mrp_run_orders', 
+        where: 'orderId = ?', 
+        whereArgs: [orderId]);
+    }
+    
+    // 5. Reset order status
+    await db.update('orders', {
+      'mrpStatus': 'PENDING',
+      'mrpRunId': null,
+      'isLocked': 0,
+      'lockedAt': null,
+    }, where: 'id = ?', whereArgs: [orderId]);
+    
+    print('✅ [MRP Reset] Order $orderId safely reset for re-run');
+    return true;
+  }
+
+  /// Cancel order after MRP - marks as CANCELLED with reason
+  Future<void> cancelOrderAfterMRP(int orderId, String reason) async {
+    final db = await database;
+    
+    await db.update('orders', {
+      'mrpStatus': 'CANCELLED',
+      'cancelReason': reason,
+      'cancelledAt': DateTime.now().toIso8601String(),
+    }, where: 'id = ?', whereArgs: [orderId]);
+    
+    print('📦 [DB] Cancelled order $orderId after MRP: $reason');
+  }
+
+  /// Transaction-wrapped MRP execution for race condition prevention
+  /// This is the SAFE way to run MRP - ensures atomicity
+  Future<int?> runMrpInTransaction({
+    required String firmId,
+    required String targetDate,
+    required List<int> orderIds,
+    required Future<Map<int, Map<String, dynamic>>> Function(List<int> orderIds) calculateOutput,
+  }) async {
+    final db = await database;
+    
+    try {
+      return await db.transaction((txn) async {
+        final now = DateTime.now();
+        
+        // 1. ATOMIC CHECK: Re-verify all orders are still PENDING
+        for (var orderId in orderIds) {
+          final check = await txn.query('orders',
+            columns: ['mrpStatus', 'mrpRunId'],
+            where: 'id = ?',
+            whereArgs: [orderId],
+          );
+          
+          if (check.isEmpty) {
+            throw Exception('Order $orderId not found');
+          }
+          
+          final status = check.first['mrpStatus'];
+          final existingRunId = check.first['mrpRunId'];
+          
+          if (status != null && status != 'PENDING' && existingRunId != null) {
+            throw Exception('Order $orderId already processed in run #$existingRunId');
+          }
+        }
+        
+        // 2. Create MRP Run
+        final monthStart = DateTime(now.year, now.month, 1).toIso8601String().substring(0, 10);
+        final monthEnd = DateTime(now.year, now.month + 1, 0).toIso8601String().substring(0, 10);
+        
+        final existingRuns = await txn.rawQuery('''
+          SELECT MAX(runNumber) as maxNum 
+          FROM mrp_runs 
+          WHERE firmId = ? AND date(runDate) >= date(?) AND date(runDate) <= date(?)
+        ''', [firmId, monthStart, monthEnd]);
+        
+        int runNumber = 1;
+        if (existingRuns.isNotEmpty && existingRuns.first['maxNum'] != null) {
+          runNumber = (existingRuns.first['maxNum'] as int) + 1;
+        }
+        
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        final runName = '${monthNames[now.month - 1]}-$runNumber';
+        
+        final mrpRunId = await txn.insert('mrp_runs', {
+          'firmId': firmId,
+          'runDate': now.toIso8601String(),
+          'targetDate': targetDate,
+          'status': 'DRAFT',
+          'runNumber': runNumber,
+          'runName': runName,
+          'totalOrders': orderIds.length,
+          'createdAt': now.toIso8601String(),
+        });
+        
+        // 3. Link orders to run (with unique constraint protection)
+        for (var orderId in orderIds) {
+          await txn.insert('mrp_run_orders', {
+            'mrpRunId': mrpRunId,
+            'orderId': orderId,
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+        
+        // 4. Calculate output (callback provided by caller)
+        final output = await calculateOutput(orderIds);
+        
+        // 5. Apply rounding and save output
+        final batch = txn.batch();
+        for (var entry in output.entries) {
+          final item = entry.value;
+          final category = item['category'] as String?;
+          final qty = (item['requiredQty'] as num?)?.toDouble() ?? 0;
+          item['requiredQty'] = roundByCategory(qty, category);
+          
+          batch.insert('mrp_output', {
+            'mrpRunId': mrpRunId,
+            ...item,
+          });
+        }
+        await batch.commit(noResult: true);
+        
+        // 6. Lock orders
+        final lockNow = now.toIso8601String();
+        for (var orderId in orderIds) {
+          await txn.update('orders', {
+            'mrpRunId': mrpRunId,
+            'mrpStatus': 'MRP_DONE',
+            'isLocked': 1,
+            'lockedAt': lockNow,
+          }, where: 'id = ?', whereArgs: [orderId]);
+        }
+        
+        print('✅ [MRP Transaction] Run #$mrpRunId completed for ${orderIds.length} orders');
+        return mrpRunId;
+      });
+    } catch (e) {
+      print('❌ [MRP Transaction] Failed: $e');
+      return null;
+    }
+  }
+
   // --- PURCHASE ORDERS ---
   Future<int> createPurchaseOrder(Map<String, dynamic> data) async {
     final db = await database;
     data['createdAt'] = DateTime.now().toIso8601String();
     data['sentAt'] = DateTime.now().toIso8601String();
-    return await db.insert('purchase_orders', data);
+    final id = await db.insert('purchase_orders', data);
+    await _syncOrQueue(table: 'purchase_orders', data: {...data, 'id': id}, action: 'INSERT');
+    return id;
   }
 
   Future<void> addPoItems(int poId, List<Map<String, dynamic>> items) async {
@@ -3784,31 +4322,664 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     return await db.update('purchase_orders', updateData, where: 'id = ?', whereArgs: [poId]);
   }
 
-  // --- INVOICES ---
-  Future<int> insertInvoice(Map<String, dynamic> data) async {
+  // --- INVOICES (v35: Full Invoice Management) ---
+  
+  /// Generate invoice number in format: inv-YYYY-MM-NNN
+  Future<String> generateInvoiceNumber(String firmId) async {
     final db = await database;
-    data['createdAt'] = DateTime.now().toIso8601String();
-    return await db.insert('invoices', data);
+    final now = DateTime.now();
+    final yearMonth = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final prefix = 'inv-$yearMonth-';
+    
+    final countResult = await db.rawQuery(
+      "SELECT COUNT(*) as cnt FROM invoices WHERE firmId = ? AND invoiceNumber LIKE ?",
+      [firmId, '$prefix%'],
+    );
+    final count = (countResult.first['cnt'] as int?) ?? 0;
+    return '$prefix${(count + 1).toString().padLeft(3, '0')}';
   }
 
-  Future<List<Map<String, dynamic>>> getInvoices(String firmId, {String? status}) async {
+  /// Create invoice with items (returns invoice ID)
+  Future<int> insertInvoice(Map<String, dynamic> data, {List<Map<String, dynamic>>? items}) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    data['createdAt'] = now;
+    data['updatedAt'] = now;
+    
+    // Auto-generate invoice number if not provided
+    if (data['invoiceNumber'] == null) {
+      data['invoiceNumber'] = await generateInvoiceNumber(data['firmId']);
+    }
+    
+    // Calculate due date (invoice date + 7 days)
+    if (data['dueDate'] == null && data['invoiceDate'] != null) {
+      final invoiceDate = DateTime.parse(data['invoiceDate']);
+      data['dueDate'] = invoiceDate.add(const Duration(days: 7)).toIso8601String().substring(0, 10);
+    }
+    
+    // Calculate balance due
+    data['balanceDue'] = (data['totalAmount'] ?? 0) - (data['amountPaid'] ?? 0);
+    
+    final invoiceId = await db.insert('invoices', data);
+    
+    // Insert items if provided
+    if (items != null && items.isNotEmpty) {
+      await insertInvoiceItems(invoiceId, items);
+    }
+    
+    // Sync to AWS
+    await _syncOrQueue(table: 'invoices', data: {...data, 'id': invoiceId}, action: 'INSERT');
+    
+    return invoiceId;
+  }
+
+  /// Insert invoice line items
+  Future<void> insertInvoiceItems(int invoiceId, List<Map<String, dynamic>> items) async {
+    final db = await database;
+    final batch = db.batch();
+    for (var item in items) {
+      item['invoiceId'] = invoiceId;
+      // Calculate item totals
+      final qty = (item['quantity'] ?? 1) as num;
+      final rate = (item['rate'] ?? 0) as num;
+      final amount = qty * rate;
+      final gstRate = (item['gstRate'] ?? 18) as num;
+      final gstAmount = amount * gstRate / 100;
+      
+      // For now, assume intra-state (CGST+SGST). TODO: Add state logic for IGST
+      item['amount'] = amount;
+      item['cgst'] = gstAmount / 2;
+      item['sgst'] = gstAmount / 2;
+      item['igst'] = 0;
+      item['totalAmount'] = amount + gstAmount;
+      
+      batch.insert('invoice_items', item);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  /// Get all invoices with optional filters
+  Future<List<Map<String, dynamic>>> getInvoices(String firmId, {
+    String? status,
+    String? startDate,
+    String? endDate,
+    int? customerId,
+  }) async {
     final db = await database;
     String where = 'firmId = ?';
     List<dynamic> args = [firmId];
+    
     if (status != null) {
       where += ' AND status = ?';
       args.add(status);
     }
+    if (startDate != null && endDate != null) {
+      where += ' AND invoiceDate BETWEEN ? AND ?';
+      args.addAll([startDate, endDate]);
+    }
+    if (customerId != null) {
+      where += ' AND customerId = ?';
+      args.add(customerId);
+    }
+    
     return await db.query('invoices',
       where: where,
       whereArgs: args,
-      orderBy: 'createdAt DESC',
+      orderBy: 'invoiceDate DESC, id DESC',
     );
   }
 
+  /// Get invoice with items
+  Future<Map<String, dynamic>?> getInvoiceWithItems(int invoiceId) async {
+    final db = await database;
+    final invoices = await db.query('invoices', where: 'id = ?', whereArgs: [invoiceId]);
+    if (invoices.isEmpty) return null;
+    
+    final items = await db.query('invoice_items', where: 'invoiceId = ?', whereArgs: [invoiceId]);
+    return {
+      ...invoices.first,
+      'items': items,
+    };
+  }
+
+  /// Update invoice
   Future<int> updateInvoice(int id, Map<String, dynamic> data) async {
     final db = await database;
-    return await db.update('invoices', data, where: 'id = ?', whereArgs: [id]);
+    data['updatedAt'] = DateTime.now().toIso8601String();
+    
+    // Recalculate balance due if payment updated
+    if (data.containsKey('amountPaid')) {
+      final invoice = await db.query('invoices', where: 'id = ?', whereArgs: [id]);
+      if (invoice.isNotEmpty) {
+        final totalAmount = (invoice.first['totalAmount'] as num?) ?? 0;
+        final amountPaid = (data['amountPaid'] as num?) ?? 0;
+        data['balanceDue'] = totalAmount - amountPaid;
+        
+        // Auto-update status based on payment
+        if (amountPaid >= totalAmount) {
+          data['status'] = 'PAID';
+        } else if (amountPaid > 0) {
+          data['status'] = 'PARTIAL';
+        }
+      }
+    }
+    
+    final rows = await db.update('invoices', data, where: 'id = ?', whereArgs: [id]);
+    await _syncOrQueue(table: 'invoices', data: {...data, 'id': id}, action: 'UPDATE', filters: {'id': id});
+    return rows;
+  }
+
+  /// Record payment against invoice and create transaction
+  Future<void> recordInvoicePayment(int invoiceId, double amount, String paymentMode, {String? notes}) async {
+    final db = await database;
+    final invoice = await db.query('invoices', where: 'id = ?', whereArgs: [invoiceId]);
+    if (invoice.isEmpty) return;
+    
+    final inv = invoice.first;
+    final currentPaid = (inv['amountPaid'] as num?) ?? 0;
+    final newPaid = currentPaid + amount;
+    
+    // Update invoice
+    await updateInvoice(invoiceId, {
+      'amountPaid': newPaid,
+      'paymentMode': paymentMode,
+    });
+    
+    // Create income transaction
+    await insertTransaction({
+      'firmId': inv['firmId'],
+      'date': DateTime.now().toIso8601String().substring(0, 10),
+      'type': 'INCOME',
+      'amount': amount,
+      'category': 'Invoice Payment',
+      'description': 'Payment for ${inv['invoiceNumber']}${notes != null ? ' - $notes' : ''}',
+      'mode': paymentMode,
+      'relatedEntityType': 'INVOICE',
+      'relatedEntityId': invoiceId,
+      'partyName': inv['customerName'],
+    });
+  }
+
+  /// Auto-create invoice from order
+  Future<int> createInvoiceFromOrder(int orderId, String firmId) async {
+    final db = await database;
+    
+    // Get order details
+    final orders = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
+    if (orders.isEmpty) throw Exception('Order not found');
+    final order = orders.first;
+    
+    // Get order dishes
+    final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [orderId]);
+    
+    // Get customer details
+    final customerId = order['customerId'] as int? ?? 0;
+    Map<String, dynamic>? customer;
+    if (customerId > 0) {
+      final customers = await db.query('customers', where: 'id = ?', whereArgs: [customerId]);
+      if (customers.isNotEmpty) customer = customers.first;
+    }
+    
+    // Calculate totals
+    double subtotal = 0;
+    List<Map<String, dynamic>> items = [];
+    
+    for (var dish in dishes) {
+      final pax = (dish['pax'] as int?) ?? 1;
+      final rate = (dish['pricePerPlate'] as num?) ?? 0;
+      final amount = pax * rate;
+      subtotal += amount;
+      
+      items.add({
+        'description': dish['dishName'] ?? 'Item',
+        'quantity': pax,
+        'unit': 'plates',
+        'rate': rate,
+        'gstRate': 5, // Food is typically 5% GST
+        'hsnCode': '996331', // Catering services HSN code
+      });
+    }
+    
+    // Calculate GST (assuming intra-state for now)
+    final gstRate = 0.05; // 5% for catering
+    final gstAmount = subtotal * gstRate;
+    final totalAmount = subtotal + gstAmount;
+    
+    // Create invoice
+    return await insertInvoice({
+      'firmId': firmId,
+      'orderId': orderId,
+      'customerId': customerId,
+      'customerName': order['customerName'] ?? customer?['name'] ?? 'Customer',
+      'customerAddress': customer?['address'],
+      'customerMobile': order['mobile'] ?? customer?['mobile'],
+      'customerGstin': customer?['gstin'],
+      'invoiceDate': DateTime.now().toIso8601String().substring(0, 10),
+      'subtotal': subtotal,
+      'cgst': gstAmount / 2,
+      'sgst': gstAmount / 2,
+      'igst': 0,
+      'totalAmount': totalAmount,
+      'amountPaid': (order['advanceAmount'] as num?) ?? 0,
+      'status': 'UNPAID',
+      'notes': 'Event: ${order['date']} at ${order['location'] ?? 'Venue'}',
+    }, items: items);
+  }
+
+  // --- ACCOUNTS RECEIVABLE (AR) ---
+  
+  /// Get customer outstanding balance
+  Future<double> getCustomerOutstanding(int customerId) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(balanceDue), 0) as outstanding
+      FROM invoices
+      WHERE customerId = ? AND status != 'PAID' AND status != 'CANCELLED'
+    ''', [customerId]);
+    return (result.first['outstanding'] as num?)?.toDouble() ?? 0;
+  }
+
+  /// Get total AR for firm
+  Future<double> getTotalAR(String firmId) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(balanceDue), 0) as totalAR
+      FROM invoices
+      WHERE firmId = ? AND status != 'PAID' AND status != 'CANCELLED'
+    ''', [firmId]);
+    return (result.first['totalAR'] as num?)?.toDouble() ?? 0;
+  }
+
+  /// Get AR aging report (30/60/90 days)
+  Future<Map<String, dynamic>> getARAgingReport(String firmId) async {
+    final db = await database;
+    final now = DateTime.now();
+    final today = now.toIso8601String().substring(0, 10);
+    final days30 = now.subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
+    final days60 = now.subtract(const Duration(days: 60)).toIso8601String().substring(0, 10);
+    final days90 = now.subtract(const Duration(days: 90)).toIso8601String().substring(0, 10);
+    
+    final result = await db.rawQuery('''
+      SELECT 
+        COALESCE(SUM(CASE WHEN dueDate >= ? THEN balanceDue ELSE 0 END), 0) as current,
+        COALESCE(SUM(CASE WHEN dueDate < ? AND dueDate >= ? THEN balanceDue ELSE 0 END), 0) as days30,
+        COALESCE(SUM(CASE WHEN dueDate < ? AND dueDate >= ? THEN balanceDue ELSE 0 END), 0) as days60,
+        COALESCE(SUM(CASE WHEN dueDate < ? THEN balanceDue ELSE 0 END), 0) as days90Plus
+      FROM invoices
+      WHERE firmId = ? AND status != 'PAID' AND status != 'CANCELLED'
+    ''', [today, today, days30, days30, days60, days60, firmId]);
+    
+    // Get customer-wise breakdown
+    final customers = await db.rawQuery('''
+      SELECT customerId, customerName, 
+             SUM(balanceDue) as outstanding,
+             MIN(dueDate) as oldestDue
+      FROM invoices
+      WHERE firmId = ? AND status != 'PAID' AND status != 'CANCELLED'
+      GROUP BY customerId
+      ORDER BY outstanding DESC
+    ''', [firmId]);
+    
+    return {
+      'summary': result.isNotEmpty ? result.first : {},
+      'customers': customers,
+    };
+  }
+
+  // --- ACCOUNTS PAYABLE (AP) ---
+  
+  /// Get supplier outstanding (PO total - payments made)
+  Future<double> getSupplierOutstanding(int supplierId, String firmId) async {
+    final db = await database;
+    
+    // Total PO value
+    final poTotal = await db.rawQuery('''
+      SELECT COALESCE(SUM(totalAmount), 0) as total
+      FROM purchase_orders
+      WHERE vendorId = ? AND firmId = ? AND status != 'CANCELLED'
+    ''', [supplierId, firmId]);
+    
+    // Total payments made (from transactions)
+    final payments = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE relatedEntityType = 'SUPPLIER' AND relatedEntityId = ? AND type = 'EXPENSE'
+    ''', [supplierId]);
+    
+    final po = (poTotal.first['total'] as num?)?.toDouble() ?? 0;
+    final paid = (payments.first['total'] as num?)?.toDouble() ?? 0;
+    
+    return po - paid;
+  }
+
+  /// Get total AP for firm
+  Future<double> getTotalAP(String firmId) async {
+    final db = await database;
+    final suppliers = await getAllSuppliers(firmId);
+    double totalAP = 0;
+    
+    for (var supplier in suppliers) {
+      totalAP += await getSupplierOutstanding(supplier['id'] as int, firmId);
+    }
+    return totalAP;
+  }
+
+  // --- PROFIT & LOSS ---
+  
+  /// Get P&L summary with expense grouping
+  Future<Map<String, dynamic>> getProfitLossSummary(String firmId, String startDate, String endDate) async {
+    final db = await database;
+    
+    // Income by category
+    final income = await db.rawQuery('''
+      SELECT category, COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE firmId = ? AND type = 'INCOME' AND date BETWEEN ? AND ?
+      GROUP BY category
+      ORDER BY total DESC
+    ''', [firmId, startDate, endDate]);
+    
+    // Expenses by standard P&L categories
+    final expenses = await db.rawQuery('''
+      SELECT 
+        CASE 
+          WHEN category IN ('Raw Materials', 'Ingredients', 'Groceries', 'Supplies', 'Purchase') THEN 'Raw Materials'
+          WHEN category IN ('Salary', 'Wages', 'Overtime', 'Advance', 'Staff Payment') THEN 'Staff Costs'
+          WHEN category IN ('Transport', 'Fuel', 'Vehicle', 'Driver', 'Logistics') THEN 'Transport'
+          WHEN category IN ('Subcontract', 'Outsourcing', 'External Catering') THEN 'Subcontracting'
+          WHEN category IN ('Rent', 'Electricity', 'Gas', 'Water', 'Utilities') THEN 'Utilities'
+          WHEN category IN ('Marketing', 'Advertising', 'Promotion') THEN 'Marketing'
+          ELSE 'Other'
+        END as expenseGroup,
+        COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE firmId = ? AND type = 'EXPENSE' AND date BETWEEN ? AND ?
+      GROUP BY expenseGroup
+      ORDER BY total DESC
+    ''', [firmId, startDate, endDate]);
+    
+    // Calculate totals
+    double totalIncome = 0;
+    for (var i in income) {
+      totalIncome += (i['total'] as num?)?.toDouble() ?? 0;
+    }
+    
+    double totalExpense = 0;
+    for (var e in expenses) {
+      totalExpense += (e['total'] as num?)?.toDouble() ?? 0;
+    }
+    
+    return {
+      'income': income,
+      'expenses': expenses,
+      'totalIncome': totalIncome,
+      'totalExpense': totalExpense,
+      'netProfit': totalIncome - totalExpense,
+      'profitMargin': totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100) : 0,
+    };
+  }
+
+  // --- BALANCE SHEET (Simplified) ---
+  
+  /// Get simplified Balance Sheet data as of a specific date
+  /// Assets: Cash, AR, Inventory
+  /// Liabilities: AP, GST Payable
+  Future<Map<String, dynamic>> getBalanceSheetData(String firmId, String asOfDate) async {
+    final db = await database;
+    
+    // ASSETS
+    
+    // 1. Cash: Net of all income - expenses up to asOfDate
+    final cashResult = await db.rawQuery('''
+      SELECT 
+        COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END), 0) as cash
+      FROM transactions
+      WHERE firmId = ? AND date <= ?
+    ''', [firmId, asOfDate]);
+    final cash = (cashResult.first['cash'] as num?)?.toDouble() ?? 0;
+    
+    // 2. Accounts Receivable: Unpaid invoices
+    final ar = await getTotalAR(firmId);
+    
+    // 3. Inventory: Sum of (stock * rate) from ingredients
+    final inventoryResult = await db.rawQuery('''
+      SELECT COALESCE(SUM(stock * rate), 0) as inventory
+      FROM ingredients
+      WHERE firmId = ?
+    ''', [firmId]);
+    final inventory = (inventoryResult.first['inventory'] as num?)?.toDouble() ?? 0;
+    
+    final totalAssets = cash + ar + inventory;
+    
+    // LIABILITIES
+    
+    // 1. Accounts Payable: Outstanding supplier balances
+    final ap = await getTotalAP(firmId);
+    
+    // 2. GST Payable: GST from unpaid invoices
+    final gstResult = await db.rawQuery('''
+      SELECT COALESCE(SUM(cgst + sgst + igst), 0) as gstPayable
+      FROM invoices
+      WHERE firmId = ? AND status != 'PAID' AND status != 'CANCELLED'
+    ''', [firmId]);
+    final gstPayable = (gstResult.first['gstPayable'] as num?)?.toDouble() ?? 0;
+    
+    final totalLiabilities = ap + gstPayable;
+    
+    // NET WORTH
+    final netWorth = totalAssets - totalLiabilities;
+    
+    return {
+      'asOfDate': asOfDate,
+      'assets': {
+        'cash': cash,
+        'accountsReceivable': ar,
+        'inventory': inventory,
+        'total': totalAssets,
+      },
+      'liabilities': {
+        'accountsPayable': ap,
+        'gstPayable': gstPayable,
+        'total': totalLiabilities,
+      },
+      'netWorth': netWorth,
+    };
+  }
+
+  // --- CASH FLOW STATEMENT (Operating Only) ---
+  
+  /// Get operating cash flow for a period
+  Future<Map<String, dynamic>> getCashFlowData(String firmId, String startDate, String endDate) async {
+    final db = await database;
+    
+    // Opening Balance: Cash as of day before startDate
+    final openingDate = DateTime.parse(startDate).subtract(const Duration(days: 1));
+    final openingDateStr = openingDate.toIso8601String().substring(0, 10);
+    
+    final openingResult = await db.rawQuery('''
+      SELECT 
+        COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END), 0) as balance
+      FROM transactions
+      WHERE firmId = ? AND date <= ?
+    ''', [firmId, openingDateStr]);
+    final openingBalance = (openingResult.first['balance'] as num?)?.toDouble() ?? 0;
+    
+    // Cash Inflows (by category)
+    final inflows = await db.rawQuery('''
+      SELECT category, COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE firmId = ? AND type = 'INCOME' AND date BETWEEN ? AND ?
+      GROUP BY category
+      ORDER BY total DESC
+    ''', [firmId, startDate, endDate]);
+    
+    double totalInflow = 0;
+    for (var i in inflows) {
+      totalInflow += (i['total'] as num?)?.toDouble() ?? 0;
+    }
+    
+    // Cash Outflows (grouped by P&L categories)
+    final outflows = await db.rawQuery('''
+      SELECT 
+        CASE 
+          WHEN category IN ('Raw Materials', 'Ingredients', 'Groceries', 'Supplies', 'Purchase') THEN 'Supplier Payments'
+          WHEN category IN ('Salary', 'Wages', 'Overtime', 'Advance', 'Staff Payment') THEN 'Staff Payments'
+          WHEN category IN ('Transport', 'Fuel', 'Vehicle', 'Driver', 'Logistics') THEN 'Transport'
+          WHEN category IN ('Rent', 'Electricity', 'Gas', 'Water', 'Utilities') THEN 'Utilities'
+          ELSE 'Other Operating'
+        END as expenseGroup,
+        COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE firmId = ? AND type = 'EXPENSE' AND date BETWEEN ? AND ?
+      GROUP BY expenseGroup
+      ORDER BY total DESC
+    ''', [firmId, startDate, endDate]);
+    
+    double totalOutflow = 0;
+    for (var o in outflows) {
+      totalOutflow += (o['total'] as num?)?.toDouble() ?? 0;
+    }
+    
+    // Net Cash Flow
+    final netCashFlow = totalInflow - totalOutflow;
+    
+    // Closing Balance
+    final closingBalance = openingBalance + netCashFlow;
+    
+    return {
+      'period': {'start': startDate, 'end': endDate},
+      'openingBalance': openingBalance,
+      'inflows': inflows,
+      'totalInflow': totalInflow,
+      'outflows': outflows,
+      'totalOutflow': totalOutflow,
+      'netCashFlow': netCashFlow,
+      'closingBalance': closingBalance,
+    };
+  }
+
+  // --- KPI DASHBOARD DATA ---
+  
+  /// Get KPI data for dashboard (Revenue, Margin, Order Count, Avg Order Value)
+  Future<Map<String, dynamic>> getKPIData(String firmId, String startDate, String endDate) async {
+    final db = await database;
+    
+    // Revenue (total income)
+    final revenueResult = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as revenue
+      FROM transactions
+      WHERE firmId = ? AND type = 'INCOME' AND date BETWEEN ? AND ?
+    ''', [firmId, startDate, endDate]);
+    final revenue = (revenueResult.first['revenue'] as num?)?.toDouble() ?? 0;
+    
+    // COGS (Raw Materials expenses)
+    final cogsResult = await db.rawQuery('''
+      SELECT COALESCE(SUM(amount), 0) as cogs
+      FROM transactions
+      WHERE firmId = ? AND type = 'EXPENSE' AND date BETWEEN ? AND ?
+        AND category IN ('Raw Materials', 'Ingredients', 'Groceries', 'Supplies', 'Purchase')
+    ''', [firmId, startDate, endDate]);
+    final cogs = (cogsResult.first['cogs'] as num?)?.toDouble() ?? 0;
+    
+    // Gross Margin
+    final grossProfit = revenue - cogs;
+    final grossMargin = revenue > 0 ? (grossProfit / revenue * 100) : 0;
+    
+    // Order Count
+    final orderResult = await db.rawQuery('''
+      SELECT COUNT(*) as orderCount, COALESCE(SUM(totalPax), 0) as totalPax
+      FROM orders
+      WHERE firmId = ? AND date BETWEEN ? AND ? AND status != 'CANCELLED'
+    ''', [firmId, startDate, endDate]);
+    final orderCount = (orderResult.first['orderCount'] as num?)?.toInt() ?? 0;
+    final totalPax = (orderResult.first['totalPax'] as num?)?.toInt() ?? 0;
+    
+    // Average Order Value
+    final avgOrderValue = orderCount > 0 ? revenue / orderCount : 0;
+    
+    return {
+      'period': {'start': startDate, 'end': endDate},
+      'revenue': revenue,
+      'cogs': cogs,
+      'grossProfit': grossProfit,
+      'grossMargin': grossMargin,
+      'orderCount': orderCount,
+      'totalPax': totalPax,
+      'avgOrderValue': avgOrderValue,
+    };
+  }
+  
+  /// Get KPI comparison data (current vs previous period)
+  Future<Map<String, dynamic>> getKPIComparison(String firmId, String startDate, String endDate) async {
+    final current = await getKPIData(firmId, startDate, endDate);
+    
+    // Calculate previous period (same duration before startDate)
+    final start = DateTime.parse(startDate);
+    final end = DateTime.parse(endDate);
+    final duration = end.difference(start);
+    final prevStart = start.subtract(duration).subtract(const Duration(days: 1));
+    final prevEnd = start.subtract(const Duration(days: 1));
+    
+    final previous = await getKPIData(
+      firmId, 
+      prevStart.toIso8601String().substring(0, 10),
+      prevEnd.toIso8601String().substring(0, 10),
+    );
+    
+    // Calculate change percentages
+    double calcChange(double current, double previous) {
+      if (previous == 0) return current > 0 ? 100 : 0;
+      return ((current - previous) / previous * 100);
+    }
+    
+    return {
+      'current': current,
+      'previous': previous,
+      'changes': {
+        'revenue': calcChange(current['revenue'] as double, previous['revenue'] as double),
+        'grossMargin': (current['grossMargin'] as double) - (previous['grossMargin'] as double),
+        'orderCount': calcChange((current['orderCount'] as int).toDouble(), (previous['orderCount'] as int).toDouble()),
+        'avgOrderValue': calcChange(current['avgOrderValue'] as double, previous['avgOrderValue'] as double),
+      },
+    };
+  }
+
+  /// Get event/order profitability
+
+  Future<Map<String, dynamic>> getEventProfitability(int orderId, String firmId) async {
+    final db = await database;
+    
+    // Get order revenue
+    final order = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
+    if (order.isEmpty) return {};
+    
+    final orderData = order.first;
+    final revenue = (orderData['grandTotal'] as num?)?.toDouble() ?? 
+                   (orderData['totalAmount'] as num?)?.toDouble() ?? 0;
+    
+    // Get linked expenses
+    final expenses = await db.rawQuery('''
+      SELECT category, COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE relatedEntityType = 'ORDER' AND relatedEntityId = ? AND type = 'EXPENSE'
+      GROUP BY category
+    ''', [orderId]);
+    
+    double totalCost = 0;
+    for (var e in expenses) {
+      totalCost += (e['total'] as num?)?.toDouble() ?? 0;
+    }
+    
+    return {
+      'orderId': orderId,
+      'revenue': revenue,
+      'costs': expenses,
+      'totalCost': totalCost,
+      'profit': revenue - totalCost,
+      'margin': revenue > 0 ? ((revenue - totalCost) / revenue * 100) : 0,
+    };
   }
 
   // Generate PO Number
@@ -3890,4 +5061,206 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     }).toList();
   }
 
+  // =====================================================
+  // DRIVER PORTAL HELPERS (v34)
+  // =====================================================
+
+  /// Get pending dispatch assignments for a driver
+  Future<List<Map<String, dynamic>>> getDriverPendingAssignments(int driverId) async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
+             (SELECT COUNT(*) FROM dishes WHERE orderId = o.id) as dishCount
+      FROM dispatches d
+      JOIN orders o ON o.id = d.orderId
+      WHERE d.driverId = ? AND d.assignmentStatus = 'PENDING'
+      ORDER BY o.date ASC, o.time ASC
+    ''', [driverId]);
+  }
+
+  /// Get driver's active dispatch (in progress)
+  Future<Map<String, dynamic>?> getDriverActiveDispatch(int driverId) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
+             v.vehicleNo, v.vehicleType
+      FROM dispatches d
+      JOIN orders o ON o.id = d.orderId
+      LEFT JOIN vehicles v ON v.id = d.vehicleId
+      WHERE d.driverId = ? AND d.assignmentStatus = 'ACCEPTED' 
+        AND d.dispatchStatus IN ('PENDING', 'LOADING', 'DISPATCHED', 'DELIVERED')
+      ORDER BY d.dispatchTime DESC
+      LIMIT 1
+    ''', [driverId]);
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  /// Update dispatch assignment status (accept/reject)
+  Future<void> updateDispatchAssignment(int dispatchId, String status, {String? rejectionReason}) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    
+    Map<String, dynamic> updates = {'assignmentStatus': status};
+    if (status == 'ACCEPTED') {
+      updates['acceptedAt'] = now;
+    } else if (status == 'REJECTED') {
+      updates['rejectedAt'] = now;
+      updates['rejectionReason'] = rejectionReason;
+      updates['driverId'] = null; // Unassign so admin can reassign
+    }
+    
+    await db.update('dispatches', updates, where: 'id = ?', whereArgs: [dispatchId]);
+  }
+
+  /// Update dispatch km tracking and earnings
+  Future<void> updateDispatchKmAndEarnings(int dispatchId, {
+    double? kmForward,
+    double? kmReturn,
+    double? driverShare,
+  }) async {
+    final db = await database;
+    Map<String, dynamic> updates = {'updatedAt': DateTime.now().toIso8601String()};
+    if (kmForward != null) updates['kmForward'] = kmForward;
+    if (kmReturn != null) updates['kmReturn'] = kmReturn;
+    if (driverShare != null) updates['driverShare'] = driverShare;
+    
+    await db.update('dispatches', updates, where: 'id = ?', whereArgs: [dispatchId]);
+  }
+
+  /// Get driver earnings report for date range
+  Future<Map<String, dynamic>> getDriverEarningsReport(int driverId, String startDate, String endDate) async {
+    final db = await database;
+    
+    final summary = await db.rawQuery('''
+      SELECT 
+        COUNT(*) as tripCount,
+        COALESCE(SUM(kmForward), 0) as totalKmForward,
+        COALESCE(SUM(kmReturn), 0) as totalKmReturn,
+        COALESCE(SUM(driverShare), 0) as totalEarnings,
+        SUM(CASE WHEN isPaid = 1 THEN driverShare ELSE 0 END) as paidAmount,
+        SUM(CASE WHEN isPaid = 0 THEN driverShare ELSE 0 END) as pendingAmount
+      FROM dispatches
+      WHERE driverId = ? AND DATE(dispatchTime) BETWEEN ? AND ?
+        AND dispatchStatus IN ('DELIVERED', 'COMPLETED', 'RETURNING')
+    ''', [driverId, startDate, endDate]);
+    
+    final trips = await db.rawQuery('''
+      SELECT d.*, o.customerName, o.location, o.date, o.time
+      FROM dispatches d
+      JOIN orders o ON o.id = d.orderId
+      WHERE d.driverId = ? AND DATE(d.dispatchTime) BETWEEN ? AND ?
+        AND d.dispatchStatus IN ('DELIVERED', 'COMPLETED', 'RETURNING')
+      ORDER BY d.dispatchTime DESC
+    ''', [driverId, startDate, endDate]);
+    
+    return {
+      'summary': summary.isNotEmpty ? summary.first : {},
+      'trips': trips,
+    };
+  }
+
+  // =====================================================
+  // SUBCONTRACTOR PORTAL HELPERS (v34)
+  // =====================================================
+
+  /// Get orders assigned to subcontractor for a date
+  Future<List<Map<String, dynamic>>> getSubcontractorOrders(int subcontractorId, String date) async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT DISTINCT o.*, 
+             (SELECT SUM(d2.pax) FROM dishes d2 WHERE d2.orderId = o.id AND d2.isSubcontracted = 1 AND d2.subcontractorId = ?) as assignedPax,
+             (SELECT COUNT(*) FROM dishes d3 WHERE d3.orderId = o.id AND d3.isSubcontracted = 1 AND d3.subcontractorId = ?) as dishCount
+      FROM orders o
+      JOIN dishes d ON d.orderId = o.id
+      WHERE d.isSubcontracted = 1 AND d.subcontractorId = ? AND o.date = ?
+      ORDER BY o.time ASC
+    ''', [subcontractorId, subcontractorId, subcontractorId, date]);
+  }
+
+  /// Get dishes assigned to subcontractor for an order
+  Future<List<Map<String, dynamic>>> getSubcontractorDishes(int subcontractorId, int orderId) async {
+    final db = await database;
+    return await db.query('dishes',
+      where: 'orderId = ? AND isSubcontracted = 1 AND subcontractorId = ?',
+      whereArgs: [orderId, subcontractorId],
+    );
+  }
+
+  /// Get subcontractor ledger transactions
+  Future<List<Map<String, dynamic>>> getSubcontractorLedger(String subcontractorName, String startDate, String endDate) async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT * FROM finance
+      WHERE partyName LIKE ? AND date BETWEEN ? AND ?
+      ORDER BY date DESC
+    ''', ['%$subcontractorName%', startDate, endDate]);
+  }
+
+  // =====================================================
+  // SUPPLIER PORTAL HELPERS (v34)
+  // =====================================================
+
+  /// Get purchase orders for supplier by status
+  Future<List<Map<String, dynamic>>> getSupplierPOs(int supplierId, {String? status}) async {
+    final db = await database;
+    if (status != null) {
+      return await db.query('purchase_orders',
+        where: 'vendorId = ? AND status = ?',
+        whereArgs: [supplierId, status],
+        orderBy: 'createdAt DESC',
+      );
+    }
+    return await db.query('purchase_orders',
+      where: 'vendorId = ?',
+      whereArgs: [supplierId],
+      orderBy: 'createdAt DESC',
+    );
+  }
+
+  /// Update PO status (accept/dispatch/deliver)
+  Future<void> updateSupplierPOStatus(int poId, String status) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    
+    Map<String, dynamic> updates = {'status': status};
+    if (status == 'ACCEPTED') updates['acceptedAt'] = now;
+    else if (status == 'DISPATCHED') updates['dispatchedAt'] = now;
+    else if (status == 'DELIVERED') updates['deliveredAt'] = now;
+    
+    await db.update('purchase_orders', updates, where: 'id = ?', whereArgs: [poId]);
+  }
+
+  /// Get supplier ledger (payments and PO values)
+  Future<Map<String, dynamic>> getSupplierLedger(int supplierId, String supplierName, String startDate, String endDate) async {
+    final db = await database;
+    
+    final transactions = await db.rawQuery('''
+      SELECT * FROM finance
+      WHERE partyName LIKE ? AND date BETWEEN ? AND ?
+      ORDER BY date DESC
+    ''', ['%$supplierName%', startDate, endDate]);
+    
+    final poSummary = await db.rawQuery('''
+      SELECT SUM(totalAmount) as totalInvoiced
+      FROM purchase_orders 
+      WHERE vendorId = ? AND DATE(createdAt) BETWEEN ? AND ?
+    ''', [supplierId, startDate, endDate]);
+    
+    return {
+      'transactions': transactions,
+      'totalInvoiced': poSummary.isNotEmpty ? poSummary.first['totalInvoiced'] ?? 0 : 0,
+    };
+  }
+
+  /// Assign driver to dispatch and send notification
+  Future<void> assignDriverToDispatch(int dispatchId, int driverId) async {
+    final db = await database;
+    await db.update('dispatches', {
+      'driverId': driverId,
+      'assignmentStatus': 'PENDING',
+      'assignedAt': DateTime.now().toIso8601String(),
+    }, where: 'id = ?', whereArgs: [dispatchId]);
+  }
+
 }
+

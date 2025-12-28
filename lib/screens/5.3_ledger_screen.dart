@@ -20,7 +20,7 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _loadFirmId();
   }
 
@@ -66,6 +66,7 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
           indicatorColor: Colors.white,
           tabs: [
             Tab(text: AppLocalizations.of(context)!.suppliers),
+            Tab(text: AppLocalizations.of(context)!.subcontractors),
             Tab(text: AppLocalizations.of(context)!.staff),
             Tab(text: AppLocalizations.of(context)!.customers),
           ],
@@ -75,6 +76,7 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
         controller: _tabController,
         children: [
           _buildEntityList('Supplier'),
+          _buildEntityList('Subcontractor'),
           _buildEntityList('Staff'),
           _buildEntityList('Customer'),
         ],
@@ -137,6 +139,8 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
     final db = DatabaseHelper();
     if (type == 'Supplier') {
       return await db.getAllSuppliers(_firmId);
+    } else if (type == 'Subcontractor') {
+      return await db.getAllSubcontractors(_firmId);
     } else if (type == 'Staff') {
       return await db.getAllStaff();
     } else if (type == 'Customer') {

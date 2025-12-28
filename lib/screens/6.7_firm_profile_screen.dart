@@ -23,6 +23,7 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
   final _gstController = TextEditingController();
   final _websiteController = TextEditingController();
   final _otMultiplierController = TextEditingController(text: '1.5');
+  final _clientUpiIdController = TextEditingController(); // UPI Subscription
   
   bool _isLoading = true;
   bool _isSaving = false;
@@ -51,6 +52,7 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
     _gstController.dispose();
     _websiteController.dispose();
     _otMultiplierController.dispose();
+    _clientUpiIdController.dispose();
     super.dispose();
   }
 
@@ -108,6 +110,9 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
         }
         _geoFenceRadius = (data['geoFenceRadius'] as int?) ?? 100;
         _otMultiplierController.text = ((data['otMultiplier'] as num?) ?? 1.5).toString();
+        
+        // UPI Subscription
+        _clientUpiIdController.text = data['client_upi_id']?.toString() ?? '';
       }
       setState(() => _isLoading = false);
     }
@@ -186,6 +191,8 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
         'kitchenLongitude': _kitchenLongitude,
         'geoFenceRadius': _geoFenceRadius,
         'otMultiplier': double.tryParse(_otMultiplierController.text) ?? 1.5,
+        // UPI Subscription
+        'client_upi_id': _clientUpiIdController.text.trim(),
       };
       
       await DatabaseHelper().updateFirmDetails(_firmId!, data);
@@ -290,6 +297,34 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                           ),
                         ),
                       ],
+                    ),
+                    
+                    // UPI Subscription Section
+                    const SizedBox(height: 24),
+                    const Text('Subscription Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Your UPI ID is used for subscription payment verification.',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _clientUpiIdController,
+                      decoration: const InputDecoration(
+                        labelText: 'Your UPI ID',
+                        hintText: 'e.g., yourname@upi',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.account_balance_wallet),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return null; // Optional
+                        // Basic UPI ID format: xxx@yyy
+                        if (!v.contains('@')) {
+                          return 'Invalid UPI ID format (should be like name@bank)';
+                        }
+                        return null;
+                      },
                     ),
 
                     const SizedBox(height: 32),

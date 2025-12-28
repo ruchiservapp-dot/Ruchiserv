@@ -7,6 +7,7 @@ import '../db/database_helper.dart';
 import '../services/geo_fence_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import '3.3.1_staff_detail_screen.dart';
+import 'staff/my_salary_slips_screen.dart';
 
 class MyAttendanceScreen extends StatefulWidget {
   const MyAttendanceScreen({super.key});
@@ -302,51 +303,72 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     await _loadData();
   }
 
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.attendanceTitle)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    if (_staffRecord == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.attendanceTitle)),
+        body: _buildNoStaffRecord(),
+      );
+    }
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.attendanceTitle),
         actions: [
-          if (_staffRecord != null)
-            IconButton(
-              icon: const Icon(Icons.person),
-              tooltip: AppLocalizations.of(context)!.profile,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => StaffDetailScreen(staffId: _staffRecord!['id']),
-                  ),
-                );
-              },
-            ),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
-        ],
-        bottom: _staffRecord != null
-            ? TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                indicatorColor: Colors.white,
-                tabs: [
-                  Tab(text: AppLocalizations.of(context)!.today, icon: const Icon(Icons.today)),
-                  Tab(text: AppLocalizations.of(context)!.history, icon: const Icon(Icons.calendar_month)),
-                ],
-              )
-            : null,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _staffRecord == null
-              ? _buildNoStaffRecord()
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildTodayTab(),
-                    _buildCalendarTab(),
-                  ],
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            tooltip: 'Salary Slips',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MySalarySlipsScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: AppLocalizations.of(context)!.profile,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => StaffDetailScreen(staffId: _staffRecord!['id']),
                 ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.today, icon: const Icon(Icons.today, size: 18)),
+            Tab(text: AppLocalizations.of(context)!.history, icon: const Icon(Icons.calendar_month, size: 18)),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildTodayTab(),
+          _buildCalendarTab(),
+        ],
+      ),
     );
   }
 
