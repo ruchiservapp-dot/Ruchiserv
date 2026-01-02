@@ -37,7 +37,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       db = await openDatabase(
         fileName,
-        version: 35, // v35: UPI Subscription Fields
+        version: 37, // v37: Users showRates fix
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -47,7 +47,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       db = await openDatabase(
         path,
-        version: 35, // v35: UPI Subscription Fields
+        version: 37, // v37: Users showRates fix
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -144,6 +144,53 @@ class DatabaseHelper {
         );
       ''');
       await db.execute('CREATE INDEX IF NOT EXISTS idx_dish_master_category ON dish_master(category);');
+    }
+
+    // Upgrade to v6: Defensive add for showRates in users 
+    if (oldVersion < 37) { // Bumped version check safely
+       try {
+         await db.execute('ALTER TABLE users ADD COLUMN showRates INTEGER DEFAULT 1;');
+       } catch (_) {}
+    }
+
+    // Upgrade to v36: Order Emails & Enhanced Fields
+    if (oldVersion < 36) {
+      final orderCols = [
+        'ALTER TABLE orders ADD COLUMN email TEXT;',
+        'ALTER TABLE orders ADD COLUMN time TEXT;',
+        'ALTER TABLE orders ADD COLUMN beforeDiscount REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN discountPercent REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN discountAmount REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN finalAmount REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN serviceRequired INTEGER DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN serviceType TEXT;',
+        'ALTER TABLE orders ADD COLUMN counterCount INTEGER DEFAULT 1;',
+        'ALTER TABLE orders ADD COLUMN staffCount INTEGER DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN staffRate REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN counterSetupRequired INTEGER DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN counterSetupRate REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN serviceCost REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN counterSetupCost REAL DEFAULT 0;',
+        'ALTER TABLE orders ADD COLUMN deliveredAt TEXT;',
+      ];
+      for (final sql in orderCols) {
+        try {
+          await db.execute(sql);
+        } catch (_) {}
+      }
+      
+      // Dishes table columns
+      final dishCols = [
+        'ALTER TABLE dishes ADD COLUMN foodType TEXT DEFAULT "Veg";',
+        'ALTER TABLE dishes ADD COLUMN createdAt TEXT;',
+        'ALTER TABLE dishes ADD COLUMN updatedAt TEXT;',
+        'ALTER TABLE dishes ADD COLUMN readyAt TEXT;',
+      ];
+      for (final sql in dishCols) {
+        try {
+          await db.execute(sql);
+        } catch (_) {}
+      }
     }
 
     // Upgrade to v6: Service and Counter Setup fields
@@ -1547,7 +1594,7 @@ class DatabaseHelper {
     final db = await database;
     return await db.query(
       'dishes',
-      where: "orderId = ? AND name IS NOT NULL AND name != '' AND name != 'Unnamed'",
+      where: "orderId = ? AND dishName IS NOT NULL AND dishName != '' AND dishName != 'Unnamed'",
       whereArgs: [orderId],
       orderBy: 'id ASC',
     );
@@ -1721,6 +1768,21 @@ class DatabaseHelper {
         whereArgs: [orderId, firmId],
       );
       
+      // Sync update to cloud
+      await _syncOrQueue(
+        table: 'orders',
+        data: {
+          'id': orderId,
+          'isCancelled': 1,
+          'cancelledAt': now,
+          'cancelledBy': userId,
+          'status': 'CANCELLED',
+          'updatedAt': now,
+        },
+        action: 'UPDATE',
+        filters: {'id': orderId}
+      );
+      
       return true;
     } catch (e) {
       return false;
@@ -1731,16 +1793,16 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getDishesSummaryByDate(String date) async {
     final db = await database;
     return await db.rawQuery('''
-      SELECT d.name,
+      SELECT d.dishName AS name,
              COALESCE(d.foodType, 'Veg') AS foodType,
              COALESCE(o.mealType, 'Snacks/Others') AS mealType,
              SUM(COALESCE(d.pax, 0)) AS totalPax,
-             SUM(COALESCE(d.cost, 0)) AS totalCost
+             SUM(COALESCE(d.pax * d.pricePerPlate, 0)) AS totalCost
       FROM dishes d
       JOIN orders o ON o.id = d.orderId
       WHERE o.date = ?
-      GROUP BY d.name, d.foodType, o.mealType
-      ORDER BY o.mealType, d.name
+      GROUP BY d.dishName, d.foodType, o.mealType
+      ORDER BY o.mealType, d.dishName
     ''', [date]);
   }
 
@@ -1938,7 +2000,51 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
 
   Future<int?> insertUser(Map<String, dynamic> user) async {
     final db = await database;
-    return await db.insert('users', user);
+    final id = await db.insert('users', user);
+    
+    // AUTO-AUTHORIZE: Add mobile to authorized_mobiles so user can login
+    final mobile = user['mobile']?.toString();
+    final firmId = user['firmId']?.toString();
+    final role = user['role']?.toString() ?? 'Staff';
+    final username = user['username']?.toString() ?? 'User';
+    
+    if (mobile != null && firmId != null && mobile.isNotEmpty) {
+      try {
+        final authData = {
+          'firmId': firmId,
+          'mobile': mobile,
+          'role': role,
+          'name': username,
+          'isActive': 1,
+          'addedBy': 'SYSTEM',
+          'addedAt': DateTime.now().toIso8601String(),
+        };
+        
+        final authId = await db.insert('authorized_mobiles', authData, 
+          conflictAlgorithm: ConflictAlgorithm.ignore);
+        
+        // SYNC: Push to cloud
+        if (authId > 0) {
+          await _syncOrQueue(
+            table: 'authorized_mobiles',
+            data: {...authData, 'id': authId},
+            action: 'INSERT'
+          );
+        }
+        print('✅ [DB] User $username ($mobile) auto-authorized for login');
+      } catch (e) {
+        print('⚠️ [DB] Failed to auto-authorize mobile: $e');
+      }
+    }
+    
+    // SYNC: Push new user to cloud
+    await _syncOrQueue(
+      table: 'users',
+      data: {...user, 'id': id},
+      action: 'INSERT'
+    );
+    
+    return id;
   }
 
   Future<List<Map<String, dynamic>>> getUsersByFirm(String firmId) async {
@@ -2976,15 +3082,15 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT 
-        d.name,
+        d.dishName AS name,
         d.category,
         COUNT(*) as orderCount,
         SUM(COALESCE(d.pax, 0)) as totalPax,
-        SUM(COALESCE(d.cost, 0)) as totalRevenue
+        SUM(COALESCE(d.pax * d.pricePerPlate, 0)) as totalRevenue
       FROM dishes d
       JOIN orders o ON d.orderId = o.id
       WHERE o.date BETWEEN ? AND ? AND (o.isCancelled = 0 OR o.isCancelled IS NULL)
-      GROUP BY d.name
+      GROUP BY d.dishName
       ORDER BY orderCount DESC
       LIMIT ?
     ''', [startDate, endDate, limit]);
@@ -2998,7 +3104,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
         COALESCE(d.category, 'Uncategorized') as category,
         COUNT(*) as dishCount,
         SUM(COALESCE(d.pax, 0)) as totalPax,
-        SUM(COALESCE(d.cost, 0)) as totalRevenue
+        SUM(COALESCE(d.pax * d.pricePerPlate, 0)) as totalRevenue
       FROM dishes d
       JOIN orders o ON d.orderId = o.id
       WHERE o.date BETWEEN ? AND ? AND (o.isCancelled = 0 OR o.isCancelled IS NULL)
@@ -4158,7 +4264,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     final db = await database;
     
     try {
-      return await db.transaction((txn) async {
+      final result = await db.transaction((txn) async {
         final now = DateTime.now();
         
         // 1. ATOMIC CHECK: Re-verify all orders are still PENDING
@@ -4250,6 +4356,47 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
         print('✅ [MRP Transaction] Run #$mrpRunId completed for ${orderIds.length} orders');
         return mrpRunId;
       });
+      
+      // SYNC: Post-transaction sync (outside txn to avoid locking)
+      if (result != null) {
+        final mrpRunId = result;
+        final db = await database;
+        
+        // 1. Sync MRP Run
+        final runData = await db.query('mrp_runs', where: 'id = ?', whereArgs: [mrpRunId], limit: 1);
+        if (runData.isNotEmpty) {
+           await _syncOrQueue(table: 'mrp_runs', data: runData.first, action: 'INSERT');
+        }
+        
+        // 2. Sync MRP Run Orders
+        final runOrders = await db.query('mrp_run_orders', where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
+        for (var ro in runOrders) {
+          await _syncOrQueue(table: 'mrp_run_orders', data: ro, action: 'INSERT');
+        }
+        
+        // 3. Sync MRP Output
+        final runOutput = await db.query('mrp_output', where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
+        for (var out in runOutput) {
+          await _syncOrQueue(table: 'mrp_output', data: out, action: 'INSERT');
+        }
+        
+        // 4. Sync Updated Orders status
+        for (var orderId in orderIds) {
+          await _syncOrQueue(
+            table: 'orders', 
+            data: {
+              'id': orderId,
+              'mrpRunId': mrpRunId,
+              'mrpStatus': 'MRP_DONE',
+              'isLocked': 1,
+              'lockedAt': DateTime.now().toIso8601String(), // approx
+            }, 
+            action: 'UPDATE',
+            filters: {'id': orderId}
+          );
+        }
+      }
+      return result;
     } catch (e) {
       print('❌ [MRP Transaction] Failed: $e');
       return null;

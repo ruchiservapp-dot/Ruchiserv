@@ -322,12 +322,12 @@ class _LoginScreenState extends State<LoginScreen> {
         final sp = await SharedPreferences.getInstance();
         await sp.setBool('biometric_enabled', true);
         if (!mounted) return;
+        setState(() {}); // Refresh UI to show enabled state
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.biometricEnabled)),
         );
       }
     } catch (e) {
-      if (!mounted) return;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.failedEnableBiometric(e.toString()))),

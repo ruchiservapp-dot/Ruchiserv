@@ -118,6 +118,10 @@ class AwsApi {
       print('🤔 Decoded Type: ${decoded.runtimeType}'); // DEBUG
       
       if (decoded is Map<String, dynamic>) return decoded;
+      // Handle List responses (e.g., query results from Lambda)
+      if (decoded is List) {
+        return {'Items': decoded};
+      }
       return {'status': 'error', 'message': 'Invalid JSON format (Expected Map, got ${decoded.runtimeType})'};
     } catch (e) {
       print('🔴 Decode Error Body: "${res.body}"'); // DEBUG

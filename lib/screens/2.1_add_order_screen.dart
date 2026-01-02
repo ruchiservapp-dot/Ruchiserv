@@ -31,6 +31,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _customerController = TextEditingController();
   final _mobileController = TextEditingController();
+  final _emailController = TextEditingController();
   final _locationController = TextEditingController();
   final _notesController = TextEditingController();
 
@@ -96,6 +97,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     if (o != null) {
       _customerController.text = o['customerName']?.toString() ?? '';
       _mobileController.text = o['mobile']?.toString() ?? '';
+      _emailController.text = o['email']?.toString() ?? '';
       _locationController.text = o['location']?.toString() ?? '';
       _mealType = o['mealType']?.toString() ?? 'Lunch';
       _foodType = o['foodType']?.toString() ?? 'Veg';
@@ -183,10 +185,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         _categorizedDishes[category] = [];
       }
       _categorizedDishes[category]!.add({
-        'name': dish['name'],
+        'name': dish['dishName'], // DB column is 'dishName'
         'pax': dish['pax'] ?? 0,
-        'rate': dish['rate'] ?? 0,
-        'cost': dish['cost'] ?? 0,
+        'rate': dish['pricePerPlate'] ?? 0, // DB column is 'pricePerPlate'
+        'cost': (dish['pax'] ?? 0) * (dish['pricePerPlate'] ?? 0), // Recalculate cost
         'foodType': dish['foodType'] ?? _foodType,
         '_localId': '${DateTime.now().microsecondsSinceEpoch}_${dish['id'] ?? 'new'}',
       });
@@ -354,7 +356,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         'date': dateStr,
         'customerName': _customerController.text.trim(),
         'mobile': _mobileController.text.trim(),
-        'email': null,
+        'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
         'location': _locationController.text.trim(),
         'mealType': _mealType,
         'foodType': _foodType,
@@ -384,12 +386,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       // prepare dishes payload
       final dishRows = allValidDishes.map((d) {
         return {
-            'name': d['name'],
+            'dishName': d['name'], // Schema uses 'dishName' column
             'foodType': d['foodType'] ?? _foodType,
             'pax': _parseInt(d['pax']) ?? 0, // Pax is int
-            'rate': d['rate'] ?? 0, // Maintain double precision
-            'manualCost': 0,
-            'cost': d['cost'] ?? 0, // Maintain double precision
+            'pricePerPlate': d['rate'] ?? 0, // Schema uses 'pricePerPlate' column
             'category': d['category'],
           };
       }).toList();
@@ -691,6 +691,28 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                   }
                   if (cleaned.length != 10) {
                     return AppLocalizations.of(context)!.mobileLengthError;
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8),
+
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'customer@email.com',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return null; // Optional field
+                  }
+                  // Basic email validation
+                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailRegex.hasMatch(v.trim())) {
+                    return 'Enter a valid email';
                   }
                   return null;
                 },

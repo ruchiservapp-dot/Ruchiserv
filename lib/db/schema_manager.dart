@@ -48,19 +48,14 @@ class SchemaManager {
       if (!existingColumns.contains(colName)) {
         print('$TAG Column "$colName" missing in "${schema.tableName}". Adding...');
         try {
-          // Extract just the definition part if it contains PRIMARY KEY (which can't be added via ALTER)
-          // But usually we are adding non-PK columns. 
-          // SQLite ALTER TABLE ADD COLUMN supports simple definitions.
-          // Note: Cannot add PRIMARY KEY or UNIQUE constraints via ALTER TABLE ADD COLUMN in SQLite
-          // But DEFAULT values work.
-          
           await db.execute('ALTER TABLE ${schema.tableName} ADD COLUMN $colName $colDef');
-          print('$TAG Added column "$colName" to "${schema.tableName}"');
+          print('$TAG ✅ Added column "$colName" to "${schema.tableName}"');
         } catch (e) {
           print('$TAG ❌ Failed to add column "$colName" to "${schema.tableName}": $e');
         }
       }
     }
+    print('$TAG Table ${schema.tableName} sync done.');
   }
 
   static Future<bool> _tableExists(Database db, String tableName) async {

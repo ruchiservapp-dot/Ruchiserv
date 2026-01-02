@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import '../../core/locale_provider.dart';
+import '../core/locale_provider.dart';
+import '../db/database_helper.dart';
+import '../db/schema_manager.dart';
+
 class GeneralSettingsScreen extends StatefulWidget {
   const GeneralSettingsScreen({super.key});
 
@@ -56,8 +59,6 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
               );
             },
           ),
-          const Divider(),
-          const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
           const Text("Language", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -117,6 +118,33 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             onChanged: (val) {
               setState(() => _otpEnabled = val);
               _savePreference('otp_enabled', val);
+            },
+          ),
+          const Divider(),
+          const SizedBox(height: 16),
+          const Text("Maintenance", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ListTile(
+            leading: const Icon(Icons.build_circle, color: Colors.orange),
+            title: const Text("Fix Database Schema"),
+            subtitle: const Text("Run if you see missing column errors"),
+            onTap: () async {
+              try {
+                final db = DatabaseHelper();
+                final database = await db.database;
+                await SchemaManager.syncSchema(database);
+                
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Database Schema Synced! Try your action again."), backgroundColor: Colors.green),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Fix failed: $e"), backgroundColor: Colors.red),
+                  );
+                }
+              }
             },
           ),
         ],

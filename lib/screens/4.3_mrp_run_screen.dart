@@ -175,7 +175,7 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
             continue;
           }
 
-          final dishName = dish['name'] as String?;
+          final dishName = (dish['dishName'] ?? dish['name']) as String?;
           if (dishName == null || dishName.isEmpty) continue;
           
           final dishQty = (dish['pax'] as num?)?.toInt() ?? 1;
@@ -258,7 +258,7 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
 
   void _showIngredients(int orderId, int dishIndex) async {
     final dish = _orderDishes[orderId]![dishIndex];
-    final dishName = dish['name'] as String;
+    final dishName = (dish['dishName'] ?? dish['name']) as String;
     final pax = (dish['pax'] as num?)?.toInt() ?? 0;
     
     // Fetch ingredients for this dish
@@ -460,7 +460,7 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 final dish = dishes[index];
                 // Check productionType for truth
                 final isSub = dish['productionType'] == 'SUBCONTRACT';
-                final name = dish['name'] ?? 'Unknown';
+                final name = dish['dishName'] ?? dish['name'] ?? 'Unknown';
                 final pax = dish['pax'] ?? 0;
                 
                 return FutureBuilder<List<Map<String, dynamic>>>(

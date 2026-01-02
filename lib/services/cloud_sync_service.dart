@@ -3,6 +3,7 @@
 // Full AWS DynamoDB sync service for multi-device, multi-user cloud operations
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart'; // For ConflictAlgorithm
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
 import 'connectivity_service.dart';
@@ -42,6 +43,8 @@ class CloudSyncService {
     'invoices',
     'invoice_items',
     'salary_disbursements',
+    'users',                // v37: Multi-device user sync
+    'authorized_mobiles',   // v37: Multi-device login authorization
   ];
 
   /// Get current firm ID
@@ -160,13 +163,13 @@ class CloudSyncService {
     print('🔄 CloudSync: Starting full sync for firm $firmId...');
 
     for (final table in syncTables) {
-      await _syncTableFromCloud(table, firmId);
+      await syncTableFromCloud(table, firmId);
     }
 
     print('✅ CloudSync: Full sync complete');
   }
 
-  Future<void> _syncTableFromCloud(String table, String firmId) async {
+  Future<void> syncTableFromCloud(String table, String firmId) async {
     try {
       final resp = await AwsApi.callDbHandler(
         method: 'GET',
@@ -177,21 +180,43 @@ class CloudSyncService {
         },
       );
 
-      if (resp is! List || resp.isEmpty) {
+      // Handle response - Lambda returns items directly as a List in response body
+      // or as a Map with error field
+      List<dynamic> records = [];
+      
+      if (resp['error'] != null) {
+        print('  ❌ $table: API error: ${resp['error']}');
+        return;
+      }
+      
+      // The Lambda should return a list for query results
+      // Check if response has items in different formats
+      if (resp['Items'] != null && resp['Items'] is List) {
+        records = resp['Items'] as List;
+      } else if (resp.containsKey('local_id') || resp.containsKey('id')) {
+        // Single item response
+        records = [resp];
+      } else {
+        print('  📥 $table: No cloud data (resp: $resp)');
+        return;
+      }
+      
+      if (records.isEmpty) {
         print('  📥 $table: No cloud data');
         return;
       }
 
-      final records = resp as List;
       print('  📥 $table: Received ${records.length} records');
 
       final db = await _db.database;
 
       for (final record in records) {
         final data = Map<String, dynamic>.from(record);
-        final localId = data['local_id'] as int?;
+        // Parse local_id - DynamoDB returns numbers as strings
+        final localIdRaw = data['local_id'];
+        final localId = localIdRaw == null ? null : int.tryParse(localIdRaw.toString());
         
-        // Remove DynamoDB metadata
+        // Remove DynamoDB metadata (but keep firmId - needed for tables)
         data.remove('pk');
         data.remove('sk');
         data.remove('table_name');
@@ -199,6 +224,9 @@ class CloudSyncService {
         data.remove('synced_at');
 
         if (localId == null) continue;
+
+        // Sanitize data - convert DynamoDB string numbers to proper types
+        final sanitized = _sanitizeForSqlite(data);
 
         // Check if record exists locally
         final existing = await db.query(
@@ -209,21 +237,75 @@ class CloudSyncService {
 
         if (existing.isEmpty) {
           // Insert new record (preserve original ID)
-          data['id'] = localId;
+          sanitized['id'] = localId;
           try {
-            await db.insert(table, data);
+            // Use ConflictAlgorithm.replace to handle UNIQUE constraints (like userId)
+            await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
           } catch (e) {
-            // ID conflict - update instead
-            await db.update(table, data, where: 'id = ?', whereArgs: [localId]);
+            print('  ⚠️ $table insert failed for id=$localId: $e');
           }
         } else {
-          // Update existing record
-          await db.update(table, data, where: 'id = ?', whereArgs: [localId]);
+          // Update existing record - use replace to handle UNIQUE constraints
+          sanitized['id'] = localId;
+          await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
     } catch (e) {
       print('  ❌ $table sync error: $e');
     }
+  }
+
+  /// Convert DynamoDB string numbers to proper types for SQLite
+  static Map<String, dynamic> _sanitizeForSqlite(Map<String, dynamic> data) {
+    // Fields that must ALWAYS remain strings, even if they look like numbers
+    const stringFields = {
+      'mobile', 'phone', 'contact', 
+      'firmId', 'userId', 'gstin', 
+      'date', 'time', 'eventDate', 'eventTime', 
+      'createdAt', 'updatedAt', 'deletedAt', 'synced_at', 'joinedAt',
+      'sku_name', 'vehicleNumber',
+      'zip', 'pin', 'postalCode'
+    };
+
+    final result = <String, dynamic>{};
+    for (final entry in data.entries) {
+      final key = entry.key;
+      final value = entry.value;
+      
+      if (value == null) {
+        result[key] = null;
+        continue;
+      }
+      
+      // If manually flagged as string field, keep as is
+      if (stringFields.contains(key) || key.endsWith('Name') || key.endsWith('Url')) {
+        result[key] = value.toString();
+        continue;
+      }
+
+      if (value is String) {
+        // Try to convert string to int if it's a numeric string
+        final intVal = int.tryParse(value);
+        final doubleVal = double.tryParse(value);
+        
+        // Only convert if it helps (e.g. "1" -> 1). 
+        // If it's a mix of chars, tryParse returns null.
+        if (intVal != null) {
+           // Double check: if it starts with 0 and length > 1, it might be a code (e.g. "01")
+           // Keep "0" as 0. Keep "05" as "05"? No, SQLite int 5 is fine usually.
+           // But just in case, typical IDs don't start with 0.
+           result[key] = intVal;
+        } else if (doubleVal != null) {
+           result[key] = doubleVal;
+        } else {
+           result[key] = value;
+        }
+      } else {
+        // Already a number or boolean
+        result[key] = value;
+      }
+    }
+    return result;
   }
 
   // ============ PENDING SYNC QUEUE ============
@@ -299,5 +381,86 @@ class CloudSyncService {
     }
 
     print('✅ CloudSync: $table batch sync complete');
+  }
+
+  // ============ POLLING & BACKGROUND SYNC ============
+
+  bool _isPolling = false;
+
+  /// Start periodic sync (Push & Pull)
+  /// Call this from main.dart or after login
+  void startPolling() {
+    if (_isPolling) return;
+    _isPolling = true;
+    print('🔄 CloudSync: Starting background polling...');
+
+    // PUSH: Process pending queue every 30 seconds
+    Stream.periodic(const Duration(seconds: 30)).listen((_) async {
+      await processPendingSync();
+    });
+
+    // PUSH: Process pending queue every 30 seconds (Cheap - only if local changes)
+    Stream.periodic(const Duration(seconds: 30)).listen((_) async {
+      if (!_isFrontendActive) return; // Optimization
+      await processPendingSync();
+    });
+
+    // PULL (HOT): Sync high-velocity tables every 60 seconds
+    // Cost: ~6 requests/minute per device (Orders, Dispatch, MRP, Users)
+    Stream.periodic(const Duration(seconds: 60)).listen((_) async {
+      if (!_isFrontendActive) return; // Optimization
+      final isOnline = await ConnectivityService().isOnline();
+      if (isOnline) {
+        final firmId = await _getFirmId();
+        if (firmId != null) {
+          await syncTableFromCloud('orders', firmId);
+          await syncTableFromCloud('dispatch', firmId);
+          await syncTableFromCloud('mrp_runs', firmId);
+          await syncTableFromCloud('mrp_output', firmId);
+          await syncTableFromCloud('users', firmId);              // v37: Multi-device login
+          await syncTableFromCloud('authorized_mobiles', firmId); // v37: Multi-device login
+        }
+      }
+    });
+
+    // PULL (COLD): Sync static/low-velocity data every 5 minutes
+    // Cost: reduced by 5x
+    // PULL (COLD): Sync static/low-velocity data every 5 minutes
+    // Cost: reduced by 5x
+    Stream.periodic(const Duration(minutes: 5)).listen((_) async {
+       if (!_isFrontendActive) return; // Optimization: Skip if app backgrounded
+       
+       final isOnline = await ConnectivityService().isOnline();
+       if (isOnline) {
+         final firmId = await _getFirmId();
+         if (firmId != null) {
+           // Sync everything else
+           for (final table in syncTables) {
+             if (!['orders', 'dispatch', 'mrp_runs', 'mrp_output'].contains(table)) {
+               await syncTableFromCloud(table, firmId);
+             }
+           }
+         }
+       }
+    });
+  }
+
+  // ============ LIFECYCLE MANAGEMENT ============
+  
+  bool _isFrontendActive = true;
+
+  /// Call this when app goes to background (paused/inactive)
+  void setAppBackgrounded() {
+    _isFrontendActive = false;
+    print('🌙 CloudSync: App backgrounded - pausing polling');
+  }
+
+  /// Call this when app resumes (foreground)
+  void setAppForegrounded() {
+    _isFrontendActive = true;
+    print('☀️ CloudSync: App foregrounded - resuming polling');
+    // Trigger immediate check on resume
+    processPendingSync();
+    fullSyncFromCloud(); 
   }
 }

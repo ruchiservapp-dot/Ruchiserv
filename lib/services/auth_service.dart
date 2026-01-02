@@ -199,6 +199,17 @@ class AuthService {
     print('AuthService.loginOfflineWithDetails: Checking credentials for $firmId / $mobile');
     final db = DatabaseHelper();
     
+    // SYNC-ON-LOGIN: Pull latest users and authorized_mobiles from AWS first
+    // This ensures newly created users from other devices are available immediately
+    try {
+      final cloudSync = CloudSyncService();
+      await cloudSync.syncTableFromCloud('users', firmId);
+      await cloudSync.syncTableFromCloud('authorized_mobiles', firmId);
+      print('✅ Pre-login sync complete for users & authorized_mobiles');
+    } catch (e) {
+      print('⚠️ Pre-login sync failed (will use local data): $e');
+    }
+    
     // Check if firm exists locally
     final database = await db.database;
     var firms = await database.query('firms', where: 'firmId = ?', whereArgs: [firmId]);
@@ -320,6 +331,14 @@ class AuthService {
           final sp = await SharedPreferences.getInstance();
           final userId = u['userId']?.toString() ?? 'U-$mobile';
           await sp.setString('user_id', userId);
+          await sp.setString('last_firm', firmId); // Essential for CloudSync!
+          
+          // SYNC: Trigger cloud sync for multi-device support
+          try {
+            await CloudSyncService().fullSyncFromCloud();
+          } catch (e) {
+            print('⚠️ Cloud Sync after offline login failed: $e');
+          }
           
           return {'success': true, 'error': null};
         } else {
@@ -381,10 +400,18 @@ class AuthService {
           if (awsPassword == password) {
             print('✓ Password match from AWS!');
             
-            // COMPLIANCE: Save user_id for audit trail
+            // COMPLIANCE: Save user_id and firmId for audit trail and sync
             final sp = await SharedPreferences.getInstance();
             final userId = awsUser['userId']?.toString() ?? awsUser['userid']?.toString() ?? 'U-$mobile';
             await sp.setString('user_id', userId);
+            await sp.setString('last_firm', firmId); // Essential for CloudSync!
+            
+            // SYNC: Trigger cloud sync for multi-device support
+            try {
+              await CloudSyncService().fullSyncFromCloud();
+            } catch (e) {
+              print('⚠️ Cloud Sync after AWS login failed: $e');
+            }
             
             return {'success': true, 'error': null};
           } else {

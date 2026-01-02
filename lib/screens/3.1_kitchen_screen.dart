@@ -358,7 +358,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
                   children: [
                     Row(
                       children: [
-                        Expanded(child: Text(dish['name'], style: const TextStyle(fontWeight: FontWeight.w600))),
+                        Expanded(child: Text(dish['dishName'] ?? dish['name'] ?? 'Dish', style: const TextStyle(fontWeight: FontWeight.w600))),
                         if (type == 'LIVE')
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -498,7 +498,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
           ),
           ...grouped[date]!.map((d) {
             final type = d['productionType'] ?? 'INTERNAL';
-            final dishName = d['name'] as String;
+            final dishName = (d['dishName'] ?? d['name'] ?? 'Dish') as String;
             final pax = d['pax'] as int? ?? 1;
             
             return Card(
@@ -629,7 +629,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
               color: Colors.green.shade50,
               child: ListTile(
                 contentPadding: const EdgeInsets.all(12),
-                title: Text(d['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(d['dishName'] ?? d['name'] ?? 'Dish', style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

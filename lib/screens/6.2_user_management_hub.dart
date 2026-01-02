@@ -601,6 +601,8 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
     String selectedRole = 'Staff';
     bool showRates = true;
 
+    String? inlineError;
+
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -610,6 +612,19 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (inlineError != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(8),
+                    color: Colors.red.shade50,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, size: 20, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(inlineError!, style: const TextStyle(color: Colors.red, fontSize: 12))),
+                      ],
+                    ),
+                  ),
                 TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder())),
                 const SizedBox(height: 12),
                 TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, maxLength: 10, decoration: const InputDecoration(labelText: 'Mobile', border: OutlineInputBorder(), counterText: '')),
@@ -635,34 +650,48 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
-                // Validate each field with specific errors
+                setDialogState(() => inlineError = null);
+                
+                // Validate
                 if (nameCtrl.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name is required'), backgroundColor: Colors.orange));
+                  setDialogState(() => inlineError = 'Name is required');
                   return;
                 }
                 if (mobileCtrl.text.trim().length != 10) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mobile must be exactly 10 digits'), backgroundColor: Colors.orange));
+                  setDialogState(() => inlineError = 'Mobile must be 10 digits');
                   return;
                 }
                 if (passCtrl.text.length < 4) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must be at least 4 characters'), backgroundColor: Colors.orange));
+                  setDialogState(() => inlineError = 'Password min 4 chars');
                   return;
                 }
-                final db = DatabaseHelper();
-                await db.insertUser({
-                  'firmId': _currentFirmId!,
-                  'userId': 'U-${mobileCtrl.text}',
-                  'username': nameCtrl.text.trim(),
-                  'passwordHash': passCtrl.text.trim(),
-                  'role': selectedRole,
-                  'mobile': mobileCtrl.text.trim(),
-                  'isActive': 1,
-                  'showRates': showRates ? 1 : 0,
-                  'permissions': PermissionService.getDefaultPermissions(selectedRole),
-                  'createdAt': DateTime.now().toIso8601String(),
-                });
-                Navigator.pop(ctx);
-                _loadData();
+                if (_currentFirmId == null) {
+                  setDialogState(() => inlineError = 'System Error: No Firm ID found. Re-login.');
+                  return;
+                }
+
+                try {
+                  final db = DatabaseHelper();
+                  print('Attempting to add user for firm: $_currentFirmId');
+                  await db.insertUser({
+                    'firmId': _currentFirmId!,
+                    'userId': 'U-${mobileCtrl.text}',
+                    'username': nameCtrl.text.trim(),
+                    'passwordHash': passCtrl.text.trim(),
+                    'role': selectedRole,
+                    'mobile': mobileCtrl.text.trim(),
+                    'isActive': 1,
+                    'showRates': showRates ? 1 : 0,
+                    'permissions': PermissionService.getDefaultPermissions(selectedRole),
+                    'createdAt': DateTime.now().toIso8601String(),
+                  });
+                  print('User added successfully');
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  _loadData();
+                } catch (e) {
+                  print('ERROR ADDING USER: $e');
+                  setDialogState(() => inlineError = 'Save Failed: $e');
+                }
               },
               child: const Text('Add'),
             ),

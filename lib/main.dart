@@ -9,6 +9,7 @@ import 'core/locale_provider.dart';
 
 import 'screens/1.4_login_screen.dart'; // Full version with biometrics
 import 'screens/main_menu_screen.dart'; // Proper menu navigation
+import 'services/cloud_sync_service.dart'; // Background Sync
 import 'screens/0.0_splash_screen.dart';
 import 'db/seed_dishes.dart'; // Sample dishes and ingredients
 // DEV: Uncomment below for development testing
@@ -28,6 +29,9 @@ Future<void> main() async {
   // DEV: Uncomment below for development testing only
   // await seedTestUser();
   // await seedNovember2025Data();
+  
+  // SYNC: Start background polling for multi-device sync
+  CloudSyncService().startPolling();
   
   runApp(const RuchiServApp());
 }
@@ -56,7 +60,7 @@ class RuchiServApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.light,
-            home: const SplashScreen(),
+            home: const LifecycleWatcher(child: SplashScreen()),
             routes: {
               '/login': (context) => LoginScreen(),
               '/home': (context) => MainMenuScreen(),
@@ -65,5 +69,42 @@ class RuchiServApp extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+/// Helper widget to watch app lifecycle and pause/resume sync
+class LifecycleWatcher extends StatefulWidget {
+  final Widget child;
+  const LifecycleWatcher({super.key, required this.child});
+
+  @override
+  State<LifecycleWatcher> createState() => _LifecycleWatcherState();
+}
+
+class _LifecycleWatcherState extends State<LifecycleWatcher> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      CloudSyncService().setAppForegrounded();
+    } else if (state == AppLifecycleState.paused) {
+      CloudSyncService().setAppBackgrounded();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

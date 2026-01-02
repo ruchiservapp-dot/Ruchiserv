@@ -50,6 +50,8 @@ class AppSchema {
         'passwordHash': 'TEXT', // For local login authentication
         'role': 'TEXT NOT NULL', // ADMIN, MANAGER, STAFF
         'permissions': 'TEXT', // JSON array of permissions
+        'showRates': 'INTEGER DEFAULT 1', // v37: Visibility toggle for rates
+        'moduleAccess': 'TEXT', // v38: Granular module access
         'isActive': 'INTEGER DEFAULT 1',
         'lastLogin': 'TEXT',
         'createdAt': 'TEXT',
@@ -162,6 +164,7 @@ class AppSchema {
         'dispatchStatus': 'TEXT DEFAULT "PENDING"', // Fixed: Used in code
         'dispatchedAt': 'TEXT',
         'returnedAt': 'TEXT', // v26
+        'deliveredAt': 'TEXT', // v36
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
         'lockedAt': 'TEXT',
@@ -174,12 +177,29 @@ class AppSchema {
         // Legacy Columns (Active in Code)
         'date': 'TEXT', 
         'customerName': 'TEXT', 
-        'mobile': 'TEXT', 
+        'mobile': 'TEXT',
+        'email': 'TEXT', // v36: Customer email
         'totalPax': 'INTEGER DEFAULT 0',
         'foodType': 'TEXT',
         'mealType': 'TEXT',
+        'time': 'TEXT', // Delivery time
         'location': 'TEXT',
+        'beforeDiscount': 'REAL DEFAULT 0', // v36
+        'discountPercent': 'REAL DEFAULT 0', // v36
+        'discountAmount': 'REAL DEFAULT 0', // v36
+        'finalAmount': 'REAL DEFAULT 0', // v36
         'grandTotal': 'REAL DEFAULT 0',
+        
+        // Service & Counter Setup columns (v36)
+        'serviceRequired': 'INTEGER DEFAULT 0',
+        'serviceType': 'TEXT',
+        'counterCount': 'INTEGER DEFAULT 1',
+        'staffCount': 'INTEGER DEFAULT 0',
+        'staffRate': 'REAL DEFAULT 0',
+        'counterSetupRequired': 'INTEGER DEFAULT 0',
+        'counterSetupRate': 'REAL DEFAULT 0',
+        'serviceCost': 'REAL DEFAULT 0',
+        'counterSetupCost': 'REAL DEFAULT 0',
       },
     ),
 
@@ -193,6 +213,7 @@ class AppSchema {
         'dishMasterId': 'INTEGER', // v35: Link to dish_master.id for ID-based BOM lookup
         'dishName': 'TEXT NOT NULL DEFAULT "Dish"',
         'category': 'TEXT',
+        'foodType': 'TEXT DEFAULT "Veg"', // v36: Veg/Non-Veg
         'pax': 'INTEGER',
         'pricePerPlate': 'REAL',
         'isSubcontracted': 'INTEGER DEFAULT 0', // v31
@@ -200,6 +221,9 @@ class AppSchema {
         'productionType': 'TEXT DEFAULT "INTERNAL"', // v32 - INTERNAL, SUBCONTRACT, LIVE
         'productionStatus': 'TEXT DEFAULT "PENDING"', // v32 - PENDING, QUEUED, COMPLETED
         'notes': 'TEXT',
+        'createdAt': 'TEXT',
+        'updatedAt': 'TEXT',
+        'readyAt': 'TEXT', // v32: When production completed
       },
     ),
 
@@ -282,6 +306,7 @@ class AppSchema {
         'firmId': 'TEXT DEFAULT "SEED"', // v22
         'baseId': 'INTEGER', // v22
         'name': 'TEXT NOT NULL',
+        'sku_name': 'TEXT', // v36: SKU identifier
         'category': 'TEXT',
         'subcategory': 'TEXT',
         'unit_of_measure': 'TEXT DEFAULT "kg"', // Corrected from 'unit' to match usage
@@ -606,6 +631,31 @@ class AppSchema {
         'updatedAt': 'TEXT',
       },
       constraints: ['UNIQUE(staffId, monthYear)'],
+    ),
+
+    // 28. Service Rates (Staff/Counter Setup rates cache)
+    TableSchema(
+      tableName: 'service_rates',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'firmId': 'TEXT NOT NULL',
+        'rateType': 'TEXT NOT NULL', // STAFF, COUNTER
+        'rate': 'REAL DEFAULT 0',
+        'updatedAt': 'TEXT',
+      },
+      constraints: ['UNIQUE(firmId, rateType)'],
+    ),
+
+    // 29. Pending Sync (Offline Sync Queue)
+    TableSchema(
+      tableName: 'pending_sync',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'table_name': 'TEXT NOT NULL',
+        'data': 'TEXT', // JSON data
+        'action': 'TEXT', // INSERT, UPDATE, DELETE
+        'timestamp': 'TEXT',
+      },
     ),
   ];
 }
