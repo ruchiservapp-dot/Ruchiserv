@@ -1,6 +1,6 @@
 // @locked
 // lib/screens/1.7_create_firm_screen.dart
-// Version: 2.0.0 | Date: 2025-12-28
+// Version: 2.1.0 | Date: 2026-01-06 | E2E TESTED ✅
 // New Firm Registration - Self-service firm creation with OTP verification
 // Cross-Platform Sync: AWS sync with error feedback
 // DO NOT MODIFY without explicit approval - critical registration/sync logic
