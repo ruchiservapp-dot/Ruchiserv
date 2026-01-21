@@ -2722,6 +2722,12 @@ abstract class AppLocalizations {
   /// **'No items ready for unload'**
   String get noUnloadItems;
 
+  /// No description provided for @upgradeToEnterprise.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Enterprise for this feature'**
+  String get upgradeToEnterprise;
+
   /// No description provided for @startDispatch.
   ///
   /// In en, this message translates to:

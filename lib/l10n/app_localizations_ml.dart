@@ -1425,6 +1425,9 @@ class AppLocalizationsMl extends AppLocalizations {
   String get noUnloadItems => 'അൺലോഡ് ചെയ്യാൻ ഇനങ്ങൾ ഇല്ല';
 
   @override
+  String get upgradeToEnterprise => 'Upgrade to Enterprise for this feature';
+
+  @override
   String get startDispatch => 'ഡിസ്പാച്ച് തുടങ്ങുക';
 
   @override

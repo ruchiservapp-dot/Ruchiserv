@@ -163,6 +163,17 @@ class _SupplierScreenState extends State<SupplierScreen> {
                 } else {
                   await DatabaseHelper().insertSupplier(data);
                 }
+
+                // AUTO-WHITELIST: Allow instant login
+                if (mobileController.text.trim().isNotEmpty) {
+                  await DatabaseHelper().insertAuthorizedMobile({
+                    'firmId': _firmId,
+                    'mobile': mobileController.text.trim(),
+                    'role': 'Supplier',
+                    'name': nameController.text.trim(),
+                    'addedBy': 'ADMIN_APP',
+                  });
+                }
                 Navigator.pop(context, true);
               },
               child: Text(isEdit ? AppLocalizations.of(context)!.save : AppLocalizations.of(context)!.add),

@@ -19,7 +19,7 @@ class DriverHomeScreen extends StatefulWidget {
 
 class _DriverHomeScreenState extends State<DriverHomeScreen> {
   bool _isLoading = true;
-  int _driverId = 0;
+  String _driverId = ''; // Fixed: Changed from int to String
   String _driverName = '';
   
   // Data
@@ -35,54 +35,80 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   }
 
   Future<void> _loadDriverData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     
-    final sp = await SharedPreferences.getInstance();
-    final mobile = sp.getString('last_mobile') ?? '';
-    final firmId = sp.getString('last_firm') ?? '';
-    
-    final db = await DatabaseHelper().database;
-    
-    // Get driver ID from users table (linked by mobile)
-    final users = await db.query('users', 
-      where: 'mobile = ? AND firmId = ?', 
-      whereArgs: [mobile, firmId],
-    );
-    
-    if (users.isNotEmpty) {
-      _driverId = users.first['id'] as int? ?? 0;
-      _driverName = users.first['name']?.toString() ?? 'Driver';
+    try {
+      final sp = await SharedPreferences.getInstance();
+      final mobile = sp.getString('last_mobile') ?? '';
+      final firmId = sp.getString('last_firm') ?? '';
+      
+      final db = await DatabaseHelper().database;
+      
+      // 1. Get Driver Identity (Name)
+      final users = await db.query('users', 
+        where: 'mobile = ? AND firmId = ?', 
+        whereArgs: [mobile, firmId],
+      );
+      
+      if (users.isNotEmpty) {
+        _driverName = users.first['username']?.toString() ?? 'Driver';
+      }
+
+      // 2. Find Assigned Vehicle (Driver is linked to Vehicle by Mobile)
+      // This gives us the vehicleId to check dispatches for
+      final vehicleRes = await db.query('vehicles',
+        where: 'driverMobile = ? AND firmId = ?',
+        whereArgs: [mobile, firmId],
+        limit: 1,
+      );
+
+      if (vehicleRes.isNotEmpty) {
+        // We use the vehicleId effectively as the "driver identity" for dispatch logic
+        // because dispatches are assigned to vehicles, not directly to driver user IDs
+        _driverId = vehicleRes.first['id'].toString();
+        await _loadDispatchData();
+      } else {
+        // No vehicle assigned to this mobile
+        if (mounted) {
+          setState(() {
+            _pendingAssignments = [];
+            _activeDispatch = null;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('DriverHome Error: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
-    
-    if (_driverId > 0) {
-      await _loadDispatchData();
-    }
-    
-    setState(() => _isLoading = false);
   }
 
   Future<void> _loadDispatchData() async {
     final db = await DatabaseHelper().database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     
-    // 1. Pending Assignments (PENDING status, assigned to this driver)
+    // NOTE: dispatches table uses 'vehicleId', not 'driverId'
+    // We reuse _driverId variable to store the vehicleId for convenience here
+    
+    // 1. Pending Assignments
     final pending = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
              (SELECT COUNT(*) FROM dishes WHERE orderId = o.id) as dishCount
       FROM dispatches d
       JOIN orders o ON o.id = d.orderId
-      WHERE d.driverId = ? AND d.assignmentStatus = 'PENDING'
+      WHERE d.vehicleId = ? AND d.assignmentStatus = 'PENDING'
       ORDER BY o.date ASC, o.time ASC
     ''', [_driverId]);
     
-    // 2. Active Dispatch (ACCEPTED, in progress)
+    // 2. Active Dispatch
     final active = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
-             v.vehicleNo, v.vehicleType
+             v.vehicleNumber as vehicleNo, v.vehicleType
       FROM dispatches d
       JOIN orders o ON o.id = d.orderId
       LEFT JOIN vehicles v ON v.id = d.vehicleId
-      WHERE d.driverId = ? AND d.assignmentStatus = 'ACCEPTED' 
+      WHERE d.vehicleId = ? AND d.assignmentStatus = 'ACCEPTED' 
         AND d.dispatchStatus IN ('PENDING', 'LOADING', 'DISPATCHED', 'DELIVERED')
       ORDER BY d.dispatchTime DESC
       LIMIT 1
@@ -94,7 +120,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
              COALESCE(SUM(kmForward + COALESCE(kmReturn, 0)), 0) as totalKm,
              COALESCE(SUM(driverShare), 0) as earnings
       FROM dispatches
-      WHERE driverId = ? AND DATE(dispatchTime) = ?
+      WHERE vehicleId = ? AND DATE(dispatchTime) = ?
         AND dispatchStatus IN ('DELIVERED', 'COMPLETED')
     ''', [_driverId, today]);
     
@@ -106,16 +132,19 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
              COUNT(*) as tripCount,
              SUM(CASE WHEN isPaid = 0 THEN driverShare ELSE 0 END) as pendingAmount
       FROM dispatches
-      WHERE driverId = ? AND DATE(dispatchTime) >= ?
+      WHERE vehicleId = ? AND DATE(dispatchTime) >= ?
         AND dispatchStatus IN ('DELIVERED', 'COMPLETED')
     ''', [_driverId, monthStart]);
     
-    setState(() {
-      _pendingAssignments = List<Map<String, dynamic>>.from(pending);
-      _activeDispatch = active.isNotEmpty ? Map<String, dynamic>.from(active.first) : null;
-      _todayStats = todayCompleted.isNotEmpty ? Map<String, dynamic>.from(todayCompleted.first) : {};
-      _earningsSummary = monthEarnings.isNotEmpty ? Map<String, dynamic>.from(monthEarnings.first) : {};
-    });
+    if (mounted) {
+      setState(() {
+        _pendingAssignments = List<Map<String, dynamic>>.from(pending);
+        _activeDispatch = active.isNotEmpty ? Map<String, dynamic>.from(active.first) : null;
+        _todayStats = todayCompleted.isNotEmpty ? Map<String, dynamic>.from(todayCompleted.first) : {};
+        _earningsSummary = monthEarnings.isNotEmpty ? Map<String, dynamic>.from(monthEarnings.first) : {};
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -484,7 +513,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => DriverEarningsScreen(driverId: _driverId)),
+          MaterialPageRoute(builder: (_) => DriverEarningsScreen(driverId: int.tryParse(_driverId) ?? 0)),
         ).then((_) => _loadDispatchData()),
         borderRadius: BorderRadius.circular(12),
         child: Padding(

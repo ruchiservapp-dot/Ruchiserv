@@ -9,6 +9,9 @@ import '../db/database_helper.dart';
 import 'package:sqflite/sqflite.dart'; // For ConflictAlgorithm
 import 'master_data_sync_service.dart';
 import 'cloud_sync_service.dart'; // Full operational data sync
+import 'fcm_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 
 /// Central place for login/registration/password APIs + local expiry rules.
 class AuthService {
@@ -64,6 +67,16 @@ class AuthService {
           await CloudSyncService().fullSyncFromCloud();
         } catch (e) {
           print('⚠️ Cloud Sync Failed: $e');
+        }
+
+          // TRIGGER FCM TOKEN SAVE
+        try {
+          final token = await FirebaseMessaging.instance.getToken();
+          if (token != null) {
+            await FcmService.saveTokenToBackend(token, firmId: firmId, mobile: mobile);
+          }
+        } catch (e) {
+          print('⚠️ FCM Token Save Failed on Login: $e');
         }
 
 
@@ -321,7 +334,31 @@ class AuthService {
           print('✓ Password match!');
           
           // Check if mobile is still authorized
-          final isAuthorized = await db.isMobileAuthorized(firmId, mobile);
+          bool isAuthorized = await db.isMobileAuthorized(firmId, mobile);
+          
+          // SELF-HEALING: If Admin is not authorized (likely due to sync bug), authorize them now
+          // CRITICAL SECURITY FIX: Only allow this if NO authorized mobiles exist ( First User / Recovery )
+          // Prevent random users from registering as Admin and bypassing checks
+          if (!isAuthorized && (u['role'] == 'Admin' || u['role'] == 'Owner')) {
+             final authMobiles = await db.getAuthorizedMobiles(firmId);
+             if (authMobiles.isEmpty) {
+                 print('⚠️ Admin found and Authorization Table Empty. Auto-authorizing for self-healing/setup.');
+                 final database = await db.database;
+                 await database.insert('authorized_mobiles', {
+                    'firmId': firmId,
+                    'mobile': mobile,
+                    'role': u['role'],
+                    'name': u['username'],
+                    'isActive': 1,
+                    'addedBy': 'SELF_HEALING',
+                    'addedAt': DateTime.now().toIso8601String(),
+                 }, conflictAlgorithm: ConflictAlgorithm.replace);
+                 isAuthorized = true;
+             } else {
+               print('🛑 Admin found but NOT authorized, and table not empty. Blocking access.');
+             }
+          }
+
           if (!isAuthorized) {
             print('✗ Mobile not authorized/deactivated');
             return {'success': false, 'error': 'access_revoked'};
@@ -332,13 +369,24 @@ class AuthService {
           final userId = u['userId']?.toString() ?? 'U-$mobile';
           await sp.setString('user_id', userId);
           await sp.setString('last_firm', firmId); // Essential for CloudSync!
+          await sp.setString('last_mobile', mobile); // Essential for FCM!
           
-          // SYNC: Trigger cloud sync for multi-device support
           try {
             await CloudSyncService().fullSyncFromCloud();
           } catch (e) {
             print('⚠️ Cloud Sync after offline login failed: $e');
           }
+
+          // TRIGGER FCM TOKEN SAVE
+          try {
+            final token = await FirebaseMessaging.instance.getToken();
+            if (token != null) {
+              await FcmService.saveTokenToBackend(token, firmId: firmId, mobile: mobile);
+            }
+          } catch (e) {
+            print('⚠️ FCM Token Save Failed on Offline Login: $e');
+          }
+
           
           return {'success': true, 'error': null};
         } else {
@@ -406,12 +454,22 @@ class AuthService {
             await sp.setString('user_id', userId);
             await sp.setString('last_firm', firmId); // Essential for CloudSync!
             
-            // SYNC: Trigger cloud sync for multi-device support
             try {
               await CloudSyncService().fullSyncFromCloud();
             } catch (e) {
               print('⚠️ Cloud Sync after AWS login failed: $e');
             }
+
+            // TRIGGER FCM TOKEN SAVE
+            try {
+              final token = await FirebaseMessaging.instance.getToken();
+              if (token != null) {
+                await FcmService.saveTokenToBackend(token);
+              }
+            } catch (e) {
+              print('⚠️ FCM Token Save Failed on AWS Login: $e');
+            }
+
             
             return {'success': true, 'error': null};
           } else {
@@ -501,8 +559,9 @@ class AuthService {
     required String mobile,
     required String password,
     required String name,
+    String role = 'Staff', // Default to Staff, caller must specify Admin if needed
   }) async {
-    print('AuthService.registerLocalUser: Registering $firmId / $mobile with password: $password');
+    print('AuthService.registerLocalUser: Registering $firmId / $mobile ($role) with password: $password');
     final db = DatabaseHelper();
     // Check if exists
     final users = await db.getUsersByFirm(firmId);
@@ -511,14 +570,16 @@ class AuthService {
     if (!existing) {
       print('AuthService.registerLocalUser: Inserting new user...');
       final userId = 'U-$mobile'; // Generate a userId
+      
       await db.insertUser({
         'firmId': firmId,
         'userId': userId,
         'username': name,
         'mobile': mobile,
-        'role': 'Admin', // Default to Admin for first user
+        'role': role, 
         'passwordHash': password, // Should be hashed in production
-        'permissions': 'ALL',
+        'permissions': role == 'Admin' ? 'ALL' : 'standard',
+        'isActive': role == 'Admin' ? 1 : 0, // Staff inactive by default
       });
       
       // COMPLIANCE: Save user_id for audit trail (Rule C.2)
@@ -635,122 +696,76 @@ class AuthService {
 
   // ====== OTP Logic (Rule F.3) ======
 
-  /// Generate and send OTP (Mock)
-  /// Enforces rate limiting: Max 3 failed attempts in last hour
+  // ====== OTP Logic (Rule F.3: Secure Backend) ======
+
+  /// Request OTP from Backend (Supports 2Factor, MSG91, Fast2SMS failovers)
+  /// Rate limiting is now enforced server-side.
   static Future<Map<String, dynamic>> sendOtp(String mobile) async {
-    final db = DatabaseHelper();
-    final now = DateTime.now();
-    
-    // 1. Check rate limiting (F.3)
-    // Count failed attempts in last hour
-    final oneHourAgo = now.subtract(const Duration(hours: 1)).toIso8601String();
-    final logs = await db.database.then((d) => d.query(
-      'otp_logs',
-      where: 'mobile = ? AND created_at > ? AND is_used = 0 AND attempts >= 3',
-      whereArgs: [mobile, oneHourAgo],
-    ));
-    
-    if (logs.isNotEmpty) {
+    print('🔐 AuthService: Requesting OTP for $mobile via Secure Backend...');
+    try {
+      // 1. Call Backend API
+      // Note: Endpoint /auth/otp/request handles provider selection and rate limits
+      final resp = await AwsApi.callDbHandler(
+        method: 'POST',
+        table: 'auth/otp/request',
+        data: {'mobile': mobile},
+      );
+      
+      print('🔐 AuthService: OTP Response: $resp');
+
+      // 2. Handle Response
+      if (resp['success'] == true) {
+         return {
+          'success': true,
+          'message': resp['message'] ?? 'OTP sent successfully',
+          'expiresIn': resp['expires_in'] ?? 300,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': resp['error'] ?? 'Failed to send OTP',
+          'blocked': (resp['error'] ?? '').toString().contains('Rate limit') 
+                     || (resp['error'] ?? '').toString().contains('Too many'),
+        };
+      }
+    } catch (e) {
+      print('❌ AuthService: OTP Request Failed: $e');
       return {
         'success': false,
-        'error': 'Too many failed attempts. Please try again in 1 hour.',
-        'blocked': true,
+        'error': 'Network error. Please try again.',
       };
     }
-
-    // 2. Generate OTP (Mock 6-digit)
-    // In production, use a secure random generator
-    final otp = '123456'; // Fixed for testing/mock
-    
-    // 3. Store in DB with 5 min expiry (F.3)
-    final expiresAt = now.add(const Duration(minutes: 5)).toIso8601String();
-    
-    await db.database.then((d) => d.insert('otp_logs', {
-      'mobile': mobile,
-      'otp_code': otp,
-      'created_at': now.toIso8601String(),
-      'expires_at': expiresAt,
-      'attempts': 0,
-      'is_used': 0,
-    }));
-    
-    // 4. Send SMS (Mock)
-    print('🔐 [MOCK SMS] OTP for $mobile: $otp');
-    
-    return {
-      'success': true,
-      'message': 'OTP sent successfully',
-      'expiresIn': 300, // seconds
-    };
   }
 
-  /// Verify OTP
-  /// Enforces expiry and max attempts
+  /// Verify OTP via Secure Backend
+  /// Enforces expiry and max attempts server-side
   static Future<Map<String, dynamic>> verifyOtp({
     required String mobile,
     required String code,
   }) async {
-    final db = DatabaseHelper();
-    final now = DateTime.now();
-    
-    // 1. Find latest valid OTP
-    final logs = await db.database.then((d) => d.query(
-      'otp_logs',
-      where: 'mobile = ? AND is_used = 0',
-      whereArgs: [mobile],
-      orderBy: 'created_at DESC',
-      limit: 1,
-    ));
-    
-    if (logs.isEmpty) {
-      return {'success': false, 'error': 'No OTP found. Please request a new one.'};
-    }
-    
-    final log = logs.first;
-    final logId = log['id'] as int;
-    final expiryStr = log['expires_at'] as String;
-    final attempts = log['attempts'] as int;
-    final correctOtp = log['otp_code'] as String;
-    
-    // 2. Check expiry
-    if (now.isAfter(DateTime.parse(expiryStr))) {
-      return {'success': false, 'error': 'OTP expired. Please request a new one.'};
-    }
-    
-    // 3. Check code match
-    if (code != correctOtp) {
-      // Increment attempts
-      final newAttempts = attempts + 1;
-      await db.database.then((d) => d.update(
-        'otp_logs',
-        {'attempts': newAttempts},
-        where: 'id = ?',
-        whereArgs: [logId],
-      ));
+    print('🔐 AuthService: Verifying OTP for $mobile...');
+    try {
+      final resp = await AwsApi.callDbHandler(
+        method: 'POST',
+        table: 'auth/otp/verify',
+        data: {'mobile': mobile, 'otp': code},
+      );
       
-      if (newAttempts >= 3) {
+      print('🔐 AuthService: Verify Response: $resp');
+      
+      if (resp['success'] == true) {
+        return {'success': true};
+      } else {
         return {
           'success': false,
-          'error': 'Too many failed attempts. Account blocked for 1 hour.',
-          'blocked': true,
+          'error': resp['error'] ?? 'Invalid OTP',
+          'blocked': (resp['error'] ?? '').contains('Too many'), // Pass through blocked status
         };
       }
-      
-      return {
-        'success': false,
-        'error': 'Invalid OTP. ${3 - newAttempts} attempts remaining.',
-      };
+    } catch (e) {
+       print('❌ AuthService: Verification Network Error: $e');
+       return {'success': false, 'error': 'Verification failed. Check network.'};
     }
-    
-    // 4. Success - Mark used
-    await db.database.then((d) => d.update(
-      'otp_logs',
-      {'is_used': 1},
-      where: 'id = ?',
-      whereArgs: [logId],
-    ));
-    
-    return {'success': true};
   }
 
   /// Register new firm + admin to AWS (called after local registration)
@@ -797,17 +812,37 @@ class AuthService {
       }
 
       bool userSuccess = true;
-      if (userResp['error'] != null || (userResp['status'] != 'success' && userResp['message'] != 'Created')) {
-        print('⚠️ Failed to sync user to AWS: ${userResp['error']}');
-        userSuccess = false;
-      }
+    if (userResp['error'] != null || (userResp['status'] != 'success' && userResp['message'] != 'Created')) {
+      print('⚠️ Failed to sync user to AWS: ${userResp['error']}');
+      userSuccess = false;
+    }
 
-      if (firmSuccess && userSuccess) {
-         print('✅ Firm registration synced to AWS');
-         return true;
-      } else {
-         return false;
-      }
+    // 3. Sync Authorized Mobiles to AWS (CRITICAL FIX)
+    final awsAuthData = {
+      'firmId': firmId,
+      'mobile': adminData['mobile'],
+      'role': 'Admin',
+      'name': adminData['username'],
+      'isActive': 1,
+      'addedBy': 'REGISTRATION_SYNC',
+      'addedAt': DateTime.now().toIso8601String(),
+    };
+    // Flatten for DynamoDB (if needed) or just pass as data
+    // The Lambda expects 'data' object.
+    
+    final authResp = await AwsApi.callDbHandler(
+      method: 'PUT',
+      table: 'authorized_mobiles',
+      data: awsAuthData,
+    );
+    print('AWS authorized_mobiles sync response: $authResp');
+
+    if (firmSuccess && userSuccess) {
+       print('✅ Firm registration synced to AWS');
+       return true;
+    } else {
+       return false;
+    }
     } catch (e) {
       print('🔴 AWS sync failed (will retry later): $e');
       return false;

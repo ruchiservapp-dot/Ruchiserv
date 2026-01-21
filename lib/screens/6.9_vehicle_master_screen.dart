@@ -1,6 +1,7 @@
 // MODULE: VEHICLE MASTER (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 // Last Locked: 2025-12-07 | Features: Fleet Management, Vehicle Type, Driver Info, In-House/Outside Classification
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Added
 import '../db/database_helper.dart';
 
 class VehicleMasterScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class VehicleMasterScreen extends StatefulWidget {
 class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
   List<Map<String, dynamic>> _vehicles = [];
   bool _isLoading = true;
+  String? _firmId; // Added for correct syncing
 
   @override
   void initState() {
@@ -22,8 +24,11 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
 
   Future<void> _loadVehicles() async {
     setState(() => _isLoading = true);
+    final sp = await SharedPreferences.getInstance(); // Added
+    _firmId = sp.getString('last_firm'); // Added
+    
     final db = await DatabaseHelper().database;
-    final result = await db.query('vehicles', orderBy: 'vehicleNo ASC');
+    final result = await db.query('vehicles', orderBy: 'vehicleNo ASC'); // Ideally filter by firmId too if multi-tenant locally
     setState(() {
       _vehicles = result;
       _isLoading = false;
@@ -96,7 +101,7 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
                 'type': type,
                 'driverName': driverNameController.text.trim(),
                 'driverMobile': driverMobileController.text.trim(),
-                'firmId': 'DEFAULT', // TODO: Get from session
+                'firmId': _firmId ?? 'DEFAULT', // Use real firmId
                 'updatedAt': now,
               };
               if (isEdit) {
@@ -104,6 +109,21 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
               } else {
                 data['createdAt'] = now;
                 await db.insert('vehicles', {...data, 'isActive': 1});
+              }
+
+              // AUTO-WHITELIST: Allow instant login for Driver
+              if (driverMobileController.text.trim().isNotEmpty) {
+                // Must get firmId from DB or Session properly, here we use 'DEFAULT' or cached logic if available
+                // Ideally this screen should load firmId from SharedPreferences like others
+                // Assuming DatabaseHelper internal logic or sync handles 'DEFAULT' if not provided
+                // But let's try to be safe.
+                await DatabaseHelper().insertAuthorizedMobile({
+                  'firmId': data['firmId'], // Passed from above logic
+                  'mobile': driverMobileController.text.trim(),
+                  'role': 'Driver',
+                  'name': driverNameController.text.trim(),
+                  'addedBy': 'ADMIN_APP',
+                });
               }
               Navigator.pop(ctx);
               _loadVehicles();

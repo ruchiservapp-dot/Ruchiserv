@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/permission_service.dart';
 import '../services/feature_gate_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
+
 import '2.0_orders_calendar_screen.dart';
 import '3.0_operations_screen.dart';
 import '4.0_inventory_screen.dart';
@@ -250,9 +251,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             ),
         ],
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: _visibleScreens[_selectedIndex],
+      body: Column(
+        children: [
+            // --- FCM DEBUGGING TOOL ---
+
+            // ---------------------------
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _visibleScreens[_selectedIndex],
+              ),
+            ),
+        ],
       ),
       // Only show bottom nav if more than 1 item
       bottomNavigationBar: _visibleMenuItems.length > 1 

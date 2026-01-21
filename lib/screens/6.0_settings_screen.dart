@@ -180,42 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               MaterialPageRoute(builder: (_) => const GeneralSettingsScreen()),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.language, color: Colors.indigo),
-            title: const Text("Language"),
-            subtitle: Consumer<LocaleProvider>(
-              builder: (context, provider, child) {
-                String label = 'English';
-                switch (provider.locale?.languageCode) {
-                  case 'ml': label = 'Malayalam (മലയാളം)'; break;
-                  case 'ta': label = 'Tamil (தமிழ்)'; break;
-                  case 'kn': label = 'Kannada (ಕನ್ನಡ)'; break;
-                  case 'hi': label = 'Hindi (हिंदी)'; break;
-                  case 'te': label = 'Telugu (తెలుగు)'; break;
-                }
-                return Text(label);
-              },
-            ),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Select Language'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildLanguageOption(context, 'English', 'en'),
-                      _buildLanguageOption(context, 'Malayalam (മലയാളം)', 'ml'),
-                      _buildLanguageOption(context, 'Tamil (தமிழ்)', 'ta'),
-                      _buildLanguageOption(context, 'Kannada (ಕನ್ನಡ)', 'kn'),
-                      _buildLanguageOption(context, 'Hindi (हिंदी)', 'hi'),
-                      _buildLanguageOption(context, 'Telugu (తెలుగు)', 'te'),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+
           ListTile(
             leading: const Icon(Icons.local_shipping_rounded, color: Colors.indigo),
             title: const Text("Vehicle Master"),
@@ -359,13 +324,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-  Widget _buildLanguageOption(BuildContext context, String label, String code) {
-    return ListTile(
-      title: Text(label),
-      onTap: () {
-        context.read<LocaleProvider>().setLocale(Locale(code));
-        Navigator.pop(context);
-      },
-    );
-  }
+
 }

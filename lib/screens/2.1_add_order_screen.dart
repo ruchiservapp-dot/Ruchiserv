@@ -9,6 +9,8 @@ import '../services/notification_service.dart';
 import '../utils/staffing_logic.dart';
 import '../services/language_service.dart';
 import '../services/master_data_sync_service.dart';
+import '../services/whatsapp_service.dart';
+import '../services/messaging_service.dart';
 
 class AddOrderScreen extends StatefulWidget {
   final DateTime date;
@@ -400,6 +402,14 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           order,
           dishRows,
         );
+        
+        // Trigger WhatsApp Update (Fire & Forget)
+        WhatsAppService.sendOrderUpdate(
+          toNumber: _mobileController.text.trim(),
+          customerName: _customerController.text.trim(),
+          orderId: widget.existingOrder!['id'].toString(),
+          orderStatus: 'UPDATED',
+        ).then((_) => print('💬 WhatsApp update trigger done'));
       } else {
         final id = await DatabaseHelper().insertOrder(order, dishRows);
         if (id == null || id <= 0) throw Exception('Insert failed');
@@ -409,6 +419,38 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           orderId: id,
           orderData: {...order, 'id': id, 'dishes': dishRows}, // Ensure ID is passed
         ).then((_) => print('🔔 Notification queued')).catchError((e) => print('🔕 Notification trigger failed: $e'));
+
+        // Fetch Firm Details for WhatsApp Params
+        String cateringName = 'RuchiServ';
+        String cateringPhone = '91XXXXXXXXXX'; 
+        try {
+           final firmMap = await DatabaseHelper().getFirm(firmId); // Assume getFirm exists or similar
+           if (firmMap != null) {
+              cateringName = firmMap['name']?.toString() ?? 'RuchiServ';
+              cateringPhone = firmMap['mobile']?.toString() ?? '91XXXXXXXXXX';
+           }
+        } catch (_) {}
+
+        // Trigger WhatsApp Confirmation (Fire & Forget)
+        WhatsAppService.sendOrderConfirmation(
+          toNumber: _mobileController.text.trim(),
+          customerName: _customerController.text.trim(),
+          orderId: id.toString(),
+          totalAmount: _grandTotal.toStringAsFixed(0),
+          date: dateStr,
+          time: _selectedTime != null ? _selectedTime!.format(context) : 'N/A',
+          pax: _pax.toString(),
+          cateringName: cateringName,
+          cateringPhone: cateringPhone,
+          orderData: {...order, 'id': id}, // Full order data for PDF
+          dishes: dishRows, // Dishes for PDF
+        ).then((_) => print('💬 WhatsApp trigger done'));
+        
+        // Trigger Email Confirmation (Fire & Forget)
+        MessagingService().sendOrderConfirmation(
+          {...order, 'id': id}, // Ensure ID is passed
+          dishRows,
+        );
       }
 
       // Save service rates for future use (Non-critical, wrap in try-catch)

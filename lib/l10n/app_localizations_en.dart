@@ -1426,6 +1426,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noUnloadItems => 'No items ready for unload';
 
   @override
+  String get upgradeToEnterprise => 'Upgrade to Enterprise for this feature';
+
+  @override
   String get startDispatch => 'Start Dispatch';
 
   @override

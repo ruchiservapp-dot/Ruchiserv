@@ -10,6 +10,7 @@ import 'core/locale_provider.dart';
 import 'screens/1.4_login_screen.dart'; // Full version with biometrics
 import 'screens/main_menu_screen.dart'; // Proper menu navigation
 import 'services/cloud_sync_service.dart'; // Background Sync
+import 'services/fcm_service.dart'; // Notification Service
 import 'screens/0.0_splash_screen.dart';
 import 'db/seed_dishes.dart'; // Sample dishes and ingredients
 // DEV: Uncomment below for development testing
@@ -23,12 +24,11 @@ Future<void> main() async {
   // CRITICAL: Initialize encryption before database access (Rule C.3)
   await EncryptionHelper.initialize();
   
+  // INIT: Firebase Cloud Messaging
+  await FcmService.initialize();
+  
   // Seed sample dishes and ingredients (skips if already seeded)
   await seedDishesAndIngredients();
-  
-  // DEV: Uncomment below for development testing only
-  // await seedTestUser();
-  // await seedNovember2025Data();
   
   // SYNC: Start background polling for multi-device sync
   CloudSyncService().startPolling();
@@ -46,7 +46,7 @@ class RuchiServApp extends StatelessWidget {
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, child) {
           return MaterialApp(
-            title: 'RuchiServ',
+            title: 'Ruchiserv Kitchen',
             // App text follows user's language preference
             locale: localeProvider.locale,
             localizationsDelegates: const [

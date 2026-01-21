@@ -1423,6 +1423,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noUnloadItems => 'उतारने के लिए कुछ नहीं';
 
   @override
+  String get upgradeToEnterprise => 'Upgrade to Enterprise for this feature';
+
+  @override
   String get startDispatch => 'शुरू करें';
 
   @override

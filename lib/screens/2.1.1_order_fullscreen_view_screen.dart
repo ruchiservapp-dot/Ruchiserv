@@ -6,6 +6,7 @@ import '../db/database_helper.dart';
 import '../services/biometric_service.dart';
 import '../services/permission_service.dart';
 import '../services/notification_service.dart';
+import '../services/whatsapp_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OrderFullScreenViewScreen extends StatefulWidget {
@@ -291,6 +292,14 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
         orderId: orderId,
         orderData: _orderData,
       );
+
+      // Trigger WhatsApp Update
+      WhatsAppService.sendOrderUpdate(
+        toNumber: _mobileController.text.trim(),
+        customerName: _customerController.text.trim(),
+        orderId: orderId.toString(),
+        orderStatus: 'UPDATED (MRP Rerun)',
+      ).then((_) => print('💬 WhatsApp update trigger done'));
 
       // 5. Reset order MRP status
       await db.resetOrderForMRP(orderId);

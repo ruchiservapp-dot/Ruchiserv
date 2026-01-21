@@ -57,11 +57,11 @@
 
 ### Web Deployment
 
-- [ ] Run `flutter build web --release`
-- [ ] Deploy to hosting (Firebase, Vercel, AWS S3, etc.)
-- [ ] Configure custom domain
-- [ ] Enable HTTPS
-- [ ] Test on multiple browsers
+- [x] Run `flutter build web --release`
+- [x] Deploy to hosting (Firebase, Vercel, AWS S3, etc.)
+- [x] Configure custom domain
+- [x] Enable HTTPS
+- [x] Test on multiple browsers
 
 ---
 
@@ -99,6 +99,11 @@
 ---
 
 ## 3. Security Checklist
+
+- [ ] **CRITICAL: Implement Safe Mode (Dev vs Prod)**
+  - [ ] Update `AppConfig` to distinguish Local vs Live
+  - [ ] Block `PUT/DELETE` requests in `AwsApi` when running locally
+  - [ ] Disable automatic `CloudSync` in Dev builds
 
 - [ ] Remove all debug logs from production code
 - [ ] Ensure API keys are not hardcoded (use environment variables)

@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart'; // For ConflictAlgorithm
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
 import 'connectivity_service.dart';
+import '../config/app_config.dart';
 
 /// CloudSyncService - Handles bidirectional sync between local SQLite and AWS DynamoDB.
 /// 
@@ -346,7 +347,13 @@ class CloudSyncService {
       final action = item['action'] as String;
       final dataJson = item['data'] as String;
       final data = jsonDecode(dataJson) as Map<String, dynamic>;
-      final recordId = data['id'] as int;
+      final recordId = int.tryParse(data['id']?.toString() ?? '0') ?? 0;
+      
+      if (recordId == 0) {
+        print('⚠️ CloudSync: Invalid record ID in pending queue. Deleting item ${item['id']}');
+        await db.delete('pending_sync', where: 'id = ?', whereArgs: [item['id']]);
+        continue;
+      }
 
       bool success = false;
       if (action == 'PUT') {
@@ -391,6 +398,16 @@ class CloudSyncService {
   /// Call this from main.dart or after login
   void startPolling() {
     if (_isPolling) return;
+    
+    // SAFETY: Check if Cloud Sync is allowed
+    // Need to import '../config/app_config.dart' at top of file
+    // But since it's a static access, we can add import and use it
+    if (!AppConfig.enableCloudSync) {
+      print('🛡️ SAFE MODE: Cloud Sync is DISABLED to protect Production DB.');
+      print('👉 To enable: flutter run --dart-define=FORCE_DEV_SYNC=true');
+      return;
+    }
+    
     _isPolling = true;
     print('🔄 CloudSync: Starting background polling...');
 

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation #101</title>
+    <style>
+        body {
+            font-family: 'Helvetica', sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .firm-details h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .firm-details p {
+            margin: 2px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .invoice-title {
+            text-align: right;
+        }
+
+        .tag {
+            background: #3f51b5;
+            color: white;
+            padding: 5px 15px;
+            font-weight: bold;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .section-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bill-to h3 {
+            margin-top: 0;
+            font-size: 16px;
+        }
+
+        .meta-info {
+            text-align: right;
+        }
+
+        .meta-row {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .meta-label {
+            color: #777;
+            margin-right: 10px;
+        }
+
+        .meta-val {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th {
+            background: #f5f5f5;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+            font-size: 12px;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .category-row td {
+            background-color: #e8eaf6;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: #3f51b5;
+            padding-top: 15px;
+        }
+
+        .num {
+            text-align: right;
+        }
+
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-box {
+            width: 250px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .total-final {
+            font-weight: bold;
+            font-size: 16px;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .terms p {
+            margin: 2px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="firm-details">
+            <h1>My Catering Co</h1>
+            <p>123 Food Street, Culinary District</p>
+            <p>Ph: 9876543210 | GSTIN: 32ABCDE1234F1Z5</p>
+        </div>
+        <div class="invoice-title">
+            <div class="tag">ORDER CONFIRMATION</div>
+            <p style="margin-top: 10px; font-weight: bold;">#101</p>
+        </div>
+    </div>
+
+    <!-- Customer Info -->
+    <div class="section-box">
+        <div class="bill-to">
+            <h3>Bill To:</h3>
+            <p style="margin:0; font-weight:bold;">John Doe</p>
+            <p style="margin:5px 0;">Green Villa, Kerala</p>
+            <p style="margin:0;">Ph: 9998887776</p>
+        </div>
+        <div class="meta-info">
+            <div class="meta-row"><span class="meta-label">Event Date:</span><span class="meta-val">12 Dec 2025</span>
+            </div>
+            <div class="meta-row"><span class="meta-label">Time:</span><span class="meta-val">2:00 PM</span></div>
+            <div class="meta-row"><span class="meta-label">Pax:</span><span class="meta-val">500</span></div>
+            <div class="meta-row"><span class="meta-label">Status:</span><span class="meta-val"
+                    style="color:orange">CONFIRMED</span></div>
+        </div>
+    </div>
+
+    <!-- Menu Items -->
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">#</th>
+                <th width="40%">Item</th>
+                <th width="10%" class="num">Qty/Pax</th>
+                <th width="15%" class="num">Rate</th>
+                <th width="10%" class="num">Amount</th>
+                <th width="20%">Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Starters -->
+            <tr class="category-row">
+                <td colspan="6">STARTERS</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>Paneer Tikka</td>
+                <td class="num">500</td>
+                <td class="num">250</td>
+                <td class="num">125,000</td>
+                <td>Spicy Mint Chutney</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Veg Spring Roll</td>
+                <td class="num">500</td>
+                <td class="num">150</td>
+                <td class="num">75,000</td>
+                <td>Hot Garlic Sauce</td>
+            </tr>
+
+            <!-- Main Course -->
+            <tr class="category-row">
+                <td colspan="6">MAIN COURSE</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Butter Naan</td>
+                <td class="num">500</td>
+                <td class="num">40</td>
+                <td class="num">20,000</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Dal Makhani</td>
+                <td class="num">500</td>
+                <td class="num">120</td>
+                <td class="num">60,000</td>
+                <td>Rich Creamy</td>
+            </tr>
+
+            <!-- Service / Settings -->
+            <tr class="category-row">
+                <td colspan="6">SERVICE & SETTINGS</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Counter Setup & Service Boys</td>
+                <td class="num">1</td>
+                <td class="num">15,000</td>
+                <td class="num">15,000</td>
+                <td>Uniformed Staff</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals">
+        <div class="totals-box">
+            <div class="total-row">
+                <span>Subtotal</span>
+                <span>295,000</span>
+            </div>
+            <div class="total-row">
+                <span>GST (18%)</span>
+                <span>53,100</span>
+            </div>
+            <div class="total-final total-row">
+                <span>Grand Total</span>
+                <span>₹348,100</span>
+            </div>
+            <div class="total-row" style="color:green; font-weight:bold; margin-top:10px;">
+                <span>Paid Advance</span>
+                <span>50,000</span>
+            </div>
+            <div class="total-row" style="color:red; font-weight:bold;">
+                <span>Balance Due</span>
+                <span>298,100</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="terms">
+            <strong>Terms & Conditions:</strong>
+            <p>1. 50% Advance payment required.</p>
+            <p>2. Balance 50% due on event date.</p>
+            <p>3. Cancellations allowed up to 48h prior.</p>
+        </div>
+        <div class="bank-details">
+            <strong>Bank Details:</strong><br>
+            HDFC Bank<br>
+            A/C: 1234567890<br>
+            IFSC: HDFC0001234
+        </div>
+    </div>
+
+</body>
+
+</html>

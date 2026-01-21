@@ -26,6 +26,15 @@ class AppConfig {
   /// Whether debug logging is enabled
   static bool get enableDebugLogs => !isProduction;
 
+  /// SAFETY: Allow sync in dev mode (DANGEROUS: affects prod DB)
+  /// Usage: flutter run --dart-define=FORCE_DEV_SYNC=true
+  static bool get forceDevSync => 
+      const bool.fromEnvironment('FORCE_DEV_SYNC', defaultValue: false);
+
+  /// Master switch for Cloud Sync
+  /// Returns FALSE by default in Dev Mode to protect Production DB
+  static bool get enableCloudSync => isProduction || forceDevSync;
+
   // ========== CASHFREE PAYMENT GATEWAY ==========
   
   /// Cashfree App ID (from https://merchant.cashfree.com/)

@@ -40,11 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _initAsync() async {
+    print('LoginDebug: _initAsync started');
     await _checkBiometric();
     await _prefill();
   }
 
   Future<void> _prefill() async {
+    print('LoginDebug: _prefill started');
     final sp = await SharedPreferences.getInstance();
     
     // Check for pending registration credentials (highest priority)
@@ -53,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final pendingPassword = sp.getString('pending_login_password');
     
     if (pendingFirmId != null && pendingFirmId.isNotEmpty) {
+      print('LoginDebug: Found pending credentials');
       // Auto-fill from recent registration
       _firmCtrl.text = pendingFirmId;
       if (pendingMobile != null && pendingMobile.isNotEmpty) {
@@ -84,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final lastMobile = sp.getString('auth_mobile');
     final lastFirm = sp.getString('last_firm');
     final lastMobileBiometric = sp.getString('last_mobile');
+    print('LoginDebug: LastFirm: $lastFirm, LastMobileBio: $lastMobileBiometric');
     
     if (!mounted) return;
     
@@ -103,7 +107,10 @@ class _LoginScreenState extends State<LoginScreen> {
     
     // Check if biometric is enabled and auto-trigger
     final bioEnabled = sp.getBool('biometric_enabled') ?? false;
+    print('LoginDebug: bioEnabled: $bioEnabled, bioAvailable: $_biometricAvailable');
+    
     if (bioEnabled && _biometricAvailable) {
+      print('LoginDebug: Triggering biometric login...');
       // Small delay to let UI settle
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) {
@@ -115,9 +122,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _checkBiometric() async {
     try {
       final ok = await BiometricService().canCheckBiometrics();
+      print('LoginDebug: _checkBiometric result: $ok');
       if (!mounted) return;
       setState(() => _biometricAvailable = ok);
-    } catch (_) {
+    } catch (e) {
+      print('LoginDebug: _checkBiometric error: $e');
       if (!mounted) return;
       setState(() => _biometricAvailable = false);
     }
@@ -642,6 +651,40 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(AppLocalizations.of(context)!.loginButton, style: const TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ),
+                  
+                  // Explicit Biometric Login Button (if enabled)
+                  FutureBuilder<bool>(
+                    future: _isBiometricEnabled(),
+                    builder: (context, snapshot) {
+                      if (snapshot.data == true && _biometricAvailable && !_isLoading) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: InkWell(
+                            onTap: _loginWithBiometric,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white.withOpacity(0.5)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.fingerprint, color: Colors.greenAccent, size: 28),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Login with Biometrics', 
+                                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
 
                     const SizedBox(height: 16),
 

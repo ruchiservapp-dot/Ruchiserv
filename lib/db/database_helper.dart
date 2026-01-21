@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // Desktop support
 
 // Optional but useful if you already added these in your project
 // If not present, you can safely remove these two imports.
@@ -29,10 +30,10 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String fileName = 'ruchiserv.db';
+    String fileName = 'ruchiserv_v2.db';
     
     Database db;
-      if (kIsWeb) {
+    if (kIsWeb) {
       // Web initialization
       databaseFactory = databaseFactoryFfiWeb;
       db = await openDatabase(
@@ -43,6 +44,12 @@ class DatabaseHelper {
       );
     } else {
       // Mobile/Desktop initialization
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        // Initialize FFI for Desktop
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
+      }
+
       final dir = await getApplicationDocumentsDirectory();
       final path = join(dir.path, fileName);
       db = await openDatabase(
@@ -1001,6 +1008,26 @@ class DatabaseHelper {
       // 4. Add isModified to utensils
       try {
         await db.execute("ALTER TABLE utensils ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {}
+      // 4. Add isModified to utensils
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {}
+    }
+
+    // Upgrade to v38: Subcontractor Categories & Service Assignment
+    if (oldVersion < 38) {
+      // 1. Add category to subcontractors
+      try {
+        await db.execute("ALTER TABLE subcontractors ADD COLUMN category TEXT DEFAULT 'FOOD';");
+      } catch (_) {}
+
+      // 2. Add assignment columns to orders
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN serviceSubcontractorId INTEGER;");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN counterSubcontractorId INTEGER;");
       } catch (_) {}
     }
 
@@ -2066,6 +2093,34 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     }
   }
 
+  // ---------- AUTHORIZED MOBILES (WHITELIST) ----------
+  Future<void> insertAuthorizedMobile(Map<String, dynamic> data) async {
+    final db = await database;
+    try {
+      // Upsert into authorized_mobiles
+      final id = await db.insert(
+        'authorized_mobiles',
+        {
+          ...data,
+          'isActive': 1,
+          'addedAt': data['addedAt'] ?? DateTime.now().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      // Auto Sync
+      await _syncOrQueue(
+        table: 'authorized_mobiles',
+        data: {...data, 'id': id, 'isActive': 1},
+        action: 'INSERT',
+        filters: {'firmId': data['firmId'], 'mobile': data['mobile']},
+      );
+      print('✅ [DB] Added ${data['mobile']} to authorized list');
+    } catch (e) {
+      print('⚠️ [DB] Failed to insert authorized mobile: $e');
+    }
+  }
+
   // ---------- LOCAL LOGIN SUPPORT ----------
   Future<void> insertLocalUser(Map<String, dynamic> user) async {
     try {
@@ -2137,6 +2192,13 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     });
   }
   // --- Add near your other "FIRMS" helpers ---
+
+  Future<Map<String, dynamic>?> getFirm(String firmId) async {
+    final db = await database;
+    final results = await db.query('firms', where: 'firmId = ?', whereArgs: [firmId], limit: 1);
+    if (results.isNotEmpty) return results.first;
+    return null;
+  }
 
   Future<List<Map<String, dynamic>>> getFirmByFirmId(String firmId) async {
     final db = await database;
@@ -4440,6 +4502,15 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     );
   }
 
+  // --- TRANSACTIONAL EMAIL HELPERS ---
+
+  Future<Map<String, dynamic>?> getSupplierById(int id) async {
+    final db = await database;
+    final res = await db.query('suppliers', where: 'id = ?', whereArgs: [id]);
+    if (res.isNotEmpty) return res.first;
+    return null;
+  }
+
   Future<List<Map<String, dynamic>>> getPoItems(int poId) async {
     final db = await database;
     return await db.query('po_items', where: 'poId = ?', whereArgs: [poId]);
@@ -5408,6 +5479,47 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       'assignedAt': DateTime.now().toIso8601String(),
     }, where: 'id = ?', whereArgs: [dispatchId]);
   }
+  
+  // Get orders in an MRP run that require service or counter setup
+  Future<List<Map<String, dynamic>>> getServiceRequirementsForMrpRun(int mrpRunId) async {
+    final db = await database;
+    
+    // Join mrp_run_orders with orders to get service requirements
+    // Returns orders where serviceRequired=1 OR counterSetupRequired=1
+    return await db.rawQuery('''
+      SELECT 
+        o.id as orderId,
+        o.customerName,
+        o.date,
+        o.time,
+        o.serviceRequired,
+        o.serviceType,
+        o.counterSetupRequired,
+        o.serviceSubcontractorId,
+        o.counterSubcontractorId,
+        mo.pax,
+        subS.name as serviceSubcontractorName,
+        subC.name as counterSubcontractorName
+      FROM mrp_run_orders mo
+      JOIN orders o ON o.id = mo.orderId
+      LEFT JOIN subcontractors subS ON subS.id = o.serviceSubcontractorId
+      LEFT JOIN subcontractors subC ON subC.id = o.counterSubcontractorId
+      WHERE mo.mrpRunId = ? AND (o.serviceRequired = 1 OR o.counterSetupRequired = 1)
+      ORDER BY o.date ASC, o.time ASC
+    ''', [mrpRunId]);
+  }
+
+  // Update order service assignments
+  Future<void> updateOrderServiceAssignment(int orderId, {int? serviceSubId, int? counterSubId}) async {
+    final db = await database;
+    final updates = <String, dynamic>{};
+    if (serviceSubId != -1) updates['serviceSubcontractorId'] = serviceSubId; // -1 means no change check passed
+    if (counterSubId != -1) updates['counterSubcontractorId'] = counterSubId;
+    
+    if (updates.isNotEmpty) {
+      // If passing null, it means unassign
+      await db.update('orders', updates, where: 'id = ?', whereArgs: [orderId]);
+    }
+  }
 
 }
-

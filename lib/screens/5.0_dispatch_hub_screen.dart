@@ -12,6 +12,7 @@ import '../services/connectivity_service.dart';
 import '../services/notification_service.dart';
 import '../services/location_service.dart';
 import '../services/feature_gate_service.dart';
+import '../services/whatsapp_service.dart'; // Added
 import '../widgets/access_widgets.dart';
 import '5.4_return_tracking_screen.dart';
 import '5.5_unload_verify_screen.dart';
@@ -340,7 +341,16 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(AppLocalizations.of(context)!.tapToViewItems, style: TextStyle(fontSize: 11, color: Colors.indigo.shade400)),
+                      // Share Tracking Link Button
+                      TextButton.icon(
+                        onPressed: () => _shareTrackingLink(d),
+                        icon: const Icon(Icons.share, size: 16, color: Colors.green),
+                        label: const Text('Share Link', style: TextStyle(fontSize: 11, color: Colors.green)),
+                        style: TextButton.styleFrom(
+                           padding: EdgeInsets.zero,
+                           minimumSize: const Size(60, 30),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -350,6 +360,36 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
         );
       },
     );
+  }
+
+  Future<void> _shareTrackingLink(Map<String, dynamic> dispatch) async {
+    final isEnterprise = await FeatureGateService.instance.isFeatureEnabled('GPS_TRACKING');
+    if (!isEnterprise) {
+         if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(AppLocalizations.of(context)!.upgradeToEnterprise)),
+            );
+         }
+       return;
+    }
+    
+    // Generate Tracking Link (Placeholder for now)
+    final link = 'https://ruchiserv.com/track/${dispatch['id']}';
+    
+    // Send via WhatsApp
+    WhatsAppService.sendDispatchNotification(
+      toNumber: dispatch['mobile']?.toString() ?? '',
+      customerName: (dispatch['customerName'] as String?) ?? 'Customer',
+      deliveryTime: dispatch['time']?.toString() ?? '',
+      orderId: dispatch['orderId']?.toString(),
+      trackingLink: link, 
+    ).then((success) {
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tracking link shared via WhatsApp!')),
+        );
+      }
+    });
   }
 
   // Tab 3: Returns

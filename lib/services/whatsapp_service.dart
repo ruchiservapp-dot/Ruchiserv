@@ -1,84 +1,22 @@
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
-import '../secrets.dart';
+import 'pdf_service.dart';
+import '../db/aws/aws_api.dart';
 
-/// WhatsApp Business API Service
-/// Uses official Meta WhatsApp Business Platform API
+/// WhatsApp Service (Secure Backend Integration)
 class WhatsAppService {
-  // Meta WhatsApp Business API endpoint
-  static const String _baseUrl = 'https://graph.facebook.com/v18.0';
   
-  /// Send a text message directly (works without templates for some use cases)
-  static Future<bool> sendMessage({
-    required String toNumber,
-    required String message,
-  }) async {
-    debugPrint('💬 [WhatsApp] Sending message to: $toNumber');
-    debugPrint('   Message: $message');
-    
-    // Check if credentials are configured
-    if (metaWhatsAppToken == 'YOUR_META_ACCESS_TOKEN' || 
-        metaWhatsAppPhoneId == 'YOUR_PHONE_NUMBER_ID') {
-      debugPrint('⚠️ WhatsApp not configured - using mock mode');
-      await Future.delayed(const Duration(milliseconds: 500));
-      return true;
-    }
-    
-    try {
-      final url = Uri.parse('$_baseUrl/$metaWhatsAppPhoneId/messages');
-      
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $metaWhatsAppToken',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'messaging_product': 'whatsapp',
-          'to': toNumber.replaceAll('+', '').replaceAll(' ', ''),
-          'type': 'text',
-          'text': {
-            'preview_url': false,
-            'body': message,
-          },
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        debugPrint('✅ WhatsApp sent successfully: ${data['messages']?[0]?['id']}');
-        return true;
-      } else {
-        debugPrint('❌ WhatsApp failed: ${response.statusCode} - ${response.body}');
-        return false;
-      }
-    } catch (e) {
-      debugPrint('❌ WhatsApp error: $e');
-      return false;
-    }
-  }
-  
-  /// Send template message (required for most notifications)
+  /// Send template message via Secure Backend
   static Future<bool> sendTemplateMessage({
     required String toNumber,
     required String templateName,
     required String languageCode,
     List<String>? bodyParameters,
   }) async {
-    debugPrint('💬 [WhatsApp] Sending template "$templateName" to: $toNumber');
-    
-    // Check if credentials are configured
-    if (metaWhatsAppToken == 'YOUR_META_ACCESS_TOKEN' || 
-        metaWhatsAppPhoneId == 'YOUR_PHONE_NUMBER_ID') {
-      debugPrint('⚠️ WhatsApp not configured - using mock mode');
-      await Future.delayed(const Duration(milliseconds: 500));
-      return true;
-    }
+    debugPrint('💬 [WhatsApp] Requesting Backend to send "$templateName" to: $toNumber');
     
     try {
-      final url = Uri.parse('$_baseUrl/$metaWhatsAppPhoneId/messages');
-      
       // Build template components
       final components = <Map<String, dynamic>>[];
       if (bodyParameters != null && bodyParameters.isNotEmpty) {
@@ -90,59 +28,54 @@ class WhatsAppService {
           }).toList(),
         });
       }
-      
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer $metaWhatsAppToken',
-          'Content-Type': 'application/json',
+
+      // Call Backend
+      final resp = await AwsApi.callDbHandler(
+        method: 'POST',
+        table: 'messaging/whatsapp/send',
+        data: {
+          'to': toNumber,
+          'template': templateName,
+          'language': languageCode,
+          'components': components,
         },
-        body: jsonEncode({
-          'messaging_product': 'whatsapp',
-          'to': toNumber.replaceAll('+', '').replaceAll(' ', ''),
-          'type': 'template',
-          'template': {
-            'name': templateName,
-            'language': {'code': languageCode},
-            if (components.isNotEmpty) 'components': components,
-          },
-        }),
       );
       
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        debugPrint('✅ WhatsApp template sent: ${data['messages']?[0]?['id']}');
-        return true;
-      } else {
-        debugPrint('❌ WhatsApp template failed: ${response.statusCode} - ${response.body}');
+      if (resp['error'] != null) {
+        debugPrint('❌ WhatsApp Backend Error: ${resp['error']}');
         return false;
       }
+      
+      debugPrint('✅ WhatsApp Backend Triggered Successfully');
+      return true;
+
     } catch (e) {
-      debugPrint('❌ WhatsApp template error: $e');
+      debugPrint('❌ WhatsApp Service Error: $e');
       return false;
     }
   }
 
-  /// Send order update notification using template
+  /// Send order update notification
   static Future<bool> sendOrderUpdate({
     required String toNumber,
     required String customerName,
     required String orderStatus,
     String? orderId,
   }) async {
-    // Try template first (if configured), fallback to simple message
-    try {
-      return await sendTemplateMessage(
-        toNumber: toNumber,
-        templateName: 'order_update',
-        languageCode: 'en',
-        bodyParameters: [customerName, orderId ?? 'N/A', orderStatus],
-      );
-    } catch (e) {
-      // Fallback to simple text message
-      final message = 'Hello $customerName, your order${orderId != null ? " #$orderId" : ""} is now $orderStatus. Thank you!';
-      return await sendMessage(toNumber: toNumber, message: message);
-    }
+    // Try Backend API First
+    final success = await sendTemplateMessage(
+      toNumber: toNumber,
+      templateName: 'order_update', // Ensure this template exists in Meta
+      languageCode: 'en_US',
+      bodyParameters: [customerName, orderId ?? 'N/A', orderStatus],
+    );
+    
+    if (success) return true;
+
+    // Fallback: Launch App
+    debugPrint('⚠️ WhatsApp API failed, falling back to URL launcher...');
+    final message = 'Hello $customerName, updates for your order${orderId != null ? " #$orderId" : ""}. Status: $orderStatus. Thank you!';
+    return await _launchWhatsApp(toNumber, message);
   }
 
   /// Send dispatch notification
@@ -151,39 +84,118 @@ class WhatsAppService {
     required String customerName,
     required String deliveryTime,
     String? orderId,
+    String? trackingLink,
   }) async {
-    // Try template first, fallback to simple message
-    try {
-      return await sendTemplateMessage(
-        toNumber: toNumber,
-        templateName: 'dispatch_notification',
-        languageCode: 'en',
-        bodyParameters: [customerName, deliveryTime, orderId ?? 'N/A'],
-      );
-    } catch (e) {
-      // Fallback to simple text message
-      final message = 'Hello $customerName, your order${orderId != null ? " #$orderId" : ""} will be delivered by $deliveryTime. Please be available.';
-      return await sendMessage(toNumber: toNumber, message: message);
-    }
+    final success = await sendTemplateMessage(
+      toNumber: toNumber,
+      templateName: 'dispatch_notification',
+      languageCode: 'en_US',
+      bodyParameters: [customerName, deliveryTime, orderId ?? 'N/A'],
+    );
+
+    if (success) return true;
+
+    // Fallback
+    String message = 'Hello $customerName, your order${orderId != null ? " #$orderId" : ""} will be delivered by $deliveryTime.';
+    if (trackingLink != null) message += '\nTrack here: $trackingLink';
+    message += '\nPlease be available.';
+    return await _launchWhatsApp(toNumber, message);
   }
   
-  /// Send order confirmation
+  /// Send order confirmation (Text + PDF)
   static Future<bool> sendOrderConfirmation({
     required String toNumber,
     required String customerName,
     required String orderId,
     required String totalAmount,
+    required String date,
+    required String time,
+    required String pax,
+    required String cateringName, // {{7}}
+    required String cateringPhone, // {{8}} - In Body
+    required Map<String, dynamic> orderData, // NEW: Full order data for PDF
+    required List<Map<String, dynamic>> dishes, // NEW: Dishes for PDF
   }) async {
     try {
-      return await sendTemplateMessage(
-        toNumber: toNumber,
-        templateName: 'order_confirmation',
-        languageCode: 'en',
-        bodyParameters: [customerName, orderId, totalAmount],
-      );
+      debugPrint('📄 Generating PDF for Order #$orderId...');
+      
+      // 1. Generate PDF from Order data using PdfService
+      final pdfBytes = await PdfService.generateOrderPdfBytes(orderData, dishes);
+      
+      if (pdfBytes != null) {
+         // 2. Prepare Base64
+         final pdfBase64 = base64Encode(pdfBytes);
+         
+         debugPrint('🚀 Sending Text+PDF via Backend...');
+         final resp = await AwsApi.callDbHandler(
+            method: 'POST',
+            table: 'messaging/whatsapp/send_order_pdf',
+            data: {
+              'to': toNumber,
+              'pdf_base64': pdfBase64,
+              // Text Params: {{1}}..{{8}}
+              'text_params': [
+                 orderId,
+                 customerName, 
+                 date, 
+                 time, 
+                 pax, 
+                 totalAmount,
+                 cateringName,
+                 cateringPhone 
+              ],
+              // PDF Params: {{1}} (Order ID)
+              'pdf_params': [orderId]
+            }
+         );
+         
+         if (resp['success'] == true) {
+            debugPrint('✅ WhatsApp (Text+PDF) Sent!');
+            return true;
+         }
+         debugPrint('⚠️ Backend Warning: ${resp['warning'] ?? resp['error']}');
+      } else {
+        debugPrint('❌ PDF Generation Failed. Sending Text Only fallback.');
+      }
+      
     } catch (e) {
-      final message = 'Dear $customerName, your order #$orderId has been confirmed. Total amount: ₹$totalAmount. Thank you for choosing RuchiServ!';
-      return await sendMessage(toNumber: toNumber, message: message);
+      debugPrint('❌ PDF/Backend Error: $e');
+    }
+
+    // Fallback: Send Simple Text Template (if backend/PDF failed)
+    debugPrint('⚠️ Falling back to Text-Only Template...');
+    final success = await sendTemplateMessage(
+      toNumber: toNumber,
+      templateName: 'order_status_update',
+      languageCode: 'en_US',
+      // Params 1-8
+      bodyParameters: [orderId, customerName, date, time, pax, totalAmount, cateringName, cateringPhone],
+    );
+
+    if (success) return true;
+
+    // Ultimate Fallback: Launch WhatsApp URL
+    final message = 'Dear $customerName, your order #$orderId is confirmed!\n\n📅 Date: $date\n⏰ Time: $time\n👥 Pax: $pax\n💰 Amount: ₹$totalAmount\n\n📞 Call: $cateringPhone\n\nThank you for choosing $cateringName!';
+    return await _launchWhatsApp(toNumber, message);
+  }
+
+  /// Launch WhatsApp App with pre-filled message (Fallback)
+  static Future<bool> _launchWhatsApp(String phone, String message) async {
+    try {
+      String cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+      if (cleanPhone.length == 10) cleanPhone = '91$cleanPhone'; // Default to India
+      
+      final url = Uri.parse('https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}');
+      
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('❌ Launcher error: $e');
+      return false;
     }
   }
 }
+

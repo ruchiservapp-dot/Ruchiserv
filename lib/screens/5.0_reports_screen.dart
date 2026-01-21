@@ -364,50 +364,61 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(AppLocalizations.of(context)!.periodLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 8),
-                        DropdownButton<String>(
-                          value: _selectedTimeline,
-                          underline: const SizedBox(),
-                          items: [
-                            AppLocalizations.of(context)!.day,
-                            AppLocalizations.of(context)!.week,
-                            AppLocalizations.of(context)!.month,
-                            AppLocalizations.of(context)!.year,
-                            'Custom',
-                          ]
-                              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                              .toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() => _selectedTimeline = val);
-                              if (val != 'Custom') {
-                                 _loadReportData();
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(AppLocalizations.of(context)!.periodLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 8),
+                          DropdownButton<String>(
+                            value: _selectedTimeline,
+                            underline: const SizedBox(),
+                            items: [
+                              AppLocalizations.of(context)!.day,
+                              AppLocalizations.of(context)!.week,
+                              AppLocalizations.of(context)!.month,
+                              AppLocalizations.of(context)!.year,
+                              'Custom',
+                            ]
+                                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() => _selectedTimeline = val);
+                                if (val != 'Custom') {
+                                   _loadReportData();
+                                }
                               }
-                            }
-                          },
-                        ),
-                        if (_selectedTimeline != 'Custom') ...[
-                           const SizedBox(width: 12),
-                           Text('$_startDate to $_endDate', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                            },
+                          ),
+                          if (_selectedTimeline != 'Custom') ...[
+                             const SizedBox(width: 12),
+                             Text('$_startDate to $_endDate', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          ],
                         ],
-
-                    const Spacer(),
-                    if (_selectedCategory == 'HR')
-                      TextButton.icon(
-                        onPressed: () => Navigator.push(context, 
-                          MaterialPageRoute(builder: (_) => const StaffPayrollScreen())),
-                        icon: const Icon(Icons.payments, size: 18),
-                        label: Text(AppLocalizations.of(context)!.payroll),
                       ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: _loadReportData,
-                    ),
-                  ],
-                ),
+
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_selectedCategory == 'HR')
+                            TextButton.icon(
+                              onPressed: () => Navigator.push(context, 
+                                MaterialPageRoute(builder: (_) => const StaffPayrollScreen())),
+                              icon: const Icon(Icons.payments, size: 18),
+                              label: Text(AppLocalizations.of(context)!.payroll),
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            onPressed: _loadReportData,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 if (_selectedTimeline == 'Custom')
                   Padding(
                     padding: const EdgeInsets.only(top: 8),

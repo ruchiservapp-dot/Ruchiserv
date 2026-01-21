@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "742769773860",
+        "project_id": "ruchiserv-kitchen-e26d4",
+        "storage_bucket": "ruchiserv-kitchen-e26d4.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:742769773860:android:c6f83bf794b7e75faaf7b1",
+                "android_client_info": {
+                    "package_name": "com.ruchiserv.events"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyDkBlF0sSYaKSCEhq6xgm9JfLjZgI_MiKs"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

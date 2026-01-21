@@ -7,6 +7,42 @@ import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 
 class PdfService {
+  /// Generate ORDER PDF as bytes (for WhatsApp/S3 upload)
+  static Future<List<int>?> generateOrderPdfBytes(Map<String, dynamic> order, List<Map<String, dynamic>> dishes) async {
+    try {
+      final pdf = pw.Document();
+      
+      final dateStr = order['date'] ?? '';
+      final customerName = order['customerName'] ?? 'Valued Customer';
+      final mobile = order['mobile'] ?? '';
+      final firmId = order['firmId'] ?? '';
+      
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return [
+              _buildHeader(firmId),
+              pw.SizedBox(height: 20),
+              _buildOrderDetails(order, dateStr, customerName, mobile),
+              pw.SizedBox(height: 20),
+              _buildDishTable(dishes),
+              pw.SizedBox(height: 20),
+              _buildTotals(order),
+              pw.SizedBox(height: 40),
+              _buildFooter(),
+            ];
+          },
+        ),
+      );
+
+      return pdf.save();
+    } catch (e) {
+      print('❌ PdfService.generateOrderPdfBytes error: $e');
+      return null;
+    }
+  }
+
   /// Generate and open a PDF for the given order
   static Future<void> generateAndOpenOrderPdf(Map<String, dynamic> order, List<Map<String, dynamic>> dishes) async {
     final pdf = pw.Document();
@@ -93,10 +129,13 @@ class PdfService {
     final headers = ['Dish Name', 'Category', 'Pax', 'Rate', 'Amount'];
     final data = dishes.map((d) {
       final pax = int.tryParse(d['pax']?.toString() ?? '0') ?? 0;
-      final rate = double.tryParse(d['rate']?.toString() ?? '0') ?? 0;
+      // Handle both 'rate' and 'pricePerPlate' field names
+      final rate = double.tryParse((d['rate'] ?? d['pricePerPlate'])?.toString() ?? '0') ?? 0;
       final amount = pax * rate;
+      // Handle both 'name' and 'dishName' field names
+      final dishName = d['name'] ?? d['dishName'] ?? '';
       return [
-        d['name'] ?? '',
+        dishName,
         d['category'] ?? '',
         pax.toString(),
         rate.toStringAsFixed(2),

@@ -27,9 +27,13 @@ dependencies:
   url_launcher: ^6.3.0
   flutter_cashfree_pg_sdk: ^2.1.6
   provider: ^6.1.1
+  firebase_core: ^3.1.1
+  firebase_messaging: ^15.0.2
+  flutter_local_notifications: ^17.1.0
 
   # Local storage / DB
   sqflite: ^2.3.3
+  sqflite_common_ffi: ^2.3.0
   sqflite_common_ffi_web: ^1.1.0
   path: ^1.9.0
   path_provider: ^2.1.3
@@ -56,12 +60,10 @@ dependencies:
   sticky_headers: ^0.3.0
 
 dev_dependencies:
-  integration_test:
-    sdk: flutter
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  sqflite_common_ffi: ^2.3.0 # For running DB tests on host
+
   flutter_launcher_icons: ^0.13.1
 
 flutter_launcher_icons:

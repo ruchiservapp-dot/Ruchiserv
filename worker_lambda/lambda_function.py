@@ -2,14 +2,41 @@ import json
 import os
 import boto3
 import requests
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+import firebase_admin
+from firebase_admin import credentials, messaging
+
+# Optional PDF generation (handles local testing compatibility)
+try:
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    print("⚠️ ReportLab/PIL not available (likely binary mismatch on local Mac). PDF generation will be skipped.")
+    REPORTLAB_AVAILABLE = False
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
+
+# Initialize Firebase Admin
+if not firebase_admin._apps:
+    try:
+        # Check if running in Lambda environment or locally
+        cred_path = os.path.join(os.path.dirname(__file__), 'firebase_service_account.json')
+        if os.path.exists(cred_path):
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase Admin initialized")
+        else:
+            print("⚠️ Firebase Service Account JSON not found")
+    except Exception as e:
+        print(f"❌ Firebase Admin init failed: {e}")
+
 # Initialize Clients
 ses = boto3.client('ses')
+dynamodb = boto3.resource('dynamodb')
+
 
 def lambda_handler(event, context):
     for record in event['Records']:
@@ -26,19 +53,36 @@ def lambda_handler(event, context):
 def process_notification(data):
     mobile = data.get('mobile')
     order_data = data.get('orderData', {})
+    firm_id = order_data.get('firmId') or data.get('firmId')
     
     # 1. Generate PDF
-    pdf_path = generate_pdf(order_data)
+    pdf_path = None
+    if REPORTLAB_AVAILABLE:
+        try:
+            pdf_path = generate_pdf(order_data)
+        except Exception as e:
+            print(f"⚠️ PDF Generation failed: {e}")
+    else:
+        print("⏭️ Skipping PDF generation (ReportLab unavailable)")
     
     # 2. Send WhatsApp
     wa_success = send_whatsapp(mobile, order_data, pdf_path)
     
     # 3. Send Email
     send_email(mobile, order_data, pdf_path)
+
     
-    # 4. Fallback SMS
+    # 4. FCM Notifications (Business Staff/Drivers)
+    if firm_id:
+        send_fcm_to_firm(firm_id, 
+                        f"New Order #{order_data.get('id')}", 
+                        f"Order for {order_data.get('customerName')} at {order_data.get('eventTime')}",
+                        {'orderId': str(order_data.get('id')), 'type': 'NEW_ORDER'})
+    
+    # 5. Fallback SMS
     if not wa_success:
         send_sms(mobile, order_data)
+
 
 def generate_pdf(order):
     from reportlab.lib import colors
@@ -315,8 +359,6 @@ Dishes:
 
 Total Amount: ₹{order.get('finalAmount')}
 
-Please find the detailed invoice attached.
-
 For any queries, please contact us.
 
 Best regards,
@@ -324,11 +366,17 @@ RuchiServ Team
 """
     msg.attach(MIMEText(body, 'plain'))
     
-    # Attach PDF
-    with open(pdf_path, 'rb') as f:
-        part = MIMEApplication(f.read(), Name=os.path.basename(pdf_path))
-        part['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
-        msg.attach(part)
+    # Attach PDF if available
+    if pdf_path and os.path.exists(pdf_path):
+        with open(pdf_path, 'rb') as f:
+            part = MIMEApplication(f.read(), Name=os.path.basename(pdf_path))
+            part['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
+            msg.attach(part)
+    elif pdf_path:
+        print(f"⚠️ PDF path provided but file not found: {pdf_path}")
+    else:
+        print("ℹ️ Sending email without PDF attachment.")
+
         
     try:
         ses.send_raw_email(
@@ -354,3 +402,54 @@ def send_sms(mobile, order):
         print("SMS Sent")
     except Exception as e:
         print(f"SMS Error: {e}")
+
+def get_fcm_tokens_for_firm(firm_id):
+    """Fetch all FCM tokens for a given firm from the users table"""
+    try:
+        from boto3.dynamodb.conditions import Key
+        table_name = 'ruchiserv-users'
+        
+        # Check if table exists in current account/region (prevents ResourceNotFound crash)
+        try:
+            # We don't want to scan/query yet, just check if it exists
+            table = dynamodb.Table(table_name)
+            table.table_status # Accessing property triggers error if table doesn't exist
+        except Exception:
+             print(f"⚠️ DynamoDB Table '{table_name}' not found in this account/region. Skipping lookup.")
+             return []
+
+        response = table.query(
+            KeyConditionExpression=Key('ruchiserv-firms').eq(firm_id)
+        )
+        
+        items = response.get('Items', [])
+        tokens = [item['fcmToken'] for item in items if item.get('fcmToken')]
+        print(f"Found {len(tokens)} tokens for firm {firm_id}")
+        return tokens
+    except Exception as e:
+        print(f"❌ Error fetching tokens for {firm_id}: {e}")
+        return []
+
+
+def send_fcm_to_firm(firm_id, title, body, data_payload=None):
+    """Send push notification to all staff members of a firm"""
+    tokens = get_fcm_tokens_for_firm(firm_id)
+    if not tokens:
+        print(f"Skipping FCM: No tokens found for firm {firm_id}")
+        return
+
+    for token in tokens:
+        try:
+            message = messaging.Message(
+                notification=messaging.Notification(
+                    title=title,
+                    body=body,
+                ),
+                data=data_payload or {},
+                token=token,
+            )
+            response = messaging.send(message)
+            print(f"✅ FCM sent to {token[:10]}...: {response}")
+        except Exception as e:
+            print(f"⚠️ FCM send failed for a token: {e}")
+

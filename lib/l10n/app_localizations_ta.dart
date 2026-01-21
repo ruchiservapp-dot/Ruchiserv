@@ -1422,6 +1422,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get noUnloadItems => 'இறக்க எதுவுமில்லை';
 
   @override
+  String get upgradeToEnterprise => 'Upgrade to Enterprise for this feature';
+
+  @override
   String get startDispatch => 'தொடங்கு';
 
   @override

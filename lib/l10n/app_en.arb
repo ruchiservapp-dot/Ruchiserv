@@ -798,6 +798,7 @@
   "noActiveDispatches": "No active dispatches",
   "noReturnTracking": "No items for return tracking",
   "noUnloadItems": "No items ready for unload",
+  "upgradeToEnterprise": "Upgrade to Enterprise for this feature",
   "startDispatch": "Start Dispatch",
   "waitingForKitchen": "Waiting for Kitchen",
   "track": "Track",

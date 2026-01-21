@@ -35,6 +35,20 @@ class AppSchema {
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
         'showUniversalData': 'INTEGER DEFAULT 1', // v23
+        
+        // v37: Firm Profile Extensions
+        'contactPerson': 'TEXT',
+        'primaryMobile': 'TEXT',
+        'primaryEmail': 'TEXT',
+        'capacity': 'INTEGER DEFAULT 500',
+        'ownerName': 'TEXT',
+        'gstNumber': 'TEXT', // Alias for gstin used in UI
+        'website': 'TEXT',
+        'kitchenLatitude': 'REAL',
+        'kitchenLongitude': 'REAL',
+        'geoFenceRadius': 'INTEGER DEFAULT 100',
+        'otMultiplier': 'REAL DEFAULT 1.5',
+        'client_upi_id': 'TEXT',
       },
     ),
 

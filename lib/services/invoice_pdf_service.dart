@@ -16,7 +16,7 @@ class InvoicePdfService {
   /// Generate and preview invoice PDF
   static Future<bool> previewInvoice(int invoiceId) async {
     try {
-      final pdfBytes = await _generateInvoicePdf(invoiceId);
+      final pdfBytes = await generateInvoicePdfBytes(invoiceId);
       if (pdfBytes == null) return false;
       
       await Printing.layoutPdf(onLayout: (_) async => Uint8List.fromList(pdfBytes));
@@ -30,7 +30,7 @@ class InvoicePdfService {
   /// Generate, save and share invoice PDF
   static Future<File?> shareInvoice(int invoiceId) async {
     try {
-      final pdfBytes = await _generateInvoicePdf(invoiceId);
+      final pdfBytes = await generateInvoicePdfBytes(invoiceId);
       if (pdfBytes == null) return null;
       
       final invoice = await DatabaseHelper().getInvoiceWithItems(invoiceId);
@@ -52,8 +52,8 @@ class InvoicePdfService {
     }
   }
 
-  /// Generate invoice PDF bytes
-  static Future<List<int>?> _generateInvoicePdf(int invoiceId) async {
+  /// Generate invoice PDF bytes (Public helper)
+  static Future<List<int>?> generateInvoicePdfBytes(int invoiceId) async {
     // Get invoice data
     final invoice = await DatabaseHelper().getInvoiceWithItems(invoiceId);
     if (invoice == null) return null;

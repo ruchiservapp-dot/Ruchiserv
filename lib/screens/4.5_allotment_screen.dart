@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
+import '../services/messaging_service.dart';
 
 class AllotmentScreen extends StatefulWidget {
   final int mrpRunId;
@@ -18,7 +19,9 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
   late TabController _tabController;
   List<Map<String, dynamic>> _mrpOutput = [];
   List<Map<String, dynamic>> _suppliers = [];
-  List<Map<String, dynamic>> _releasedPOs = []; // POs already generated for this MRP run
+  List<Map<String, dynamic>> _releasedPOs = [];
+  List<Map<String, dynamic>> _serviceOrders = [];
+  List<Map<String, dynamic>> _eventSubcontractors = [];
   bool _isLoading = true;
   
   // Track allocation: ingredientId -> supplierId
@@ -27,7 +30,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this); // Added Services Tab
     _loadData();
   }
 
@@ -44,6 +47,13 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
     _mrpOutput = await DatabaseHelper().getMrpOutputForAllotment(widget.mrpRunId);
     _suppliers = await DatabaseHelper().getAllSuppliers(widget.firmId);
     
+    // Load Service Requirements
+    _serviceOrders = await DatabaseHelper().getServiceRequirementsForMrpRun(widget.mrpRunId);
+    
+    // Load Event Subcontractors
+    final allSubs = await DatabaseHelper().getAllSubcontractors(widget.firmId);
+    _eventSubcontractors = allSubs.where((s) => (s['category'] ?? '') == 'EVENT').toList();
+
     // Load already-released POs for this MRP run (for Summary tab)
     _releasedPOs = await DatabaseHelper().getPurchaseOrdersByMrpRun(widget.mrpRunId);
     
@@ -120,6 +130,18 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
         // Mark MRP output items as PO_SENT to prevent re-processing
         final ingredientIds = items.map((i) => i['ingredientId'] as int).toList();
         await DatabaseHelper().markMrpOutputAsPOSent(widget.mrpRunId, poId, ingredientIds);
+
+        // Trigger Email (Fire & Forget)
+        MessagingService().sendPurchaseOrder({
+          'id': poId,
+          'firmId': widget.firmId,
+          'poNumber': poNumber,
+          'vendorId': supplierId,
+          'vendorName': supplier['name'],
+          'vendorEmail': supplier['email'], // Pass email if available
+          'totalAmount': totalAmount,
+          'date': DateTime.now().toIso8601String(),
+        });
       }
 
       // Check if ALL items are now PO'd - only then update order/run status
@@ -164,6 +186,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
           indicatorColor: Colors.white,
           tabs: [
             Tab(text: AppLocalizations.of(context)!.supplierAllotment),
+            Tab(text: 'Service & Events'),
             Tab(text: AppLocalizations.of(context)!.summary),
           ],
         ),
@@ -174,6 +197,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
               controller: _tabController,
               children: [
                 _buildSupplierTab(),
+                _buildServiceTab(),
                 _buildSummaryTab(),
               ],
             ),
@@ -271,6 +295,142 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                 textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServiceTab() {
+    if (_serviceOrders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_seat, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            const Text('No orders require Service or Stage Setup'),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _serviceOrders.length,
+      itemBuilder: (context, index) {
+        final order = _serviceOrders[index];
+        final bool needsService = (order['serviceRequired'] as int? ?? 0) == 1;
+        final bool needsCounter = (order['counterSetupRequired'] as int? ?? 0) == 1;
+        
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.receipt_long, color: Colors.purple),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('${order['date']} • ${order['time']} • ${order['pax']} Pax', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    if (needsService)
+                      _buildAssignmentRow(
+                        title: 'Service Team',
+                        subtitle: order['serviceType'] ?? 'General',
+                        icon: Icons.group,
+                        color: Colors.blue,
+                        value: order['serviceSubcontractorId'],
+                        onChanged: (v) async {
+                           await DatabaseHelper().updateOrderServiceAssignment(
+                             order['orderId'], 
+                             serviceSubId: v
+                           );
+                           _loadData(); // Reload to refresh dropdown
+                        },
+                      ),
+                    if (needsService && needsCounter) const Divider(),
+                    if (needsCounter)
+                      _buildAssignmentRow(
+                        title: 'Stage & Counters',
+                        subtitle: 'Setup & Decoration',
+                        icon: Icons.deck,
+                        color: Colors.orange,
+                        value: order['counterSubcontractorId'],
+                        onChanged: (v) async {
+                           await DatabaseHelper().updateOrderServiceAssignment(
+                             order['orderId'], 
+                             counterSubId: v
+                           );
+                           _loadData();
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAssignmentRow({
+    required String title, required String subtitle, required IconData icon, required Color color,
+    required int? value, required Function(int?) onChanged
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            ],
+          ),
+        ),
+        SizedBox(
+          width: 160,
+          child: DropdownButtonFormField<int>(
+            value: value,
+            isExpanded: true,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              hintText: 'Select Partner',
+            ),
+            items: _eventSubcontractors.map((s) => DropdownMenuItem<int>(
+              value: s['id'],
+              child: Text(s['name'], overflow: TextOverflow.ellipsis),
+            )).toList(),
+            onChanged: onChanged,
           ),
         ),
       ],

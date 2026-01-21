@@ -1423,6 +1423,9 @@ class AppLocalizationsTe extends AppLocalizations {
   String get noUnloadItems => 'అన్‌లోడ్ చేయడానికి ఏమీ లేదు';
 
   @override
+  String get upgradeToEnterprise => 'Upgrade to Enterprise for this feature';
+
+  @override
   String get startDispatch => 'ప్రారంభించు';
 
   @override
