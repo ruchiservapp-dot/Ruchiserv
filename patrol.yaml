@@ -1,0 +1,6 @@
+app_name: ruchiserv
+android:
+  package_name: com.ruchiserv.events
+ios:
+  bundle_id: com.ruchiserv.events
+  app_name: RuchiServ
