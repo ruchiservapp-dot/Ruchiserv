@@ -8,6 +8,8 @@ import '../services/permission_service.dart';
 import '../services/notification_service.dart';
 import '../services/whatsapp_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import '../utils/time_utils.dart';
 
 class OrderFullScreenViewScreen extends StatefulWidget {
   final Map<String, dynamic> order;
@@ -390,8 +392,14 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Status Banner
-                  _buildStatusBanner(mrpStatus),
+                  // Status Banners
+                  Row(
+                    children: [
+                      Expanded(child: _buildStatusBanner(mrpStatus)),
+                      const SizedBox(width: 8),
+                      Expanded(child: _buildClientConfirmationBadge(_orderData['clientStatus']?.toString() ?? 'PENDING')),
+                    ],
+                  ),
                   const SizedBox(height: 16),
 
                   // Order Info Card
@@ -506,6 +514,13 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                     AppLocalizations.of(context)!.date,
                     dateStr,
                     Icons.calendar_today,
+                  ),
+                ),
+                Expanded(
+                  child: _buildInfoItem(
+                    AppLocalizations.of(context)!.deliveryTime,
+                    TimeUtils.formatTo12Hour(_orderData['time']),
+                    Icons.access_time,
                   ),
                 ),
                 if (_isEditMode)
@@ -858,6 +873,53 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
             fontSize: isLarge ? 18 : 14,
             color: isLarge ? Colors.blueAccent : Colors.black,
           )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClientConfirmationBadge(String status) {
+    Color color;
+    String label;
+    IconData icon;
+
+    switch (status) {
+      case 'ACCEPTED':
+        color = Colors.green;
+        label = 'CONFIRMED';
+        icon = Icons.check_circle;
+        break;
+      case 'CHANGE_REQ':
+        color = Colors.amber;
+        label = 'CHANGE REQ';
+        icon = Icons.warning;
+        break;
+      default:
+        color = Colors.orange;
+        label = 'PENDING';
+        icon = Icons.hourglass_empty;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );

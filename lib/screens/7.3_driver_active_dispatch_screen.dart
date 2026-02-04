@@ -5,8 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../db/database_helper.dart';
 import '../services/location_service.dart';
+import '../services/tracking_api_service.dart'; // Local Tracking API Service
 import 'package:ruchiserv/l10n/app_localizations.dart';
+import 'dart:async'; // For Timer
 import '7.4_driver_return_screen.dart';
+import '../utils/time_utils.dart';
 
 class DriverActiveDispatchScreen extends StatefulWidget {
   final Map<String, dynamic> dispatch;
@@ -23,6 +26,7 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
   Map<String, dynamic> _order = {};
   List<Map<String, dynamic>> _items = [];
   bool _gpsEnabled = false;
+  Timer? _trackingTimer;
   
   // KM tracking
   final TextEditingController _kmForwardController = TextEditingController();
@@ -39,35 +43,49 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
   @override
   void initState() {
     super.initState();
+    print("📍 DriverActiveDispatchScreen: initState start for dispatch ${widget.dispatch['id']}");
     _dispatch = Map<String, dynamic>.from(widget.dispatch);
     _kmForwardController.text = ((_dispatch['kmForward'] as num?)?.toStringAsFixed(1) ?? '0');
     _kmReturnController.text = ((_dispatch['kmReturn'] as num?)?.toStringAsFixed(1) ?? '0');
     _loadDetails();
+    print("📍 DriverActiveDispatchScreen: initState end");
   }
 
   Future<void> _loadDetails() async {
+    print("📍 DriverActiveDispatchScreen: _loadDetails start");
     setState(() => _isLoading = true);
     
-    final db = await DatabaseHelper().database;
-    final orderId = _dispatch['orderId'];
-    
-    // Refresh dispatch data
-    final dispatches = await db.query('dispatches', where: 'id = ?', whereArgs: [_dispatch['id']]);
-    if (dispatches.isNotEmpty) {
-      _dispatch = Map<String, dynamic>.from(dispatches.first);
+    try {
+      final db = await DatabaseHelper().database;
+      print("📍 DriverActiveDispatchScreen: DB initialized");
+      final orderId = _dispatch['orderId'];
+      
+      // Refresh dispatch data
+      final dispatches = await db.query('dispatches', where: 'id = ?', whereArgs: [_dispatch['id']]);
+      if (dispatches.isNotEmpty) {
+        _dispatch = Map<String, dynamic>.from(dispatches.first);
+        print("📍 DriverActiveDispatchScreen: Dispatch refreshed: ${_dispatch['id']}");
+      }
+      
+      // Get order
+      final orders = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
+      if (orders.isNotEmpty) {
+        _order = Map<String, dynamic>.from(orders.first);
+        print("📍 DriverActiveDispatchScreen: Order loaded: ${_order['id']}");
+      }
+      
+      // Get dispatch items
+      final items = await db.query('dispatch_items', where: 'dispatchId = ?', whereArgs: [_dispatch['id']]);
+      _items = List<Map<String, dynamic>>.from(items);
+      print("📍 DriverActiveDispatchScreen: Items loaded: ${_items.length}");
+      
+      if (mounted) setState(() => _isLoading = false);
+      print("📍 DriverActiveDispatchScreen: _loadDetails complete, loading=false");
+    } catch (e, stack) {
+      print("📍 DriverActiveDispatchScreen error: $e");
+      print(stack);
+      if (mounted) setState(() => _isLoading = false);
     }
-    
-    // Get order
-    final orders = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
-    if (orders.isNotEmpty) {
-      _order = Map<String, dynamic>.from(orders.first);
-    }
-    
-    // Get dispatch items
-    final items = await db.query('dispatch_items', where: 'dispatchId = ?', whereArgs: [_dispatch['id']]);
-    _items = List<Map<String, dynamic>>.from(items);
-    
-    setState(() => _isLoading = false);
   }
 
   int _getCurrentStageIndex() {
@@ -177,23 +195,61 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
 
   Future<void> _toggleGps() async {
     if (_gpsEnabled) {
-      LocationService.instance.stopTracking();
+      _trackingTimer?.cancel();
+      // LocationService.instance.stopTracking(); // If you have a persistent service
       setState(() => _gpsEnabled = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('GPS tracking disabled')),
       );
     } else {
       try {
-        await LocationService.instance.startTracking(_dispatch['id'] as int);
+        final perm = await LocationService.instance.requestPermission();
+        if (!perm) throw 'Permission denied';
+        
+        // Start Periodic Updates
+        _startTrackingLoop();
+        
         setState(() => _gpsEnabled = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('GPS tracking enabled'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('GPS tracking enabled (Updates every 30s)'), backgroundColor: Colors.green),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('GPS error: $e'), backgroundColor: Colors.red),
         );
       }
+    }
+  }
+
+  void _startTrackingLoop() {
+    _trackingTimer?.cancel();
+    // Immediate first post
+    _postLocation();
+    
+    // Schedule every 30s
+    _trackingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        _postLocation();
+    });
+  }
+
+  Future<void> _postLocation() async {
+    if (!mounted) return;
+    try {
+        final loc = await LocationService.instance.getCurrentLocation();
+        if (loc != null) {
+            print("📍 Posting Location: ${loc.latitude}, ${loc.longitude}");
+            // Use TrackingApiService to hit the POST /track endpoint
+            await TrackingApiService.post(
+                path: '/track',
+                body: {
+                    'dispatchId': _dispatch['id'],
+                    'lat': loc.latitude,
+                    'lng': loc.longitude
+                }
+            );
+        }
+    } catch (e) {
+        print("⚠️ Location Post Failed: $e");
     }
   }
 
@@ -297,6 +353,12 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
     );
   }
 
+  @override
+  void dispose() {
+    _trackingTimer?.cancel();
+    super.dispose();
+  }
+
   Widget _buildTimeline(int currentIndex) {
     return Card(
       child: Padding(
@@ -385,7 +447,7 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
             const Divider(),
             _infoRow('Customer', _order['customerName'] ?? 'N/A'),
             _infoRow('Location', _order['location'] ?? 'N/A'),
-            _infoRow('Time', _order['time'] ?? 'N/A'),
+            _infoRow('Time', TimeUtils.formatTo12Hour(_order['time'])),
             _infoRow('Pax', '${_order['totalPax'] ?? 0} guests'),
           ],
         ),

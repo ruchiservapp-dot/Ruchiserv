@@ -13,6 +13,7 @@ import '../services/notification_service.dart';
 import '../services/location_service.dart';
 import '../services/feature_gate_service.dart';
 import '../services/whatsapp_service.dart'; // Added
+import '../utils/time_utils.dart';
 import '../widgets/access_widgets.dart';
 import '5.4_return_tracking_screen.dart';
 import '5.5_unload_verify_screen.dart';
@@ -40,10 +41,12 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   @override
   void initState() {
     super.initState();
+    print("📍 DispatchHubScreen: initState start");
     _tabController = TabController(length: 4, vsync: this);
     _generateDateList();
     _loadAllData();
     _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) => _loadAllData());
+    print("📍 DispatchHubScreen: initState end");
   }
 
   @override
@@ -61,69 +64,96 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   }
 
   Future<void> _loadAllData() async {
+    print("📍 DispatchHubScreen: _loadAllData start");
     setState(() => _isLoading = true);
-    final db = await DatabaseHelper().database;
-    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    
+    try {
+      final db = await DatabaseHelper().database;
+      print("📍 DispatchHubScreen: DB initialized");
+      
+      // DEBUG: Inspection of orders table
+      try {
+        final sample = await db.query('orders', limit: 3);
+        print("📍 DispatchHubScreen: Sample Orders: $sample");
+      } catch (e) {
+        print("📍 DispatchHubScreen: Error sampling orders: $e");
+      }
 
-    // Tab 1: Pending Orders (ready for dispatch)
-    final pending = await db.rawQuery('''
-      SELECT o.*, 
-             (SELECT COUNT(*) FROM dishes d WHERE d.orderId = o.id AND d.productionType = 'INTERNAL') as internalCount,
-             (SELECT COUNT(*) FROM dishes d WHERE d.orderId = o.id AND d.productionType = 'INTERNAL' AND d.productionStatus = 'COMPLETED') as internalReadyCount,
-             dp.dispatchStatus as currentDispatchStatus,
-             dp.id as dispatchId
-      FROM orders o
-      LEFT JOIN dispatches dp ON dp.orderId = o.id
-      WHERE o.date = ? AND (dp.dispatchStatus IS NULL OR dp.dispatchStatus = 'PENDING' OR dp.dispatchStatus = 'LOADING')
-      ORDER BY o.time ASC
-    ''', [dateStr]);
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+      print("📍 DispatchHubScreen: Loading for date $dateStr");
 
-    // Tab 2: Active Dispatches (in-transit) - include vehicle details
-    final active = await db.rawQuery('''
-      SELECT d.*, o.customerName, o.location, o.time, o.date, o.mobile, o.totalPax,
-             v.vehicleNo, v.vehicleType, v.driverName, v.driverMobile
-      FROM dispatches d
-      JOIN orders o ON o.id = d.orderId
-      LEFT JOIN vehicles v ON v.id = d.vehicleId
-      WHERE d.dispatchStatus IN ('DISPATCHED', 'DELIVERED')
-      ORDER BY d.dispatchTime DESC
-      LIMIT 50
-    ''');
+      // Tab 1: Pending Orders (ready for dispatch)
+      final pending = await db.rawQuery('''
+        SELECT o.*, 
+               (SELECT COUNT(*) FROM dishes d WHERE d.orderId = o.id AND d.productionType = 'INTERNAL') as internalCount,
+               (SELECT COUNT(*) FROM dishes d WHERE d.orderId = o.id AND d.productionType = 'INTERNAL' AND d.productionStatus = 'COMPLETED') as internalReadyCount,
+               dp.dispatchStatus as currentDispatchStatus,
+               dp.id as dispatchId
+        FROM orders o
+        LEFT JOIN dispatches dp ON dp.orderId = o.id
+        WHERE o.date = ? AND (dp.dispatchStatus IS NULL OR dp.dispatchStatus = 'PENDING' OR dp.dispatchStatus = 'LOADING')
+        ORDER BY o.time ASC
+      ''', [dateStr]);
+      print("📍 DispatchHubScreen: Pending orders loaded: ${pending.length}");
 
-    // Tab 3: Returns (awaiting return tracking)
-    final returns = await db.rawQuery('''
-      SELECT d.*, o.customerName, o.location, o.date, o.mobile
-      FROM dispatches d
-      JOIN orders o ON o.id = d.orderId
-      WHERE d.dispatchStatus IN ('DISPATCHED', 'DELIVERED', 'RETURNING')
-      ORDER BY d.dispatchTime DESC
-      LIMIT 50
-    ''');
+      // Tab 2: Active Dispatches (in-transit) - include vehicle details
+      final active = await db.rawQuery('''
+        SELECT d.*, o.customerName, o.location, o.time, o.date, o.mobile, o.totalPax,
+               v.vehicleNumber, v.vehicleType, v.driverName, v.driverMobile
+        FROM dispatches d
+        JOIN orders o ON o.id = d.orderId
+        LEFT JOIN vehicles v ON v.id = d.vehicleId
+        WHERE d.dispatchStatus IN ('DISPATCHED', 'DELIVERED')
+        ORDER BY d.dispatchTime DESC
+        LIMIT 50
+      ''');
+      print("📍 DispatchHubScreen: Active dispatches loaded: ${active.length}");
 
-    // Tab 4: Unloads (ready for verification)
-    final unloads = await db.rawQuery('''
-      SELECT d.*, o.customerName, o.location, o.date
-      FROM dispatches d
-      JOIN orders o ON o.id = d.orderId
-      WHERE d.dispatchStatus = 'RETURNING'
-      ORDER BY d.returnTime DESC
-      LIMIT 50
-    ''');
+      // Tab 3: Returns (awaiting return tracking)
+      final returns = await db.rawQuery('''
+        SELECT d.*, o.customerName, o.location, o.date, o.mobile
+        FROM dispatches d
+        JOIN orders o ON o.id = d.orderId
+        WHERE d.dispatchStatus IN ('DISPATCHED', 'DELIVERED', 'RETURNING')
+        ORDER BY d.dispatchTime DESC
+        LIMIT 50
+      ''');
+      print("📍 DispatchHubScreen: Returns loaded: ${returns.length}");
 
-    // Get dishes for pending orders
-    List<Map<String, dynamic>> pendingWithDishes = [];
-    for (final order in pending) {
-      final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [order['id']]);
-      pendingWithDishes.add({...order, 'dishes': dishes});
+      // Tab 4: Unloads (ready for verification)
+      final unloads = await db.rawQuery('''
+        SELECT d.*, o.customerName, o.location, o.date
+        FROM dispatches d
+        JOIN orders o ON o.id = d.orderId
+        WHERE d.dispatchStatus = 'RETURNING'
+        ORDER BY d.returnTime DESC
+        LIMIT 50
+      ''');
+      print("📍 DispatchHubScreen: Unloads loaded: ${unloads.length}");
+
+      // Get dishes for pending orders
+      List<Map<String, dynamic>> pendingWithDishes = [];
+      for (final order in pending) {
+        final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [order['id']]);
+        pendingWithDishes.add({...order, 'dishes': dishes});
+      }
+      print("📍 DispatchHubScreen: Dishes for pending orders loaded");
+
+      if (mounted) {
+        setState(() {
+          _pendingOrders = pendingWithDishes;
+          _activeDispatches = List<Map<String, dynamic>>.from(active);
+          _returns = List<Map<String, dynamic>>.from(returns);
+          _unloads = List<Map<String, dynamic>>.from(unloads);
+          _isLoading = false;
+        });
+      }
+      print("📍 DispatchHubScreen: _loadAllData complete, loading=false");
+    } catch (e, stack) {
+      print("📍 DispatchHubScreen error: $e");
+      print(stack);
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    setState(() {
-      _pendingOrders = pendingWithDishes;
-      _activeDispatches = List<Map<String, dynamic>>.from(active);
-      _returns = List<Map<String, dynamic>>.from(returns);
-      _unloads = List<Map<String, dynamic>>.from(unloads);
-      _isLoading = false;
-    });
   }
 
   @override
@@ -232,7 +262,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
         children: [
           ListTile(
             title: Text(order['customerName'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('${order['time']} • ${order['location'] ?? 'N/A'}'),
+            subtitle: Text('${TimeUtils.formatTo12Hour(order['time'])} • ${order['location'] ?? 'N/A'}'),
             trailing: Chip(
               label: Text(allReady ? AppLocalizations.of(context)!.ready : '$internalReady/$internalCount'),
               backgroundColor: allReady ? Colors.green.shade100 : Colors.orange.shade100,
@@ -246,8 +276,9 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                 final type = d['productionType'] ?? 'INTERNAL';
                 final status = d['productionStatus'] ?? 'PENDING';
                 final pax = d['pax'] ?? 0;
+                final dishName = d['dishName'] ?? d['name'] ?? 'Unnamed';
                 return Chip(
-                  label: Text('${d['name']} (${pax})', style: const TextStyle(fontSize: 11)),
+                  label: Text('$dishName ($pax)', style: const TextStyle(fontSize: 11)),
                   backgroundColor: status == 'COMPLETED' ? Colors.green.shade50 : Colors.grey.shade100,
                   avatar: type != 'INTERNAL' ? Icon(type == 'LIVE' ? Icons.restaurant : Icons.store, size: 14) : null,
                 );
@@ -281,7 +312,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
       itemCount: _activeDispatches.length,
       itemBuilder: (ctx, i) {
         final d = _activeDispatches[i];
-        final vehicleNo = d['vehicleNo'] ?? 'N/A';
+        final vehicleNo = d['vehicleNumber'] ?? 'N/A';
         final vehicleType = d['vehicleType'] ?? '';
         final driverName = d['driverName'] ?? 'N/A';
         return Card(
@@ -310,7 +341,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('${d['date']} | ${d['time']} | ${d['location'] ?? 'N/A'}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('${d['date']} | ${TimeUtils.formatTo12Hour(d['time'])} | ${d['location'] ?? 'N/A'}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                   const Divider(),
                   Row(
                     children: [
@@ -446,10 +477,14 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
 
   // Actions
   void _startDispatch(Map<String, dynamic> order) {
+    print("📍 DispatchHubScreen: _startDispatch for order ${order['id']}");
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => _DispatchLoadingSheet(order: order)),
-    ).then((_) => _loadAllData());
+    ).then((_) {
+      print("📍 DispatchHubScreen: Returned from _DispatchLoadingSheet");
+      _loadAllData();
+    });
   }
 
   void _showLocation(Map<String, dynamic> dispatch) {
@@ -479,13 +514,13 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
               Text((dispatch['customerName'] as String?) ?? 'Order', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              Text('${dispatch['date']} | ${dispatch['time']} | ${dispatch['location'] ?? 'N/A'}', style: TextStyle(color: Colors.grey.shade600)),
+              Text('${dispatch['date']} | ${TimeUtils.formatTo12Hour(dispatch['time'])} | ${dispatch['location'] ?? 'N/A'}', style: TextStyle(color: Colors.grey.shade600)),
               const SizedBox(height: 8),
               Row(
                 children: [
                   const Icon(Icons.local_shipping, size: 18, color: Colors.green),
                   const SizedBox(width: 8),
-                  Text('${dispatch['vehicleNo'] ?? 'N/A'}${(dispatch['vehicleType'] ?? '').toString().isNotEmpty ? ' [${dispatch['vehicleType']}]' : ''}'),
+                  Text('${dispatch['vehicleNumber'] ?? 'N/A'}${(dispatch['vehicleType'] ?? '').toString().isNotEmpty ? ' [${dispatch['vehicleType']}]' : ''}'),
                 ],
               ),
               Row(
@@ -590,7 +625,9 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
   List<Map<String, dynamic>> _customUtensils = []; // User-added utensils
   List<String> _utensilSuggestions = []; // From DB for autocomplete
   int? _selectedVehicleId;
+  bool _isCustomerCollection = false; // Added
   bool _isLoading = true;
+  List<Map<String, dynamic>> _customConsumables = []; // Added for dynamic consumables
 
   @override
   void initState() {
@@ -599,26 +636,33 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
   }
 
   Future<void> _loadData() async {
-    final db = await DatabaseHelper().database;
-    final vehicles = await db.query('vehicles', where: 'isActive = 1');
-    final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [widget.order['id']]);
-    final dbUtensils = await db.query('utensils');
+    print("📍 _DispatchLoadingSheet: _loadData start");
+    try {
+      final db = await DatabaseHelper().database;
+      print("📍 _DispatchLoadingSheet: DB initialized");
+      final vehicles = await db.query('vehicles', where: 'isActive = 1');
+      print("📍 _DispatchLoadingSheet: Vehicles loaded: ${vehicles.length}");
+      final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [widget.order['id']]);
+      print("📍 _DispatchLoadingSheet: Dishes loaded: ${dishes.length}");
+      final dbUtensils = await db.query('utensils');
+      print("📍 _DispatchLoadingSheet: Utensils loaded: ${dbUtensils.length}");
 
-    List<Map<String, dynamic>> items = [];
-    
-    // Categorize dishes by production type
-    for (final d in dishes) {
-      final prodType = d['productionType'] ?? 'INTERNAL';
-      items.add({
-        'type': 'DISH',
-        'prodType': prodType, // INTERNAL, SUBCONTRACT, LIVE
-        'name': d['name'],
-        'qty': d['pax'] ?? 1,
-        'loaded': prodType == 'INTERNAL', // Kitchen items pre-ticked
-        'directToVenue': prodType == 'SUBCONTRACT', // Subcontract default goes to venue
-        'notes': prodType == 'LIVE' ? 'Ingredients' : (prodType == 'SUBCONTRACT' ? 'Optional' : ''),
-      });
-    }
+      List<Map<String, dynamic>> items = [];
+      
+      // Categorize dishes by production type
+      for (final d in dishes) {
+        final prodType = d['productionType'] ?? 'INTERNAL';
+        final dishName = d['dishName'] ?? d['name'] ?? 'Unnamed Dish';
+        items.add({
+          'type': 'DISH',
+          'prodType': prodType, // INTERNAL, SUBCONTRACT, LIVE
+          'name': dishName,
+          'qty': d['pax'] ?? 1,
+          'loaded': prodType == 'INTERNAL', // Kitchen items pre-ticked
+          'directToVenue': prodType == 'SUBCONTRACT', // Subcontract default goes to venue
+          'notes': prodType == 'LIVE' ? 'Ingredients' : (prodType == 'SUBCONTRACT' ? 'Optional' : ''),
+        });
+      }
     
     // Fixed consumables (always show)
     final consumables = [
@@ -632,12 +676,24 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
     // Utensil suggestions from DB
     final suggestions = dbUtensils.map((u) => u['name'].toString()).toList();
 
+      setState(() {
+        _vehicles = vehicles;
+        _items = items;
+        _consumables = consumables;
+        _utensilSuggestions = suggestions;
+        _isLoading = false;
+      });
+      print("📍 _DispatchLoadingSheet: _loadData complete");
+    } catch (e, stack) {
+      print("📍 _DispatchLoadingSheet error: $e");
+      print(stack);
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _removeCustomUtensil(int index) {
     setState(() {
-      _vehicles = vehicles;
-      _items = items;
-      _consumables = consumables;
-      _utensilSuggestions = suggestions;
-      _isLoading = false;
+      _customUtensils.removeAt(index);
     });
   }
 
@@ -647,14 +703,20 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
     });
   }
 
-  void _removeCustomUtensil(int index) {
+  void _addCustomConsumable() {
     setState(() {
-      _customUtensils.removeAt(index);
+      _customConsumables.add({'type': 'CONSUMABLE', 'name': '', 'qty': 0, 'icon': '➕'});
+    });
+  }
+
+  void _removeCustomConsumable(int index) {
+    setState(() {
+      _customConsumables.removeAt(index);
     });
   }
 
   Future<void> _completeDispatch() async {
-    if (_selectedVehicleId == null) {
+    if (!_isCustomerCollection && _selectedVehicleId == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectVehicle)));
       return;
     }
@@ -703,6 +765,22 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
         }
       }
 
+      // Insert CUSTOM consumables
+      for (final item in _customConsumables) {
+        final name = item['name']?.toString() ?? '';
+        final qtyInt = item['qty'] as int? ?? 0;
+        if (name.isNotEmpty && qtyInt > 0) {
+          await db.insert('dispatch_items', {
+            'dispatchId': dispatchId,
+            'itemType': 'CONSUMABLE',
+            'itemName': name,
+            'quantity': qtyInt,
+            'loadedQty': qtyInt,
+            'status': 'LOADED',
+          });
+        }
+      }
+
       // Insert custom utensils
       for (final item in _customUtensils) {
         final name = item['name']?.toString() ?? '';
@@ -729,24 +807,21 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
       // Update order
       await db.update('orders', {'dispatchStatus': 'DISPATCHED', 'dispatchedAt': now}, where: 'id = ?', whereArgs: [widget.order['id']]);
 
-      // Send notification (non-blocking)
-      final vehicle = await db.query('vehicles', where: 'id = ?', whereArgs: [_selectedVehicleId]);
-      if (vehicle.isNotEmpty) {
-        try {
-          await NotificationService.queueDispatchNotification(dispatchId: dispatchId, orderData: widget.order, vehicleData: vehicle.first);
-        } catch (e) {
-          print('Notification error: $e');
-        }
-      }
+      // Notification removed from Admin App: 
+      // Requirement Change: Only send when Driver accepts the load.
+      // -------------------------------------------------------------
+      // if (!_isCustomerCollection && _selectedVehicleId != null) { ... }
 
-      // Start GPS (non-blocking) - ENTERPRISE FEATURE ONLY
-      try {
-        final gpsEnabled = await FeatureGateService.instance.isFeatureEnabled('GPS_TRACKING');
-        if (gpsEnabled) {
-          await LocationService.instance.startTracking(dispatchId);
+      // Start GPS (non-blocking) - ENTERPRISE FEATURE ONLY & Only if vehicle selected
+      if (!_isCustomerCollection && _selectedVehicleId != null) {
+        try {
+          final gpsEnabled = await FeatureGateService.instance.isFeatureEnabled('GPS_TRACKING');
+          if (gpsEnabled) {
+            await LocationService.instance.startTracking(dispatchId);
+          }
+        } catch (e) {
+          print('GPS tracking error: $e');
         }
-      } catch (e) {
-        print('GPS tracking error: $e');
       }
 
       if (mounted) {
@@ -849,13 +924,25 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
                   decoration: InputDecoration(labelText: AppLocalizations.of(context)!.selectVehicle, border: const OutlineInputBorder()),
                   items: _vehicles.map((v) {
                     // Format: VehicleNo [Type] - DriverName
-                    final vehicleNo = v['vehicleNo'] ?? '';
+                    final vehicleNo = v['vehicleNumber'] ?? v['vehicleNo'] ?? '';
                     final vehicleType = v['vehicleType'] ?? '';
                     final driverName = v['driverName'] ?? '';
                     final displayText = '$vehicleNo${vehicleType.isNotEmpty ? ' [$vehicleType]' : ''}${driverName.isNotEmpty ? ' - $driverName' : ''}';
                     return DropdownMenuItem<int>(value: v['id'] as int, child: Text(displayText));
                   }).toList(),
-                  onChanged: (v) => setState(() => _selectedVehicleId = v),
+                  onChanged: _isCustomerCollection ? null : (v) => setState(() => _selectedVehicleId = v),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text('Customer Collection / Front-Off Handover'),
+                  subtitle: const Text('Bypass vehicle selection (No GPS Tracking)'),
+                  value: _isCustomerCollection,
+                  onChanged: (v) {
+                    setState(() {
+                      _isCustomerCollection = v;
+                      if (v) _selectedVehicleId = null;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16),
                 
@@ -895,8 +982,22 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('📦 Consumables', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
-                      const Text('Enter quantities for disposables', style: TextStyle(fontSize: 11, color: Colors.teal)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('📦 Consumables', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
+                              Text('Enter quantities for disposables', style: TextStyle(fontSize: 11, color: Colors.teal)),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle, color: Colors.teal),
+                            onPressed: _addCustomConsumable,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -919,6 +1020,42 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
                   );
                 }),
                 
+                // === CUSTOM DYNAMIC CONSUMABLES ===
+                ..._customConsumables.asMap().entries.map((e) {
+                  final i = e.key;
+                  final item = e.value;
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextField(
+                              decoration: const InputDecoration(labelText: 'Consumable Name', isDense: true, border: OutlineInputBorder()),
+                              onChanged: (v) => _customConsumables[i]['name'] = v,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 60,
+                            child: TextField(
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(labelText: 'Qty', isDense: true, border: OutlineInputBorder()),
+                              onChanged: (v) => _customConsumables[i]['qty'] = int.tryParse(v) ?? 0,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle, color: Colors.red),
+                            onPressed: () => _removeCustomConsumable(i),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+
                 // === CUSTOM UTENSILS ===
                 Container(
                   margin: const EdgeInsets.only(top: 16, bottom: 8),

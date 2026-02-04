@@ -120,13 +120,13 @@ class NotificationService {
       'customerName': orderData['customerName'] ?? '',
       'driverName': vehicleData['driverName'] ?? '',
       'driverMobile': vehicleData['driverMobile'] ?? '',
-      'vehicleNo': vehicleData['vehicleNo'] ?? '',
+      'vehicleNumber': vehicleData['vehicleNumber'] ?? '',
       'trackingUrl': trackingUrl,
       'channels': ['WHATSAPP', 'SMS'],
       'message': '''🚚 Your order is on the way!
 
 Driver: ${vehicleData['driverName'] ?? 'N/A'}
-Vehicle: ${vehicleData['vehicleNo'] ?? 'N/A'}
+Vehicle: ${vehicleData['vehicleNumber'] ?? 'N/A'}
 Contact: ${vehicleData['driverMobile'] ?? 'N/A'}
 
 Track your delivery: $trackingUrl''',

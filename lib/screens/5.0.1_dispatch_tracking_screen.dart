@@ -227,7 +227,7 @@ Powered by RuchiServ''';
                 icon: Icons.person,
                 children: [
                   _buildInfoRow('Driver', dispatch['driverName'] ?? 'N/A'),
-                  _buildInfoRow('Vehicle', '${dispatch['vehicleNo'] ?? 'N/A'} ${dispatch['vehicleType'] != null ? '[${dispatch['vehicleType']}]' : ''}'),
+                  _buildInfoRow('Vehicle', '${dispatch['vehicleNumber'] ?? 'N/A'} ${dispatch['vehicleType'] != null ? '[${dispatch['vehicleType']}]' : ''}'),
                   _buildInfoRow('Mobile', dispatch['driverMobile'] ?? 'N/A', isPhone: true),
                 ],
               ),

@@ -28,7 +28,7 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
     _firmId = sp.getString('last_firm'); // Added
     
     final db = await DatabaseHelper().database;
-    final result = await db.query('vehicles', orderBy: 'vehicleNo ASC'); // Ideally filter by firmId too if multi-tenant locally
+    final result = await db.query('vehicles', orderBy: 'vehicleNumber ASC'); // Ideally filter by firmId too if multi-tenant locally
     setState(() {
       _vehicles = result;
       _isLoading = false;
@@ -37,7 +37,7 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
 
   Future<void> _addOrEditVehicle([Map<String, dynamic>? vehicle]) async {
     final isEdit = vehicle != null;
-    final vehicleNoController = TextEditingController(text: vehicle?['vehicleNo'] ?? '');
+    final vehicleNumberController = TextEditingController(text: vehicle?['vehicleNumber'] ?? '');
     final vehicleTypeController = TextEditingController(text: vehicle?['vehicleType'] ?? '');
     final driverNameController = TextEditingController(text: vehicle?['driverName'] ?? '');
     final driverMobileController = TextEditingController(text: vehicle?['driverMobile'] ?? '');
@@ -52,8 +52,8 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: vehicleNoController,
-                decoration: const InputDecoration(labelText: 'Vehicle No *'),
+                controller: vehicleNumberController,
+                decoration: const InputDecoration(labelText: 'Vehicle Number *'),
                 textCapitalization: TextCapitalization.characters,
               ),
               const SizedBox(height: 12),
@@ -90,46 +90,74 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (vehicleNoController.text.isEmpty) return;
-              final db = await DatabaseHelper().database;
-              final now = DateTime.now().toIso8601String();
-              final data = {
-                'vehicleNo': vehicleNoController.text.trim().toUpperCase(),
-                'vehicleType': vehicleTypeController.text.trim(),
-                'type': type,
-                'driverName': driverNameController.text.trim(),
-                'driverMobile': driverMobileController.text.trim(),
-                'firmId': _firmId ?? 'DEFAULT', // Use real firmId
-                'updatedAt': now,
-              };
-              if (isEdit) {
-                await db.update('vehicles', data, where: 'id = ?', whereArgs: [vehicle['id']]);
-              } else {
-                data['createdAt'] = now;
-                await db.insert('vehicles', {...data, 'isActive': 1});
-              }
+              ElevatedButton(
+                onPressed: () async {
+                  if (vehicleNumberController.text.isEmpty) return;
+                  final db = await DatabaseHelper().database;
+                  final now = DateTime.now().toIso8601String();
+                  final vehicleNum = vehicleNumberController.text.trim().toUpperCase();
+                  
+                  try {
+                    // Check columns to handle legacy schemas (v11 vs AppSchema)
+                    final tableInfo = await db.rawQuery('PRAGMA table_info(vehicles)');
+                    final columns = tableInfo.map((row) => row['name'] as String).toSet();
+                    
+                    final Map<String, dynamic> data = {
+                      'vehicleNumber': vehicleNum,
+                      'vehicleType': vehicleTypeController.text.trim(),
+                      'type': type,
+                      'driverName': driverNameController.text.trim(),
+                      'driverMobile': driverMobileController.text.trim(),
+                      'firmId': _firmId ?? 'DEFAULT',
+                      'updatedAt': now,
+                    };
+                    
+                    // Backward compatibility: Only add vehicleNo if column exists
+                    if (columns.contains('vehicleNo')) {
+                      data['vehicleNo'] = vehicleNum;
+                    }
+                    
+                    // Check for missing AppSchema columns (in case sync hasn't run or failed)
+                    if (columns.contains('isActive')) {
+                      data['isActive'] = 1;
+                    }
 
-              // AUTO-WHITELIST: Allow instant login for Driver
-              if (driverMobileController.text.trim().isNotEmpty) {
-                // Must get firmId from DB or Session properly, here we use 'DEFAULT' or cached logic if available
-                // Ideally this screen should load firmId from SharedPreferences like others
-                // Assuming DatabaseHelper internal logic or sync handles 'DEFAULT' if not provided
-                // But let's try to be safe.
-                await DatabaseHelper().insertAuthorizedMobile({
-                  'firmId': data['firmId'], // Passed from above logic
-                  'mobile': driverMobileController.text.trim(),
-                  'role': 'Driver',
-                  'name': driverNameController.text.trim(),
-                  'addedBy': 'ADMIN_APP',
-                });
-              }
-              Navigator.pop(ctx);
-              _loadVehicles();
-            },
-            child: Text(isEdit ? 'Update' : 'Add'),
-          ),
+                    if (isEdit) {
+                      await db.update('vehicles', data, where: 'id = ?', whereArgs: [vehicle['id']]);
+                    } else {
+                      data['createdAt'] = now;
+                      await db.insert('vehicles', data);
+                    }
+
+                    // AUTO-WHITELIST: Allow instant login for Driver
+                    if (driverMobileController.text.trim().isNotEmpty) {
+                      await DatabaseHelper().insertAuthorizedMobile({
+                        'firmId': data['firmId'],
+                        'mobile': driverMobileController.text.trim(),
+                        'role': 'Driver',
+                        'name': driverNameController.text.trim(),
+                        'addedBy': 'ADMIN_APP',
+                      });
+                    }
+
+                    if (mounted) {
+                      Navigator.pop(ctx);
+                      _loadVehicles();
+                    }
+                  } catch (e) {
+                    print("📍 Error saving vehicle: $e");
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error saving vehicle: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(isEdit ? 'Update' : 'Add'),
+              ),
         ],
       ),
     );
@@ -204,7 +232,7 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
                         ),
                         title: Row(
                           children: [
-                            Text(v['vehicleNo'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(v['vehicleNumber'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
                             if ((v['vehicleType'] ?? '').toString().isNotEmpty)
                               Container(
                                 margin: const EdgeInsets.only(left: 8),

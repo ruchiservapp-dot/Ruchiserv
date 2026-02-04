@@ -29,7 +29,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
 
   Future<void> _checkUserRole() async {
     final sp = await SharedPreferences.getInstance();
-    String role = sp.getString('last_role') ?? '';
+    String role = sp.getString('user_role') ?? sp.getString('last_role') ?? '';
     
     // If role not in SharedPreferences, try to get from database
     if (role.isEmpty) {

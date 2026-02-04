@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart'; // For ConflictAlgorithm
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
+import '../db/sync_event.dart'; // Added
 import 'connectivity_service.dart';
 import '../config/app_config.dart';
 
@@ -24,6 +25,9 @@ class CloudSyncService {
   
   // Tables that sync to AWS
   static const syncTables = [
+    'firms',                // v38: Firm profile sync for cross-device settings
+    'users',                // v37: Multi-device user sync (PRIORITY)
+    'authorized_mobiles',   // v37: Multi-device login authorization (PRIORITY)
     'orders',
     'dishes', 
     'dispatches',
@@ -44,8 +48,6 @@ class CloudSyncService {
     'invoices',
     'invoice_items',
     'salary_disbursements',
-    'users',                // v37: Multi-device user sync
-    'authorized_mobiles',   // v37: Multi-device login authorization
   ];
 
   /// Get current firm ID
@@ -81,15 +83,18 @@ class CloudSyncService {
       // Prepare DynamoDB record
       final awsData = Map<String, dynamic>.from(data);
       awsData['pk'] = firmId;
-      awsData['sk'] = '$table#$recordId';
+      // v38: For 'firms' table, use firmId as SK to avoid collisions across devices
+      final skValue = (table == 'firms') ? firmId : '$recordId';
+      awsData['sk'] = '$table#$skValue';
       awsData['table_name'] = table;
       awsData['local_id'] = recordId;
+      awsData['firmId'] = firmId; // v37: Ensure firmId is in attributes
       awsData['synced_at'] = DateTime.now().toIso8601String();
 
       final resp = await AwsApi.callDbHandler(
         method: 'PUT',
         table: 'ruchiserv_data',
-        data: awsData,
+        data: _injectGsiAttributes(table, firmId, awsData),
       );
 
       if (resp['error'] != null) {
@@ -171,7 +176,11 @@ class CloudSyncService {
   }
 
   Future<void> syncTableFromCloud(String table, String firmId) async {
+    print('🔄 CloudSync: Syncing table $table for firm $firmId...');
     try {
+      // DEBUG: Print query params
+      print('  👉 Querying AWS: pk=$firmId, sk_prefix=$table#');
+      
       final resp = await AwsApi.callDbHandler(
         method: 'GET',
         table: 'ruchiserv_data',
@@ -180,6 +189,12 @@ class CloudSyncService {
           'sk_prefix': '$table#',
         },
       );
+
+      // DEBUG: Print raw response keys
+      print('  📥 AWS Response Keys: ${resp.keys.toList()}');
+      if (resp.containsKey('Items')) {
+        print('  📥 Items count: ${(resp['Items'] as List).length}');
+      }
 
       // Handle response - Lambda returns items directly as a List in response body
       // or as a Map with error field
@@ -203,56 +218,167 @@ class CloudSyncService {
       }
       
       if (records.isEmpty) {
-        print('  📥 $table: No cloud data');
+        print('  📥 $table: No cloud data found (empty list)');
         return;
       }
 
-      print('  📥 $table: Received ${records.length} records');
+      print('  📥 $table: Received ${records.length} records to processing...');
 
       final db = await _db.database;
 
       for (final record in records) {
-        final data = Map<String, dynamic>.from(record);
-        // Parse local_id - DynamoDB returns numbers as strings
-        final localIdRaw = data['local_id'];
-        final localId = localIdRaw == null ? null : int.tryParse(localIdRaw.toString());
-        
-        // Remove DynamoDB metadata (but keep firmId - needed for tables)
-        data.remove('pk');
-        data.remove('sk');
-        data.remove('table_name');
-        data.remove('local_id');
-        data.remove('synced_at');
+        try {
+          final data = Map<String, dynamic>.from(record);
+          // Parse local_id - DynamoDB returns numbers as strings
+          final localIdRaw = data['local_id'];
+          final localId = localIdRaw == null ? null : int.tryParse(localIdRaw.toString());
+          
+          // Remove DynamoDB metadata (but keep firmId - needed for tables)
+          data.remove('pk');
+          data.remove('sk');
+          data.remove('table_name');
+          data.remove('local_id');
+          data.remove('synced_at');
+          data.remove('gsi_partition'); // Fix: Remove GSI keys not in local DB
+          data.remove('gsi_sort');      // Fix: Remove GSI keys not in local DB
+          // data.remove('firmId'); // KEEP firmId, required for local DB constraints
 
-        if (localId == null) continue;
-
-        // Sanitize data - convert DynamoDB string numbers to proper types
-        final sanitized = _sanitizeForSqlite(data);
-
-        // Check if record exists locally
-        final existing = await db.query(
-          table,
-          where: 'id = ?',
-          whereArgs: [localId],
-        );
-
-        if (existing.isEmpty) {
-          // Insert new record (preserve original ID)
-          sanitized['id'] = localId;
-          try {
-            // Use ConflictAlgorithm.replace to handle UNIQUE constraints (like userId)
-            await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
-          } catch (e) {
-            print('  ⚠️ $table insert failed for id=$localId: $e');
+          // Sanitize data - convert DynamoDB string numbers to proper types
+          final sanitized = _sanitizeForSqlite(data);
+          
+          // DEBUG: Print first record to check sanitization
+          if (records.indexOf(record) == 0) {
+             print('  📝 Processing first record: $sanitized');
           }
-        } else {
-          // Update existing record - use replace to handle UNIQUE constraints
-          sanitized['id'] = localId;
-          await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
+
+          // v38: Handle 'firms' table specially - uses firmId as unique key, not id
+          if (table == 'firms') {
+            final recordFirmId = sanitized['firmId']?.toString();
+            if (recordFirmId == null || recordFirmId.isEmpty) {
+              print('  ⚠️ Skipping firms record without firmId');
+              continue;
+            }
+            
+            final existing = await db.query(
+              'firms',
+              where: 'LOWER(firmId) = LOWER(?)',
+              whereArgs: [recordFirmId],
+            );
+
+            if (existing.isEmpty) {
+              try {
+                await db.insert('firms', sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
+                print('    ✅ Inserted firms #$recordFirmId');
+              } catch (e) {
+                print('    ❌ firms insert failed for firmId=$recordFirmId: $e');
+              }
+            } else {
+              // Update existing record, preserving local id
+              sanitized['id'] = existing.first['id'];
+              await db.insert('firms', sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
+              print('    ✅ Updated firms #$recordFirmId');
+            }
+            continue; // Skip standard processing
+          }
+
+          // Standard processing for other tables
+          if (localId == null) {
+            print('  ⚠️ Skipping record without local_id: $data');
+            continue;
+          }
+
+          // Check if record exists locally
+          final existing = await db.query(
+            table,
+            where: 'id = ?',
+            whereArgs: [localId],
+          );
+
+          if (existing.isEmpty) {
+            // Insert new record (preserve original ID)
+            sanitized['id'] = localId;
+            try {
+              // Use ConflictAlgorithm.replace to handle UNIQUE constraints
+              await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
+              // print('    ✅ Inserted $table #$localId');
+            } catch (e) {
+              print('    ❌ $table insert failed for id=$localId: $e');
+            }
+          } else {
+            // Update existing record
+            sanitized['id'] = localId; // Ensure ID is preserved
+            await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
+            // print('    ✅ Updated $table #$localId');
+          }
+        } catch (e) {
+          print('  ⚠️ Error processing record: $e');
         }
       }
+      print('  ✅ $table sync processing complete');
     } catch (e) {
       print('  ❌ $table sync error: $e');
+    }
+  }
+
+  /// Fetches live report data from Cloud using Phase 2 GSI optimization.
+  /// This is much faster/cheaper than a Scan as it uses GSI_FirmTable_Date.
+  static Future<List<Map<String, dynamic>>> getLiveCloudReport({
+    required String table,
+    required String startDate,
+    required String endDate,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final firmId = prefs.getString('firmId');
+    if (firmId == null) return [];
+
+    try {
+      final resp = await AwsApi.queryGsi(
+        table: 'ruchiserv_data',
+        indexName: 'GSI_FirmTable_Date',
+        pkValue: '$firmId#$table',
+        skValue: startDate,
+        skValueEnd: endDate,
+        skOp: 'between',
+      );
+
+      if (resp['error'] != null) {
+        print('🔴 [Cloud Report Error] ${resp['error']}');
+        return [];
+      }
+
+      final items = resp['Items'] as List?;
+      if (items == null) return [];
+
+      return items.map((i) => _sanitizeForSqlite(Map<String, dynamic>.from(i))).toList();
+    } catch (e) {
+      print('🔴 [Cloud Report Exception] $e');
+      return [];
+    }
+  }
+
+  /// Injects GSI attributes for optimized cloud queries
+  static Map<String, dynamic> _injectGsiAttributes(String table, String firmId, Map<String, dynamic> data) {
+    final result = Map<String, dynamic>.from(data);
+    
+    // 1. Partition: firmId#tableName
+    result['gsi_partition'] = '$firmId#$table';
+    
+    // 2. Sort key: The most common date/sort field for this table
+    result['gsi_sort'] = _getGsiSortKey(table, data);
+    
+    return result;
+  }
+
+  /// Determines which field to use for GSI sorting
+  static String _getGsiSortKey(String table, Map<String, dynamic> data) {
+    switch (table) {
+      case 'orders': return data['eventDate']?.toString() ?? data['date']?.toString() ?? '';
+      case 'finance':
+      case 'attendance': 
+      case 'invoices': return data['date']?.toString() ?? data['invoiceDate']?.toString() ?? '';
+      case 'staff': return data['joinDate']?.toString() ?? '';
+      case 'salary_disbursements': return data['monthYear']?.toString() ?? '';
+      default: return data['createdAt']?.toString() ?? '';
     }
   }
 
@@ -410,6 +536,20 @@ class CloudSyncService {
     
     _isPolling = true;
     print('🔄 CloudSync: Starting background polling...');
+
+    // MUTATION LISTENER: Listen to all DB changes and sync them
+    DatabaseHelper().syncStreamController.stream.listen((event) async {
+       print('📥 CloudSync: Received event: ${event.table} ${event.action}');
+       final recordId = int.tryParse(event.data['id']?.toString() ?? '0') ?? 0;
+       if (recordId == 0) return;
+
+       if (event.action == 'DELETE') {
+         await deleteRecord(table: event.table, recordId: recordId);
+       } else {
+         // INSERT or UPDATE are handled by syncRecord (PUT)
+         await syncRecord(table: event.table, recordId: recordId, data: event.data);
+       }
+    });
 
     // PUSH: Process pending queue every 30 seconds
     Stream.periodic(const Duration(seconds: 30)).listen((_) async {

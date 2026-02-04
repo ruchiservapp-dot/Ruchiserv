@@ -16,6 +16,8 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
   String _selectedPlan = 'Monthly';
   bool _isLoading = false;
   late CashfreePaymentService _paymentService;
+  String? _currentSubscriptionId;
+  String? _currentExpiry;
 
   final Map<String, Map<String, dynamic>> _plans = {
     'Monthly': {'price': 999.0, 'duration': '1 Month'},
@@ -29,6 +31,32 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
       onSuccess: _handlePaymentSuccess,
       onFailure: _handlePaymentError,
     );
+    _checkCurrentSubscription();
+  }
+
+  Future<void> _checkCurrentSubscription() async {
+    final sp = await SharedPreferences.getInstance();
+    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final firmDetails = await DatabaseHelper().getFirmDetails(firmId);
+    
+    if (firmDetails != null) {
+      setState(() {
+        _currentSubscriptionId = firmDetails['txnId']; // Using txnId as a fallback for subId
+        _currentExpiry = firmDetails['subscriptionEnd'];
+      });
+    }
+  }
+
+  Future<void> _updateMandate() async {
+    if (_currentSubscriptionId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No active subscription found to update.")),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    await _paymentService.updateMandate(_currentSubscriptionId!);
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -179,6 +207,21 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                if (_currentExpiry != null) ...[
+                  Text(
+                    "Current Plan active until $_currentExpiry",
+                    style: const TextStyle(color: Colors.indigo, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _updateMandate,
+                    icon: const Icon(Icons.sync_problem),
+                    label: const Text("Update UPI Mandate (Auto-pay)"),
+                    style: OutlinedButton.styleFrom(foregroundColor: Colors.orange),
+                  ),
+                  const Divider(height: 40),
+                ],
+                const SizedBox(height: 12),
                 ..._plans.entries.map((entry) {
                   final plan = entry.key;
                   final details = entry.value;

@@ -37,8 +37,21 @@ class PermissionService {
     final firmId = sp.getString('last_firm');
     final mobile = sp.getString('last_mobile');
     
+    // PRIORITY 1: Check if role was already set by AuthService (from Cognito token)
+    final spRole = sp.getString('user_role');
+    if (spRole != null && spRole.isNotEmpty && spRole != 'Staff') {
+      print('PermissionService: Using SharedPreferences role: $spRole');
+      _cachedRole = spRole;
+      final rolePerms = rolePermissions[_cachedRole] ?? 'ALL';
+      _cachedModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
+      _cachedShowRates = sp.getBool('show_rates') ?? true;
+      _cachedPermissions = sp.getString('user_permissions');
+      return;
+    }
+    
     if (firmId == null || mobile == null) return;
     
+    // PRIORITY 2: Query local database for user record
     final db = await DatabaseHelper().database;
     final users = await db.query('users', 
       where: 'firmId = ? AND mobile = ?', 
@@ -66,6 +79,12 @@ class PermissionService {
       await sp.setString('user_permissions', _cachedPermissions ?? '');
       await sp.setBool('show_rates', _cachedShowRates ?? true);
       await sp.setStringList('allowed_modules', _cachedModules!);
+    } else {
+      // PRIORITY 3: Fallback - use any role from SharedPreferences even if 'Staff'
+      print('PermissionService: No user in DB, using SP fallback: $spRole');
+      _cachedRole = spRole ?? 'Staff';
+      final rolePerms = rolePermissions[_cachedRole] ?? 'ORDERS';
+      _cachedModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
     }
   }
 
@@ -142,6 +161,9 @@ class PermissionService {
 
   /// Get list of allowed modules for current user
   Future<List<String>> getAllowedModules() async {
+    final role = await getUserRole();
+    if (role == 'Admin') return allModules;
+
     if (_cachedModules != null) return _cachedModules!;
     
     final sp = await SharedPreferences.getInstance();

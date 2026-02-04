@@ -13,9 +13,7 @@ import 'services/cloud_sync_service.dart'; // Background Sync
 import 'services/fcm_service.dart'; // Notification Service
 import 'screens/0.0_splash_screen.dart';
 import 'db/seed_dishes.dart'; // Sample dishes and ingredients
-// DEV: Uncomment below for development testing
-// import 'db/seed_test_user.dart';
-// import 'db/seed_november_data.dart';
+import 'screens/2.1_add_order_screen.dart';
 
 // COMPLIANCE: Initialize encryption before any database operations
 Future<void> main() async {
@@ -60,10 +58,11 @@ class RuchiServApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.light,
-            home: const LifecycleWatcher(child: SplashScreen()),
+            home: const LifecycleWatcher(child: VerificationContainer()),
             routes: {
               '/login': (context) => LoginScreen(),
               '/home': (context) => MainMenuScreen(),
+              '/verify': (context) => const VerificationContainer(),
             },
           );
         },
@@ -106,5 +105,42 @@ class _LifecycleWatcherState extends State<LifecycleWatcher> with WidgetsBinding
   @override
   Widget build(BuildContext context) {
     return widget.child;
+  }
+}
+
+class VerificationContainer extends StatelessWidget {
+  const VerificationContainer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('UI Verification (Dynamic Width)')),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const Text('Testing Dynamic Width (90% of screen) + Single Line'),
+              const SizedBox(height: 20),
+              DishRowItem(
+                dish: {'name': 'Biryani', 'rate': 250, 'pax': 10, 'cost': 2500},
+                suggestions: const [
+                  {'id': 1, 'name': 'Chicken Biryani Special Edition with Very Long Name That Should Truncate', 'rate': 300},
+                  {'id': 2, 'name': 'Mutton Biryani Deluxe Large Portion', 'rate': 500},
+                  {'id': 3, 'name': 'Veg Biryani Family Pack Extra Spicy', 'rate': 200},
+                  {'id': 4, 'name': 'Short Name', 'rate': 350},
+                ],
+                category: 'Main Course',
+                index: 0,
+                totalPax: 10,
+                parentSetState: (fn) => fn(),
+                recalculateTotals: () {},
+                onDelete: (idx) {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

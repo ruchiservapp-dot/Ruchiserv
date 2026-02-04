@@ -9,6 +9,8 @@ import '7.1_driver_assignment_screen.dart';
 import '7.2_driver_dispatch_detail_screen.dart';
 import '7.3_driver_active_dispatch_screen.dart';
 import '7.5_driver_earnings_screen.dart';
+import '../utils/time_utils.dart';
+import '../services/location_service.dart'; // For permission check
 
 class DriverHomeScreen extends StatefulWidget {
   const DriverHomeScreen({super.key});
@@ -31,32 +33,76 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   @override
   void initState() {
     super.initState();
+    print("📍 DriverHomeScreen: initState start");
     _loadDriverData();
+    _checkPermission();
+    print("📍 DriverHomeScreen: initState end");
+  }
+
+  Future<void> _checkPermission() async {
+    print("📍 DriverHomeScreen: _checkPermission start");
+    // Proactive Permission Request
+    // This ensures drivers grant permission before they even start a dispatch
+    final granted = await LocationService.instance.requestPermission();
+    print("📍 DriverHomeScreen: _checkPermission granted: $granted");
+    if (!granted && mounted) {
+        print("📍 DriverHomeScreen: Showing permission dialog");
+        // Show dialog asking them to enable it
+        showDialog(
+            context: context,
+            barrierDismissible: false, // Force them to acknowledge
+            builder: (ctx) => AlertDialog(
+                title: const Text('Location Access Required'),
+                content: const Text(
+                    'To track deliveries and provide route guidance, this app collects location data even when the app is closed or not in use.\n\nPlease enable "Allow all the time" or "When in use" in settings.',
+                ),
+                actions: [
+                    TextButton(
+                        onPressed: () { 
+                            Navigator.pop(ctx);
+                        }, 
+                        child: const Text('I Understand'),
+                    ),
+                    ElevatedButton(
+                        onPressed: () async {
+                            Navigator.pop(ctx);
+                            await LocationService.instance.requestPermission();
+                        },
+                        child: const Text('Open Settings'),
+                    )
+                ],
+            ),
+        );
+    }
   }
 
   Future<void> _loadDriverData() async {
+    print("📍 DriverHomeScreen: _loadDriverData start");
     if (!mounted) return;
     setState(() => _isLoading = true);
     
     try {
-      final sp = await SharedPreferences.getInstance();
+      final SharedPreferences sp = await SharedPreferences.getInstance();
+      print("📍 DriverHomeScreen: SP initialized");
       final mobile = sp.getString('last_mobile') ?? '';
       final firmId = sp.getString('last_firm') ?? '';
+      _driverName = sp.getString('last_user_name') ?? 'Driver';
       
       final db = await DatabaseHelper().database;
+      print("📍 DriverHomeScreen: DB initialized");
       
-      // 1. Get Driver Identity (Name)
+      // 1. Get Driver Identity (Name) if not in SP
       final users = await db.query('users', 
         where: 'mobile = ? AND firmId = ?', 
         whereArgs: [mobile, firmId],
       );
       
       if (users.isNotEmpty) {
-        _driverName = users.first['username']?.toString() ?? 'Driver';
+        _driverName = users.first['username']?.toString() ?? _driverName;
       }
+      print("📍 DriverHomeScreen: Driver identified: $_driverName");
 
-      // 2. Find Assigned Vehicle (Driver is linked to Vehicle by Mobile)
-      // This gives us the vehicleId to check dispatches for
+      // 2. Find Assigned Vehicle
       final vehicleRes = await db.query('vehicles',
         where: 'driverMobile = ? AND firmId = ?',
         whereArgs: [mobile, firmId],
@@ -64,27 +110,54 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       );
 
       if (vehicleRes.isNotEmpty) {
-        // We use the vehicleId effectively as the "driver identity" for dispatch logic
-        // because dispatches are assigned to vehicles, not directly to driver user IDs
         _driverId = vehicleRes.first['id'].toString();
+        print("📍 DriverHomeScreen: Vehicle identified: $_driverId");
         await _loadDispatchData();
       } else {
-        // No vehicle assigned to this mobile
+        print("📍 DriverHomeScreen: No vehicle assigned for $mobile");
         if (mounted) {
           setState(() {
             _pendingAssignments = [];
             _activeDispatch = null;
-            _isLoading = false;
           });
         }
       }
-    } catch (e) {
-      print('DriverHome Error: $e');
+      
+      if (mounted) setState(() => _isLoading = false);
+      print("📍 DriverHomeScreen: _loadDriverData complete, loading=false");
+    } catch (e, stack) {
+      print("📍 DriverHomeScreen error: $e");
+      print(stack);
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _loadDispatchData() async {
+    print("📍 DriverHomeScreen: _loadDispatchData start");
+    try {
+      final db = await DatabaseHelper().database;
+      
+      // Get pending assignments
+      final pending = await db.query('dispatches', 
+        where: 'assignmentStatus = ?', 
+        whereArgs: ['PENDING']
+      );
+      _pendingAssignments = List<Map<String, dynamic>>.from(pending);
+      print("📍 DriverHomeScreen: Pending load: ${_pendingAssignments.length}");
+      
+      // Get active dispatch
+      final active = await db.query('dispatches', 
+        where: 'dispatchStatus IN (?, ?, ?)', 
+        whereArgs: ['LOADING', 'DISPATCHED', 'DELIVERED']
+      );
+      if (active.isNotEmpty) {
+        _activeDispatch = Map<String, dynamic>.from(active.first);
+        print("📍 DriverHomeScreen: Active found: ${_activeDispatch!['id']}");
+      }
+      print("📍 DriverHomeScreen: _loadDispatchData complete");
+    } catch (e) {
+      print("📍 Error loading dispatch data: $e");
+    }
     final db = await DatabaseHelper().database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     
@@ -104,7 +177,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     // 2. Active Dispatch
     final active = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
-             v.vehicleNumber as vehicleNo, v.vehicleType
+             v.vehicleNumber, v.vehicleType
       FROM dispatches d
       JOIN orders o ON o.id = d.orderId
       LEFT JOIN vehicles v ON v.id = d.vehicleId
@@ -336,7 +409,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildDispatchInfo(Icons.access_time, d['time'] ?? 'N/A'),
+                    child: _buildDispatchInfo(Icons.access_time, TimeUtils.formatTo12Hour(d['time'])),
                   ),
                 ],
               ),
@@ -344,7 +417,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildDispatchInfo(Icons.local_shipping, d['vehicleNo'] ?? 'N/A'),
+                    child: _buildDispatchInfo(Icons.local_shipping, d['vehicleNumber'] ?? 'N/A'),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -493,7 +566,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           child: Icon(Icons.delivery_dining, color: Colors.orange.shade700),
         ),
         title: Text(assignment['customerName'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${assignment['date']} • ${assignment['time']} • ${assignment['dishCount'] ?? 0} dishes'),
+        subtitle: Text('${assignment['date']} • ${TimeUtils.formatTo12Hour(assignment['time'])} • ${assignment['dishCount'] ?? 0} dishes'),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: () => Navigator.push(context,
           MaterialPageRoute(builder: (_) => DriverDispatchDetailScreen(dispatch: assignment)),

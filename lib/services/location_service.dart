@@ -2,7 +2,6 @@
 // GPS Location Tracking Service for Driver location updates
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
 import 'connectivity_service.dart';
@@ -17,20 +16,27 @@ class LocationService {
   int? _activeDispatchId;
   bool _isTracking = false;
 
-  /// Start tracking location for a dispatch
-  Future<bool> startTracking(int dispatchId) async {
-    // Check permission
+  /// Request location permission explicitly
+  Future<bool> requestPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print('📍 Location permission denied');
         return false;
       }
     }
-
     if (permission == LocationPermission.deniedForever) {
-      print('📍 Location permission permanently denied');
+      return false;
+    }
+    return true;
+  }
+
+  /// Start tracking location for a dispatch
+  Future<bool> startTracking(int dispatchId) async {
+    // Check permission
+    final hasPermission = await requestPermission();
+    if (!hasPermission) {
+      print('📍 Location permission denied or permanent');
       return false;
     }
 
@@ -40,7 +46,7 @@ class LocationService {
     // Update location immediately
     await _updateLocation();
 
-    // Start 60-second interval updates
+    // Start 60-second interval updates (Local DB Sync mostly)
     _locationTimer = Timer.periodic(const Duration(seconds: 60), (_) async {
       if (_isTracking) {
         await _updateLocation();
@@ -60,15 +66,26 @@ class LocationService {
     print('📍 Location tracking stopped');
   }
 
-  /// Get current location and update DB + AWS
+  /// Get current location (Public)
+  Future<Position?> getCurrentLocation() async {
+    try {
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+    } catch (e) {
+      print('📍 Error getting location: $e');
+      return null;
+    }
+  }
+
+  /// Get current location and update DB + AWS (Internal Sync)
   Future<void> _updateLocation() async {
     if (_activeDispatchId == null) return;
 
     try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
+      final position = await getCurrentLocation();
+      if (position == null) return;
 
       final lat = position.latitude;
       final lng = position.longitude;

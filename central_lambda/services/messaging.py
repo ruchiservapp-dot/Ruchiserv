@@ -7,7 +7,7 @@ class EmailService:
     def __init__(self):
         # Initialize ZeptoMail credentials
         self.token = os.environ.get('ZEPTO_MAIL_TOKEN')
-        self.from_email = os.environ.get('ZEPTO_FROM_EMAIL')
+        self.from_email = os.environ.get('ZEPTO_FROM_EMAIL', 'no-reply@ruchiserv.com')
         self.from_name = os.environ.get('ZEPTO_FROM_NAME', 'RuchiServ Admin')
         
         # Keep DynamoDB for local blacklist check (optional extra safety)
@@ -137,9 +137,9 @@ class WhatsAppService:
             self.last_error = f"Media Upload Failed: {e}"
             return None
 
-    def send_document_template(self, to_mobile: str, template_name: str, media_id: str, filename: str, language_code: str = 'en_US', body_text_params: list = None) -> bool:
+    def send_document_template(self, to_mobile: str, template_name: str, media_id: str, filename: str, language_code: str = 'en_US', body_text_params: list = None, buttons: list = None) -> bool:
         """
-        Sends a Document Template (Header=PDF).
+        Sends a Document Template (Header=PDF) with optional Buttons.
         """
         components = [
             {
@@ -161,6 +161,16 @@ class WhatsAppService:
                 "type": "body",
                 "parameters": [{"type": "text", "text": p} for p in body_text_params]
             })
+
+        if buttons:
+            # Each quick_reply button needs a separate component entry with its own index
+            for idx, btn_payload in enumerate(buttons):
+                components.append({
+                    "type": "button",
+                    "sub_type": "quick_reply",
+                    "index": str(idx),  # "0", "1", etc.
+                    "parameters": [{"type": "payload", "payload": btn_payload}]
+                })
             
         return self.send_template(to_mobile, template_name, language_code, components)
 
@@ -258,106 +268,112 @@ class EmailTemplates:
     def _get_styles() -> str:
         return """
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
             
             body { 
-                font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-                background-color: #f4f6f8; 
+                font-family: 'Outfit', 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                background-color: #f0f2f5; 
                 margin: 0; 
-                padding: 40px 0; 
-                color: #2d3436; 
+                padding: 0; 
+                color: #1a1c1e; 
                 -webkit-font-smoothing: antialiased;
             }
+            .wrapper { width: 100%; table-layout: fixed; background-color: #f0f2f5; padding-bottom: 40px; }
             .container {
                 max-width: 600px;
-                margin: 0 auto;
+                margin: 20px auto;
                 background: #ffffff;
-                border-radius: 12px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+                border-radius: 16px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
                 overflow: hidden;
             }
             .header-banner {
-                background: linear-gradient(135deg, #e65100 0%, #ff9800 100%);
-                padding: 30px;
+                background: linear-gradient(135deg, #FF5722 0%, #F44336 100%);
+                padding: 40px 20px;
                 text-align: center;
                 color: white;
             }
-            .header-banner h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-            .header-info { margin-top: 10px; font-size: 14px; opacity: 0.9; }
+            .header-banner h1 { margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+            .header-info { margin-top: 12px; font-size: 15px; opacity: 0.9; }
             
-            .content { padding: 40px; }
+            .content { padding: 40px 30px; }
             
             .order-meta {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 30px;
-                padding-bottom: 20px;
-                border-bottom: 1px solid #edf2f7;
+                margin-bottom: 40px;
+                padding: 24px;
+                background: #f8fafc;
+                border-radius: 12px;
+                display: block;
             }
-            .meta-block h3 { margin: 0 0 5px 0; font-size: 12px; text-transform: uppercase; color: #a0aec0; letter-spacing: 0.5px; }
-            .meta-block p { margin: 0; font-size: 16px; font-weight: 600; color: #2d3436; }
+            .meta-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+            .meta-row:last-child { margin-bottom: 0; }
+            .meta-label { font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+            .meta-value { font-size: 15px; font-weight: 700; color: #1e293b; }
             
-            .badge {
-                background: #fff3e0;
-                color: #e65100;
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 600;
-                display: inline-block;
+            .section-title { 
+                font-size: 18px; 
+                font-weight: 700; 
+                color: #1e293b; 
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #f1f5f9;
             }
             
-            table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 30px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
             th { 
                 text-align: left; 
                 padding: 12px 0; 
-                color: #718096; 
-                font-size: 11px; 
+                color: #64748b; 
+                font-size: 12px; 
                 text-transform: uppercase; 
-                letter-spacing: 0.5px; 
-                border-bottom: 1px solid #edf2f7;
+                letter-spacing: 1px;
+                border-bottom: 2px solid #f1f5f9;
             }
-            td { padding: 16px 0; border-bottom: 1px dashed #edf2f7; font-size: 14px; }
-            tr:last-child td { border-bottom: none; }
+            td { padding: 18px 0; border-bottom: 1px solid #f1f5f9; font-size: 15px; }
             
-            .category-header { 
-                color: #e65100; 
-                font-weight: 700; 
-                font-size: 13px; 
-                padding-top: 25px; 
-                padding-bottom: 5px;
-                border-bottom: none !important;
+            .category-row td {
+                background: #fff5f2;
+                color: #FF5722;
+                font-weight: 700;
+                padding: 12px 15px;
+                font-size: 13px;
+                border-radius: 4px;
             }
             
-            .amount-col { text-align: right; font-weight: 600; }
+            .item-name { font-weight: 600; color: #1e293b; }
+            .item-meta { font-size: 13px; color: #64748b; margin-top: 4px; }
             
-            .billing-summary {
-                background: #f8fafc;
-                border-radius: 8px;
-                padding: 20px;
+            .summary-card {
+                background: #1e293b;
+                color: white;
+                border-radius: 12px;
+                padding: 30px;
+                margin-top: 40px;
             }
-            .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #718096; }
-            .summary-row.total { 
-                border-top: 1px solid #edf2f7; 
-                padding-top: 15px; 
-                margin-top: 10px; 
-                font-size: 18px; 
-                font-weight: 700; 
-                color: #2d3436; 
+            .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 15px; color: #94a3b8; }
+            .total-row { 
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #334155;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
-            .summary-row.discount { color: #38a169; }
+            .total-label { font-size: 18px; font-weight: 700; color: white; }
+            .total-value { font-size: 28px; font-weight: 700; color: #FF5722; }
             
             .footer { 
-                background: #f8fafc; 
-                padding: 20px; 
+                padding: 40px 20px; 
                 text-align: center; 
-                font-size: 12px; 
-                color: #a0aec0; 
-                border-top: 1px solid #edf2f7;
+                font-size: 13px; 
+                color: #64748b;
             }
             
-            .gst-info { margin-top: 5px; font-size: 12px; opacity: 0.8; }
+            @media only screen and (max-width: 480px) {
+                .content { padding: 30px 20px; }
+                .header-banner h1 { font-size: 26px; }
+                .total-value { font-size: 24px; }
+            }
         </style>
         """
 
@@ -365,156 +381,179 @@ class EmailTemplates:
     def generate_order_html(order: dict, dishes: list, firm_details: dict) -> str:
         styles = EmailTemplates._get_styles()
         
-        # 1. Custom Order ID Display (YY-MM-ID)
-        # Try to use 'createdAt' or 'date' to get Year/Month
         import datetime
+        # 1. Standardized Date Formatting
         try:
-            date_str = order.get('createdAt') or order.get('date') or datetime.datetime.now().isoformat()
-            # Handle variable date formats roughly
-            if 'T' in date_str: dt = datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-            else: dt = datetime.datetime.now() # Fallback if standard parsing fails
+            # Prioritize eventDate for the invoice itself
+            raw_date = order.get('eventDate') or order.get('date') or order.get('createdAt') or datetime.datetime.now().isoformat()
+            if 'T' in raw_date: dt = datetime.datetime.fromisoformat(raw_date.replace('Z', '+00:00'))
+            else: dt = datetime.datetime.now()
+            display_date = dt.strftime('%d %B %Y') 
             
-            yy = dt.strftime('%y')
-            mm = dt.strftime('%m')
-            # Ensure ID is treated as int for formatting
+            # Order ID logic
+            yy, mm = dt.strftime('%y'), dt.strftime('%m')
             try:
                 raw_id_int = int(order.get('id', 0))
-                display_order_id = f"{yy}-{mm}-{raw_id_int:03d}" # e.g. 24-01-005
-            except:
-                display_order_id = f"#{order.get('id')}"
+                display_order_id = f"{yy}-{mm}-{raw_id_int:03d}"
+            except: display_order_id = f"#{order.get('id')}"
         except:
+            display_date = order.get('eventDate', order.get('date', 'N/A'))
             display_order_id = f"#{order.get('id', 'N/A')}"
 
-        # 2. Firm Branding
+        # 2. Standardize Time Format: 6:36 PM
+        def format_time(t_str):
+            if not t_str or t_str == 'N/A': return 'N/A'
+            try:
+                parts = t_str.split(':')
+                if len(parts) >= 2:
+                    h, m = int(parts[0]), int(parts[1])
+                    suffix = "AM"
+                    if h >= 12:
+                        suffix = "PM"
+                        if h > 12: h -= 12
+                    elif h == 0: h = 12
+                    return f"{h}:{m:02d} {suffix}"
+            except: pass
+            return t_str
+
+        display_time = format_time(order.get('eventTime', order.get('time', 'N/A')))
+
         firm_name = firm_details.get('firmName', firm_details.get('name', 'RuchiServ Partner'))
         firm_logo = firm_details.get('logoUrl', '')
         
-        # 3. Group Dishes
+        # 2. Group Dishes
         categorized_dishes = {}
         for d in dishes:
-            cat = d.get('category', 'General') or 'General'
+            cat = d.get('category', 'General Items') or 'General Items'
             if cat not in categorized_dishes: categorized_dishes[cat] = []
             categorized_dishes[cat].append(d)
         
-        sorted_categories = sorted(categorized_dishes.keys())
-
-        # 4. Build Menu Content
         menu_html = ""
-        for category in sorted_categories:
-            menu_html += f"""
-            <tr style="background-color: #fff8e1;">
-                <td colspan="4" class='category-header' style="padding-left: 15px; border-left: 4px solid #ff9800;">
-                    {category}
-                </td>
-            </tr>
-            """
-            
+        for category in sorted(categorized_dishes.keys()):
+            menu_html += f'<tr class="category-row"><td colspan="3">{category.upper()}</td></tr>'
             for d in categorized_dishes[category]:
                 name = d.get('dishName', 'Item')
                 qty = d.get('pax', 0)
                 rate = d.get('pricePerPlate', 0)
-                total = qty * rate
+                amount = float(qty) * float(rate)
                 menu_html += f"""
                 <tr>
-                    <td style="width: 50%; padding-left: 15px;">{name}</td>
-                    <td style="width: 15%">{qty}</td>
-                    <td style="width: 15%">₹{rate}</td>
-                    <td class="amount-col">₹{total:,.0f}</td>
+                    <td>
+                        <div class="item-name">{name}</div>
+                        <div class="item-meta">₹{rate:,.0f} x {qty} Pax</div>
+                    </td>
+                    <td align="right" style="font-weight: 700; color: #1e293b;">₹{amount:,.0f}</td>
                 </tr>
                 """
 
-        # 5. Billing Calculations
-        def to_float(val):
-            try: return float(val) if val else 0.0
-            except: return 0.0
+        # 3. Totals
+        grand_total = float(order.get('grandTotal', 0))
+        discount = float(order.get('discountAmount', 0))
+        subtotal = grand_total + discount # Approximate
 
-        grand_total = to_float(order.get('grandTotal'))
-        service_cost = to_float(order.get('serviceCost'))
-        counter_cost = to_float(order.get('counterSetupCost'))
-        discount = to_float(order.get('discountAmount'))
+        subtotal = grand_total + discount # Approximate
         
-        # Calculate Base Subtotal (Reverse engineer or approximate)
-        # Showing line items + extras is safer
-        
-        billing_html = ""
-        if service_cost > 0:
-            billing_html += f'<div class="summary-row"><span>Service Charges</span><span>+ ₹{service_cost:,.2f}</span></div>'
-        if counter_cost > 0:
-            billing_html += f'<div class="summary-row"><span>Counter Setup</span><span>+ ₹{counter_cost:,.2f}</span></div>'
-        if discount > 0:
-            billing_html += f'<div class="summary-row discount"><span>Discount</span><span>- ₹{discount:,.2f}</span></div>'
-
-        # 6. Contact Info Line
-        contact_parts = []
-        if firm_details.get('mobile'): contact_parts.append(firm_details['mobile'])
-        if firm_details.get('email'): contact_parts.append(firm_details['email'])
-        contact_info = " • ".join(contact_parts)
+        header_html = EmailTemplates._get_header(firm_details)
 
         return f"""
         <!DOCTYPE html>
         <html>
-        <head>{styles}</head>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            {styles}
+        </head>
         <body>
-            <div class="container">
-                <div class="header-banner">
-                    {'<img src="' + firm_logo + '" style="height: 60px; background: white; padding: 5px; border-radius: 8px; margin-bottom: 10px;">' if firm_logo else ''}
-                    <h1>{firm_name}</h1>
-                    <div class="header-info">{contact_info}</div>
-                    {f'<div class="gst-info">GSTIN: {firm_details["gstNumber"]}</div>' if firm_details.get('gstNumber') else ''}
-                </div>
-                
-                <div class="content">
-                    <div class="order-meta">
-                        <div class="meta-block">
-                            <h3>Order ID</h3>
-                            <p>{display_order_id}</p>
-                        </div>
-                        <div class="meta-block">
-                            <h3>Event Date</h3>
-                            <p>{order.get('eventDate', order.get('date', 'N/A'))}</p>
-                        </div>
-                        <div class="meta-block" style="text-align: right;">
-                            <h3>Customer</h3>
-                            <p>{order.get('customerName')}</p>
-                            <span class="badge" style="margin-top: 5px;">{order.get('mealType')}</span>
-                        </div>
-                    </div>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Rate</th>
-                                <th style="text-align: right;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {menu_html}
-                        </tbody>
-                    </table>
+            <div class="wrapper">
+                <div class="container">
+                    {header_html}
                     
-                    <div class="billing-summary">
-                        {billing_html}
-                        <div class="summary-row total">
-                            <span>Grand Total</span>
-                            <span>₹{grand_total:,.2f}</span>
+                    <div class="content">
+                    
+                    <div class="content">
+                        <div class="order-meta">
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 0;">
+                                <tr>
+                                    <td style="border:none; padding: 0; width: 50%;">
+                                        <span class="meta-label" style="display:block; margin-bottom: 4px;">Order ID</span>
+                                        <span class="meta-value" style="font-size: 16px;">{display_order_id}</span>
+                                    </td>
+                                    <td align="right" style="border:none; padding: 0; width: 50%;">
+                                        <span class="meta-label" style="display:block; margin-bottom: 4px;">Event Date</span>
+                                        <span class="meta-value" style="font-size: 16px;">{display_date}</span>
+                                    </td>
+                                </tr>
+                                <tr><td colspan="2" style="border:none; height: 24px;"></td></tr>
+                                <tr>
+                                    <td style="border:none; padding: 0; width: 50%;">
+                                        <span class="meta-label" style="display:block; margin-bottom: 4px;">Event Time</span>
+                                        <span class="meta-value" style="font-size: 16px;">{display_time}</span>
+                                    </td>
+                                    <td align="right" style="border:none; padding: 0; width: 50%;">
+                                        <span class="meta-label" style="display:block; margin-bottom: 4px;">Client Name</span>
+                                        <span class="meta-value" style="font-size: 16px;">{order.get('customerName')}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="section-title">SERVICE DETAILS</div>
+                        <div class="order-meta" style="background: #fff; border: 1px solid #f1f5f9; padding: 25px;">
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 0;">
+                                <tr>
+                                    <td style="border:none; padding: 0 0 15px 0;">
+                                        <span class="meta-label" style="display:block; margin-bottom: 4px;">Service Style</span>
+                                        <span class="meta-value" style="color:#FF5722; font-size: 18px;">{order.get('serviceType', 'N/A').upper()}</span>
+                                    </td>
+                                    <td align="right" style="border:none; padding: 0 0 15px 0;">
+                                        <span class="meta-label" style="display:block; margin-bottom: 4px;">Guests (Pax)</span>
+                                        <span class="meta-value" style="font-size: 18px;">{order.get('totalPax', 0)}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="border:none; padding: 15px 0 0 0; border-top: 1px solid #f1f5f9;">
+                                        <span class="meta-label" style="display:block; margin-bottom: 8px;">Logistics & Setup</span>
+                                        <span class="meta-value" style="color: #64748b; font-weight: normal;">
+                                            <b style="color: #1a1c1e;">{order.get('counterCount', 1)}</b> Counters &nbsp;&bull;&nbsp; 
+                                            <b style="color: #1a1c1e;">{order.get('staffCount', 0)}</b> Service Staff
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="section-title">ORDER SUMMARY</div>
+                        <table>
+                            {menu_html}
+                        </table>
+                        
+                        <div class="summary-card">
+                            <div class="summary-row">
+                                <span>Item Subtotal</span>
+                                <span>₹{subtotal:,.0f}</span>
+                            </div>
+                            {f'<div class="summary-row" style="color:#fb7185;"><span>Discount ({order.get("discountPercent", 0)}%)</span><span>-₹{discount:,.0f}</span></div>' if discount > 0 else ''}
+                            <div class="total-row">
+                                <span class="total-label">GRAND TOTAL</span>
+                                <span class="total-value">₹{grand_total:,.0f}</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 40px; font-size: 14px; color: #64748b; line-height: 1.6;">
+                            <strong>Delivery Notes:</strong><br>
+                            {order.get('notes', 'No special instructions provided.')}
                         </div>
                     </div>
-
-                    <div style="margin-top: 30px; font-size: 13px; color: #718096; background: #fff8e1; padding: 15px; border-radius: 6px;">
-                        <strong>📝 Notes:</strong> {order.get('notes', 'No specific notes.')}
+                    
+                    <div class="footer">
+                        <p>Thank you for choosing {firm_name}!<br>We look forward to serving you.</p>
+                        <p style="margin-top: 20px; font-size: 11px; opacity: 0.5;">POWERED BY RUCHISERV</p>
                     </div>
-                </div>
-                
-                <div class="footer">
-                    <p>Thank you for choosing {firm_name}!</p>
-                    <p style="margin-top: 5px; font-size: 10px;">Powered by RuchiServ</p>
                 </div>
             </div>
         </body>
         </html>
         """
+
 
     @staticmethod
     def generate_po_html(po: dict, items: list, firm_details: dict) -> str:

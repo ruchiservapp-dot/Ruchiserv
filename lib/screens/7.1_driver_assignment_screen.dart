@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import '7.2_driver_dispatch_detail_screen.dart';
+import '../utils/time_utils.dart';
 
 class DriverAssignmentScreen extends StatefulWidget {
   const DriverAssignmentScreen({super.key});
@@ -22,47 +23,65 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
   @override
   void initState() {
     super.initState();
+    print("📍 DriverAssignmentScreen: initState start");
     _loadAssignments();
+    print("📍 DriverAssignmentScreen: initState end");
   }
 
   Future<void> _loadAssignments() async {
+    print("📍 DriverAssignmentScreen: _loadAssignments start");
     setState(() => _isLoading = true);
     
-    final sp = await SharedPreferences.getInstance();
-    final mobile = sp.getString('last_mobile') ?? '';
-    final firmId = sp.getString('last_firm') ?? '';
-    
-    final db = await DatabaseHelper().database;
-    
-    // Get driver ID
-    final users = await db.query('users', 
-      where: 'mobile = ? AND firmId = ?', 
-      whereArgs: [mobile, firmId],
-    );
-    
-    if (users.isNotEmpty) {
-      _driverId = users.first['id'] as int? ?? 0;
-    }
-    
-    if (_driverId > 0) {
-      final assignments = await db.rawQuery('''
-        SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, 
-               o.mobile as customerMobile, o.mealType, o.foodType,
-               v.vehicleNo, v.vehicleType,
-               (SELECT COUNT(*) FROM dishes WHERE orderId = o.id) as dishCount
-        FROM dispatches d
-        JOIN orders o ON o.id = d.orderId
-        LEFT JOIN vehicles v ON v.id = d.vehicleId
-        WHERE d.driverId = ? AND d.assignmentStatus = 'PENDING'
-        ORDER BY o.date ASC, o.time ASC
-      ''', [_driverId]);
+    try {
+      final sp = await SharedPreferences.getInstance();
+      print("📍 DriverAssignmentScreen: SP initialized");
+      final mobile = sp.getString('last_mobile') ?? '';
+      final firmId = sp.getString('last_firm') ?? '';
+      print("📍 DriverAssignmentScreen: Mobile: $mobile, Firm: $firmId");
       
-      setState(() {
-        _assignments = List<Map<String, dynamic>>.from(assignments);
-      });
+      final db = await DatabaseHelper().database;
+      print("📍 DriverAssignmentScreen: DB initialized");
+      
+      // Get driver ID
+      final users = await db.query('users', 
+        where: 'mobile = ? AND firmId = ?', 
+        whereArgs: [mobile, firmId],
+      );
+      
+      if (users.isNotEmpty) {
+        _driverId = users.first['id'] as int? ?? 0;
+        print("📍 DriverAssignmentScreen: Driver ID found: $_driverId");
+      } else {
+        print("📍 DriverAssignmentScreen: No driver user found");
+      }
+      
+      if (_driverId > 0) {
+        print("📍 DriverAssignmentScreen: Querying assignments for driver $_driverId");
+        final assignments = await db.rawQuery('''
+          SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, 
+                 o.mobile as customerMobile, o.mealType, o.foodType,
+                 v.vehicleNumber, v.vehicleType,
+                 (SELECT COUNT(*) FROM dishes WHERE orderId = o.id) as dishCount
+          FROM dispatches d
+          JOIN orders o ON o.id = d.orderId
+          LEFT JOIN vehicles v ON v.id = d.vehicleId
+          WHERE d.driverId = ? AND d.assignmentStatus = 'PENDING'
+          ORDER BY o.date ASC, o.time ASC
+        ''', [_driverId]);
+        
+        setState(() {
+          _assignments = List<Map<String, dynamic>>.from(assignments);
+        });
+        print("📍 DriverAssignmentScreen: Load complete - count: ${_assignments.length}");
+      }
+      
+      if (mounted) setState(() => _isLoading = false);
+      print("📍 DriverAssignmentScreen: _loadAssignments end, loading=false");
+    } catch (e, stack) {
+        print("📍 DriverAssignmentScreen error: $e");
+        print(stack);
+        if (mounted) setState(() => _isLoading = false);
     }
-    
-    setState(() => _isLoading = false);
   }
 
   Future<void> _acceptAssignment(Map<String, dynamic> dispatch) async {
@@ -70,7 +89,7 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Accept Assignment?'),
-        content: Text('Accept delivery to ${dispatch['customerName']} on ${dispatch['date']} at ${dispatch['time']}?'),
+        content: Text('Accept delivery to ${dispatch['customerName']} on ${dispatch['date']} at ${TimeUtils.formatTo12Hour(dispatch['time'])}?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
@@ -219,7 +238,7 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
                   child: Text(dateLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
                 const SizedBox(width: 8),
-                Text(time, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(TimeUtils.formatTo12Hour(time), style: const TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 Chip(
                   label: Text('${a['dishCount'] ?? 0} dishes'),
@@ -257,11 +276,11 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
                       Icon(Icons.people, size: 14, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
                       Text('${a['totalPax'] ?? 0} Pax', style: TextStyle(color: Colors.grey.shade600)),
-                      if (a['vehicleNo'] != null) ...[
+                      if (a['vehicleNumber'] != null) ...[
                         const SizedBox(width: 16),
                         Icon(Icons.local_shipping, size: 14, color: Colors.grey.shade600),
                         const SizedBox(width: 4),
-                        Text(a['vehicleNo'], style: TextStyle(color: Colors.grey.shade600)),
+                        Text(a['vehicleNumber'], style: TextStyle(color: Colors.grey.shade600)),
                       ],
                     ],
                   ),

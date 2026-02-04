@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/locale_provider.dart';
 import '../db/database_helper.dart';
 import '../db/schema_manager.dart';
+import 'saas_payment_screen.dart';
 
 class GeneralSettingsScreen extends StatefulWidget {
   const GeneralSettingsScreen({super.key});
@@ -118,6 +119,23 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             onChanged: (val) {
               setState(() => _otpEnabled = val);
               _savePreference('otp_enabled', val);
+            },
+          ),
+          const Divider(),
+          const SizedBox(height: 16),
+          const Text("Subscription & Billing", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ListTile(
+            leading: const Icon(Icons.star, color: Colors.amber),
+            title: const Text("Manage Subscription"),
+            subtitle: const Text("View plans and upgrade your account"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // Redirect to SaaS Payment Screen
+              // Note: Make sure to import saas_payment_screen.dart
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SaaSPaymentScreen()),
+              );
             },
           ),
           const Divider(),

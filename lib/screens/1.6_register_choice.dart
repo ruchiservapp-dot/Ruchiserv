@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../services/otp_service.dart';
 import '../services/auth_service.dart';
+import '../db/database_helper.dart'; // Added
 
 class RegisterChoiceScreen extends StatefulWidget {
   const RegisterChoiceScreen({super.key});
@@ -110,6 +111,11 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
       final firmId = _firmCtrl.text.trim();
       final mobile = _mobileCtrl.text.trim();
       
+      // 0. Fetch the role from authorized_mobiles
+      final auth = await DatabaseHelper().getAuthorizedMobileByPhone(firmId, mobile);
+      final role = auth != null ? auth['role']?.toString() ?? 'Staff' : 'Staff';
+      final name = auth != null ? auth['name']?.toString() ?? 'User' : 'User';
+
       // 1. Call API (Mocked)
       final ok = await AuthService.setPassword(
         firmId: firmId,
@@ -122,12 +128,12 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
       }
 
       // 2. Save Locally (So user can login immediately)
-      // We need to insert this user into local DB
       await AuthService.registerLocalUser(
         firmId: firmId,
         mobile: mobile,
-        password: pwd, // In real app, hash this!
-        name: 'Admin', // Default name
+        password: pwd, 
+        name: name,
+        role: role, // Pass the discovered role!
       );
 
       if (!mounted) return;
@@ -135,6 +141,8 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration complete. You can login now.')),
       );
+    } catch (e) {
+      _showError('Registration Error: $e');
     } finally {
       setState(() => _sending = false);
     }

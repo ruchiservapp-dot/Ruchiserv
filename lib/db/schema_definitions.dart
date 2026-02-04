@@ -1,3 +1,5 @@
+// lib/db/schema_definitions.dart
+// @locked
 class TableSchema {
   final String tableName;
   final Map<String, String> columns; // ColumnName -> Definition (e.g., "TEXT NOT NULL")
@@ -184,6 +186,10 @@ class AppSchema {
         'lockedAt': 'TEXT',
         'mrpRunId': 'INTEGER',
         'mrpStatus': 'TEXT DEFAULT "PENDING"', // PENDING, MRP_DONE, PO_SENT, CANCELLED
+        'clientStatus': 'TEXT DEFAULT "PENDING"', // v37: PENDING, ACCEPTED, CHANGE_REQ
+        'sentAt': 'TEXT', // v37: Timestamp of first invoice send
+        'confirmedAt': 'TEXT', // v37: Timestamp of customer confirmation
+        'changeRequestedAt': 'TEXT', // v37: Timestamp of customer change request
         'isLocked': 'INTEGER DEFAULT 0',
         'cancelReason': 'TEXT', // v35: For MRP cancel with reason
         'cancelledAt': 'TEXT', // v35: Timestamp of cancellation
@@ -276,7 +282,9 @@ class AppSchema {
         'createdAt': 'TEXT', // v17
         'updatedAt': 'TEXT', // v17
         'isModified': 'INTEGER DEFAULT 0', // v26
+        'isReturnable': 'INTEGER DEFAULT 1', // Added
       },
+      constraints: ['UNIQUE(firmId, name)'],
     ),
 
     // 11. Dispatch (Utensil movement)
@@ -305,9 +313,13 @@ class AppSchema {
         'driverName': 'TEXT',
         'driverMobile': 'TEXT',
         'vehicleType': 'TEXT', // TRUCK, VAN, AUTO
+        'type': 'TEXT DEFAULT "INHOUSE"', // Added
         'status': 'TEXT DEFAULT "AVAILABLE"',
         'notes': 'TEXT',
+        'isActive': 'INTEGER DEFAULT 1', // Added
         'isModified': 'INTEGER DEFAULT 0', // v26
+        'createdAt': 'TEXT', // Added
+        'updatedAt': 'TEXT', // Added
       },
       constraints: ['UNIQUE(firmId, vehicleNumber)'],
     ),
@@ -669,7 +681,25 @@ class AppSchema {
         'data': 'TEXT', // JSON data
         'action': 'TEXT', // INSERT, UPDATE, DELETE
         'timestamp': 'TEXT',
+        },
+    ),
+
+    // 30. Dispatch Items (Line items for dispatches)
+    TableSchema(
+      tableName: 'dispatch_items',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'dispatchId': 'INTEGER NOT NULL',
+        'itemType': 'TEXT NOT NULL', // DISH, UTENSIL, CONSUMABLE
+        'itemName': 'TEXT NOT NULL',
+        'quantity': 'INTEGER DEFAULT 0',
+        'loadedQty': 'INTEGER DEFAULT 0',
+        'returnedQty': 'INTEGER DEFAULT 0',
+        'unloadedQty': 'INTEGER DEFAULT 0',
+        'status': 'TEXT DEFAULT "PENDING"', // PENDING, LOADED, RETURNED, UNLOADED
+        'notes': 'TEXT',
       },
+      constraints: ['FOREIGN KEY(dispatchId) REFERENCES dispatches(id)'],
     ),
   ];
 }

@@ -58,90 +58,103 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   void initState() {
     super.initState();
+    print('MainMenuDebug: initState started');
     _loadPermissions();
   }
 
   Future<void> _loadPermissions() async {
-    final role = await PermissionService.instance.getUserRole();
-    final allowedModules = await PermissionService.instance.getAllowedModules();
-    final tier = await FeatureGateService.instance.getCurrentTier();
-    
-    // Check for external portal users (Driver, Subcontractor, Supplier)
-    // These users get a dedicated single-screen portal instead of the standard menu
-    final roleLower = role.toLowerCase();
-    if (roleLower == 'driver') {
-      setState(() {
-        _userRole = role;
-        _isExternalPortal = true;
-        _portalScreen = const DriverHomeScreen();
-        _isLoading = false;
-      });
-      return;
-    } else if (roleLower == 'subcontractor' || roleLower == 'vendor') {
-      setState(() {
-        _userRole = role;
-        _isExternalPortal = true;
-        _portalScreen = const SubcontractorHomeScreen();
-        _isLoading = false;
-      });
-      return;
-    } else if (roleLower == 'supplier') {
-      setState(() {
-        _userRole = role;
-        _isExternalPortal = true;
-        _portalScreen = const SupplierHomeScreen();
-        _isLoading = false;
-      });
-      return;
-    }
-    
-    // Standard menu for Admin, Manager, Staff
-    // Filter menu items based on Admin-assigned permissions for ALL roles
-    List<Map<String, dynamic>> visible = [];
-    List<Widget> screens = [];
-    
-    // For ALL roles (including Staff, Driver, Vendor, Subcontractor), 
-    // filter based on module access assigned by Admin
-    for (int i = 0; i < _allMenuItems.length; i++) {
-      final item = _allMenuItems[i];
-      final module = item['module'] as String;
+    print('MainMenuDebug: _loadPermissions started');
+    try {
+      final role = await PermissionService.instance.getUserRole();
+      print('MainMenuDebug: Role found: $role');
+      final allowedModules = await PermissionService.instance.getAllowedModules();
+      print('MainMenuDebug: Modules: ${allowedModules.length}');
+      final tier = await FeatureGateService.instance.getCurrentTier();
+      print('MainMenuDebug: Tier: $tier');
       
-      // Check if user can access this module
-      bool hasAccess = role == 'Admin' || 
-          allowedModules.contains(module) || 
-          allowedModules.contains('ALL');
-      
-      // Check tier requirements
-      final requiredTier = item['tier'] as String;
-      bool hasTier = _checkTierAccess(tier, requiredTier);
-      
-      if (hasAccess && hasTier) {
-        visible.add(item);
-        screens.add(_allScreens[i]);
+      // Check for external portal users (Driver, Subcontractor, Supplier)
+      // These users get a dedicated single-screen portal instead of the standard menu
+      final roleLower = role.toLowerCase();
+      if (roleLower == 'driver') {
+        print('MainMenuDebug: User is DRIVER. Setting portal screen.');
+        setState(() {
+          _userRole = role;
+          _isExternalPortal = true;
+          _portalScreen = const DriverHomeScreen();
+          _isLoading = false;
+        });
+        return;
+      } else if (roleLower == 'subcontractor' || roleLower == 'vendor') {
+        setState(() {
+          _userRole = role;
+          _isExternalPortal = true;
+          _portalScreen = const SubcontractorHomeScreen();
+          _isLoading = false;
+        });
+        return;
+      } else if (roleLower == 'supplier') {
+        setState(() {
+          _userRole = role;
+          _isExternalPortal = true;
+          _portalScreen = const SupplierHomeScreen();
+          _isLoading = false;
+        });
+        return;
       }
-    }
-    
-    // Fallback: If nothing visible, show My Attendance for non-Admin roles
-    // or Orders for Admin
-    if (visible.isEmpty) {
-      if (role == 'Admin') {
-        visible.add(_allMenuItems[0]); // Orders
-        screens.add(_allScreens[0]);
-      } else {
-        // Show Operations as minimum for Staff (My Attendance is inside Operations)
-        visible.add(_allMenuItems[2]); // Operations
-        screens.add(_allScreens[2]);
+      
+      // Standard menu for Admin, Manager, Staff
+      // Filter menu items based on Admin-assigned permissions for ALL roles
+      List<Map<String, dynamic>> visible = [];
+      List<Widget> screens = [];
+      
+      // For ALL roles (including Staff, Driver, Vendor, Subcontractor), 
+      // filter based on module access assigned by Admin
+      for (int i = 0; i < _allMenuItems.length; i++) {
+        final item = _allMenuItems[i];
+        final module = item['module'] as String;
+        
+        // Check if user can access this module
+        bool hasAccess = role == 'Admin' || 
+            allowedModules.contains(module) || 
+            allowedModules.contains('ALL');
+        
+        // Check tier requirements
+        final requiredTier = item['tier'] as String;
+        bool hasTier = _checkTierAccess(tier, requiredTier);
+        
+        if (hasAccess && hasTier) {
+          visible.add(item);
+          screens.add(_allScreens[i]);
+        }
       }
+      
+      // Fallback: If nothing visible, show My Attendance for non-Admin roles
+      // or Orders for Admin
+      if (visible.isEmpty) {
+        if (role == 'Admin') {
+          visible.add(_allMenuItems[0]); // Orders
+          screens.add(_allScreens[0]);
+        } else {
+          // Show Operations as minimum for Staff (My Attendance is inside Operations)
+          visible.add(_allMenuItems[2]); // Operations
+          screens.add(_allScreens[2]);
+        }
+      }
+      
+      setState(() {
+        _userRole = role;
+        _subscriptionTier = tier;
+        _visibleMenuItems = visible;
+        _visibleScreens = screens;
+        _selectedIndex = 0;
+        _isLoading = false;
+      });
+      print('MainMenuDebug: _loadPermissions complete');
+    } catch (e, stack) {
+      print('MainMenuDebug error: $e');
+      print(stack);
+      if (mounted) setState(() => _isLoading = false);
     }
-    
-    setState(() {
-      _userRole = role;
-      _subscriptionTier = tier;
-      _visibleMenuItems = visible;
-      _visibleScreens = screens;
-      _selectedIndex = 0;
-      _isLoading = false;
-    });
   }
 
   bool _checkTierAccess(String currentTier, String requiredTier) {

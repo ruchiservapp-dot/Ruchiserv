@@ -11,6 +11,8 @@ import '../services/language_service.dart';
 import '../services/master_data_sync_service.dart';
 import '../services/whatsapp_service.dart';
 import '../services/messaging_service.dart';
+import 'package:intl/intl.dart';
+import '../utils/time_utils.dart';
 
 class AddOrderScreen extends StatefulWidget {
   final DateTime date;
@@ -422,12 +424,18 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
         // Fetch Firm Details for WhatsApp Params
         String cateringName = 'RuchiServ';
-        String cateringPhone = '91XXXXXXXXXX'; 
+        String cateringPhone = '91XXXXXXXXXX';
+        String cateringAddress = '';
+        String cateringEmail = '';
+        String cateringGstin = '';
         try {
            final firmMap = await DatabaseHelper().getFirm(firmId); // Assume getFirm exists or similar
            if (firmMap != null) {
-              cateringName = firmMap['name']?.toString() ?? 'RuchiServ';
+              cateringName = firmMap['firmName']?.toString() ?? firmMap['name']?.toString() ?? 'RuchiServ';
               cateringPhone = firmMap['mobile']?.toString() ?? '91XXXXXXXXXX';
+              cateringAddress = firmMap['address']?.toString() ?? '';
+              cateringEmail = firmMap['email']?.toString() ?? firmMap['primaryEmail']?.toString() ?? '';
+              cateringGstin = firmMap['gstNumber']?.toString() ?? firmMap['gstin']?.toString() ?? '';
            }
         } catch (_) {}
 
@@ -438,17 +446,36 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           orderId: id.toString(),
           totalAmount: _grandTotal.toStringAsFixed(0),
           date: dateStr,
-          time: _selectedTime != null ? _selectedTime!.format(context) : 'N/A',
+          time: _selectedTime != null 
+              ? DateFormat('h:mm a').format(DateTime(2026, 1, 1, _selectedTime!.hour, _selectedTime!.minute)) 
+              : 'N/A',
           pax: _pax.toString(),
           cateringName: cateringName,
           cateringPhone: cateringPhone,
-          orderData: {...order, 'id': id}, // Full order data for PDF
+          // Full order data for PDF - MUST include all firm details
+          orderData: {
+            ...order, 
+            'id': id, 
+            'firmName': cateringName,
+            'firmAddress': cateringAddress,
+            'firmMobile': cateringPhone,
+            'firmEmail': cateringEmail,
+            'firmGstin': cateringGstin,
+          }, 
           dishes: dishRows, // Dishes for PDF
         ).then((_) => print('💬 WhatsApp trigger done'));
         
-        // Trigger Email Confirmation (Fire & Forget)
+        // Trigger Email Confirmation (Fire & Forget) - include full firm details for letterpad
         MessagingService().sendOrderConfirmation(
-          {...order, 'id': id}, // Ensure ID is passed
+          {
+            ...order, 
+            'id': id, 
+            'firmName': cateringName,
+            'firmAddress': cateringAddress,
+            'firmMobile': cateringPhone,
+            'firmEmail': cateringEmail,
+            'firmGstin': cateringGstin,
+          },
           dishRows,
         );
       }
@@ -690,7 +717,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                           ),
                           controller: TextEditingController(
                             text: _selectedTime != null
-                                ? _selectedTime!.format(context)
+                                ? TimeUtils.formatTo12Hour('${_selectedTime!.hour}:${_selectedTime!.minute}')
                                 : '',
                           ),
                         ),
@@ -1299,31 +1326,49 @@ class _DishRowItemState extends State<DishRowItem> {
                       optionsViewBuilder: (context, onSelected, options) {
                         return Align(
                           alignment: Alignment.topLeft,
-                          child: Material(
-                            elevation: 4,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 200, maxWidth: 250),
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: options.length,
-                                itemBuilder: (context, i) {
-                                  final opt = options.elementAt(i);
-                                  final locName = LanguageService().getLocalizedName(
-                                    entityType: 'DISH',
-                                    entityId: opt['id'] as int,
-                                    defaultName: opt['name'],
-                                  );
-                                  
-                                  return ListTile(
-                                    dense: true,
-                                    // Show Localized Name primarily if language is not English
-                                    title: Text(locName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                    subtitle: locName != opt['name'] ? Text(opt['name']) : null,
-                                    trailing: Text('₹${opt['rate'] ?? 0}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                    onTap: () => onSelected(opt),
-                                  );
-                                },
+                          child: UnconstrainedBox(
+                            alignment: Alignment.topLeft,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.90, // Dynamic width (90% of screen)
+                              child: Material(
+                                elevation: 8,
+                                shadowColor: Colors.black54,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxHeight: 250),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder: (context, i) {
+                                      final opt = options.elementAt(i);
+                                      final locName = LanguageService().getLocalizedName(
+                                        entityType: 'DISH',
+                                        entityId: opt['id'] as int,
+                                        defaultName: opt['name'],
+                                      );
+                                      
+                                      return ListTile(
+                                        dense: true,
+                                        // Show Localized Name primarily if language is not English
+                                        title: Text(
+                                          locName, 
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        subtitle: locName != opt['name'] 
+                                            ? Text(
+                                                opt['name'],
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ) 
+                                            : null,
+                                        trailing: Text('₹${opt['rate'] ?? 0}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                        onTap: () => onSelected(opt),
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
                             ),
                           ),

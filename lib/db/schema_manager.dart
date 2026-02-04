@@ -1,3 +1,5 @@
+// lib/db/schema_manager.dart
+// @locked
 import 'package:sqflite/sqflite.dart';
 import 'schema_definitions.dart';
 

@@ -30,8 +30,12 @@ flutter test test/sync_logic_test.dart
 
 ---
 
-## ✅ Best Practice Workflow
-1. Write your new code / logic
-2. Run `flutter test` to ensure you didn't break existing logic
-3. Commit and Push
-4. Let GitHub Actions run the full suite (takes ~10 mins)
+## 🚀 Super Automation
+I've created a script that runs tests and automatically commits if everything is green.
+
+1. **Make your changes**
+2. **Run:**
+   ```bash
+   ./scripts/smart_commit.sh "Description of what I changed"
+   ```
+3. **Relax!** Verification, Committing, and Pushing happens automatically.

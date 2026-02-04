@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
+import '../utils/time_utils.dart';
 
 class SubcontractorOrderDetailScreen extends StatefulWidget {
   final String date;
@@ -130,8 +131,8 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
           leading: CircleAvatar(
             backgroundColor: Colors.purple.shade100,
             child: Text(
-              '${order['time'] ?? ''}',
-              style: TextStyle(fontSize: 10, color: Colors.purple.shade800),
+              TimeUtils.formatTo12Hour(order['time']),
+              style: TextStyle(fontSize: 8, color: Colors.purple.shade800, fontWeight: FontWeight.bold),
             ),
           ),
           title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.bold)),

@@ -1,5 +1,6 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
 /// Minimal API client for your API Gateway (adjust base/stage).
 class AwsApi {
@@ -7,13 +8,25 @@ class AwsApi {
   static const String _baseUrl = 'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com';
   static const String _stage = 'prod';
 
+  /// JWT Token for authentication (Cognito)
+  static String? _authToken;
+
+  /// Update the token after login
+  static void setAuthToken(String token) {
+    _authToken = token;
+  }
+
+  static Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+  };
+
   static Uri _uri(String path) {
     final clean = path.startsWith('/') ? path.substring(1) : path;
     
-    // HACK: Use Local Bridge for Web to fix CORS
-    // Note: In release, you MUST enable CORS on AWS Gateway.
-    bool useProxy = false; // Reverted to false: Using --disable-web-security Chrome instead
-    if (useProxy) {
+    // HACK: Use Local Bridge for Web to fix CORS (Only for local development)
+    bool useProxy = false; 
+    if (!kReleaseMode && useProxy) {
       return Uri.parse('http://localhost:9090/$clean');
     }
     
@@ -21,7 +34,7 @@ class AwsApi {
   }
 
   static Future<Map<String, dynamic>> get({required String path}) async {
-    final res = await http.get(_uri(path), headers: {'Content-Type': 'application/json'});
+    final res = await http.get(_uri(path), headers: _headers);
     return _decode(res);
   }
 
@@ -34,7 +47,7 @@ class AwsApi {
     print('🚀 AWS POST Request: $uri'); // DEBUG
     final res = await http.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode(body ?? {}),
     );
     return _decode(res);
@@ -48,7 +61,7 @@ class AwsApi {
     final uri = _uri(path).replace(queryParameters: query);
     final res = await http.put(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: jsonEncode(body),
     );
     return _decode(res);
@@ -62,7 +75,7 @@ class AwsApi {
     final uri = _uri(path).replace(queryParameters: query);
     final res = await http.delete(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers,
       body: body != null ? jsonEncode(body) : null,
     );
     return _decode(res);
@@ -86,6 +99,28 @@ class AwsApi {
     );
   }
 
+  /// Optimized GSI query helper (Phase 2)
+  static Future<Map<String, dynamic>> queryGsi({
+    required String table,
+    required String indexName,
+    required String pkValue,
+    String? skValue,
+    String? skValueEnd,
+    String skOp = 'eq',
+  }) async {
+    return callDbHandler(
+      method: 'GET',
+      table: table,
+      filters: {
+        'index_name': indexName,
+        'gsi_pk': pkValue,
+        if (skValue != null) 'gsi_sk': skValue,
+        if (skValueEnd != null) 'gsi_sk_end': skValueEnd,
+        if (skValue != null) 'sk_op': skOp,
+      },
+    );
+  }
+
   /// COMPLIANCE: Rule C.4 - Offload to SQS
   static Future<Map<String, dynamic>> pushToQueue({
     required Map<String, dynamic> payload,
@@ -96,7 +131,7 @@ class AwsApi {
     try {
       final res = await http.post(
         Uri.parse(functionUrl),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers,
         body: jsonEncode(payload),
       );
       return _decode(res);
@@ -108,8 +143,6 @@ class AwsApi {
       };
     }
   }
-
-
 
   static Map<String, dynamic> _decode(http.Response res) {
     print('📥 AWS Raw Response: "${res.body}" (Status: ${res.statusCode})'); // DEBUG

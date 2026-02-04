@@ -1,10 +1,13 @@
 // MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
+import '../services/cloud_sync_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '2.1_add_order_screen.dart';
 import '2.1.1_order_fullscreen_view_screen.dart';
 import '2.3_summary_screen.dart';
+import '../utils/time_utils.dart';
 
 class OrdersListScreen extends StatefulWidget {
   final DateTime date;
@@ -32,6 +35,16 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         _errorMessage = null;
       });
       final dateStr = widget.date.toIso8601String().split('T')[0];
+      
+      // Sync from Cloud (using robust service)
+      try {
+        final sp = await SharedPreferences.getInstance();
+        final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+        await CloudSyncService().syncTableFromCloud('orders', firmId);
+      } catch (_) {
+        // Silently fail - sync is enhancement
+      }
+      
       final data = await DatabaseHelper().getOrdersByDate(dateStr);
       setState(() {
         _orders = List<Map<String, dynamic>>.from(data);
@@ -221,6 +234,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  // Client Status Circle (v37)
+                  _buildClientStatusCircle(order['clientStatus']?.toString() ?? 'PENDING'),
+                  const SizedBox(width: 8),
                   // MRP Status Badge
                   if (isLocked)
                     Container(
@@ -261,7 +277,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text('Pax: $pax | ${order['mealType'] ?? ''} | ${order['foodType'] ?? ''}',
+                  Text('Pax: $pax | ${order['mealType'] ?? ''} | ${order['foodType'] ?? ''} | ${TimeUtils.formatTo12Hour(order['time'])}',
                       style: const TextStyle(fontSize: 12, color: Colors.black54)),
                 ],
               ),
@@ -379,6 +395,54 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                   if (result == true) await _loadOrders();
                 },
               ),
+      ),
+    );
+  }
+
+  Widget _buildClientStatusCircle(String status) {
+    Color color;
+    IconData? icon;
+    String label;
+    
+    switch (status) {
+      case 'ACCEPTED':
+        color = Colors.green.shade700;
+        icon = Icons.check_circle;
+        label = 'CNF';
+        break;
+      case 'CHANGE_REQ':
+        color = Colors.deepOrange;
+        icon = Icons.warning_rounded;
+        label = 'CHG';
+        break;
+      default: // PENDING
+        color = Colors.grey.shade400;
+        icon = Icons.access_time_filled;
+        label = '';
+    }
+
+    if (label.isEmpty) {
+        // Simple dot for pending
+        return Icon(Icons.circle, size: 12, color: color);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+          ),
+        ],
       ),
     );
   }

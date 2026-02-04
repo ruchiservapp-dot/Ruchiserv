@@ -1,4 +1,5 @@
 // lib/db/database_helper.dart
+// @locked
 import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart';
@@ -15,6 +16,8 @@ import '../services/connectivity_service.dart';
 import '../db/aws/aws_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'schema_manager.dart';
+import 'sync_event.dart';
+import 'dart:async';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -22,6 +25,10 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
+
+  /// Event stream for database mutations that need cloud sync.
+  /// Decouples DatabaseHelper from CloudSyncService to avoid circular dependencies.
+  final syncStreamController = StreamController<SyncEvent>.broadcast();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -346,7 +353,7 @@ class DatabaseHelper {
         CREATE TABLE IF NOT EXISTS vehicles (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           firmId TEXT NOT NULL,
-          vehicleNo TEXT NOT NULL,
+          vehicleNumber TEXT NOT NULL,
           type TEXT DEFAULT 'INHOUSE',
           driverName TEXT,
           driverMobile TEXT,
@@ -1293,40 +1300,38 @@ class DatabaseHelper {
     // FIX: First remove duplicates if they exist, then insert only if not present
     final now = DateTime.now().toIso8601String();
     try {
-      // Remove duplicates - keep only the first occurrence of each vehicleNo
+      // Remove duplicates - keep only the first occurrence of each vehicleNumber
       await db.rawDelete('''
         DELETE FROM vehicles 
         WHERE id NOT IN (
-          SELECT MIN(id) FROM vehicles GROUP BY vehicleNo
+          SELECT MIN(id) FROM vehicles GROUP BY vehicleNumber
         )
       ''');
       
-      // Insert only if not exists (check by vehicleNo)
-      final existingCustomerVehicle = await db.query('vehicles', where: "vehicleNo = 'Customer Vehicle'", limit: 1);
+      // Insert only if not exists (check by vehicleNumber)
+      final existingCustomerVehicle = await db.query('vehicles', where: "vehicleNumber = 'Customer Vehicle'", limit: 1);
       if (existingCustomerVehicle.isEmpty) {
         await db.insert('vehicles', {
           'firmId': 'SEED',
-          'vehicleNo': 'Customer Vehicle',
-          'vehicleType': 'OTHER',
-          'status': 'AVAILABLE',
-          'driverName': 'Customer Arranged',
+          'vehicleNumber': 'Customer Vehicle',
+          'type': 'OUTSIDE',
+          'driverName': 'Customer',
           'isActive': 1,
-          'isModified': 0,
           'createdAt': now,
+          'updatedAt': now,
         });
       }
       
-      final existingOwnVehicle = await db.query('vehicles', where: "vehicleNo = 'Own Vehicle'", limit: 1);
+      final existingOwnVehicle = await db.query('vehicles', where: "vehicleNumber = 'Own Vehicle'", limit: 1);
       if (existingOwnVehicle.isEmpty) {
         await db.insert('vehicles', {
           'firmId': 'SEED',
-          'vehicleNo': 'Own Vehicle',
-          'vehicleType': 'OTHER',
-          'status': 'AVAILABLE',
-          'driverName': 'Company Driver',
+          'vehicleNumber': 'Own Vehicle',
+          'type': 'INHOUSE',
+          'driverName': 'Self',
           'isActive': 1,
-          'isModified': 0,
           'createdAt': now,
+          'updatedAt': now,
         });
       }
     } catch (_) {}
@@ -1425,65 +1430,20 @@ class DatabaseHelper {
     );
   }
 
-  /// Unified Sync Helper: Tries online sync, falls back to queue.
-  /// Uses DynamoDB structure: PK=firmId, SK=table#id for multi-tenancy
+  /// Unified Sync Trigger: Emits an event for CloudSyncService to handle.
+  /// This removes direct dependency on sync logic from DatabaseHelper.
   Future<void> _syncOrQueue({
     required String table,
     required Map<String, dynamic> data,
     required String action, // 'INSERT', 'UPDATE', 'DELETE'
     Map<String, dynamic>? filters,
   }) async {
-    // Get firmId for multi-tenant partitioning
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
-    final recordId = data['id']?.toString() ?? '0';
-    
-    // 1. Try Online Sync
-    bool synced = false;
-    try {
-      if (await ConnectivityService().isOnline()) {
-        if (action == 'DELETE') {
-          // Delete operation
-          final resp = await AwsApi.callDbHandler(
-            method: 'DELETE',
-            table: 'ruchiserv_data',
-            filters: {
-              'pk': firmId,
-              'sk': '$table#$recordId',
-            },
-          );
-          synced = resp['error'] == null;
-        } else {
-          // INSERT or UPDATE - use PUT (upsert)
-          final awsData = Map<String, dynamic>.from(data);
-          awsData['pk'] = firmId;
-          awsData['sk'] = '$table#$recordId';
-          awsData['table_name'] = table;
-          awsData['local_id'] = data['id'];
-          awsData['firmId'] = firmId;
-          awsData['synced_at'] = DateTime.now().toIso8601String();
-          
-          final resp = await AwsApi.callDbHandler(
-            method: 'PUT',
-            table: 'ruchiserv_data',
-            data: awsData,
-          );
-          synced = resp['error'] == null;
-        }
-        
-        if (synced) {
-          // print('✅ [AWS Sync] $action $table#$recordId success');
-        }
-      }
-    } catch (e) {
-      // print('🔶 [AWS Sync] Network error: $e');
-    }
-
-    // 2. Queue if failed or offline
-    if (!synced) {
-      // print('📥 [AWS Sync] Queuing for offline sync: $action $table');
-      await queuePendingSync(table: table, data: data, action: action);
-    }
+    syncStreamController.add(SyncEvent(
+      table: table,
+      data: data,
+      action: action,
+      filters: filters,
+    ));
   }
 
 
@@ -1717,6 +1677,65 @@ class DatabaseHelper {
       whereArgs: [date],
       orderBy: 'eventTime ASC',
     );
+  }
+
+  /// Refresh clientStatus from AWS for orders on a given date (v37 Interactive Flow)
+  /// Call this on pull-to-refresh to sync confirmation status from WhatsApp button clicks
+  Future<void> refreshClientStatusFromAws(String date, String firmId) async {
+    try {
+      print('🔄 Refreshing clientStatus from AWS for $date...');
+      
+      // Fetch orders from DynamoDB
+      final response = await AwsApi.callDbHandler(
+        method: 'GET',
+        table: 'orders',
+        filters: {
+          'pk': firmId,
+          'sk_prefix': 'ORDER#$date',
+        },
+      );
+      
+      // Handle response - AwsApi.callDbHandler always returns Map
+      // DynamoDB results are in 'Items' key, or directly if single scan
+      List<dynamic> orders = [];
+      if (response.containsKey('Items')) {
+        orders = response['Items'] as List? ?? [];
+      } else if (response.containsKey('data') && response['data'] is List) {
+        orders = response['data'] as List;
+      } else if (response.containsKey('id')) {
+        // Single order response
+        orders = [response];
+      }
+      
+      if (orders.isNotEmpty) {
+        final db = await database;
+        for (final awsOrder in orders) {
+          if (awsOrder is! Map) continue;
+          final orderId = awsOrder['id'];
+          final clientStatus = awsOrder['clientStatus'];
+          final confirmedAt = awsOrder['confirmedAt'];
+          final changeRequestedAt = awsOrder['changeRequestedAt'];
+          final sentAt = awsOrder['sentAt'];
+          
+          if (orderId != null && clientStatus != null) {
+            await db.update(
+              'orders',
+              {
+                'clientStatus': clientStatus,
+                if (confirmedAt != null) 'confirmedAt': confirmedAt,
+                if (changeRequestedAt != null) 'changeRequestedAt': changeRequestedAt,
+                if (sentAt != null) 'sentAt': sentAt,
+              },
+              where: 'id = ? AND firmId = ?',
+              whereArgs: [orderId, firmId],
+            );
+            print('✅ Updated order $orderId → $clientStatus');
+          }
+        }
+      }
+    } catch (e) {
+      print('⚠️ Failed to refresh clientStatus from AWS: $e');
+    }
   }
 
   /// Get orders eligible for MRP Run (STRICT: Only PENDING status)
@@ -2027,7 +2046,8 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
 
   Future<int?> insertUser(Map<String, dynamic> user) async {
     final db = await database;
-    final id = await db.insert('users', user);
+    // Use replace to avoid unique constraint crashes during registration/sync
+    final id = await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.replace);
     
     // AUTO-AUTHORIZE: Add mobile to authorized_mobiles so user can login
     final mobile = user['mobile']?.toString();
@@ -2048,7 +2068,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
         };
         
         final authId = await db.insert('authorized_mobiles', authData, 
-          conflictAlgorithm: ConflictAlgorithm.ignore);
+          conflictAlgorithm: ConflictAlgorithm.replace);
         
         // SYNC: Push to cloud
         if (authId > 0) {
@@ -2076,7 +2096,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
 
   Future<List<Map<String, dynamic>>> getUsersByFirm(String firmId) async {
     final db = await database;
-    return await db.query('users', where: 'firmId = ?', whereArgs: [firmId]);
+    return await db.query('users', where: 'LOWER(firmId) = LOWER(?)', whereArgs: [firmId]);
   }
 
   Future<bool> verifyUserEligibility(String firmId, String mobile) async {
@@ -2084,7 +2104,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       final db = await database;
       final result = await db.query(
         'users',
-        where: 'firmId = ? AND mobile = ?',
+        where: 'LOWER(firmId) = LOWER(?) AND mobile = ?',
         whereArgs: [firmId, mobile],
       );
       return result.isNotEmpty;
@@ -3284,7 +3304,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final db = await database;
     final result = await db.query(
       'authorized_mobiles',
-      where: 'firmId = ? AND mobile = ? AND isActive = 1',
+      where: 'LOWER(firmId) = LOWER(?) AND mobile = ? AND isActive = 1',
       whereArgs: [firmId, mobile],
     );
     return result.isNotEmpty;
@@ -3307,6 +3327,17 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
 whereArgs: [firmId],
       orderBy: 'name ASC',
     );
+  }
+
+  Future<Map<String, dynamic>?> getAuthorizedMobileByPhone(String firmId, String mobile) async {
+    final db = await database;
+    final results = await db.query(
+      'authorized_mobiles',
+      where: 'LOWER(firmId) = LOWER(?) AND mobile = ?',
+      whereArgs: [firmId, mobile],
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
   }
   
   /// Add authorized mobile
@@ -3421,18 +3452,29 @@ whereArgs: [firmId],
     updateData.remove('id');
     updateData['updatedAt'] = DateTime.now().toIso8601String();
 
+    int result;
     if (exists == null) {
       updateData['firmId'] = firmId; // Ensure firmId is set
       updateData['createdAt'] = DateTime.now().toIso8601String();
-      return await db.insert('firms', updateData);
+      result = await db.insert('firms', updateData);
     } else {
-      return await db.update(
+      result = await db.update(
         'firms',
         updateData,
         where: 'firmId = ?',
         whereArgs: [firmId],
       );
     }
+    
+    // v38: Trigger cloud sync for cross-device firm profile sync
+    await _syncOrQueue(
+      table: 'firms',
+      data: {...updateData, 'firmId': firmId, 'id': exists?['id'] ?? result},
+      action: exists == null ? 'INSERT' : 'UPDATE',
+      filters: {'firmId': firmId},
+    );
+    
+    return result;
   }
 
   // ========== DISH METHODS FOR INVENTORY ==========
@@ -5301,7 +5343,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     final db = await database;
     final result = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
-             v.vehicleNo, v.vehicleType
+                 v.vehicleNumber, v.vehicleType
       FROM dispatches d
       JOIN orders o ON o.id = d.orderId
       LEFT JOIN vehicles v ON v.id = d.vehicleId

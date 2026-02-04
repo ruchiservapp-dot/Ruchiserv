@@ -12,6 +12,7 @@ import 'reports/cash_flow_screen.dart';
 import 'reports/pl_report_screen.dart';
 import 'reports/event_profitability_screen.dart';
 import 'finance/salary_disbursement_screen.dart';
+import '../services/cloud_sync_service.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -26,6 +27,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String _selectedSubReport = 'Summary';
   List<Map<String, dynamic>> _reportData = [];
   bool _isLoading = true;
+  bool _isCloudMode = false; // Phase 2: Live Cloud Reporting
   
   // For expandable detail rows
   final Set<String> _expandedItems = {};
@@ -160,6 +162,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
           }
           break;
       }
+
+      // Phase 2: If Cloud Mode is ON and we have a cloud fetcher for this report
+      if (_isCloudMode) {
+        data = await _loadCloudReportData();
+      }
     } catch (e) {
       debugPrint('Report error: $e');
     }
@@ -168,6 +175,54 @@ class _ReportsScreenState extends State<ReportsScreen> {
       _reportData = data;
       _isLoading = false;
     });
+  }
+
+  /// Phase 2: Loads data from Cloud GSI and aggregates it for the report view
+  Future<List<Map<String, dynamic>>> _loadCloudReportData() async {
+    // Only implemented for 'Orders' -> 'Summary' for now to demonstrate GSI performance
+    if (_selectedCategory == 'Orders' && _selectedSubReport == 'Summary') {
+      final rawItems = await CloudSyncService.getLiveCloudReport(
+        table: 'orders',
+        startDate: _startDate,
+        endDate: _endDate,
+      );
+      return _aggregateCloudData(rawItems);
+    }
+    // Fallback if not implemented for other reports yet
+    return [];
+  }
+
+  /// Aggregates raw DynamoDB records into report categories
+  List<Map<String, dynamic>> _aggregateCloudData(List<Map<String, dynamic>> items) {
+    if (_selectedCategory == 'Orders' && _selectedSubReport == 'Summary') {
+      final Map<String, Map<String, dynamic>> grouped = {};
+      for (var item in items) {
+        final date = item['date'] ?? 'Unknown';
+        if (!grouped.containsKey(date)) {
+          grouped[date] = {
+            'date': date,
+            'totalOrders': 0,
+            'confirmed': 0,
+            'completed': 0,
+            'cancelled': 0,
+            'totalPax': 0,
+            'revenue': 0.0,
+          };
+        }
+        final g = grouped[date]!;
+        g['totalOrders']++;
+        final status = item['status']?.toString().toLowerCase();
+        if (status == 'confirmed') g['confirmed']++;
+        if (status == 'completed' || item['dispatchStatus'] == 'DELIVERED') g['completed']++;
+        if (item['isCancelled'] == 1) g['cancelled']++;
+        g['totalPax'] += (item['totalPax'] as num?)?.toInt() ?? 0;
+        if (item['isCancelled'] != 1) {
+          g['revenue'] += (item['finalAmount'] as num?)?.toDouble() ?? (item['grandTotal'] as num?)?.toDouble() ?? 0.0;
+        }
+      }
+      return grouped.values.toList()..sort((a,b) => b['date'].compareTo(a['date']));
+    }
+    return [];
   }
 
   void _selectCategory(String category) {
@@ -411,6 +466,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               icon: const Icon(Icons.payments, size: 18),
                               label: Text(AppLocalizations.of(context)!.payroll),
                             ),
+                          // Phase 2: LIVE Cloud Toggle
+                          if (_selectedCategory == 'Orders' && _selectedSubReport == 'Summary')
+                           Row(
+                             children: [
+                               const Text('Live Cloud', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                               Switch(
+                                 value: _isCloudMode,
+                                 activeColor: Colors.blue,
+                                 onChanged: (val) {
+                                   setState(() => _isCloudMode = val);
+                                   _loadReportData();
+                                 },
+                               ),
+                             ],
+                           ),
                           IconButton(
                             icon: const Icon(Icons.refresh),
                             onPressed: _loadReportData,

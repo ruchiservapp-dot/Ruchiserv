@@ -1,6 +1,7 @@
 // lib/services/subscription_service.dart
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
+import '../db/aws/aws_api.dart';
 
 /// Enforces F.1 Subscription Gate Mandate
 class SubscriptionService {
@@ -98,5 +99,52 @@ class SubscriptionService {
   static Future<bool> isReadOnly(String firmId) async {
     final status = await SubscriptionService().checkSubscriptionStatus(firmId);
     return status == 'grace_period' || status == 'locked';
+  }
+
+  /// Validate a promo code against backend
+  Future<Map<String, dynamic>> validatePromoCode(String code, String planId) async {
+    try {
+      final response = await AwsApi.callDbHandler(
+        method: 'POST',
+        table: 'subscription/validate-promo',
+        data: {
+          'code': code.toUpperCase(),
+          'planId': planId,
+        },
+      );
+
+      if (response['error'] != null) {
+        return {'valid': false, 'error': response['error']};
+      }
+
+      return response;
+    } catch (e) {
+      return {'valid': false, 'error': 'Validation failed: $e'};
+    }
+  }
+
+  /// Create a subscription with backend
+  Future<Map<String, dynamic>> createSubscription({
+    required String firmId,
+    required String planId,
+    required String billingCycle,
+    String? promoCode,
+  }) async {
+    try {
+      final response = await AwsApi.callDbHandler(
+        method: 'POST',
+        table: 'subscription/create',
+        data: {
+          'firmId': firmId,
+          'planId': planId,
+          'billingCycle': billingCycle,
+          if (promoCode != null && promoCode.isNotEmpty) 'promoCode': promoCode,
+        },
+      );
+
+      return response;
+    } catch (e) {
+      return {'error': 'Failed to create subscription: $e'};
+    }
   }
 }

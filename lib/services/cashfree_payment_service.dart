@@ -13,6 +13,7 @@ import 'package:flutter_cashfree_pg_sdk/utils/cfexceptions.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/app_config.dart';
+import '../db/aws/aws_api.dart';
 
 /// Cashfree Payment Service for handling one-time and subscription payments
 class CashfreePaymentService {
@@ -63,39 +64,25 @@ class CashfreePaymentService {
     String? orderNote,
   }) async {
     try {
-      // MOCK: In production, call your backend API
-      // Your backend should:
-      // 1. Call Cashfree's Create Order API
-      // 2. Return the order_id and payment_session_id
-      
-      // For now, return mock data for testing UI flow
-      // This will NOT work for actual payments without a real backend
-      final mockOrderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
-      
-      // In production, your backend returns this
-      return {
-        'order_id': mockOrderId,
-        'payment_session_id': 'session_mock_${DateTime.now().millisecondsSinceEpoch}',
-      };
-      
-      /* PRODUCTION CODE - Uncomment when backend is ready
-      final response = await http.post(
-        Uri.parse('YOUR_BACKEND_URL/payments/create-order'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      final response = await AwsApi.post(
+        path: 'dbhandler',
+        body: {
+          'payment_type': 'ORDER',
           'amount': amount,
           'customerEmail': customerEmail,
           'customerPhone': customerPhone,
           'customerName': customerName,
           'orderNote': orderNote,
-        }),
+        },
       );
       
-      if (response.statusCode == 200) {
-        return Map<String, String>.from(jsonDecode(response.body));
+      if (response['order_id'] != null) {
+        return {
+          'order_id': response['order_id'] ?? '',
+          'payment_session_id': response['payment_session_id'] ?? '',
+        };
       }
       return null;
-      */
     } catch (e) {
       debugPrint('Error creating payment session: $e');
       return null;
@@ -119,7 +106,7 @@ class CashfreePaymentService {
 
       // Configure theme
       var theme = CFThemeBuilder()
-          .setNavigationBarBackgroundColor("#0D47A1")
+          // .setNavigationBarBackgroundColor("#0D47A1") // Method not found in this SDK version
           .setNavigationBarTextColor("#FFFFFF")
           .setButtonBackgroundColor("#0D47A1")
           .setButtonTextColor("#FFFFFF")
@@ -183,37 +170,26 @@ class CashfreePaymentService {
     required String customerName,
   }) async {
     try {
-      // MOCK: In production, call your backend API for Cashfree Subscriptions
-      final mockSubId = 'sub_${DateTime.now().millisecondsSinceEpoch}';
-      
-      return {
-        'subscription_id': mockSubId,
-        'order_id': 'order_$mockSubId',
-        'payment_session_id': 'session_$mockSubId',
-      };
-      
-      /* PRODUCTION CODE - Your backend should:
-      1. Create a Subscription Plan if not exists
-      2. Create a Subscription for the customer
-      3. Return the authorization link or session
-      
-      final response = await http.post(
-        Uri.parse('YOUR_BACKEND_URL/subscriptions/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'planName': planName,
+      final response = await AwsApi.post(
+        path: 'dbhandler',
+        body: {
+          'payment_type': 'SUBSCRIPTION',
+          'plan_id': planName,
           'amount': amount,
           'customerEmail': customerEmail,
           'customerPhone': customerPhone,
           'customerName': customerName,
-        }),
+        },
       );
       
-      if (response.statusCode == 200) {
-        return Map<String, String>.from(jsonDecode(response.body));
+      if (response['subscriptionId'] != null || response['subscription_id'] != null) {
+        return {
+          'subscription_id': (response['subscriptionId'] ?? response['subscription_id'] ?? '').toString(),
+          'order_id': (response['order_id'] ?? '').toString(),
+          'payment_session_id': (response['payment_session_id'] ?? '').toString(),
+        };
       }
       return null;
-      */
     } catch (e) {
       debugPrint('Error creating subscription: $e');
       return null;
@@ -247,6 +223,32 @@ class CashfreePaymentService {
       amount: amount,
       description: 'Subscription: $planName Plan',
     );
+  }
+  
+  /// Trigger a mandate update session
+  Future<void> updateMandate(String subscriptionId) async {
+    try {
+      final response = await AwsApi.post(
+        path: 'dbhandler',
+        body: {
+          'payment_type': 'MANDATE_UPDATE',
+          'subscription_id': subscriptionId,
+        },
+      );
+      
+      if (response['payment_session_id'] != null) {
+        await openCheckout(
+          orderId: (response['order_id'] ?? 'update_$subscriptionId').toString(),
+          paymentSessionId: response['payment_session_id']!.toString(),
+          description: 'Update UPI Mandate',
+        );
+      }
+ else {
+        onFailure('UPDATE_ERROR', 'Failed to trigger mandate update');
+      }
+    } catch (e) {
+      onFailure('UPDATE_ERROR', e.toString());
+    }
   }
 
   /// Helper to calculate new end date for subscription

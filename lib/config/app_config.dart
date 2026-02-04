@@ -75,14 +75,27 @@ class AppConfig {
   
   /// Meta WhatsApp Business API Token
   static String get metaWhatsAppToken => 
-      const String.fromEnvironment('META_WHATSAPP_TOKEN', defaultValue: '');
+      const String.fromEnvironment('META_WHATSAPP_TOKEN', defaultValue: 'EAAV2vfaMyi4BQnvlNE1UcDB1IvqSULZAO55UgaaK9EZCECrhpQxMnkL3venvSFLZAz9Ab2Pyj0Nd9jdpzIiflsduKB6G9rfirpClLl0ihMOzXrp6WElzmuDHNulUNcUq2tYSpBZAEWZA5iX4dHC9uo8pZBTa5sW7e4EbzfgmIVDHXAzsAxFBqqnxYsJymVzAZDZD');
   
   /// Meta WhatsApp Phone Number ID
   static String get metaWhatsAppPhoneId => 
-      const String.fromEnvironment('META_WHATSAPP_PHONE_ID', defaultValue: '');
+      const String.fromEnvironment('META_WHATSAPP_PHONE_ID', defaultValue: '1008830502312691');
 
   static bool get isWhatsAppConfigured => 
       metaWhatsAppToken.isNotEmpty && metaWhatsAppPhoneId.isNotEmpty;
+
+  // ========== AWS COGNITO ==========
+
+  /// AWS Cognito User Pool ID
+  static String get cognitoUserPoolId =>
+      const String.fromEnvironment('COGNITO_USER_POOL_ID', defaultValue: 'ap-south-1_Or5Ziy7vX');
+
+  /// AWS Cognito App Client ID
+  static String get cognitoClientId =>
+      const String.fromEnvironment('COGNITO_CLIENT_ID', defaultValue: '3hghkvaekrqcrfv3nsec45242v');
+
+  static bool get isCognitoConfigured =>
+      cognitoUserPoolId.isNotEmpty && cognitoClientId.isNotEmpty;
 
   // ========== HELPER METHODS ==========
   

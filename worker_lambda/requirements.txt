@@ -1,0 +1,9 @@
+firebase-admin
+reportlab
+requests
+PyJWT
+pillow
+google-cloud-firestore
+google-cloud-storage
+# boto3 is included in the Lambda runtime, but listed here for local development if needed
+# boto3

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'pdf_service.dart';
 import '../db/aws/aws_api.dart';
 
@@ -126,27 +127,48 @@ class WhatsAppService {
          // 2. Prepare Base64
          final pdfBase64 = base64Encode(pdfBytes);
          
-         debugPrint('🚀 Sending Text+PDF via Backend...');
-         final resp = await AwsApi.callDbHandler(
+          // Format date for WhatsApp display: "12 December 2026"
+          String formattedDate = date;
+          try {
+            final dt = DateTime.tryParse(date);
+            if (dt != null) {
+              formattedDate = DateFormat('dd MMMM yyyy').format(dt);
+            }
+          } catch (_) {}
+
+          // Format time for WhatsApp display: "6:36 PM"
+          String formattedTime = time;
+          try {
+            final parts = time.split(':');
+            if (parts.length >= 2) {
+              int h = int.parse(parts[0]);
+              int m = int.parse(parts[1]);
+              final dt = DateTime(2026, 1, 1, h, m);
+              formattedTime = DateFormat('h:mm a').format(dt);
+            }
+          } catch (_) {}
+
+          debugPrint('🚀 Sending Text+PDF via Backend...');
+          final resp = await AwsApi.callDbHandler(
             method: 'POST',
             table: 'messaging/whatsapp/send_order_pdf',
             data: {
               'to': toNumber,
               'pdf_base64': pdfBase64,
-              // Text Params: {{1}}..{{8}}
+              'firm_id': orderData['firmId'], // NEW: For webhook lookup
+              'order_id_raw': orderData['id'], // NEW: For webhook lookup
+              // Text Params: {{1}}..{{6}} - must match template exactly
               'text_params': [
-                 orderId,
-                 customerName, 
-                 date, 
-                 time, 
-                 pax, 
-                 totalAmount,
-                 cateringName,
-                 cateringPhone 
+                 customerName, // {{1}} - Name
+                 orderId,      // {{2}} - Order ID
+                 formattedDate, // {{3}} - Date (12 December 2026)
+                 formattedTime, // {{4}} - Time (6:36 PM)
+                 pax,          // {{5}} - Pax
+                 totalAmount,  // {{6}} - Total
               ],
               // PDF Params: {{1}} (Order ID)
               'pdf_params': [orderId]
-            }
+            },
          );
          
          if (resp['success'] == true) {
@@ -166,10 +188,10 @@ class WhatsAppService {
     debugPrint('⚠️ Falling back to Text-Only Template...');
     final success = await sendTemplateMessage(
       toNumber: toNumber,
-      templateName: 'order_status_update',
-      languageCode: 'en_US',
+      templateName: 'ruchiserv_order_interactive',
+      languageCode: 'en',
       // Params 1-8
-      bodyParameters: [orderId, customerName, date, time, pax, totalAmount, cateringName, cateringPhone],
+      bodyParameters: [customerName, orderId, date, time, pax, totalAmount],
     );
 
     if (success) return true;

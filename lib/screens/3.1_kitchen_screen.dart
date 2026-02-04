@@ -8,6 +8,7 @@ import 'package:ruchiserv/l10n/app_localizations.dart';
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
 import '../services/connectivity_service.dart';
+import '../utils/time_utils.dart';
 
 class KitchenScreen extends StatefulWidget {
   const KitchenScreen({super.key});
@@ -306,7 +307,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
                 Expanded(
                   child: Text(order['customerName'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.indigo)),
                 ),
-                Text("${order['time']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(TimeUtils.formatTo12Hour(order['time']), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ],
             ),
             const SizedBox(height: 4),

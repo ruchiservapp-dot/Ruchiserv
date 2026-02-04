@@ -3,7 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
+import '../services/tracking_api_service.dart'; // Local Tracking API Service
+import '../services/location_service.dart'; // For permission check
+import '../db/aws/aws_api.dart'; // Added import for AwsApi
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class DriverDispatchDetailScreen extends StatefulWidget {
@@ -27,35 +31,50 @@ class _DriverDispatchDetailScreenState extends State<DriverDispatchDetailScreen>
   @override
   void initState() {
     super.initState();
+    print("📍 DriverDispatchDetailScreen: initState start for dispatch ${widget.dispatch['id']}");
     _dispatch = widget.dispatch;
     _loadDetails();
+    print("📍 DriverDispatchDetailScreen: initState end");
   }
 
   Future<void> _loadDetails() async {
+    print("📍 DriverDispatchDetailScreen: _loadDetails start");
     setState(() => _isLoading = true);
     
-    final db = await DatabaseHelper().database;
-    final orderId = _dispatch['orderId'];
-    
-    // Get order details
-    final orders = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
-    if (orders.isNotEmpty) {
-      _order = Map<String, dynamic>.from(orders.first);
+    try {
+      final db = await DatabaseHelper().database;
+      print("📍 DriverDispatchDetailScreen: DB initialized");
+      final orderId = _dispatch['orderId'];
+      print("📍 DriverDispatchDetailScreen: Loading details for order $orderId");
+      
+      // Get order details
+      final orders = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
+      if (orders.isNotEmpty) {
+        _order = Map<String, dynamic>.from(orders.first);
+        print("📍 DriverDispatchDetailScreen: Order loaded: ${_order['id']}");
+      }
+      
+      // Get dishes for order
+      final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [orderId]);
+      _dishes = List<Map<String, dynamic>>.from(dishes);
+      print("📍 DriverDispatchDetailScreen: Dishes loaded: ${_dishes.length}");
+      
+      // Get dispatch items (if already loaded)
+      final dispatchId = _dispatch['id'];
+      final items = await db.query('dispatch_items', where: 'dispatchId = ?', whereArgs: [dispatchId]);
+      
+      _dispatchItems = List<Map<String, dynamic>>.from(items);
+      _utensils = _dispatchItems.where((i) => i['itemType'] == 'UTENSIL').toList();
+      _consumables = _dispatchItems.where((i) => i['itemType'] == 'CONSUMABLE').toList();
+      print("📍 DriverDispatchDetailScreen: Items loaded: records=${_dispatchItems.length}, utensils=${_utensils.length}");
+      
+      if (mounted) setState(() => _isLoading = false);
+      print("📍 DriverDispatchDetailScreen: _loadDetails complete, loading=false");
+    } catch (e, stack) {
+      print("📍 DriverDispatchDetailScreen error: $e");
+      print(stack);
+      if (mounted) setState(() => _isLoading = false);
     }
-    
-    // Get dishes for order
-    final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [orderId]);
-    _dishes = List<Map<String, dynamic>>.from(dishes);
-    
-    // Get dispatch items (if already loaded)
-    final dispatchId = _dispatch['id'];
-    final items = await db.query('dispatch_items', where: 'dispatchId = ?', whereArgs: [dispatchId]);
-    
-    _dispatchItems = List<Map<String, dynamic>>.from(items);
-    _utensils = _dispatchItems.where((i) => i['itemType'] == 'UTENSIL').toList();
-    _consumables = _dispatchItems.where((i) => i['itemType'] == 'CONSUMABLE').toList();
-    
-    setState(() => _isLoading = false);
   }
 
   Future<void> _callCustomer() async {
@@ -87,11 +106,24 @@ class _DriverDispatchDetailScreenState extends State<DriverDispatchDetailScreen>
   }
 
   Future<void> _acceptAndStart() async {
+    // 1. Enterprise Feature Check (Client-side validation)
+    // In a real app, we should check this from a robust source. 
+    // For now, we assume if GPS is required, we ask permissions.
+    
+    // 2. Request Location Permission (Always) for tracking
+    final perm = await LocationService.instance.requestPermission();
+    if (!perm) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location permission is required for dispatch tracking.')),
+      );
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Accept & Start Loading?'),
-        content: const Text('This will mark the dispatch as accepted and you can begin loading items.'),
+        content: const Text('This will mark the dispatch as accepted. A WhatsApp tracking link will be sent to the customer.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           ElevatedButton(
@@ -111,8 +143,55 @@ class _DriverDispatchDetailScreenState extends State<DriverDispatchDetailScreen>
         'dispatchStatus': 'LOADING',
       }, where: 'id = ?', whereArgs: [_dispatch['id']]);
       
+      // 3. Trigger WhatsApp Tracking Notification (via Backend)
+      // We will perform a "sync-like" call or invoke lambda via API Service
+      // 3. Trigger WhatsApp Tracking Notification (via Backend)
+      try {
+        // Fetch Driver Details (from SP or Context)
+        // In DriverHomeScreen we loaded this, but here we might need to fetch again or pass it.
+        // For now, we trust the backend to look it up if we don't send it, 
+        // BUT for template {{3}} and {{4}} we should send it to be safe.
+        // We'll reuse the AdminApiService.
+        
+        final SharedPreferences sp = await SharedPreferences.getInstance();
+        final driverMobile = sp.getString('last_mobile') ?? '';
+        final userId = sp.getString('user_id') ?? '';
+        
+        // Fetch Driver Details from DB
+        String driverName = 'Our Driver'; 
+        if (userId.isNotEmpty) {
+           final users = await db.query('users', where: 'userId = ?', whereArgs: [userId]);
+           if (users.isNotEmpty) {
+             driverName = (users.first['username'] as String?) ?? 'Our Driver';
+           }
+        }
+        
+        final customerName = _order['customerName'] ?? _dispatch['customerName'] ?? 'Customer';
+        final mobile = _order['mobile'] ?? _dispatch['customerMobile'] ?? '';
+        
+        // Push directly to SQS Producer for Worker Lambda
+        await AwsApi.pushToQueue(
+            payload: {
+                'type': 'DISPATCH_ACCEPTED',
+                'mobile': mobile, 
+                'orderData': {
+                    'orderId': _order['id'],
+                    'dispatchId': _dispatch['id'],
+                    'customerName': customerName,
+                    'driverName': driverName,
+                    'driverMobile': driverMobile,
+                },
+                'firmId': _dispatch['firmId'] ?? sp.getString('last_firm') ?? 'UNKNOWN'
+            }
+        );
+        print("🚀 Dispatch Accepted notification pushed to SQS");
+
+      } catch (e) {
+        print("⚠️ Notification Trigger Failed: $e");
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assignment accepted! Start loading.'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Dispatch Accepted! Tracking Link sent to Customer.'), backgroundColor: Colors.green),
       );
       Navigator.pop(context, true);
     }

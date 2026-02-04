@@ -37,6 +37,51 @@ if not firebase_admin._apps:
 ses = boto3.client('ses')
 dynamodb = boto3.resource('dynamodb')
 
+class WhatsAppService:
+    """Helper class to send WhatsApp templates via Meta Graph API."""
+    def __init__(self):
+        self.phone_id = os.environ.get('META_PHONE_ID')
+        self.token = os.environ.get('META_TOKEN')
+        self.api_version = 'v21.0'
+        
+    def send_template(self, to_mobile: str, template_name: str, language_code: str = 'en_US', components: list = None) -> bool:
+        if not self.phone_id or not self.token:
+            print("❌ WhatsApp Error: META_TOKEN or META_PHONE_ID not set in environment.")
+            return False
+
+        url = f"https://graph.facebook.com/{self.api_version}/{self.phone_id}/messages"
+        
+        # Clean mobile number
+        to_mobile = to_mobile.replace('+', '').replace(' ', '').replace('-', '')
+        if len(to_mobile) == 10: to_mobile = '91' + to_mobile # Default to India
+        
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": to_mobile,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {"code": language_code},
+                "components": components or []
+            }
+        }
+
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.token}',
+                'Content-Type': 'application/json'
+            }
+            res = requests.post(url, headers=headers, json=payload)
+            if res.status_code == 200:
+                print(f"✅ WhatsApp template '{template_name}' sent to {to_mobile}")
+                return True
+            else:
+                print(f"❌ WhatsApp Failed ({res.status_code}): {res.text}")
+                return False
+        except Exception as e:
+            print(f"❌ WhatsApp Exception: {e}")
+            return False
+
 
 def lambda_handler(event, context):
     for record in event['Records']:
@@ -54,6 +99,105 @@ def process_notification(data):
     mobile = data.get('mobile')
     order_data = data.get('orderData', {})
     firm_id = order_data.get('firmId') or data.get('firmId')
+    
+    # Support both 'type' (from Flutter) and 'notification_type'
+    notif_type = data.get('notification_type') or data.get('type') or 'NEW_ORDER'
+
+    print(f"🔔 Processing Notification Type: {notif_type}")
+
+    # === HANDLE STATUS UPDATES (No PDF/Email needed) ===
+    if notif_type == 'STATUS_UPDATE':
+        action = order_data.get('action')
+        oid = order_data.get('id')
+        
+        status_text = "Confirmed" if action == 'CONFIRM_ORDER' else "Requested Changes"
+        title = f"Order #{oid} Update"
+        body = f"Client has {status_text} this order."
+        
+        if firm_id:
+            send_fcm_to_firm(firm_id, title, body, {'orderId': str(oid), 'type': 'STATUS_UPDATE'})
+        return
+
+    # === HANDLE DISPATCH NOTIFICATION (From Admin App) ===
+    if notif_type == 'DISPATCH_NOTIFICATION':
+        print("🚚 Processing Dispatch Notification")
+        customer_name = data.get('customerName') or order_data.get('customerName', 'Customer')
+        order_id = str(data.get('orderId') or order_data.get('id', 'Unknown'))
+        # Use eventTime if available, fallback to time
+        delivery_time = data.get('deliveryTime') or order_data.get('eventTime') or order_data.get('time') or 'N/A'
+        
+        wa_svc = WhatsAppService()
+        # Template: dispatch_notification (Expected Params: {{1}} Name, {{2}} Time, {{3}} OrderId)
+        success = wa_svc.send_template(
+            mobile, 
+            'dispatch_notification', 
+            'en_US', 
+            [
+                {
+                    "type": "body", 
+                    "parameters": [
+                        {"type": "text", "text": customer_name},
+                        {"type": "text", "text": delivery_time},
+                        {"type": "text", "text": order_id}
+                    ]
+                }
+            ]
+        )
+        
+        if not success:
+            print(f"⚠️ Template dispatch_notification failed.")
+            
+        return
+
+    # === HANDLE DISPATCH ACCEPTED (Send Tracking Link from Driver App) ===
+    if notif_type == 'DISPATCH_ACCEPTED':
+        print("🚚 Processing Dispatch Accepted")
+        track_token = order_data.get('dispatchId') 
+        # Token for URL button (just the suffix usually, or full URL depending on config)
+        # Assuming Dynamic URL button: https://ruchiserv.com/track.html?token={{1}}
+        # So we pass just the token.
+        
+        # Body Params: {{1}} Name, {{2}} OrderId, {{3}} DriverName, {{4}} DriverMobile
+        customer_name = order_data.get('customerName', 'Customer')
+        order_id = str(order_data.get('orderId', 'Unknown')) # Use Display ID if available
+        driver_name = order_data.get('driverName', 'Our Driver')
+        driver_mobile = order_data.get('driverMobile', '')
+        
+        wa_svc = WhatsAppService()
+        
+        # Template: delivery_update_2 (en_US)
+        success = wa_svc.send_template(
+            mobile, 
+            'delivery_update_2', 
+            'en_US', 
+            [
+                {
+                    "type": "body", 
+                    "parameters": [
+                        {"type": "text", "text": customer_name},
+                        {"type": "text", "text": order_id},
+                        {"type": "text", "text": driver_name},
+                        {"type": "text", "text": driver_mobile}
+                    ]
+                },
+                {
+                    "type": "button",
+                    "sub_type": "url",
+                    "index": "0",
+                    "parameters": [
+                        {"type": "text", "text": f"?token={track_token}"} 
+                    ]
+                }
+            ]
+        )
+        
+        if not success:
+            print(f"⚠️ Template delivery_update_2 failed.")
+            
+        return
+
+
+    # === HANDLE NEW ORDERS (Full Workflow) ===
     
     # 1. Generate PDF
     pdf_path = None

@@ -266,6 +266,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (userList.isNotEmpty) {
         final userRole = userList.first['role']?.toString() ?? 'Staff';
         await sp.setString('last_role', userRole);
+        await sp.setString('user_role', userRole); // For PermissionService
+      } else {
+        // Fallback for web first-login: use role from AuthService or default to Admin
+        final existingRole = sp.getString('user_role');
+        if (existingRole == null || existingRole.isEmpty || existingRole == 'Staff') {
+          // If no role set yet, this is likely the firm owner's first login - grant Admin
+          await sp.setString('user_role', 'Admin');
+          await sp.setString('last_role', 'Admin');
+          print('LoginScreen: No user in DB, defaulting to Admin for first login');
+        }
       }
       
       // Initialize RBAC and Feature Gate services
@@ -357,16 +367,22 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      print('LoginDebug: Authentication Success');
+
       // Offline-with-biometric rule
+      print('LoginDebug: Checking canLoginOfflineWithBiometric...');
       final can = await AuthService.canLoginOfflineWithBiometric(firmId: firmId);
+      print('LoginDebug: canLoginOfflineWithBiometric: $can');
       if (!can) {
         if (!mounted) return;
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context)!.biometricNotAllowed),
         ));
         return;
       }
 
+      print('LoginDebug: Checking Expiry...');
       if (await AuthService.isExpired()) {
         if (!mounted) return;
         _showExpiryDialog(lock: true);
@@ -377,10 +393,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (!mounted) return;
+      print('LoginDebug: Navigating to MainMenuScreen...');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MainMenuScreen()),
       );
+      print('LoginDebug: Navigation triggered');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

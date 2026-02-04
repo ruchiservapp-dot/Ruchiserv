@@ -8,6 +8,7 @@ import 'package:ruchiserv/l10n/app_localizations.dart';
 import '8.1_subcontractor_calendar_screen.dart';
 import '8.2_subcontractor_order_detail_screen.dart';
 import '8.3_subcontractor_ledger_screen.dart';
+import '../utils/time_utils.dart';
 
 class SubcontractorHomeScreen extends StatefulWidget {
   const SubcontractorHomeScreen({super.key});
@@ -294,7 +295,7 @@ class _SubcontractorHomeScreenState extends State<SubcontractorHomeScreen> {
           child: Icon(Icons.restaurant, color: Colors.purple.shade700),
         ),
         title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${order['dishName']} • ${order['pax']} pax • ${order['time']}'),
+        subtitle: Text('${order['dishName']} • ${order['pax']} pax • ${TimeUtils.formatTo12Hour(order['time'])}'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => Navigator.push(context, MaterialPageRoute(
           builder: (_) => SubcontractorOrderDetailScreen(

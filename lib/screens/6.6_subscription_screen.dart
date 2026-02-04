@@ -4,6 +4,7 @@ import '../core/app_theme.dart';
 import '../db/database_helper.dart';
 import '../services/upi_service.dart';
 import '../services/permission_service.dart';
+import '../services/subscription_service.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -20,6 +21,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   String _userRole = 'Staff';
   String? _firmId;
   String? _clientUpiId;
+  String _billingCycle = 'MONTHLY'; // MONTHLY or YEARLY
 
   @override
   void initState() {
@@ -78,11 +80,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   bool get _isAdmin => _userRole.toLowerCase() == 'admin';
 
-  Future<void> _handleUpgrade(String planName, double amount) async {
+  Future<void> _handleUpgrade(String planName, double monthlyAmount) async {
     // Check if UPI ID is set
     if (_clientUpiId == null || _clientUpiId!.isEmpty) {
       _showUpiIdMissingDialog();
       return;
+    }
+
+    // Calculate amount based on billing cycle
+    double amount = monthlyAmount;
+    if (_billingCycle == 'YEARLY') {
+      amount = monthlyAmount * 10; // 12 months for price of 10
     }
 
     // Show payment dialog
@@ -94,6 +102,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         amount: amount,
         clientUpiId: _clientUpiId!,
         firmId: _firmId ?? 'UNKNOWN',
+        billingCycle: _billingCycle,
       ),
     );
 
@@ -187,6 +196,31 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Billing Cycle Toggle
+                  const SizedBox(height: 24),
+                  Card(
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Billing Cycle", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          SegmentedButton<String>(
+                            segments: const [
+                              ButtonSegment(value: 'MONTHLY', label: Text('Monthly')),
+                              ButtonSegment(value: 'YEARLY', label: Text('Annual (Save 16%)')),
+                            ],
+                            selected: {_billingCycle},
+                            onSelectionChanged: (Set<String> selected) {
+                              setState(() => _billingCycle = selected.first);
+                            },
                           ),
                         ],
                       ),
@@ -288,7 +322,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     ],
                   ],
                 ),
-                Text(price, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                Text(_billingCycle == 'YEARLY' ? '₹${(amount * 10).toStringAsFixed(0)} / year' : price, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
               ],
             ),
             const Divider(height: 24),
@@ -329,12 +363,14 @@ class _UPIPaymentDialog extends StatefulWidget {
   final double amount;
   final String clientUpiId;
   final String firmId;
+  final String billingCycle;
 
   const _UPIPaymentDialog({
     required this.planName,
     required this.amount,
     required this.clientUpiId,
-    required this.firmId,
+   required this.firmId,
+    required this.billingCycle,
   });
 
   @override
@@ -343,14 +379,68 @@ class _UPIPaymentDialog extends StatefulWidget {
 
 class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
   final _utrController = TextEditingController();
+  final _promoController = TextEditingController();
   int _step = 1; // 1: Confirm, 2: Enter UTR, 3: Success
   String? _transactionRef;
   bool _isProcessing = false;
+  bool _isValidatingPromo = false;
+  double? _discountAmount;
+  String? _promoValidationMessage;
 
   @override
   void dispose() {
     _utrController.dispose();
+    _promoController.dispose();
     super.dispose();
+  }
+
+  double get _finalAmount => widget.amount - (_discountAmount ?? 0);
+
+  Future<void> _validatePromoCode() async {
+    final code = _promoController.text.trim();
+    if (code.isEmpty) return;
+
+    setState(() {
+      _isValidatingPromo = true;
+      _promoValidationMessage = null;
+    });
+
+    try {
+      final result = await SubscriptionService().validatePromoCode(code, widget.planName.toUpperCase());
+      
+      if (mounted) {
+        if (result['valid'] == true) {
+          final discountType = result['discountType'];
+          final discountValue = result['discountValue'];
+          
+          double discount = 0;
+          if (discountType == 'PERCENT') {
+            discount = (widget.amount * (discountValue as num)) / 100;
+          } else if (discountType == 'FLAT') {
+            discount = (discountValue as num).toDouble();
+          }
+          
+          setState(() {
+            _discountAmount = discount;
+            _promoValidationMessage = '✓ Promo applied! Discount: ₹${discount.toStringAsFixed(0)}';
+            _isValidatingPromo = false;
+          });
+        } else {
+          setState(() {
+            _discountAmount = null;
+            _promoValidationMessage = result['error'] ?? 'Invalid promo code';
+            _isValidatingPromo = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _promoValidationMessage = 'Error validating promo code';
+          _isValidatingPromo = false;
+        });
+      }
+    }
   }
 
   Future<void> _launchUpiPayment() async {
@@ -470,6 +560,72 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
               ],
             ),
           ),
+          // Promo Code Section
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _promoController,
+                  decoration: const InputDecoration(
+                    labelText: 'Promo Code (Optional)',
+                    hintText: 'Enter code',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.local_offer),
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  enabled: !_isValidatingPromo,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _isValidatingPromo ? null : _validatePromoCode,
+                child: _isValidatingPromo 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Apply'),
+              ),
+            ],
+          ),
+          if (_promoValidationMessage != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _promoValidationMessage!,
+              style: TextStyle(
+                color: _discountAmount != null ? Colors.green : Colors.red,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+          if (_discountAmount != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Final Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '₹${widget.amount.toStringAsFixed(0)}',
+                        style: const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey),
+                      ),
+                      Text(
+                        '₹${_finalAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       );
     } else if (_step == 2) {
