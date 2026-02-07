@@ -221,8 +221,13 @@ class AuthService {
 
       final resp = await AwsApi.callDbHandler(
         method: 'PUT',
-        table: 'users',
-        data: userData,
+        table: 'ruchiserv_data',
+        data: {
+          ...userData,
+          'pk': firmId,
+          'sk': 'users#$mobile',
+          'firmId': firmId, // redundant but safe
+        },
       );
 
       if (resp['error'] != null) {
@@ -325,8 +330,11 @@ class AuthService {
       try {
         final resp = await AwsApi.callDbHandler(
           method: 'GET',
-          table: 'firms',
-          filters: {'firmid': firmId}, // Partition key is 'firmid' (lowercase)
+          table: 'ruchiserv_data',
+          filters: {
+            'pk': firmId,
+            'sk': 'firms#$firmId',
+          },
         );
         
         // Handle both object and list responses from AWS (stable commit logic)
@@ -423,10 +431,10 @@ class AuthService {
       try {
         final userResp = await AwsApi.callDbHandler(
           method: 'GET',
-          table: 'users',
+          table: 'ruchiserv_data',
           filters: {
-            'ruchiserv-firms': firmId, // Partition key is 'ruchiserv-firms'
-            'mobile': mobile.trim()    // Sort key is 'mobile'
+            'pk': firmId,
+            'sk': 'users#$mobile', // Using mobile as SK for users in unified table
           },
         );
         
@@ -680,8 +688,13 @@ class AuthService {
       
       final firmResp = await AwsApi.callDbHandler(
         method: 'PUT',
-        table: 'firms',
-        data: awsFirmData,
+        table: 'ruchiserv_data',
+        data: {
+          ...awsFirmData,
+          'pk': firmId,
+          'sk': 'firms#$firmId',
+          'firmId': firmId,
+        },
       );
       
       // 2. Create user in AWS
@@ -692,8 +705,13 @@ class AuthService {
       
       final userResp = await AwsApi.callDbHandler(
         method: 'PUT',
-        table: 'users',
-        data: awsUserData,
+        table: 'ruchiserv_data',
+        data: {
+          ...awsUserData,
+          'pk': firmId,
+          'sk': 'users#${adminData['mobile']}',
+          'firmId': firmId,
+        },
       );
       
       // 3. Sync Authorized Mobiles
@@ -709,8 +727,13 @@ class AuthService {
       
       await AwsApi.callDbHandler(
         method: 'PUT',
-        table: 'authorized_mobiles',
-        data: awsAuthData,
+        table: 'ruchiserv_data',
+        data: {
+          ...awsAuthData,
+          'pk': firmId,
+          'sk': 'authorized_mobiles#${adminData['mobile']}',
+          'firmId': firmId,
+        },
       );
 
       return true;

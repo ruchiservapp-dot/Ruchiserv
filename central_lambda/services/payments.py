@@ -52,7 +52,7 @@ class CashfreePaymentService:
         }
         return self._make_request("/orders", data=data)
 
-    def create_subscription(self, plan_id, customer_id, customer_phone, customer_email, subscription_id=None):
+    def create_subscription(self, plan_id, customer_id, customer_phone, customer_email, subscription_id=None, return_url=None):
         """Creates a subscription for recurring payments (SaaS)."""
         # Mapping to Subscriptions API (v2)
         sub_base = "https://sandbox.cashfree.com/api/v2" if self.sandbox else "https://api.cashfree.com/api/v2"
@@ -68,6 +68,9 @@ class CashfreePaymentService:
             "participantPhone": customer_phone
         }
         
+        if return_url:
+            data['returnUrl'] = return_url
+        
         url = f"{sub_base}/subscriptions"
         req = urllib.request.Request(url, method="POST")
         for k, v in self.headers.items():
@@ -79,6 +82,37 @@ class CashfreePaymentService:
                 return json.loads(resp.read().decode('utf-8'))
         except Exception as e:
             print(f"Cashfree Sub Error: {e}")
+            return {"error": str(e)}
+
+    def get_subscription_status(self, subscription_id):
+        """Checks status of a subscription."""
+        sub_base = "https://sandbox.cashfree.com/api/v2" if self.sandbox else "https://api.cashfree.com/api/v2"
+        url = f"{sub_base}/subscriptions/{subscription_id}"
+        
+        req = urllib.request.Request(url, method="GET")
+        for k, v in self.headers.items():
+            req.add_header(k, v)
+            
+        try:
+            with urllib.request.urlopen(req) as resp:
+                return json.loads(resp.read().decode('utf-8'))
+        except Exception as e:
+            print(f"Cashfree Sub Status Error: {e}")
+            return {"error": str(e)}
+
+    def get_order_status(self, order_id):
+        """Checks status of a one-time order."""
+        # Orders API (v2)
+        url = f"{self.base_url}/orders/{order_id}"
+        req = urllib.request.Request(url, method="GET")
+        for k, v in self.headers.items():
+            req.add_header(k, v)
+            
+        try:
+            with urllib.request.urlopen(req) as resp:
+                return json.loads(resp.read().decode('utf-8'))
+        except Exception as e:
+            print(f"Cashfree Order Status Error: {e}")
             return {"error": str(e)}
 
     def update_mandate(self, subscription_id):

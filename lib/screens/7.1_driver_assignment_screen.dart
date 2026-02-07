@@ -1,6 +1,5 @@
-// MODULE: DRIVER ASSIGNMENT SCREEN (v34)
-// Features: List pending dispatch assignments, accept/reject functionality
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
@@ -19,6 +18,7 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
   bool _isLoading = true;
   int _driverId = 0;
   List<Map<String, dynamic>> _assignments = [];
+  StreamSubscription? _syncSubscription;
 
   @override
   void initState() {
@@ -26,6 +26,14 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
     print("📍 DriverAssignmentScreen: initState start");
     _loadAssignments();
     print("📍 DriverAssignmentScreen: initState end");
+
+    // Phase 3: Real-time UI updates via Sync Stream
+    _syncSubscription = DatabaseHelper().syncStreamController.stream.listen((event) {
+      if (['dispatches', 'orders'].contains(event.table)) {
+        print('⚡ DriverAssignmentScreen: Real-time update detected for ${event.table}. Refreshing...');
+        _loadAssignments();
+      }
+    });
   }
 
   Future<void> _loadAssignments() async {
@@ -102,11 +110,10 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
     );
     
     if (confirmed == true) {
-      final db = await DatabaseHelper().database;
-      await db.update('dispatches', {
+      await DatabaseHelper().updateDispatch(dispatch['id'], {
         'assignmentStatus': 'ACCEPTED',
         'acceptedAt': DateTime.now().toIso8601String(),
-      }, where: 'id = ?', whereArgs: [dispatch['id']]);
+      });
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Assignment accepted!'), backgroundColor: Colors.green),
@@ -149,13 +156,12 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
     );
     
     if (confirmed == true) {
-      final db = await DatabaseHelper().database;
-      await db.update('dispatches', {
+      await DatabaseHelper().updateDispatch(dispatch['id'], {
         'assignmentStatus': 'REJECTED',
         'rejectedAt': DateTime.now().toIso8601String(),
         'rejectionReason': reasonController.text,
         'driverId': null, // Unassign driver so admin can reassign
-      }, where: 'id = ?', whereArgs: [dispatch['id']]);
+      });
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Assignment rejected'), backgroundColor: Colors.orange),
@@ -324,5 +330,11 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _syncSubscription?.cancel();
+    super.dispose();
   }
 }

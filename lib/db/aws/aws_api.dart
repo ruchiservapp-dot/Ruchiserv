@@ -87,6 +87,7 @@ class AwsApi {
     required String table,
     Map<String, dynamic>? data,
     Map<String, dynamic>? filters,
+    String? firmId, // NEW: Required for authenticated requests
   }) async {
     return post(
       path: '/dbhandler',
@@ -95,6 +96,7 @@ class AwsApi {
         'table': table,
         'data': data,
         'filters': filters,
+        if (firmId != null) 'firmId': firmId, // NEW: Include in body for Lambda auth
       },
     );
   }

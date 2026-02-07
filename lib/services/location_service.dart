@@ -92,23 +92,24 @@ class LocationService {
       final now = DateTime.now().toIso8601String();
 
       // Update local DB
-      final db = await DatabaseHelper().database;
-      await db.update('dispatches', {
+      await DatabaseHelper().updateDispatch(_activeDispatchId!, {
         'driverLat': lat,
         'driverLng': lng,
         'lastLocationUpdate': now,
-      }, where: 'id = ?', whereArgs: [_activeDispatchId]);
+      });
 
-      // Sync to AWS for real-time tracking
+      // Sync to AWS via SQS (Phase 2 compliance)
       if (await ConnectivityService().isOnline()) {
-        await AwsApi.callDbHandler(
-          method: 'PUT',
-          table: 'dispatch_locations',
-          data: {
-            'dispatchId': _activeDispatchId,
-            'lat': lat,
-            'lng': lng,
-            'timestamp': now,
+        await AwsApi.pushToQueue(
+          payload: {
+            'method': 'PUT',
+            'table': 'dispatch_locations',
+            'data': {
+              'dispatchId': _activeDispatchId,
+              'lat': lat,
+              'lng': lng,
+              'timestamp': now,
+            },
           },
         );
       }

@@ -88,19 +88,61 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
   Future<void> _handlePaymentSuccess(String orderId, String? paymentId) async {
     if (!mounted) return;
     
+    // Check if this is a Web/Desktop flow start
+    if (paymentId == "started_web") {
+      setState(() => _isLoading = false);
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text("Payment Started"),
+          content: Text("A payment page has been opened in your browser.\n\nPlease complete the payment and then click 'Verify Payment' below."),
+          actions: [
+             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _verifyAndActivate(orderId); // orderId here is actually subscriptionId passed from service
+              },
+              child: const Text("Verify Payment"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Mobile SDK Flow (Immediate Success)
+    await _verifyAndActivate(orderId);
+  }
+
+  Future<void> _verifyAndActivate(String refId) async {
+    setState(() => _isLoading = true);
+    
+    // Verify with Backend
+    final isValid = await _paymentService.verifySubscription(refId);
+    
+    if (!isValid) {
+      _handlePaymentError('VERIFY_FAILED', 'Payment verification failed. Please check if money was deducted.');
+      return;
+    }
+
     try {
       final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'DEFAULT';
       
-      // Calculate new dates
+      // Fetch updated status from DB (backend already updated it)
+      // Or just calculate locally for UI and trust backend sync later
+      
+      // Calculate new date for UI display
       String currentEndStr = DateTime.now().toIso8601String();
-      final firmDetails = await DatabaseHelper().getFirmDetails(firmId);
-      if (firmDetails != null && firmDetails['subscriptionEnd'] != null) {
-        currentEndStr = firmDetails['subscriptionEnd'];
+      if (_currentExpiry != null) {
+        currentEndStr = _currentExpiry!;
       }
       
       DateTime currentEnd = DateTime.tryParse(currentEndStr) ?? DateTime.now();
-      // If expired, start from now
       if (currentEnd.isBefore(DateTime.now())) {
         currentEnd = DateTime.now();
       }
@@ -109,32 +151,7 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
         currentEndDate: currentEnd,
         planType: _selectedPlan
       );
-      
       final newEndStr = DateFormat('yyyy-MM-dd').format(newEnd);
-      final txnRef = paymentId ?? orderId;
-      
-      // Update DB - Subscription
-      await DatabaseHelper().updateFirmSubscription(
-        firmId: firmId,
-        plan: _selectedPlan,
-        endDate: newEndStr,
-        status: 'Active',
-        txnId: txnRef
-      );
-      
-      // Log Transaction (Expense for Firm)
-      await DatabaseHelper().insertTransaction({
-        'firmId': firmId,
-        'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-        'type': 'EXPENSE',
-        'amount': _plans[_selectedPlan]!['price'],
-        'category': 'Subscription',
-        'description': 'Paid for $_selectedPlan Plan (Txn: $txnRef)',
-        'mode': 'UPI',
-        'paymentMode': 'Cashfree',
-        'relatedEntityType': 'PLATFORM',
-        'relatedEntityId': null,
-      });
 
       // Update Local Preferences for immediate Auth check success
       await sp.setString('subscription_expiry', newEndStr);
@@ -162,7 +179,7 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-      _handlePaymentError('DB_ERROR', 'Database update failed: $e');
+      _handlePaymentError('UI_ERROR', 'Error updating UI: $e');
     }
   }
 

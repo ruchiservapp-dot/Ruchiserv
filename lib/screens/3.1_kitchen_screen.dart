@@ -31,6 +31,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
 
   final List<DateTime> _dateList = [];
   Timer? _refreshTimer; // Auto-refresh for TV displays
+  StreamSubscription? _syncSubscription; 
   final ScrollController _dateScrollController = ScrollController(); // Date scroller controller
 
   @override
@@ -41,6 +42,14 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
     _loadData();
     // Auto-refresh every 30 seconds for TV/shared displays
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadData());
+    
+    // Phase 3: Real-time UI updates via Sync Stream
+    _syncSubscription = DatabaseHelper().syncStreamController.stream.listen((event) {
+      if (['orders', 'dishes'].contains(event.table)) {
+        print('⚡ KitchenScreen: Real-time update detected for ${event.table}. Refreshing...');
+        _loadData();
+      }
+    });
     
     // Scroll to today's position after build (today is at index 7)
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -57,6 +66,7 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _syncSubscription?.cancel();
     _tabController.dispose();
     _dateScrollController.dispose();
     super.dispose();
@@ -134,34 +144,15 @@ class _KitchenScreenState extends State<KitchenScreen> with SingleTickerProvider
   }
 
   Future<void> _updateDish(int id, Map<String, dynamic> updates) async {
-    final db = await DatabaseHelper().database;
-    
     // Auto-set readyAt timestamp when marking as COMPLETED
     if (updates['productionStatus'] == 'COMPLETED') {
       updates['readyAt'] = DateTime.now().toIso8601String();
     }
     
-    await db.update('dishes', updates, where: 'id = ?', whereArgs: [id]);
+    await DatabaseHelper().updateDish(id, updates);
     
-    // AWS Sync: Push dish update to cloud
-    _syncDishToAws(id, updates);
-    
+    // UI refresh
     _loadData();
-  }
-
-  /// Sync dish update to AWS (non-blocking)
-  Future<void> _syncDishToAws(int dishId, Map<String, dynamic> updates) async {
-    try {
-      if (!await ConnectivityService().isOnline()) return;
-      await AwsApi.callDbHandler(
-        method: 'PUT',
-        table: 'dishes',
-        data: {...updates, 'id': dishId},
-        filters: {'id': dishId},
-      );
-    } catch (e) {
-      print('🔴 [AWS] Dish sync error: $e');
-    }
   }
 
   Map<String, List<Map<String, dynamic>>> _groupOrdersByMeal() {

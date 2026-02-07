@@ -16,6 +16,10 @@ import '../config/app_config.dart';
 import '../db/aws/aws_api.dart';
 
 /// Cashfree Payment Service for handling one-time and subscription payments
+import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+/// Cashfree Payment Service for handling one-time and subscription payments
 class CashfreePaymentService {
   final CFPaymentGatewayService _paymentGateway = CFPaymentGatewayService();
   
@@ -27,7 +31,9 @@ class CashfreePaymentService {
     required this.onSuccess,
     required this.onFailure,
   }) {
-    _setupCallbacks();
+    if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
+      _setupCallbacks();
+    }
   }
 
   void _setupCallbacks() {
@@ -168,6 +174,7 @@ class CashfreePaymentService {
     required String customerEmail,
     required String customerPhone,
     required String customerName,
+    String? returnUrl,
   }) async {
     try {
       final response = await AwsApi.post(
@@ -179,6 +186,7 @@ class CashfreePaymentService {
           'customerEmail': customerEmail,
           'customerPhone': customerPhone,
           'customerName': customerName,
+          'return_url': returnUrl,
         },
       );
       
@@ -187,12 +195,31 @@ class CashfreePaymentService {
           'subscription_id': (response['subscriptionId'] ?? response['subscription_id'] ?? '').toString(),
           'order_id': (response['order_id'] ?? '').toString(),
           'payment_session_id': (response['payment_session_id'] ?? '').toString(),
+          'auth_link': (response['authLink'] ?? response['auth_link'] ?? '').toString(),
         };
       }
       return null;
     } catch (e) {
       debugPrint('Error creating subscription: $e');
       return null;
+    }
+  }
+
+  /// Verify Subscription Status from Backend
+  Future<bool> verifySubscription(String subscriptionId) async {
+    try {
+      final response = await AwsApi.post(
+        path: 'dbhandler',
+        body: {
+          'payment_type': 'VERIFY_PAYMENT',
+          'subscription_id': subscriptionId,
+        },
+      );
+      
+      return response['valid'] == true;
+    } catch (e) {
+      debugPrint('Error verifying subscription: $e');
+      return false;
     }
   }
 
@@ -204,12 +231,19 @@ class CashfreePaymentService {
     required String customerPhone,
     required String customerName,
   }) async {
+    // For Web/Desktop, we need a return URL
+    String? returnUrl;
+    if (kIsWeb) {
+      returnUrl = Uri.base.toString(); // Current URL
+    }
+
     final sub = await createSubscription(
       planName: planName,
       amount: amount,
       customerEmail: customerEmail,
       customerPhone: customerPhone,
       customerName: customerName,
+      returnUrl: returnUrl,
     );
 
     if (sub == null) {
@@ -217,12 +251,32 @@ class CashfreePaymentService {
       return;
     }
 
-    await openCheckout(
-      orderId: sub['order_id']!,
-      paymentSessionId: sub['payment_session_id']!,
-      amount: amount,
-      description: 'Subscription: $planName Plan',
-    );
+    // CHECK PLATFORM
+    if (kIsWeb || (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
+        // WEB / DESKTOP FLOW
+        final authLink = sub['auth_link'];
+        if (authLink != null && authLink.isNotEmpty) {
+           final uri = Uri.parse(authLink);
+           if (await canLaunchUrl(uri)) {
+             await launchUrl(uri, mode: LaunchMode.externalApplication);
+             // Notify the caller that they should check for status manually (or via polling)
+             // We reuse orderId to pass the subID back
+             onSuccess(sub['subscription_id']!, "started_web"); 
+           } else {
+             onFailure('LINK_ERROR', 'Could not launch payment link');
+           }
+        } else {
+           onFailure('LINK_ERROR', 'No payment link received from backend');
+        }
+    } else {
+      // MOBILE FLOW (SDK)
+      await openCheckout(
+        orderId: sub['order_id']!, // Note: SDK usually needs Payment Session ID, not just Order ID. But `openCheckout` uses `paymentSessionId` arg.
+        paymentSessionId: sub['payment_session_id']!,
+        amount: amount,
+        description: 'Subscription: $planName Plan',
+      );
+    }
   }
   
   /// Trigger a mandate update session
@@ -265,3 +319,4 @@ class CashfreePaymentService {
     return base.add(const Duration(days: 30));
   }
 }
+

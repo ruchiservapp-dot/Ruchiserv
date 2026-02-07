@@ -80,40 +80,48 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
         final returnedQty = _returnedQty[id] ?? 0;
         final loadedQty = (item['loadedQty'] as int?) ?? 0;
         
-        await db.update('dispatch_items', {
+        await DatabaseHelper().updateDispatchItem(id, {
           'returnedQty': status == 'RETURNED' ? returnedQty : 0,
           'status': status,
           'unloadedQty': status == 'RETURNED' ? returnedQty : 0,
-        }, where: 'id = ?', whereArgs: [id]);
+        });
         
         // Update utensil stock (return to available)
         if (status == 'RETURNED') {
-          await db.rawUpdate('''
-            UPDATE utensils SET availableStock = availableStock + ? 
-            WHERE name = ?
-          ''', [returnedQty, item['itemName']]);
+          // Note: Since rawUpdate bypasses sync, we fetch current stock, update locally, and sync.
+          // For simplicity, we use updateUtensilByName which we added to DatabaseHelper.
+          final res = await DatabaseHelper().database.then((db) => db.query('utensils', where: 'name = ?', whereArgs: [item['itemName']]));
+          if (res.isNotEmpty) {
+             final current = Map<String, dynamic>.from(res.first);
+             await DatabaseHelper().updateUtensilByName(item['itemName'], {
+               'availableStock': (current['availableStock'] ?? 0) + returnedQty,
+             });
+          }
         }
         
         // For damaged/missing, record it (stock reduced)
         if (status == 'DAMAGED' || status == 'MISSING') {
-          await db.rawUpdate('''
-            UPDATE utensils SET totalStock = totalStock - ? 
-            WHERE name = ?
-          ''', [loadedQty - returnedQty, item['itemName']]);
+          final res = await DatabaseHelper().database.then((db) => db.query('utensils', where: 'name = ?', whereArgs: [item['itemName']]));
+          if (res.isNotEmpty) {
+             final current = Map<String, dynamic>.from(res.first);
+             await DatabaseHelper().updateUtensilByName(item['itemName'], {
+               'totalStock': (current['totalStock'] ?? 0) - (loadedQty - returnedQty),
+             });
+          }
         }
       }
       
       // Update dispatch as completed
-      await db.update('dispatches', {
+      await DatabaseHelper().updateDispatch(widget.dispatch['id'], {
         'dispatchStatus': 'COMPLETED',
         'updatedAt': now,
-      }, where: 'id = ?', whereArgs: [widget.dispatch['id']]);
+      });
       
       // Update order
-      await db.update('orders', {
+      await DatabaseHelper().updateOrderFields(widget.dispatch['orderId'], {
         'dispatchStatus': 'COMPLETED',
         'returnedAt': now,
-      }, where: 'id = ?', whereArgs: [widget.dispatch['orderId']]);
+      });
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Dispatch completed!'), backgroundColor: Colors.green),

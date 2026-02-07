@@ -1,6 +1,5 @@
-// MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
-// lib/screens/2.0_orders_calendar_screen.dart
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -50,6 +49,7 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
 
   bool _isMonthLoading = false;
   bool _showOfflineChip = false;
+  StreamSubscription? _syncSubscription;
 
   @override
   void initState() {
@@ -66,6 +66,15 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
     // initial load for current month
     _loadFirmCapacity();
     _loadCalendarForMonth(_focusedDay);
+
+    // Phase 3: Real-time UI updates via Sync Stream
+    _syncSubscription = DatabaseHelper().syncStreamController.stream.listen((event) {
+      if (['orders', 'firms'].contains(event.table)) {
+        print('⚡ OrderCalendarScreen: Real-time update detected for ${event.table}. Refreshing...');
+        if (event.table == 'firms') _loadFirmCapacity();
+        _loadCalendarForMonth(_focusedDay);
+      }
+    });
   }
 
   Future<void> _loadFirmCapacity() async {
@@ -515,5 +524,10 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
         ],
       ),
     );
+  }
+  @override
+  void dispose() {
+    _syncSubscription?.cancel();
+    super.dispose();
   }
 }

@@ -51,6 +51,11 @@ class AppSchema {
         'geoFenceRadius': 'INTEGER DEFAULT 100',
         'otMultiplier': 'REAL DEFAULT 1.5',
         'client_upi_id': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -72,6 +77,11 @@ class AppSchema {
         'lastLogin': 'TEXT',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -87,6 +97,11 @@ class AppSchema {
         'isActive': 'INTEGER DEFAULT 1', // Required for isMobileAuthorized check
         'addedBy': 'TEXT',
         'addedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['UNIQUE(firmId, mobile)'],
     ),
@@ -118,6 +133,11 @@ class AppSchema {
           'photoUrl': 'TEXT',
           'createdAt': 'TEXT',
           'updatedAt': 'TEXT',
+          'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+          'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+          'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+          'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+          'synced_at': 'TEXT', // v42: Last successful sync timestamp
         }
     ),
 
@@ -140,6 +160,11 @@ class AppSchema {
           'lockedAt': 'TEXT',
           'mrpRunId': 'INTEGER',
           'isLocked': 'INTEGER DEFAULT 0',
+          'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+          'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+          'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+          'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+          'synced_at': 'TEXT', // v42: Last successful sync timestamp
         },
         constraints: ['UNIQUE(staffId, date)']
     ),
@@ -158,6 +183,11 @@ class AppSchema {
         'notes': 'TEXT',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -220,6 +250,11 @@ class AppSchema {
         'counterSetupRate': 'REAL DEFAULT 0',
         'serviceCost': 'REAL DEFAULT 0',
         'counterSetupCost': 'REAL DEFAULT 0',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -244,6 +279,11 @@ class AppSchema {
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
         'readyAt': 'TEXT', // v32: When production completed
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -264,6 +304,11 @@ class AppSchema {
         'imageUrl': 'TEXT',
         'createdBy': 'TEXT',
         'createdAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -282,7 +327,12 @@ class AppSchema {
         'createdAt': 'TEXT', // v17
         'updatedAt': 'TEXT', // v17
         'isModified': 'INTEGER DEFAULT 0', // v26
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
         'isReturnable': 'INTEGER DEFAULT 1', // Added
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['UNIQUE(firmId, name)'],
     ),
@@ -300,6 +350,11 @@ class AppSchema {
         'dispatchedAt': 'TEXT',
         'returnedAt': 'TEXT',
         'status': 'TEXT', // DISPATCHED, RETURNED
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
     
@@ -320,6 +375,11 @@ class AppSchema {
         'isModified': 'INTEGER DEFAULT 0', // v26
         'createdAt': 'TEXT', // Added
         'updatedAt': 'TEXT', // Added
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['UNIQUE(firmId, vehicleNumber)'],
     ),
@@ -343,6 +403,11 @@ class AppSchema {
         'isModified': 'INTEGER DEFAULT 0', // v22
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -363,6 +428,11 @@ class AppSchema {
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
         'readyAt': 'TEXT', // v24 (was added to 'dishes' in migration, assuming dish_master is the target)
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -378,6 +448,11 @@ class AppSchema {
         'quantity_per_base_pax': 'REAL NOT NULL', // matches actual usage
         'unit_override': 'TEXT NOT NULL', // matches actual usage
         'isModified': 'INTEGER DEFAULT 0', // v22
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
         // 'notes': 'TEXT', // BOM table had notes, checking usage...
         // 'createdAt': 'TEXT',
         // 'updatedAt': 'TEXT',
@@ -401,6 +476,11 @@ class AppSchema {
         'createdBy': 'TEXT',
         'createdAt': 'TEXT',
         'completedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -414,6 +494,11 @@ class AppSchema {
         'pax': 'INTEGER NOT NULL',
         'isSubcontracted': 'INTEGER DEFAULT 0',
         'subcontractorId': 'INTEGER',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: [
         'UNIQUE(mrpRunId, orderId)',
@@ -441,6 +526,11 @@ class AppSchema {
         // v35: Audit/debugging columns
         'originalQty': 'REAL', // Before normalization
         'roundedQty': 'REAL', // After rounding (for audit)
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -465,6 +555,11 @@ class AppSchema {
         'isActive': 'INTEGER DEFAULT 1',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
     
@@ -484,6 +579,11 @@ class AppSchema {
         'isActive': 'INTEGER DEFAULT 1',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -507,6 +607,11 @@ class AppSchema {
         'deliveredAt': 'TEXT',
         'notes': 'TEXT',
         'createdAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -525,6 +630,11 @@ class AppSchema {
         'receivedQty': 'REAL DEFAULT 0',
         'status': 'TEXT DEFAULT "PENDING"',
         'notes': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['FOREIGN KEY(poId) REFERENCES purchase_orders(id)'],
     ),
@@ -579,6 +689,11 @@ class AppSchema {
         'ratePerKm': 'REAL DEFAULT 0',
         'isPaid': 'INTEGER DEFAULT 0',
         'paidAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
 
@@ -610,6 +725,11 @@ class AppSchema {
         'termsAndConditions': 'TEXT',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['UNIQUE(firmId, invoiceNumber)'],
     ),
@@ -631,6 +751,11 @@ class AppSchema {
         'sgst': 'REAL DEFAULT 0',
         'igst': 'REAL DEFAULT 0',
         'totalAmount': 'REAL DEFAULT 0', // amount + taxes
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['FOREIGN KEY(invoiceId) REFERENCES invoices(id) ON DELETE CASCADE'],
     ),
@@ -655,6 +780,11 @@ class AppSchema {
         'notes': 'TEXT',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['UNIQUE(staffId, monthYear)'],
     ),
@@ -668,19 +798,27 @@ class AppSchema {
         'rateType': 'TEXT NOT NULL', // STAFF, COUNTER
         'rate': 'REAL DEFAULT 0',
         'updatedAt': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['UNIQUE(firmId, rateType)'],
     ),
 
-    // 29. Pending Sync (Offline Sync Queue)
+    // 29. Pending Sync (Offline Sync Queue) - v42: Enhanced for AWS-first
     TableSchema(
       tableName: 'pending_sync',
       columns: {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'table_name': 'TEXT NOT NULL',
+        'record_id': 'INTEGER', // v42: Link to actual record for status updates
         'data': 'TEXT', // JSON data
         'action': 'TEXT', // INSERT, UPDATE, DELETE
         'timestamp': 'TEXT',
+        'retry_count': 'INTEGER DEFAULT 0', // v42: Track retry attempts
+        'last_error': 'TEXT', // v42: Store last error for debugging
         },
     ),
 
@@ -698,6 +836,11 @@ class AppSchema {
         'unloadedQty': 'INTEGER DEFAULT 0',
         'status': 'TEXT DEFAULT "PENDING"', // PENDING, LOADED, RETURNED, UNLOADED
         'notes': 'TEXT',
+        'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+        'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+        'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+        'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+        'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['FOREIGN KEY(dispatchId) REFERENCES dispatches(id)'],
     ),

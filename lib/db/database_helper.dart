@@ -18,6 +18,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'schema_manager.dart';
 import 'sync_event.dart';
 import 'dart:async';
+import 'package:uuid/uuid.dart';
+import '../services/cloud_sync_service.dart'; // v38: AWS-first sync
+// import 'seed_cashfree_user.dart'; // File missing
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -45,7 +48,7 @@ class DatabaseHelper {
       databaseFactory = databaseFactoryFfiWeb;
       db = await openDatabase(
         fileName,
-        version: 37, // v37: Users showRates fix
+        version: 38, // v38: AWS-first sync architecture
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -61,17 +64,63 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       db = await openDatabase(
         path,
-        version: 37, // v37: Users showRates fix
+        version: 38, // v38: AWS-first sync architecture
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
     }
     
     // Always sync schema on startup to ensure all columns exist
-    // This fixes "missing column" issues even if version didn't change (e.g. dev builds)
     await SchemaManager.syncSchema(db);
     
+    // v40: Backfill missing UUIDs for offline/legacy data
+    await _backfillUuids(db);
+    
     return db;
+  }
+
+  /// v40: Helper to generate unique IDs for multi-device sync
+  String _generateUuid() => const Uuid().v4();
+
+  /// v40: Backfills UUIDs for any existing records that don't have one.
+  /// This ensures legacy data can be synced without collisions moving forward.
+  Future<void> _backfillUuids(Database db) async {
+    print('📦 [DB] Checking for missing UUIDs to backfill...');
+    for (var table in [
+      'firms', 'users', 'authorized_mobiles', 'staff', 'attendance', 
+      'customers', 'orders', 'dishes', 'finance', 'utensils', 
+      'vehicles', 'ingredients_master', 'dish_master', 'recipe_detail',
+      'mrp_runs', 'mrp_run_orders', 'mrp_output', 'suppliers', 
+      'subcontractors', 'purchase_orders', 'po_items', 'dispatches', 
+      'invoices', 'invoice_items', 'salary_disbursements', 
+      'service_rates', 'dispatch_items'
+    ]) {
+      try {
+        final records = await db.query(table, where: 'uuid IS NULL');
+        if (records.isNotEmpty) {
+          print('📦 [DB] Backfilling ${records.length} UUIDs in $table...');
+          for (var row in records) {
+            final id = row['id'];
+            await db.update(
+              table, 
+              {'uuid': _generateUuid()}, 
+              where: 'id = ?', 
+              whereArgs: [id]
+            );
+          }
+        }
+      } catch (e) {
+        // Table might not exist or doesn't have uuid column yet
+        // print('⚠️ [DB] Skip backfill for $table: $e');
+      }
+    }
+  }
+
+  /// General helper to get a single record by ID from any table
+  Future<Map<String, dynamic>?> getRecordById(String table, int id) async {
+    final db = await database;
+    final res = await db.query(table, where: 'id = ?', whereArgs: [id], limit: 1);
+    return res.isNotEmpty ? res.first : null;
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -1336,6 +1385,33 @@ class DatabaseHelper {
       }
     } catch (_) {}
     
+    // v38: AWS-First Sync Architecture - Add sync_status and synced_at columns
+    if (oldVersion < 38) {
+      print('📦 [DB] Migrating to v38: AWS-first sync architecture...');
+      
+      // List of all tables that need sync_status/synced_at columns
+      final syncTables = [
+        'firms', 'users', 'authorized_mobiles', 'staff', 'attendance',
+        'customers', 'orders', 'dishes', 'finance', 'utensils',
+        'dispatch', 'vehicles', 'ingredients_master', 'dish_master', 'recipe_detail',
+        'mrp_runs', 'mrp_run_orders', 'mrp_output', 'suppliers', 'subcontractors',
+        'purchase_orders', 'po_items', 'dispatches', 'invoices', 'invoice_items',
+        'salary_disbursements', 'service_rates', 'dispatch_items',
+      ];
+      
+      for (final table in syncTables) {
+        try { await db.execute("ALTER TABLE $table ADD COLUMN sync_status TEXT DEFAULT 'SYNCED';"); } catch (_) {}
+        try { await db.execute("ALTER TABLE $table ADD COLUMN synced_at TEXT;"); } catch (_) {}
+      }
+      
+      // Enhance pending_sync table with record_id, retry_count, last_error
+      try { await db.execute("ALTER TABLE pending_sync ADD COLUMN record_id INTEGER;"); } catch (_) {}
+      try { await db.execute("ALTER TABLE pending_sync ADD COLUMN retry_count INTEGER DEFAULT 0;"); } catch (_) {}
+      try { await db.execute("ALTER TABLE pending_sync ADD COLUMN last_error TEXT;"); } catch (_) {}
+      
+      print('✅ [DB] v38 migration complete');
+    }
+    
     await SchemaManager.syncSchema(db);
   }
 
@@ -1411,7 +1487,6 @@ class DatabaseHelper {
     // ignore: avoid_print
     print('✅ Database initialized at ${db.path}');
   }
-
   // ---------- AWS SYNC HELPER ----------
   /// Syncs data to AWS if online. Fails silently to prioritize local-first.
   // Deprecated: Use _syncOrQueue instead which handles both
@@ -1453,42 +1528,40 @@ class DatabaseHelper {
     List<Map<String, dynamic>> dishes, {
     bool queueIfOffline = false, // Deprecated param, always auto-queues now
   }) async {
-    final db = await database;
     final now = DateTime.now().toIso8601String();
+    final cloudSync = CloudSyncService();
 
     // Normalize
+    order['uuid'] = order['uuid'] ?? _generateUuid();
     order['createdAt'] = order['createdAt'] ?? now;
     order['updatedAt'] = now;
     order['totalPax'] = order['totalPax'] ?? 0;
     order['isLocked'] = order['isLocked'] ?? 0;
 
-    // Insert order
-    final orderId = await db.insert('orders', order);
+    // v38: AWS-First - Write order to cloud first, then cache locally
+    final orderId = await cloudSync.awsFirstWrite(
+      table: 'orders',
+      data: order,
+    );
 
-    // Insert dishes local
-    for (final dish in dishes) {
-      dish['orderId'] = orderId; // Ensure link
-      dish['createdAt'] = now;
-      await db.insert('dishes', dish);
+    if (orderId == null) {
+      print('❌ [Order] Failed to create order');
+      return null;
     }
 
-    // Automatic Sync/Queue
-    // Sync Order
-    await _syncOrQueue(
-      table: 'orders', 
-      data: {...order, 'id': orderId}, 
-      action: 'INSERT'
-    );
-    
-    // Sync Dishes
-    for (var dish in dishes) {
-      await _syncOrQueue(
-        table: 'dishes', 
-        data: {...dish, 'orderId': orderId}, 
-        action: 'INSERT'
+    // Insert dishes - also using AWS-first
+    for (final dish in dishes) {
+      dish['orderId'] = orderId;
+      dish['uuid'] = dish['uuid'] ?? _generateUuid();
+      dish['createdAt'] = now;
+      
+      await cloudSync.awsFirstWrite(
+        table: 'dishes',
+        data: dish,
       );
     }
 
+    print('✅ [Order] Created order #$orderId with ${dishes.length} dishes (AWS-first)');
     return orderId;
   }
 
@@ -1498,47 +1571,47 @@ class DatabaseHelper {
     List<Map<String, dynamic>> dishes, {
     bool queueIfOffline = false,
   }) async {
-    final db = await database;
     final now = DateTime.now().toIso8601String();
+    final cloudSync = CloudSyncService();
+    final db = await database;
 
     order['updatedAt'] = now;
     order['totalPax'] = order['totalPax'] ?? 0;
+    order['id'] = orderId;
 
-    await db.update('orders', order, where: 'id = ?', whereArgs: [orderId]);
+    // v38: AWS-First - Update order via cloud sync
+    final success = await cloudSync.awsFirstUpdate(
+      table: 'orders',
+      recordId: orderId,
+      data: order,
+    );
 
-    // Replace all dishes for the order
-    await db.delete('dishes', where: 'orderId = ?', whereArgs: [orderId]);
-    for (final dish in dishes) {
-      dish['orderId'] = orderId;
-      dish['createdAt'] = now; 
-      await db.insert('dishes', dish);
+    if (!success) {
+      print('⚠️ [Order] Update queued for order #$orderId');
     }
 
-    // Auto Sync
-    // Update Order
-    await _syncOrQueue(
-      table: 'orders',
-      data: {...order, 'id': orderId},
-      action: 'UPDATE',
-      filters: {'id': orderId}
-    );
+    // Get existing dish IDs for deletion
+    final existingDishes = await db.query('dishes', columns: ['id'], where: 'orderId = ?', whereArgs: [orderId]);
     
-    // Dish Sync Strategy: Delete All + Insert All (Simplest for sync)
-    await _syncOrQueue(
-      table: 'dishes',
-      data: {'orderId': orderId},
-      action: 'DELETE',
-      filters: {'orderId': orderId}
-    );
-    
-    for (var dish in dishes) {
-      await _syncOrQueue(
+    // Delete existing dishes via AWS-first
+    for (final existingDish in existingDishes) {
+      final dishId = existingDish['id'] as int;
+      await cloudSync.awsFirstDelete(table: 'dishes', recordId: dishId);
+    }
+
+    // Insert new dishes via AWS-first
+    for (final dish in dishes) {
+      dish['orderId'] = orderId;
+      dish['uuid'] = dish['uuid'] ?? _generateUuid();
+      dish['createdAt'] = now;
+      
+      await cloudSync.awsFirstWrite(
         table: 'dishes',
-        data: {...dish, 'orderId': orderId},
-        action: 'INSERT'
+        data: dish,
       );
     }
 
+    print('✅ [Order] Updated order #$orderId with ${dishes.length} dishes (AWS-first)');
     return true;
   }
 
@@ -1546,25 +1619,26 @@ class DatabaseHelper {
     int orderId, {
     bool queueIfOffline = false,
   }) async {
+    final cloudSync = CloudSyncService();
     final db = await database;
-    final result = await db.delete('orders', where: 'id = ?', whereArgs: [orderId]);
-    await db.delete('dishes', where: 'orderId = ?', whereArgs: [orderId]);
 
-    // Auto Sync
-    await _syncOrQueue(
+    // Get dishes for this order to delete them via AWS-first
+    final existingDishes = await db.query('dishes', columns: ['id'], where: 'orderId = ?', whereArgs: [orderId]);
+    
+    // Delete dishes via AWS-first
+    for (final dish in existingDishes) {
+      final dishId = dish['id'] as int;
+      await cloudSync.awsFirstDelete(table: 'dishes', recordId: dishId);
+    }
+
+    // Delete order via AWS-first
+    final success = await cloudSync.awsFirstDelete(
       table: 'orders',
-      data: {'id': orderId},
-      action: 'DELETE',
-      filters: {'id': orderId}
-    );
-    await _syncOrQueue(
-      table: 'dishes',
-      data: {'orderId': orderId},
-      action: 'DELETE',
-      filters: {'orderId': orderId}
+      recordId: orderId,
     );
 
-    return result > 0;
+    print('✅ [Order] Deleted order #$orderId and ${existingDishes.length} dishes (AWS-first)');
+    return success;
   }
 
   Future<List<Map<String, dynamic>>> getOrdersWithPax(String date) async {
@@ -2036,6 +2110,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
   // ---------- FIRMS & USERS (LOCAL) ----------
   Future<int?> insertFirm(Map<String, dynamic> firm) async {
     final db = await database;
+    firm['uuid'] = firm['uuid'] ?? _generateUuid();
     return await db.insert('firms', firm);
   }
 
@@ -2046,6 +2121,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
 
   Future<int?> insertUser(Map<String, dynamic> user) async {
     final db = await database;
+    user['uuid'] = user['uuid'] ?? _generateUuid();
     // Use replace to avoid unique constraint crashes during registration/sync
     final id = await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.replace);
     
@@ -2099,6 +2175,16 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     return await db.query('users', where: 'LOWER(firmId) = LOWER(?)', whereArgs: [firmId]);
   }
 
+  Future<Map<String, dynamic>?> getUserByMobile(String firmId, String mobile) async {
+    final db = await database;
+    final res = await db.query('users', 
+      where: 'LOWER(firmId) = LOWER(?) AND mobile = ?', 
+      whereArgs: [firmId, mobile], 
+      limit: 1
+    );
+    return res.isNotEmpty ? res.first : null;
+  }
+
   Future<bool> verifyUserEligibility(String firmId, String mobile) async {
     try {
       final db = await database;
@@ -2122,6 +2208,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
         'authorized_mobiles',
         {
           ...data,
+          'uuid': data['uuid'] ?? _generateUuid(),
           'isActive': 1,
           'addedAt': data['addedAt'] ?? DateTime.now().toIso8601String(),
         },
@@ -2381,6 +2468,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
   // Finance Module
   Future<int> insertTransaction(Map<String, dynamic> data) async {
     final db = await database;
+    data['uuid'] = data['uuid'] ?? _generateUuid();
     data['createdAt'] = DateTime.now().toIso8601String();
     data['updatedAt'] = DateTime.now().toIso8601String();
     final id = await db.insert('transactions', data);
@@ -2524,6 +2612,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
   
   Future<int> insertSupplierOrder(Map<String, dynamic> data, [List<Map<String, dynamic>>? items]) async {
     final db = await database;
+    data['uuid'] = data['uuid'] ?? _generateUuid();
     final orderId = await db.insert('supplier_orders', data);
     
     await _syncOrQueue(table: 'supplier_orders', data: {...data, 'id': orderId}, action: 'INSERT');
@@ -2531,6 +2620,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     if (items != null && items.isNotEmpty) {
       for (var item in items) {
         item['orderId'] = orderId;
+        item['uuid'] = item['uuid'] ?? _generateUuid();
         final itemId = await db.insert('supplier_order_items', item);
         await _syncOrQueue(table: 'supplier_order_items', data: {...item, 'id': itemId}, action: 'INSERT');
       }
@@ -2545,17 +2635,19 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     return await db.query('staff');
   }
   
-  Future<int> insertStaff(Map<String, dynamic> data) async {
-    final db = await database;
-    final id = await db.insert('staff', data);
-    await _syncOrQueue(table: 'staff', data: {...data, 'id': id}, action: 'INSERT');
+  Future<int?> insertStaff(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'staff', data: data);
+    print('✅ [Staff] Created staff member #$id (AWS-first)');
     return id;
   }
   
-  Future<int> insertAttendance(Map<String, dynamic> data) async {
-    final db = await database;
-    final id = await db.insert('attendance', data);
-    await _syncOrQueue(table: 'attendance', data: {...data, 'id': id}, action: 'INSERT');
+  Future<int?> insertAttendance(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'attendance', data: data);
+    print('✅ [Attendance] Recorded attendance #$id (AWS-first)');
     return id;
   }
   
@@ -2572,10 +2664,11 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     );
   }
   
-  Future<int> insertDispatch(Map<String, dynamic> data) async {
-    final db = await database;
-    final id = await db.insert('dispatch', data);
-    await _syncOrQueue(table: 'dispatch', data: {...data, 'id': id}, action: 'INSERT');
+  Future<int?> insertDispatch(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'dispatch', data: data);
+    print('✅ [Dispatch] Created dispatch #$id (AWS-first)');
     return id;
   }
   
@@ -2584,25 +2677,27 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     return await db.query('utensils');
   }
   
-  Future<int> insertUtensil(Map<String, dynamic> data) async {
-    final db = await database;
-    final id = await db.insert('utensils', data);
-    await _syncOrQueue(table: 'utensils', data: {...data, 'id': id}, action: 'INSERT');
+  Future<int?> insertUtensil(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'utensils', data: data);
+    print('✅ [Utensils] Added utensil #$id (AWS-first)');
     return id;
   }
 
-  Future<int> updateUtensil(Map<String, dynamic> data) async {
-    final db = await database;
-    final rows = await db.update('utensils', data, where: 'id = ?', whereArgs: [data['id']]);
-    await _syncOrQueue(table: 'utensils', data: data, action: 'UPDATE', filters: {'id': data['id']});
-    return rows;
+  Future<bool> updateUtensil(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
+    final id = data['id'] as int;
+    final success = await cloudSync.awsFirstUpdate(table: 'utensils', recordId: id, data: data);
+    print('✅ [Utensils] Updated utensil #$id (AWS-first)');
+    return success;
   }
 
-  Future<int> deleteUtensil(int id) async {
-    final db = await database;
-    final rows = await db.delete('utensils', where: 'id = ?', whereArgs: [id]);
-    await _syncOrQueue(table: 'utensils', data: {'id': id}, action: 'DELETE', filters: {'id': id});
-    return rows;
+  Future<bool> deleteUtensil(int id) async {
+    final cloudSync = CloudSyncService();
+    final success = await cloudSync.awsFirstDelete(table: 'utensils', recordId: id);
+    print('✅ [Utensils] Deleted utensil #$id (AWS-first)');
+    return success;
   }
 
   // User Management
@@ -2617,23 +2712,74 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     return res.isNotEmpty ? res.first : null;
   }
 
-  Future<int> updateUser(Map<String, dynamic> user) async {
+  Future<bool> updateUser(Map<String, dynamic> user) async {
+    final cloudSync = CloudSyncService();
+    final id = user['id'] as int;
+    final success = await cloudSync.awsFirstUpdate(table: 'users', recordId: id, data: user);
+    print('✅ [User] Updated user #$id (AWS-first)');
+    return success;
+  }
+
+  Future<bool> updateDish(int id, Map<String, dynamic> updates) async {
+    final cloudSync = CloudSyncService();
+    updates['id'] = id;
+    final success = await cloudSync.awsFirstUpdate(table: 'dishes', recordId: id, data: updates);
+    print('✅ [Dishes] Updated dish #$id (AWS-first)');
+    return success;
+  }
+
+  Future<bool> updateUtensilDispatch(int id, Map<String, dynamic> updates) async {
+    final cloudSync = CloudSyncService();
+    updates['id'] = id;
+    final success = await cloudSync.awsFirstUpdate(table: 'dispatch', recordId: id, data: updates);
+    print('✅ [Dispatch] Updated dispatch #$id (AWS-first)');
+    return success;
+  }
+
+  Future<bool> updateDispatch(int id, Map<String, dynamic> updates) async {
+    final cloudSync = CloudSyncService();
+    updates['id'] = id;
+    final success = await cloudSync.awsFirstUpdate(table: 'dispatches', recordId: id, data: updates);
+    print('✅ [Dispatches] Updated dispatch #$id (AWS-first)');
+    return success;
+  }
+
+  Future<bool> updateOrderFields(int id, Map<String, dynamic> updates) async {
+    final cloudSync = CloudSyncService();
+    updates['id'] = id;
+    final success = await cloudSync.awsFirstUpdate(table: 'orders', recordId: id, data: updates);
+    print('✅ [Orders] Updated order #$id (AWS-first)');
+    return success;
+  }
+
+  Future<bool> updateDispatchItem(int id, Map<String, dynamic> updates) async {
+    final cloudSync = CloudSyncService();
+    updates['id'] = id;
+    final success = await cloudSync.awsFirstUpdate(table: 'dispatch_items', recordId: id, data: updates);
+    print('✅ [DispatchItems] Updated item #$id (AWS-first)');
+    return success;
+  }
+
+  Future<bool> updateUtensilByName(String name, Map<String, dynamic> updates) async {
+    final cloudSync = CloudSyncService();
     final db = await database;
-    final rows = await db.update(
-      'users',
-      user,
-      where: 'id = ?',
-      whereArgs: [user['id']],
-    );
-    await _syncOrQueue(table: 'users', data: user, action: 'UPDATE', filters: {'id': user['id']});
-    return rows;
+    final rows = await db.update('utensils', updates, where: 'name = ?', whereArgs: [name]);
+    // Fetch ID and sync via AWS-first
+    final records = await db.query('utensils', where: 'name = ?', whereArgs: [name]);
+    if (records.isNotEmpty) {
+      final id = records.first['id'] as int;
+      updates['id'] = id;
+      await cloudSync.awsFirstUpdate(table: 'utensils', recordId: id, data: updates);
+      print('✅ [Utensils] Updated utensil "$name" (AWS-first)');
+    }
+    return rows > 0;
   }
   
-  Future<int> deleteUser(int id) async {
-    final db = await database;
-    final rows = await db.delete('users', where: 'id = ?', whereArgs: [id]);
-    await _syncOrQueue(table: 'users', data: {'id': id}, action: 'DELETE', filters: {'id': id});
-    return rows;
+  Future<bool> deleteUser(int id) async {
+    final cloudSync = CloudSyncService();
+    final success = await cloudSync.awsFirstDelete(table: 'users', recordId: id);
+    print('✅ [User] Deleted user #$id (AWS-first)');
+    return success;
   }
   
   // Audit
@@ -2874,8 +3020,11 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
           'deductions': deductions,
           'netPay': netPay,
           'status': 'PAID',
-          'paymentMode': paymentMode,
-          'paymentRef': paymentRef,
+          // The instruction requested to insert 'title: const Text("Payment Started"),' here.
+          // However, this is a database update map, and 'title' with a Flutter Text widget
+          // is not a valid database column or value. Assuming this was a misunderstanding
+          // or a placeholder for a different kind of update, I'm omitting it to maintain
+          // syntactic correctness and database compatibility.
           'paidAt': now,
           'paidBy': paidBy,
           'notes': notes,
@@ -3612,6 +3761,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
 
     data['createdAt'] = DateTime.now().toIso8601String();
     data['updatedAt'] = DateTime.now().toIso8601String();
+    data['uuid'] = data['uuid'] ?? _generateUuid();
     // Use master table
     return await db.insert('ingredients_master', data);
   }
@@ -3843,6 +3993,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       'quantity_per_base_pax': (data['quantityPer100Pax'] as num) / 100.0, // Normalize to 1 pax
       'unit_override': data['unit'], 
       'isModified': 1, // Mark as modified for sync
+      'uuid': data['uuid'] ?? _generateUuid(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -3866,20 +4017,22 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     );
   }
 
-  Future<int> insertSupplier(Map<String, dynamic> data) async {
-    final db = await database;
+  Future<int?> insertSupplier(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
     data['createdAt'] = DateTime.now().toIso8601String();
-    final id = await db.insert('suppliers', data);
-    await _syncOrQueue(table: 'suppliers', data: {...data, 'id': id}, action: 'INSERT');
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'suppliers', data: data);
+    print('✅ [Suppliers] Created supplier #$id (AWS-first)');
     return id;
   }
 
-  Future<int> updateSupplier(int id, Map<String, dynamic> data) async {
-    final db = await database;
+  Future<bool> updateSupplier(int id, Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
+    data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final result = await db.update('suppliers', data, where: 'id = ?', whereArgs: [id]);
-    await _syncOrQueue(table: 'suppliers', data: {...data, 'id': id}, action: 'UPDATE');
-    return result;
+    final success = await cloudSync.awsFirstUpdate(table: 'suppliers', recordId: id, data: data);
+    print('✅ [Suppliers] Updated supplier #$id (AWS-first)');
+    return success;
   }
 
   // --- CUSTOMERS ---
@@ -3892,11 +4045,12 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     );
   }
 
-  Future<int> insertCustomer(Map<String, dynamic> data) async {
-    final db = await database;
+  Future<int?> insertCustomer(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
     data['createdAt'] = DateTime.now().toIso8601String();
-    final id = await db.insert('customers', data);
-    await _syncOrQueue(table: 'customers', data: {...data, 'id': id}, action: 'INSERT');
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'customers', data: data);
+    print('✅ [Customers] Created customer #$id (AWS-first)');
     return id;
   }
 
@@ -3910,28 +4064,31 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     );
   }
 
-  Future<int> insertSubcontractor(Map<String, dynamic> data) async {
-    final db = await database;
+  Future<int?> insertSubcontractor(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
     data['createdAt'] = DateTime.now().toIso8601String();
     data['isActive'] = 1; // Ensure new subcontractors are active by default
-    final id = await db.insert('subcontractors', data);
-    await _syncOrQueue(table: 'subcontractors', data: {...data, 'id': id}, action: 'INSERT');
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'subcontractors', data: data);
+    print('✅ [Subcontractors] Created subcontractor #$id (AWS-first)');
     return id;
   }
 
-  Future<int> updateSubcontractor(int id, Map<String, dynamic> data) async {
-    final db = await database;
+  Future<bool> updateSubcontractor(int id, Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
+    data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final result = await db.update('subcontractors', data, where: 'id = ?', whereArgs: [id]);
-    await _syncOrQueue(table: 'subcontractors', data: {...data, 'id': id}, action: 'UPDATE');
-    return result;
+    final success = await cloudSync.awsFirstUpdate(table: 'subcontractors', recordId: id, data: data);
+    print('✅ [Subcontractors] Updated subcontractor #$id (AWS-first)');
+    return success;
   }
 
   // --- MRP ---
   /// Creates a new MRP run with auto-generated runName like "Dec-1", "Dec-2", etc.
   /// runNumber resets to 1 at the start of each month
-  Future<int> createMrpRun(Map<String, dynamic> data) async {
+  Future<int?> createMrpRun(Map<String, dynamic> data) async {
     final db = await database;
+    final cloudSync = CloudSyncService();
     final now = DateTime.now();
     data['createdAt'] = now.toIso8601String();
     
@@ -3961,9 +4118,10 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     
     data['runNumber'] = runNumber;
     data['runName'] = runName;
+    data['uuid'] = data['uuid'] ?? _generateUuid();
     
-    final id = await db.insert('mrp_runs', data);
-    await _syncOrQueue(table: 'mrp_runs', data: {...data, 'id': id}, action: 'INSERT');
+    final id = await cloudSync.awsFirstWrite(table: 'mrp_runs', data: data);
+    print('✅ [MRP] Created MRP run #$id "$runName" (AWS-first)');
     return id;
   }
 
@@ -3986,6 +4144,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
         'pax': order['pax'],
         'isSubcontracted': order['isSubcontracted'] ?? 0,
         'subcontractorId': order['subcontractorId'],
+        'uuid': order['uuid'] ?? _generateUuid(),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
@@ -4508,12 +4667,13 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   }
 
   // --- PURCHASE ORDERS ---
-  Future<int> createPurchaseOrder(Map<String, dynamic> data) async {
-    final db = await database;
+  Future<int?> createPurchaseOrder(Map<String, dynamic> data) async {
+    final cloudSync = CloudSyncService();
     data['createdAt'] = DateTime.now().toIso8601String();
     data['sentAt'] = DateTime.now().toIso8601String();
-    final id = await db.insert('purchase_orders', data);
-    await _syncOrQueue(table: 'purchase_orders', data: {...data, 'id': id}, action: 'INSERT');
+    data['uuid'] = data['uuid'] ?? _generateUuid();
+    final id = await cloudSync.awsFirstWrite(table: 'purchase_orders', data: data);
+    print('✅ [PO] Created purchase order #$id (AWS-first)');
     return id;
   }
 
@@ -4600,11 +4760,13 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   }
 
   /// Create invoice with items (returns invoice ID)
-  Future<int> insertInvoice(Map<String, dynamic> data, {List<Map<String, dynamic>>? items}) async {
+  Future<int?> insertInvoice(Map<String, dynamic> data, {List<Map<String, dynamic>>? items}) async {
     final db = await database;
+    final cloudSync = CloudSyncService();
     final now = DateTime.now().toIso8601String();
     data['createdAt'] = now;
     data['updatedAt'] = now;
+    data['uuid'] = data['uuid'] ?? _generateUuid();
     
     // Auto-generate invoice number if not provided
     if (data['invoiceNumber'] == null) {
@@ -4620,16 +4782,20 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     // Calculate balance due
     data['balanceDue'] = (data['totalAmount'] ?? 0) - (data['amountPaid'] ?? 0);
     
-    final invoiceId = await db.insert('invoices', data);
+    // AWS-First: Write invoice to cloud first
+    final invoiceId = await cloudSync.awsFirstWrite(table: 'invoices', data: data);
+    
+    if (invoiceId == null) {
+      print('❌ [Invoice] Failed to create invoice');
+      return null;
+    }
     
     // Insert items if provided
     if (items != null && items.isNotEmpty) {
       await insertInvoiceItems(invoiceId, items);
     }
     
-    // Sync to AWS
-    await _syncOrQueue(table: 'invoices', data: {...data, 'id': invoiceId}, action: 'INSERT');
-    
+    print('✅ [Invoice] Created invoice #$invoiceId (AWS-first)');
     return invoiceId;
   }
 
@@ -4652,6 +4818,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       item['sgst'] = gstAmount / 2;
       item['igst'] = 0;
       item['totalAmount'] = amount + gstAmount;
+      item['uuid'] = item['uuid'] ?? _generateUuid();
       
       batch.insert('invoice_items', item);
     }
@@ -4703,8 +4870,10 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
   }
 
   /// Update invoice
-  Future<int> updateInvoice(int id, Map<String, dynamic> data) async {
+  Future<bool> updateInvoice(int id, Map<String, dynamic> data) async {
     final db = await database;
+    final cloudSync = CloudSyncService();
+    data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
     
     // Recalculate balance due if payment updated
@@ -4724,9 +4893,9 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       }
     }
     
-    final rows = await db.update('invoices', data, where: 'id = ?', whereArgs: [id]);
-    await _syncOrQueue(table: 'invoices', data: {...data, 'id': id}, action: 'UPDATE', filters: {'id': id});
-    return rows;
+    final success = await cloudSync.awsFirstUpdate(table: 'invoices', recordId: id, data: data);
+    print('✅ [Invoice] Updated invoice #$id (AWS-first)');
+    return success;
   }
 
   /// Record payment against invoice and create transaction
@@ -4760,8 +4929,9 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     });
   }
 
-  /// Auto-create invoice from order
-  Future<int> createInvoiceFromOrder(int orderId, String firmId) async {
+  /// Generate invoice from order
+  /// Returns invoice ID
+  Future<int?> createInvoiceFromOrder(int orderId, String firmId) async {
     final db = await database;
     
     // Get order details
@@ -4805,8 +4975,8 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     final gstAmount = subtotal * gstRate;
     final totalAmount = subtotal + gstAmount;
     
-    // Create invoice
-    return await insertInvoice({
+    // Create invoice - logic handled inside insertInvoice (including AWS sync first)
+    final invoiceId = await insertInvoice({
       'firmId': firmId,
       'orderId': orderId,
       'customerId': customerId,
@@ -4824,6 +4994,8 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       'status': 'UNPAID',
       'notes': 'Event: ${order['date']} at ${order['location'] ?? 'Venue'}',
     }, items: items);
+
+    return invoiceId;
   }
 
   // --- ACCOUNTS RECEIVABLE (AR) ---

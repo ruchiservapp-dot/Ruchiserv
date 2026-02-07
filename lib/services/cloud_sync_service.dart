@@ -9,6 +9,7 @@ import '../db/aws/aws_api.dart';
 import '../db/sync_event.dart'; // Added
 import 'connectivity_service.dart';
 import '../config/app_config.dart';
+import 'package:uuid/uuid.dart';
 
 /// CloudSyncService - Handles bidirectional sync between local SQLite and AWS DynamoDB.
 /// 
@@ -47,6 +48,9 @@ class CloudSyncService {
     'subcontractors',
     'invoices',
     'invoice_items',
+    'ingredients_master',
+    'dish_master', 
+    'recipe_detail',
     'salary_disbursements',
   ];
 
@@ -54,6 +58,219 @@ class CloudSyncService {
   Future<String?> _getFirmId() async {
     final sp = await SharedPreferences.getInstance();
     return sp.getString('last_firm');
+  }
+
+  // ============ SYNC METADATA ============
+  
+  Future<String?> _getLastSync(String table, String firmId) async {
+    final sp = await SharedPreferences.getInstance();
+    return sp.getString('last_sync_${table}_$firmId');
+  }
+
+  Future<void> _setLastSync(String table, String firmId, String timestamp) async {
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString('last_sync_${table}_$firmId', timestamp);
+  }
+  // ============ AWS-FIRST WRITE (v38) ============
+
+  /// AWS-First write: Prioritizes cloud write, falls back to local queue
+  /// Returns the local record ID for UI continuity
+  /// 
+  /// Flow:
+  /// - Online: PUT to AWS → Success → Insert to SQLite with sync_status='SYNCED'
+  /// - Offline: Insert to SQLite with sync_status='PENDING' → Queue for later
+  Future<int?> awsFirstWrite({
+    required String table,
+    required Map<String, dynamic> data,
+  }) async {
+    final firmId = await _getFirmId();
+    if (firmId == null || firmId == 'DEFAULT') {
+      print('⚠️ CloudSync: No firmId, cannot write');
+      return null;
+    }
+    
+    final isOnline = await ConnectivityService().isOnline();
+    final now = DateTime.now().toIso8601String();
+    
+    // Prepare data with required fields
+    data['uuid'] = data['uuid'] ?? const Uuid().v4();
+    data['updatedAt'] = now;
+    data['createdAt'] = data['createdAt'] ?? now;
+    data['firmId'] = firmId;
+    
+    final db = await _db.database;
+    
+    if (isOnline) {
+      // AWS-FIRST: Attempt cloud write first
+      try {
+        final awsData = _prepareAwsRecord(table, firmId, data);
+        final resp = await AwsApi.pushToQueue(
+          payload: {
+            'method': 'PUT',
+            'table': 'ruchiserv_data',
+            'firmId': firmId,
+            'data': _injectGsiAttributes(table, firmId, awsData),
+          },
+        );
+        
+        if (resp['error'] == null && resp['status'] != 'error') {
+          // SUCCESS: Mirror to local with SYNCED status
+          data['sync_status'] = 'SYNCED';
+          data['synced_at'] = now;
+          
+          final localId = await db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
+          print('✅ CloudSync [AWS-First]: $table#$localId synced to cloud and cached locally');
+          return localId;
+        }
+      } catch (e) {
+        print('⚠️ CloudSync [AWS-First]: Cloud write failed, falling back to queue: $e');
+      }
+    }
+    
+    // OFFLINE or AWS FAILED: Queue locally with PENDING status
+    data['sync_status'] = 'PENDING';
+    data['synced_at'] = null;
+    
+    final localId = await db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _queuePendingSyncEnhanced(table, localId, data, 'PUT');
+    print('📥 CloudSync [AWS-First]: $table#$localId queued locally (offline/error)');
+    return localId;
+  }
+
+  /// AWS-First update: Similar to write but for existing records
+  Future<bool> awsFirstUpdate({
+    required String table,
+    required int recordId,
+    required Map<String, dynamic> data,
+  }) async {
+    final firmId = await _getFirmId();
+    if (firmId == null || firmId == 'DEFAULT') return false;
+    
+    final isOnline = await ConnectivityService().isOnline();
+    final now = DateTime.now().toIso8601String();
+    
+    data['updatedAt'] = now;
+    data['id'] = recordId;
+    
+    final db = await _db.database;
+    
+    if (isOnline) {
+      try {
+        final awsData = _prepareAwsRecord(table, firmId, data);
+        final resp = await AwsApi.pushToQueue(
+          payload: {
+            'method': 'PUT',
+            'table': 'ruchiserv_data',
+            'firmId': firmId,
+            'data': _injectGsiAttributes(table, firmId, awsData),
+          },
+        );
+        
+        if (resp['error'] == null && resp['status'] != 'error') {
+          data['sync_status'] = 'SYNCED';
+          data['synced_at'] = now;
+          await db.update(table, data, where: 'id = ?', whereArgs: [recordId]);
+          print('✅ CloudSync [AWS-First]: $table#$recordId updated and synced');
+          return true;
+        }
+      } catch (e) {
+        print('⚠️ CloudSync [AWS-First]: Update failed, queueing: $e');
+      }
+    }
+    
+    data['sync_status'] = 'PENDING';
+    await db.update(table, data, where: 'id = ?', whereArgs: [recordId]);
+    await _queuePendingSyncEnhanced(table, recordId, data, 'PUT');
+    print('📥 CloudSync [AWS-First]: $table#$recordId queued for update');
+    return true;
+  }
+
+  /// AWS-First delete: Delete from cloud first, then local
+  Future<bool> awsFirstDelete({
+    required String table,
+    required int recordId,
+  }) async {
+    final firmId = await _getFirmId();
+    if (firmId == null) return false;
+    
+    final isOnline = await ConnectivityService().isOnline();
+    final db = await _db.database;
+    
+    // Get record data for SK generation
+    final localData = await _db.getRecordById(table, recordId);
+    final skValue = (localData != null && localData['uuid'] != null) 
+        ? localData['uuid'].toString() 
+        : '$recordId';
+    
+    if (isOnline) {
+      try {
+        final resp = await AwsApi.pushToQueue(
+          payload: {
+            'method': 'DELETE',
+            'table': 'ruchiserv_data',
+            'firmId': firmId,
+            'filters': {
+              'pk': firmId,
+              'sk': '$table#$skValue',
+            },
+          },
+        );
+        
+        if (resp['error'] == null && resp['status'] != 'error') {
+          await db.delete(table, where: 'id = ?', whereArgs: [recordId]);
+          print('✅ CloudSync [AWS-First]: $table#$recordId deleted from cloud and local');
+          return true;
+        }
+      } catch (e) {
+        print('⚠️ CloudSync [AWS-First]: Delete failed, queueing: $e');
+      }
+    }
+    
+    // Queue delete and mark local as deleted (soft delete or queue)
+    await _queuePendingSyncEnhanced(table, recordId, {}, 'DELETE');
+    await db.delete(table, where: 'id = ?', whereArgs: [recordId]);
+    print('📥 CloudSync [AWS-First]: $table#$recordId queued for delete');
+    return true;
+  }
+
+  /// Prepare AWS record with required DynamoDB fields
+  Map<String, dynamic> _prepareAwsRecord(String table, String firmId, Map<String, dynamic> data) {
+    final awsData = Map<String, dynamic>.from(data);
+    awsData['pk'] = firmId;
+    
+    String skValue;
+    if (table == 'firms') {
+      skValue = firmId;
+    } else {
+      skValue = data['uuid']?.toString() ?? data['id']?.toString() ?? const Uuid().v4();
+    }
+    
+    awsData['sk'] = '$table#$skValue';
+    awsData['table_name'] = table;
+    awsData['local_id'] = data['id'];
+    awsData['firmId'] = firmId;
+    awsData['synced_at'] = DateTime.now().toIso8601String();
+    
+    return awsData;
+  }
+
+  /// Enhanced queue with record_id tracking
+  Future<void> _queuePendingSyncEnhanced(
+    String table,
+    int recordId,
+    Map<String, dynamic> data,
+    String action,
+  ) async {
+    final db = await _db.database;
+    await db.insert('pending_sync', {
+      'table_name': table,
+      'record_id': recordId,
+      'data': jsonEncode({'id': recordId, ...data}),
+      'action': action,
+      'timestamp': DateTime.now().toIso8601String(),
+      'retry_count': 0,
+      'last_error': null,
+    });
   }
 
   // ============ SYNC SINGLE RECORD TO AWS ============
@@ -84,26 +301,38 @@ class CloudSyncService {
       final awsData = Map<String, dynamic>.from(data);
       awsData['pk'] = firmId;
       // v38: For 'firms' table, use firmId as SK to avoid collisions across devices
-      final skValue = (table == 'firms') ? firmId : '$recordId';
+      // v40: For other tables, use uuid if available to prevent multi-device collisions
+      String skValue;
+      if (table == 'firms') {
+        skValue = firmId;
+      } else {
+        // If the record has a 'uuid' field, use it. Otherwise fallback to ID.
+        // In v40+, we will ensure all new records have a UUID.
+        skValue = data['uuid']?.toString() ?? '$recordId';
+      }
+      
       awsData['sk'] = '$table#$skValue';
       awsData['table_name'] = table;
       awsData['local_id'] = recordId;
       awsData['firmId'] = firmId; // v37: Ensure firmId is in attributes
       awsData['synced_at'] = DateTime.now().toIso8601String();
 
-      final resp = await AwsApi.callDbHandler(
-        method: 'PUT',
-        table: 'ruchiserv_data',
-        data: _injectGsiAttributes(table, firmId, awsData),
+      final resp = await AwsApi.pushToQueue(
+        payload: {
+          'method': 'PUT',
+          'table': 'ruchiserv_data',
+          'firmId': firmId, // Consolidate auth: Required by backend
+          'data': _injectGsiAttributes(table, firmId, awsData),
+        },
       );
 
-      if (resp['error'] != null) {
-        print('❌ CloudSync: Failed to sync $table#$recordId: ${resp['error']}');
+      if (resp['error'] != null || resp['status'] == 'error') {
+        print('❌ CloudSync: Failed to queue $table#$recordId: ${resp['error'] ?? resp['message']}');
         await _queuePendingSync(table, recordId, data, 'PUT');
         return false;
       }
 
-      print('✅ CloudSync: Synced $table#$recordId');
+      print('✅ CloudSync: Queued $table#$recordId for SQS');
       return true;
     } catch (e) {
       print('❌ CloudSync: Exception syncing $table#$recordId: $e');
@@ -127,21 +356,30 @@ class CloudSyncService {
     }
 
     try {
-      final resp = await AwsApi.callDbHandler(
-        method: 'DELETE',
-        table: 'ruchiserv_data',
-        filters: {
-          'pk': firmId,
-          'sk': '$table#$recordId',
+      // v40: Use UUID if available for deletion key
+      final localData = await _db.getRecordById(table, recordId);
+      final skValue = (localData != null && localData['uuid'] != null) 
+          ? localData['uuid'].toString() 
+          : '$recordId';
+
+      final resp = await AwsApi.pushToQueue(
+        payload: {
+          'method': 'DELETE',
+          'table': 'ruchiserv_data',
+          'firmId': firmId, // Consolidate auth: Required by backend
+          'filters': {
+            'pk': firmId,
+            'sk': '$table#$skValue',
+          },
         },
       );
 
-      if (resp['error'] != null) {
-        print('❌ CloudSync: Failed to delete $table#$recordId');
+      if (resp['error'] != null || resp['status'] == 'error') {
+        print('❌ CloudSync: Failed to queue delete $table#$recordId: ${resp['error'] ?? resp['message']}');
         return false;
       }
 
-      print('✅ CloudSync: Deleted $table#$recordId from cloud');
+      print('✅ CloudSync: Queued delete $table#$recordId for SQS');
       return true;
     } catch (e) {
       print('❌ CloudSync: Exception deleting $table#$recordId: $e');
@@ -181,12 +419,16 @@ class CloudSyncService {
       // DEBUG: Print query params
       print('  👉 Querying AWS: pk=$firmId, sk_prefix=$table#');
       
+      final lastSync = await _getLastSync(table, firmId);
+      
       final resp = await AwsApi.callDbHandler(
         method: 'GET',
         table: 'ruchiserv_data',
+        firmId: firmId, // FIX: Include firmId for Lambda authentication
         filters: {
           'pk': firmId,
           'sk_prefix': '$table#',
+          if (lastSync != null) 'since': lastSync,
         },
       );
 
@@ -243,8 +485,16 @@ class CloudSyncService {
           data.remove('gsi_sort');      // Fix: Remove GSI keys not in local DB
           // data.remove('firmId'); // KEEP firmId, required for local DB constraints
 
-          // Sanitize data - convert DynamoDB string numbers to proper types
-          final sanitized = _sanitizeForSqlite(data);
+          // Sanitize for SQLite (convert string numbers back)
+          final sanitized = sanitizeForSqlite(data);
+          
+          // CRITICAL: Remove DynamoDB metadata that doesn't exist in local SQLite
+          // Note: gsi_partition and gsi_sort are NOW in SQLite (v41) - keep them!
+          sanitized.remove('pk');
+          sanitized.remove('sk');
+          sanitized.remove('table_name');
+          sanitized.remove('local_id');
+          sanitized.remove('synced_at');
           
           // DEBUG: Print first record to check sanitization
           if (records.indexOf(record) == 0) {
@@ -315,6 +565,23 @@ class CloudSyncService {
         }
       }
       print('  ✅ $table sync processing complete');
+      // After successful sync, update timestamp and notify UI
+      final latestTimestamp = records.isNotEmpty 
+          ? records.map((r) => r['updatedAt']?.toString() ?? '').reduce((a, b) => a.compareTo(b) > 0 ? a : b)
+          : null;
+          
+      if (latestTimestamp != null && latestTimestamp.isNotEmpty) {
+        await _setLastSync(table, firmId, latestTimestamp);
+      }
+
+      // Broadcast event for UI update
+      _db.syncStreamController.add(SyncEvent(
+        table: table,
+        action: 'CLOUD_SYNC',
+        data: {'count': records.length},
+      ));
+
+      print('✅ $table sync finished. Notified listeners.');
     } catch (e) {
       print('  ❌ $table sync error: $e');
     }
@@ -349,7 +616,7 @@ class CloudSyncService {
       final items = resp['Items'] as List?;
       if (items == null) return [];
 
-      return items.map((i) => _sanitizeForSqlite(Map<String, dynamic>.from(i))).toList();
+      return items.map((i) => sanitizeForSqlite(Map<String, dynamic>.from(i))).toList();
     } catch (e) {
       print('🔴 [Cloud Report Exception] $e');
       return [];
@@ -383,7 +650,7 @@ class CloudSyncService {
   }
 
   /// Convert DynamoDB string numbers to proper types for SQLite
-  static Map<String, dynamic> _sanitizeForSqlite(Map<String, dynamic> data) {
+  static Map<String, dynamic> sanitizeForSqlite(Map<String, dynamic> data) {
     // Fields that must ALWAYS remain strings, even if they look like numbers
     const stringFields = {
       'mobile', 'phone', 'contact', 
@@ -473,7 +740,8 @@ class CloudSyncService {
       final action = item['action'] as String;
       final dataJson = item['data'] as String;
       final data = jsonDecode(dataJson) as Map<String, dynamic>;
-      final recordId = int.tryParse(data['id']?.toString() ?? '0') ?? 0;
+      final recordId = item['record_id'] as int? ?? int.tryParse(data['id']?.toString() ?? '0') ?? 0;
+      final retryCount = item['retry_count'] as int? ?? 0;
       
       if (recordId == 0) {
         print('⚠️ CloudSync: Invalid record ID in pending queue. Deleting item ${item['id']}');
@@ -482,14 +750,47 @@ class CloudSyncService {
       }
 
       bool success = false;
-      if (action == 'PUT') {
-        success = await syncRecord(table: table, recordId: recordId, data: data);
-      } else if (action == 'DELETE') {
-        success = await deleteRecord(table: table, recordId: recordId);
+      String? errorMessage;
+      
+      try {
+        if (action == 'PUT') {
+          success = await syncRecord(table: table, recordId: recordId, data: data);
+        } else if (action == 'DELETE') {
+          success = await deleteRecord(table: table, recordId: recordId);
+        }
+      } catch (e) {
+        errorMessage = e.toString();
+        print('❌ CloudSync: Exception processing pending sync: $e');
       }
 
       if (success) {
+        // v38: Update local record's sync_status to SYNCED
+        if (action == 'PUT') {
+          try {
+            await db.update(
+              table,
+              {'sync_status': 'SYNCED', 'synced_at': DateTime.now().toIso8601String()},
+              where: 'id = ?',
+              whereArgs: [recordId],
+            );
+            print('✅ CloudSync: Updated $table#$recordId sync_status to SYNCED');
+          } catch (e) {
+            print('⚠️ CloudSync: Could not update sync_status for $table#$recordId: $e');
+          }
+        }
         await db.delete('pending_sync', where: 'id = ?', whereArgs: [item['id']]);
+      } else {
+        // v38: Update retry_count and last_error for failed syncs
+        await db.update(
+          'pending_sync',
+          {
+            'retry_count': retryCount + 1,
+            'last_error': errorMessage ?? 'Unknown error',
+          },
+          where: 'id = ?',
+          whereArgs: [item['id']],
+        );
+        print('⚠️ CloudSync: Retry $retryCount failed for $table#$recordId');
       }
     }
 

@@ -52,3 +52,10 @@ app.*.map.json
 
 # Keep the example file
 !.env.example
+
+# Backups
+backup_*/
+
+# Lambda deployments
+*.zip
+lambda_deploy_*.zip

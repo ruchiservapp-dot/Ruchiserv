@@ -3,6 +3,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
+import 'package:sqflite/sqflite.dart'; 
+import 'cloud_sync_service.dart';
 import 'connectivity_service.dart';
 
 /// Service to sync firm-specific master data (ingredients, dishes, BOM) with AWS DynamoDB.
@@ -78,24 +80,15 @@ class MasterDataSyncService {
       print('  📤 $table: Syncing ${records.length} records...');
 
       for (final record in records) {
-        // Prepare data for DynamoDB (firmId is partition key)
-        final data = Map<String, dynamic>.from(record);
-        data['pk'] = firmId; // Partition key
-        data['sk'] = '${table}#${record['id']}'; // Sort key
+        final success = await CloudSyncService().syncRecord(
+          table: table, 
+          recordId: record['id'] as int, 
+          data: record,
+        );
         
-        await AwsApi.callDbHandler(
-          method: 'PUT',
-          table: 'master_data', // Single table for all master data
-          data: data,
-        );
-
-        // Mark as synced
-        await db.update(
-          table,
-          {'isModified': 0},
-          where: 'id = ?',
-          whereArgs: [record['id']],
-        );
+        if (success) {
+          await db.update(table, {'isModified': 0}, where: 'id = ?', whereArgs: [record['id']]);
+        }
       }
     } catch (e) {
       print('  ❌ $table sync error: $e');
@@ -130,22 +123,23 @@ class MasterDataSyncService {
 
   Future<void> _syncTableFromAWS(String table, String firmId) async {
     try {
-      // Query DynamoDB for all records with this firmId
+      // Query DynamoDB for all records with this firmId in the unified table
       final resp = await AwsApi.callDbHandler(
         method: 'GET',
-        table: 'master_data',
+        table: 'ruchiserv_data',
         filters: {
           'pk': firmId,
           'sk_prefix': '$table#', // All records for this table
         },
       );
 
-      if (resp['status'] != 'success' || resp['data'] == null) {
+      // Unified Lambda returns {'Items': [...]} or {'Items': [], ...}
+      final records = resp['Items'] as List?;
+      if (records == null || records.isEmpty) {
         print('  📥 $table: No cloud data found');
         return;
       }
 
-      final records = resp['data'] as List;
       print('  📥 $table: Received ${records.length} records from cloud');
 
       final db = await _db.database;
@@ -153,22 +147,29 @@ class MasterDataSyncService {
       for (final record in records) {
         // Remove DynamoDB keys before local insert
         final data = Map<String, dynamic>.from(record);
+        
+        // Parse local_id if present, otherwise use 'id'
+        final rawId = data['local_id'] ?? data['id'];
+        final recordId = int.tryParse(rawId.toString());
+        
+        if (recordId == null) continue;
+
         data.remove('pk');
         data.remove('sk');
+        data.remove('table_name');
+        data.remove('local_id');
+        data.remove('synced_at');
+        data.remove('gsi_partition');
+        data.remove('gsi_sort');
+        
+        data['id'] = recordId;
         data['isModified'] = 0; // Already synced
         
+        // Sanitize for SQLite (convert string numbers back)
+        final sanitized = CloudSyncService.sanitizeForSqlite(data);
+        
         // Upsert: Update if exists, insert if not
-        final existing = await db.query(
-          table,
-          where: 'id = ? AND firmId = ?',
-          whereArgs: [data['id'], firmId],
-        );
-
-        if (existing.isEmpty) {
-          await db.insert(table, data);
-        } else {
-          await db.update(table, data, where: 'id = ?', whereArgs: [data['id']]);
-        }
+        await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     } catch (e) {
       print('  ❌ $table fetch error: $e');

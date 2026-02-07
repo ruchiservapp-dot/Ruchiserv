@@ -27,6 +27,7 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
   List<Map<String, dynamic>> _items = [];
   bool _gpsEnabled = false;
   Timer? _trackingTimer;
+  StreamSubscription? _syncSubscription;
   
   // KM tracking
   final TextEditingController _kmForwardController = TextEditingController();
@@ -49,6 +50,14 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
     _kmReturnController.text = ((_dispatch['kmReturn'] as num?)?.toStringAsFixed(1) ?? '0');
     _loadDetails();
     print("📍 DriverActiveDispatchScreen: initState end");
+
+    // Phase 3: Real-time UI updates via Sync Stream
+    _syncSubscription = DatabaseHelper().syncStreamController.stream.listen((event) {
+      if (['dispatches', 'orders', 'dispatch_items'].contains(event.table)) {
+        print('⚡ DriverActiveDispatchScreen: Real-time update detected for ${event.table}. Refreshing...');
+        _loadDetails();
+      }
+    });
   }
 
   Future<void> _loadDetails() async {
@@ -147,10 +156,10 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
         updates['kmReturn'] = double.tryParse(_kmReturnController.text) ?? 0;
       }
       
-      await db.update('dispatches', updates, where: 'id = ?', whereArgs: [_dispatch['id']]);
+      await DatabaseHelper().updateDispatch(_dispatch['id'], updates);
       
       // Update order status
-      await db.update('orders', {'dispatchStatus': nextStatus}, where: 'id = ?', whereArgs: [_dispatch['orderId']]);
+      await DatabaseHelper().updateOrderFields(_dispatch['orderId'], {'dispatchStatus': nextStatus});
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Marked as ${nextStage['label']}'), backgroundColor: nextStage['color']),
@@ -356,6 +365,7 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
   @override
   void dispose() {
     _trackingTimer?.cancel();
+    _syncSubscription?.cancel();
     super.dispose();
   }
 

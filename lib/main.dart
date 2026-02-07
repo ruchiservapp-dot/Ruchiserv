@@ -12,6 +12,7 @@ import 'screens/main_menu_screen.dart'; // Proper menu navigation
 import 'services/cloud_sync_service.dart'; // Background Sync
 import 'services/fcm_service.dart'; // Notification Service
 import 'screens/0.0_splash_screen.dart';
+import 'services/web_update_service.dart';
 import 'db/seed_dishes.dart'; // Sample dishes and ingredients
 import 'screens/2.1_add_order_screen.dart';
 
@@ -30,6 +31,9 @@ Future<void> main() async {
   
   // SYNC: Start background polling for multi-device sync
   CloudSyncService().startPolling();
+  
+  // WEB UPDATE: Check for new versions periodically
+  await WebUpdateService().init();
   
   runApp(const RuchiServApp());
 }
@@ -58,7 +62,10 @@ class RuchiServApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.light,
-            home: const LifecycleWatcher(child: VerificationContainer()),
+            builder: (context, child) {
+              return WebUpdateWrapper(child: child!);
+            },
+            home: const LifecycleWatcher(child: SplashScreen()),
             routes: {
               '/login': (context) => LoginScreen(),
               '/home': (context) => MainMenuScreen(),
@@ -141,6 +148,62 @@ class VerificationContainer extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class WebUpdateWrapper extends StatefulWidget {
+  final Widget child;
+  const WebUpdateWrapper({super.key, required this.child});
+
+  @override
+  State<WebUpdateWrapper> createState() => _WebUpdateWrapperState();
+}
+
+class _WebUpdateWrapperState extends State<WebUpdateWrapper> {
+  bool _showUpdateBanner = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WebUpdateService().updateStream.listen((available) {
+      if (mounted) {
+        setState(() => _showUpdateBanner = available);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (_showUpdateBanner)
+          Material(
+            color: Colors.orange,
+            child: SafeArea(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.update, color: Colors.white),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'A new version is available!',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => WebUpdateService().forceRefresh(),
+                      child: const Text('REFRESH NOW', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        Expanded(child: widget.child),
+      ],
     );
   }
 }

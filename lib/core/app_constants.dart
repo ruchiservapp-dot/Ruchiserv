@@ -3,7 +3,7 @@
     // 🌐 AWS Base URL
     // static const String apiBaseUrl = 'https://38so00r7ld.execute-api.ap-south-1.amazonaws.com/prod/';
     // Use the config one to avoid split-brain
-    static const String apiBaseUrl = 'https://zgcy1tisjc.execute-api.ap-south-1.amazonaws.com/prod/';
+    static const String apiBaseUrl = 'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com/prod/';
 
     // 📋 Table Names
     static const String tableFirms = 'firms';

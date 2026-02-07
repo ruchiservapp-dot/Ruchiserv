@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../firebase_options.dart';
 import '../db/aws/aws_api.dart';
+import '../db/database_helper.dart';
 
 class FcmService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -87,48 +88,20 @@ class FcmService {
 
 
 
-      print("🚀 FCM: Saving token for $mobile in firm $firmId...");
+      print("🚀 FCM: Updating local user with new token for $mobile...");
       
-      // 1. Fetch existing user to avoid overwriting password (since Backend only supports PUT)
-      Map<String, dynamic> userData = {};
-      try {
-        final getResp = await AwsApi.callDbHandler(
-          method: 'GET',
-          table: 'users',
-          filters: {'ruchiserv-firms': firmId, 'mobile': mobile},
-        );
+      final dbHelper = DatabaseHelper();
+      final user = await dbHelper.getUserByMobile(firmId, mobile);
+      
+      if (user != null) {
+        final updatedUser = Map<String, dynamic>.from(user);
+        updatedUser['fcmToken'] = token;
+        updatedUser['updatedAt'] = DateTime.now().toIso8601String();
         
-        if (getResp['status'] == 'success' && (getResp['data'] is List) && (getResp['data'] as List).isNotEmpty) {
-           userData = (getResp['data'] as List).first as Map<String, dynamic>;
-        } else if (getResp['userId'] != null) {
-           userData = getResp; // direct object
-        }
-      } catch (e) {
-        print("⚠️ FCM: Could not fetch existing user, might be new: $e");
-      }
-      
-      // 2. Merge Data
-      userData['ruchiserv-firms'] = firmId;
-      userData['mobile'] = mobile;
-      userData['fcmToken'] = token;
-      userData['updatedAt'] = DateTime.now().toIso8601String();
-      
-      // Ensure required keys for table schema if new
-      if (!userData.containsKey('userId')) {
-         userData['userId'] = 'USR_${firmId}_$mobile'; // Fallback ID
-      }
-
-      // 3. PUT (Upsert)
-      final resp = await AwsApi.callDbHandler(
-        method: 'PUT', 
-        table: 'users',
-        data: userData,
-      );
-
-      if (resp['status'] == 'success' || resp['message'] == 'Created') {
-        print("✅ FCM Token saved successfully to backend.");
+        await dbHelper.updateUser(updatedUser);
+        print("✅ FCM Token updated locally. Syncing to cloud via queue...");
       } else {
-        print("⚠️ Failed to save FCM token: ${resp['error'] ?? resp['message']}");
+        print("⚠️ FCM: User not found in local DB. Cannot update token.");
       }
     } catch (e) {
       print("❌ Error saving FCM token to backend: $e");
