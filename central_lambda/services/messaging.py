@@ -131,10 +131,16 @@ class WhatsAppService:
             
             with urllib.request.urlopen(req) as response:
                 resp_data = json.loads(response.read().decode())
+                print(f"📡 Meta Media Upload Success: {resp_data}")
                 return resp_data.get('id')
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode()
+            print(f"❌ Meta Media Upload HTTP Error ({e.code}): {err_body}")
+            self.last_error = f"Meta Media HTTP {e.code}: {err_body}"
+            return None
         except Exception as e:
-            print(f"❌ Media Upload Failed: {e}")
-            self.last_error = f"Media Upload Failed: {e}"
+            print(f"❌ Meta Media Upload Exception: {e}")
+            self.last_error = f"Exception: {str(e)}"
             return None
 
     def send_document_template(self, to_mobile: str, template_name: str, media_id: str, filename: str, language_code: str = 'en_US', body_text_params: list = None, buttons: list = None) -> bool:
@@ -195,7 +201,7 @@ class WhatsAppService:
             "type": "template",
             "template": {
                 "name": template_name,
-                "language": {"code": language_code}
+                "language": {"code": "en" if template_name == "ruchiserv_order_interactive" else language_code}
             }
         }
         
@@ -210,6 +216,7 @@ class WhatsAppService:
             
             with urllib.request.urlopen(req) as response:
                 resp_data = json.loads(response.read().decode())
+                print(f"📡 Meta Send Success: {resp_data}")
                 print(f"💬 WhatsApp sent to {to_mobile}: ID {resp_data['messages'][0]['id']}")
                 return True
                 

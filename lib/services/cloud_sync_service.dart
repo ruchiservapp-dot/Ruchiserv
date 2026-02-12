@@ -113,7 +113,7 @@ class CloudSyncService {
           },
         );
         
-        if (resp['error'] == null && resp['status'] != 'error') {
+        if (resp['error'] == null && resp['status'] != 'error' && resp['message'] != 'This account is suspended') {
           // SUCCESS: Mirror to local with SYNCED status
           data['sync_status'] = 'SYNCED';
           data['synced_at'] = now;
@@ -121,6 +121,8 @@ class CloudSyncService {
           final localId = await db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
           print('✅ CloudSync [AWS-First]: $table#$localId synced to cloud and cached locally');
           return localId;
+        } else {
+           print('⚠️ CloudSync [AWS-First]: Backend Error: ${resp['message'] ?? resp['error']}');
         }
       } catch (e) {
         print('⚠️ CloudSync [AWS-First]: Cloud write failed, falling back to queue: $e');
@@ -166,12 +168,14 @@ class CloudSyncService {
           },
         );
         
-        if (resp['error'] == null && resp['status'] != 'error') {
+        if (resp['error'] == null && resp['status'] != 'error' && resp['message'] != 'This account is suspended') {
           data['sync_status'] = 'SYNCED';
           data['synced_at'] = now;
           await db.update(table, data, where: 'id = ?', whereArgs: [recordId]);
           print('✅ CloudSync [AWS-First]: $table#$recordId updated and synced');
           return true;
+        } else {
+           print('⚠️ CloudSync [AWS-First]: Backend Update Error: ${resp['message'] ?? resp['error']}');
         }
       } catch (e) {
         print('⚠️ CloudSync [AWS-First]: Update failed, queueing: $e');
@@ -531,34 +535,40 @@ class CloudSyncService {
             continue; // Skip standard processing
           }
 
-          // Standard processing for other tables
-          if (localId == null) {
-            print('  ⚠️ Skipping record without local_id: $data');
-            continue;
+          // v43: Resilient processing for records missing local_id (e.g. seeded via script)
+          int? localIdMatch = localId;
+          
+          if (localIdMatch == null) {
+            // Try to find existing record by natural unique keys
+            if (table == 'users' && sanitized['userId'] != null) {
+              final res = await db.query('users', where: 'userId = ?', whereArgs: [sanitized['userId']], limit: 1);
+              if (res.isNotEmpty) localIdMatch = res.first['id'] as int;
+            } else if (table == 'authorized_mobiles' && sanitized['firmId'] != null && sanitized['mobile'] != null) {
+              final res = await db.query('authorized_mobiles', 
+                where: 'firmId = ? AND mobile = ?', 
+                whereArgs: [sanitized['firmId'], sanitized['mobile']], 
+                limit: 1);
+              if (res.isNotEmpty) localIdMatch = res.first['id'] as int;
+            } else if (sanitized['uuid'] != null) {
+              // Standard matching by UUID for all other tables
+              final res = await db.query(table, where: 'uuid = ?', whereArgs: [sanitized['uuid']], limit: 1);
+              if (res.isNotEmpty) localIdMatch = res.first['id'] as int;
+            }
           }
 
-          // Check if record exists locally
-          final existing = await db.query(
-            table,
-            where: 'id = ?',
-            whereArgs: [localId],
-          );
-
-          if (existing.isEmpty) {
-            // Insert new record (preserve original ID)
-            sanitized['id'] = localId;
+          if (localIdMatch == null) {
+            // Truly new record (no ID, no UUID match)
             try {
-              // Use ConflictAlgorithm.replace to handle UNIQUE constraints
               await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
-              // print('    ✅ Inserted $table #$localId');
+              // print('    ✅ Inserted new $table record');
             } catch (e) {
-              print('    ❌ $table insert failed for id=$localId: $e');
+              print('    ❌ $table initial insert failed: $e');
             }
           } else {
             // Update existing record
-            sanitized['id'] = localId; // Ensure ID is preserved
+            sanitized['id'] = localIdMatch;
             await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
-            // print('    ✅ Updated $table #$localId');
+            // print('    ✅ Updated $table #$localIdMatch');
           }
         } catch (e) {
           print('  ⚠️ Error processing record: $e');
@@ -818,10 +828,12 @@ class CloudSyncService {
   }
 
   // ============ POLLING & BACKGROUND SYNC ============
+  // @locked - Push-Pull Architecture. Changed from polling to event-driven sync.
+  // See ARCHITECTURE_SYNC.md for rationale.
 
   bool _isPolling = false;
 
-  /// Start periodic sync (Push & Pull)
+  /// Start sync listeners (Push-Pull Architecture)
   /// Call this from main.dart or after login
   void startPolling() {
     if (_isPolling) return;
@@ -836,9 +848,10 @@ class CloudSyncService {
     }
     
     _isPolling = true;
-    print('🔄 CloudSync: Starting background polling...');
+    print('🔄 CloudSync: Starting Push-Pull sync (no polling)...');
 
-    // MUTATION LISTENER: Listen to all DB changes and sync them
+    // MUTATION LISTENER: Listen to all DB changes and sync them (PUSH)
+    // This is the "Push" part of Push-Pull: local changes → cloud
     DatabaseHelper().syncStreamController.stream.listen((event) async {
        print('📥 CloudSync: Received event: ${event.table} ${event.action}');
        final recordId = int.tryParse(event.data['id']?.toString() ?? '0') ?? 0;
@@ -852,56 +865,28 @@ class CloudSyncService {
        }
     });
 
-    // PUSH: Process pending queue every 30 seconds
+    // PENDING QUEUE PROCESSOR: Process failed syncs every 30 seconds
+    // This is a safety net, not a primary sync mechanism
     Stream.periodic(const Duration(seconds: 30)).listen((_) async {
+      if (!_isFrontendActive) return;
       await processPendingSync();
     });
 
-    // PUSH: Process pending queue every 30 seconds (Cheap - only if local changes)
-    Stream.periodic(const Duration(seconds: 30)).listen((_) async {
-      if (!_isFrontendActive) return; // Optimization
-      await processPendingSync();
-    });
-
-    // PULL (HOT): Sync high-velocity tables every 60 seconds
-    // Cost: ~6 requests/minute per device (Orders, Dispatch, MRP, Users)
-    Stream.periodic(const Duration(seconds: 60)).listen((_) async {
-      if (!_isFrontendActive) return; // Optimization
-      final isOnline = await ConnectivityService().isOnline();
-      if (isOnline) {
-        final firmId = await _getFirmId();
-        if (firmId != null) {
-          await syncTableFromCloud('orders', firmId);
-          await syncTableFromCloud('dispatch', firmId);
-          await syncTableFromCloud('mrp_runs', firmId);
-          await syncTableFromCloud('mrp_output', firmId);
-          await syncTableFromCloud('users', firmId);              // v37: Multi-device login
-          await syncTableFromCloud('authorized_mobiles', firmId); // v37: Multi-device login
-        }
-      }
-    });
-
-    // PULL (COLD): Sync static/low-velocity data every 5 minutes
-    // Cost: reduced by 5x
-    // PULL (COLD): Sync static/low-velocity data every 5 minutes
-    // Cost: reduced by 5x
-    Stream.periodic(const Duration(minutes: 5)).listen((_) async {
-       if (!_isFrontendActive) return; // Optimization: Skip if app backgrounded
-       
-       final isOnline = await ConnectivityService().isOnline();
-       if (isOnline) {
-         final firmId = await _getFirmId();
-         if (firmId != null) {
-           // Sync everything else
-           for (final table in syncTables) {
-             if (!['orders', 'dispatch', 'mrp_runs', 'mrp_output'].contains(table)) {
-               await syncTableFromCloud(table, firmId);
-             }
-           }
-         }
-       }
-    });
+    // ================================================
+    // PULL POLLING REMOVED (Push-Pull Architecture)
+    // ================================================
+    // The following code has been intentionally removed to implement
+    // the Push-Pull sync architecture. Instead of periodically polling
+    // for updates (which cost ~$12,000/month for 10k users), we now:
+    //
+    // 1. PUSH: Local changes trigger immediate cloud writes (above listener)
+    // 2. PULL: FCM silent push from server triggers immediate sync
+    //          (handled in FcmService._handleSyncMessage)
+    //
+    // See ARCHITECTURE_SYNC.md for cost analysis and design rationale.
+    // ================================================
   }
+
 
   // ============ LIFECYCLE MANAGEMENT ============
   

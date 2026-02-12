@@ -1,3 +1,4 @@
+# @locked - Core Sync & Messaging Architecture. Do not modify without full understanding.
 import json
 import boto3
 import time
@@ -5,6 +6,15 @@ import datetime
 import os
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
+
+# Push-Pull Architecture: FCM for real-time sync
+_fcm_service = None
+def get_fcm():
+    global _fcm_service
+    if _fcm_service is None:
+        from services.fcm import get_fcm_service
+        _fcm_service = get_fcm_service()
+    return _fcm_service
 
 # Globals for lazy loading to reduce cold-start crash risk
 _dynamodb = None
@@ -57,14 +67,25 @@ def convert_floats(obj):
     if isinstance(obj, list): return [convert_floats(i) for i in obj]
     return obj
 
-def extract_identity(event):
-    """Extracts firmId and userId strictly from JWT claims (Cognito)."""
+def extract_identity(event, body):
+    """Extracts firmId and userId from JWT claims (Cognito) or fallback to body."""
     request_context = event.get('requestContext', {})
     authorizer = request_context.get('authorizer', {})
     claims = authorizer.get('jwt', {}).get('claims', {})
     
     firm_id = claims.get('custom:firmId')
     user_id = claims.get('sub') 
+    
+    # Fallback for Legacy Login / API calls providing firmId in body
+    if not firm_id:
+        firm_id = body.get('firmId') or body.get('filters', {}).get('pk')
+    
+    if firm_id:
+        firm_id = str(firm_id).upper()
+    
+    if not user_id:
+        user_id = body.get('mobile', 'UNKNOWN')
+        
     return firm_id, user_id
 
 def lambda_handler(event, context):
@@ -85,15 +106,21 @@ def lambda_handler(event, context):
                 'body': ''
             }
 
-        # 1. Identity Extraction
-        firm_id, user_id = extract_identity(event)
-        
-        # 2. Parse Body
+        # 2. Parse Body & Params
         raw_body = event.get('body')
         if isinstance(raw_body, str):
             body = json.loads(raw_body)
         else:
             body = raw_body or {}
+        
+        # Core Request Params
+        method = body.get('method', event.get('httpMethod', 'GET'))
+        table_name = body.get('table', 'firms')
+        data = body.get('data', {})
+        filters = body.get('filters', {})
+
+        # 1. Identity Extraction (Now with body access)
+        firm_id, user_id = extract_identity(event, body)
 
         # 3. Check for Public Access (Filters/Login)
         is_public_request = False
@@ -104,6 +131,8 @@ def lambda_handler(event, context):
             is_public_request = True
         elif body.get('firmId') and body.get('mobile') and body.get('password'):
             is_public_request = True
+        elif body.get('method') == 'POST' and str(body.get('table', '')).startswith('messaging/'):
+            is_public_request = True  # Messaging uses server-side credentials only
 
         if not firm_id and not is_public_request:
             return error("Missing authentication (firmId)", 401)
@@ -161,12 +190,112 @@ def lambda_handler(event, context):
                 status_data = ps.get_subscription_status(sub_id) if sub_id else ps.get_order_status(order_id)
                 return success({'data': status_data})
 
-        # 7. Database Handler
+        # 7. Messaging Handler (@locked - Stable Meta/Zepto Routing)
+        if method == 'POST' and table_name.startswith('messaging/'):
+            from services.messaging import WhatsAppService, EmailService, EmailTemplates
+            
+            if table_name == 'messaging/whatsapp/send':
+                wa = WhatsAppService()
+                success_sent = wa.send_template(
+                    to_mobile=data.get('to'),
+                    template_name=data.get('template'),
+                    language_code=data.get('language', 'en_US'),
+                    components=data.get('components')
+                )
+                if success_sent: return success({'status': 'success'})
+                return error(wa.last_error or "WhatsApp Send Failed", 500)
+                
+            elif table_name == 'messaging/whatsapp/send_order_pdf':
+                wa = WhatsAppService()
+                # 1. Upload PDF Media to Meta
+                pdf_bytes = __import__('base64').b64decode(data.get('pdf_base64', ''))
+                media_id = wa.upload_media(pdf_bytes, filename=f"Order_{data.get('order_id_raw', 'PDF')}.pdf")
+                
+                if not media_id:
+                    return error(wa.last_error or "Media Upload Failed", 500)
+                
+                # 2. Send Document Template
+                success_sent = wa.send_document_template(
+                    to_mobile=data.get('to'),
+                    template_name='ruchiserv_order_interactive', # Specialized PDF template
+                    media_id=media_id,
+                    filename=f"Order_{data.get('order_id_raw', 'Details')}.pdf",
+                    language_code='en',
+                    body_text_params=data.get('text_params')
+                )
+                if success_sent: return success({'success': True})
+                return error(wa.last_error or "WhatsApp PDF Send Failed", 500)
+
+            elif table_name == 'messaging/email/send':
+                em = EmailService()
+                success_sent = em.send_email(
+                    recipient=data.get('to'),
+                    subject=data.get('subject'),
+                    body=data.get('body'),
+                    html_body=data.get('html_body')
+                )
+                if success_sent: return success({'status': 'success'})
+                return error("Email Send Failed", 500)
+
+            elif table_name == 'messaging/transactional/send':
+                # New Route for Transactional Emails (Order/PO)
+                type = data.get('type')
+                payload = data.get('data', {})
+                
+                em = EmailService()
+                templates = EmailTemplates()
+                
+                html_body = None
+                subject = "New Notification"
+                
+                if type == 'ORDER':
+                    order = payload.get('order', {})
+                    dishes = payload.get('dishes', [])
+                    firm_id = payload.get('firmId')
+                    
+                    # Fetch firm details if not in payload (optional, but good for completeness)
+                    # For now, assuming firmId is enough or we fetch from DB? 
+                    # Let's try to fetch firm details from DB to make the email professional
+                    firm_details = {}
+                    try:
+                        db = get_db()
+                        f_res = db.Table('ruchiserv-firms').query(KeyConditionExpression=Key('firmid').eq(firm_id))
+                        if f_res.get('Items'): firm_details = f_res['Items'][0]
+                    except: pass
+                    
+                    subject = f"Order Confirmation #{order.get('id')}"
+                    html_body = templates.generate_order_html(order, dishes, firm_details)
+                    
+                elif type == 'PO':
+                    po = payload.get('po', {})
+                    items = payload.get('items', [])
+                    firm_id = payload.get('firmId')
+                    
+                    firm_details = {}
+                    try:
+                        db = get_db()
+                        f_res = db.Table('ruchiserv-firms').query(KeyConditionExpression=Key('firmid').eq(firm_id))
+                        if f_res.get('Items'): firm_details = f_res['Items'][0]
+                    except: pass
+
+                    subject = f"Purchase Order #{po.get('poNumber')}"
+                    html_body = templates.generate_po_html(po, items, firm_details)
+
+                if html_body:
+                    success_sent = em.send_email(
+                        recipient=data.get('to'),
+                        subject=subject,
+                        body="Please view this email in a modern client.", # Fallback text
+                        html_body=html_body
+                    )
+                    if success_sent: return success({'status': 'success'})
+                    return error(em.last_error or "Transactional Email Failed", 500)
+                else:
+                    return error("Invalid Transaction Type", 400)
+
+        # 8. Database Handler
         db = get_db()
-        method = body.get('method', 'GET')
-        table_name = body.get('table', 'firms')
-        data = body.get('data', {})
-        filters = body.get('filters', {})
+        # (Variables method, table_name, data, filters are now defined at the top)
 
         target_table_name = table_name
         if table_name not in ['ruchiserv_data', 'ruchiserv-audit-log']:
@@ -176,6 +305,7 @@ def lambda_handler(event, context):
         result = None
 
         if method == 'GET':
+            # Standardize PK attribute as 'firmid' for consistency across most tables
             pk_attr = 'pk' if table_name == 'ruchiserv_data' else ('ruchiserv-firms' if target_table_name == 'ruchiserv-users' else 'firmid')
             
             # GSI Search
@@ -204,24 +334,29 @@ def lambda_handler(event, context):
                 sk_prefix = filters.get('sk_prefix')
                 query_pk = filters.get('pk') if table_name == 'ruchiserv_data' and filters.get('pk') else firm_id
                 
+                # Differential Sync: Filter by updatedAt if 'since' is provided
+                query_kwargs = {'KeyConditionExpression': Key(pk_attr).eq(query_pk)}
                 if sk_prefix:
-                    res = table.query(KeyConditionExpression=Key(pk_attr).eq(query_pk) & Key('sk').begins_with(sk_prefix))
-                else:
-                    res = table.query(KeyConditionExpression=Key(pk_attr).eq(query_pk))
+                    query_kwargs['KeyConditionExpression'] &= Key('sk').begins_with(sk_prefix)
+                
+                if filters.get('since'):
+                    query_kwargs['FilterExpression'] = Key('updatedAt').gt(filters['since'])
+                
+                res = table.query(**query_kwargs)
                 
                 items = res.get('Items', [])
                 result = success({'Items': [i for i in items if not i.get('is_deleted', False)]})
 
         elif method == 'PUT':
             safe_data = convert_floats(data)
-            pk_attr = 'pk' if table_name == 'ruchiserv_data' else 'firmId'
+            pk_attr = 'pk' if table_name == 'ruchiserv_data' else 'firmid'
             if table_name == 'ruchiserv-users': pk_attr = 'ruchiserv-firms'
             
             # 1. Inject firmId/pk
             if table_name == 'ruchiserv_data':
                 if not str(safe_data.get('pk', '')).startswith(firm_id): safe_data['pk'] = firm_id
             elif target_table_name == 'ruchiserv-users': safe_data['ruchiserv-firms'] = firm_id
-            else: safe_data['firmId'] = firm_id
+            else: safe_data['firmid'] = firm_id
 
             # 2. Scale Protection: Conditional Update (Conflict Detection)
             # If client provides 'prev_updated_at', only update if it matches
@@ -241,16 +376,32 @@ def lambda_handler(event, context):
                 
                 table.put_item(**put_kwargs)
                 result = success({'status': 'SUCCESS'})
+                
+                # Push-Pull: Notify all devices in the firm (@locked - Core Sync)
+                try:
+                    sk = safe_data.get('sk', '')
+                    sync_table = sk.split('#')[0] if '#' in sk else table_name
+                    get_fcm().notify_firm_sync(firm_id, sync_table, 'SYNC', db)
+                except Exception as fcm_err:
+                    _log("WARNING", f"FCM notify failed: {fcm_err}", firm_id=firm_id)
             except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
                 _log("WARNING", "Conflict detected (ConditionalCheckFailed)", firm_id=firm_id)
                 return error("conflict_detected", 409)
 
         elif method == 'DELETE':
-            pk_attr = 'pk' if table_name == 'ruchiserv_data' else 'firmId'
+            pk_attr = 'pk' if table_name == 'ruchiserv_data' else 'firmid'
             if filters.get(pk_attr) != firm_id and table_name != 'ruchiserv_data':
                 return error("Unauthorized delete", 403)
             table.delete_item(Key={pk_attr: filters[pk_attr], 'sk': filters['sk']})
             result = success({'status': 'DELETED'})
+            
+            # Push-Pull: Notify all devices in the firm
+            try:
+                sk = filters.get('sk', '')
+                sync_table = sk.split('#')[0] if '#' in sk else table_name
+                get_fcm().notify_firm_sync(firm_id, sync_table, 'DELETE', db)
+            except Exception as fcm_err:
+                _log("WARNING", f"FCM notify failed: {fcm_err}", firm_id=firm_id)
 
         elapsed = time.time() - start_time
         _log("INFO", f"Sync: {method} {table_name}", firm_id=firm_id, user_id=user_id, duration=elapsed)

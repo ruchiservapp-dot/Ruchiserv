@@ -1324,51 +1324,45 @@ class _DishRowItemState extends State<DishRowItem> {
                         });
                       },
                       optionsViewBuilder: (context, onSelected, options) {
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: UnconstrainedBox(
-                            alignment: Alignment.topLeft,
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.90, // Dynamic width (90% of screen)
-                              child: Material(
-                                elevation: 8,
-                                shadowColor: Colors.black54,
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(maxHeight: 250),
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    itemCount: options.length,
-                                    itemBuilder: (context, i) {
-                                      final opt = options.elementAt(i);
-                                      final locName = LanguageService().getLocalizedName(
-                                        entityType: 'DISH',
-                                        entityId: opt['id'] as int,
-                                        defaultName: opt['name'],
-                                      );
-                                      
-                                      return ListTile(
-                                        dense: true,
-                                        // Show Localized Name primarily if language is not English
-                                        title: Text(
-                                          locName, 
-                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        subtitle: locName != opt['name'] 
-                                            ? Text(
-                                                opt['name'],
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ) 
-                                            : null,
-                                        trailing: Text('₹${opt['rate'] ?? 0}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                        onTap: () => onSelected(opt),
-                                      );
-                                    },
-                                  ),
-                                ),
+                        return SizedBox(
+                          width: constraints.maxWidth, // Match parent input field width
+                          child: Material(
+                            elevation: 8,
+                            shadowColor: Colors.black54,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 250),
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: options.length,
+                                itemBuilder: (context, i) {
+                                  final opt = options.elementAt(i);
+                                  final locName = LanguageService().getLocalizedName(
+                                    entityType: 'DISH',
+                                    entityId: opt['id'] as int,
+                                    defaultName: opt['name'],
+                                  );
+                                  
+                                  return ListTile(
+                                    dense: true,
+                                    // Show Localized Name primarily if language is not English
+                                    title: Text(
+                                      locName, 
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    subtitle: locName != opt['name'] 
+                                        ? Text(
+                                            opt['name'],
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ) 
+                                        : null,
+                                    trailing: Text('₹${opt['rate'] ?? 0}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    onTap: () => onSelected(opt),
+                                  );
+                                },
                               ),
                             ),
                           ),
