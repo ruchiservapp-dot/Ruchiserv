@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
@@ -5,8 +6,8 @@ import 'package:http/http.dart' as http;
 /// Listens on localhost:9090, forwards to AWS, and adds Access-Control-Allow-Origin.
 Future<void> main() async {
   final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 9090);
-  print('🌉 CORS Bridge Active on http://localhost:9090');
-  print('🚀 Routing Web Traffic -> AWS...');
+  AppLogger.info('🌉 CORS Bridge Active on http://localhost:9090');
+  AppLogger.info('🚀 Routing Web Traffic -> AWS...');
 
   await for (HttpRequest olderReq in server) {
     try {
@@ -39,9 +40,9 @@ Future<void> main() async {
       olderReq.response.write(respBody);
       await olderReq.response.close();
       
-      print('✅ [${olderReq.method}] ${olderReq.uri.path} -> ${proxyResp.statusCode}');
+      AppLogger.success('✅ [${olderReq.method}] ${olderReq.uri.path} -> ${proxyResp.statusCode}');
     } catch (e) {
-      print('🔴 Proxy Error: $e');
+      AppLogger.info('🔴 Proxy Error: $e');
       olderReq.response.statusCode = 500;
       olderReq.response.write('{"error": "$e"}');
       olderReq.response.close();

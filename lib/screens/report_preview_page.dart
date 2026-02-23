@@ -105,7 +105,7 @@ class ReportPreviewPage extends StatelessWidget {
           // Report Info Header
           Container(
             width: double.infinity,
-            color: accentColor.withOpacity(0.1),
+            color: accentColor.withValues(alpha: 0.1),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +132,7 @@ class ReportPreviewPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.2),
+                        color: accentColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -206,7 +206,7 @@ class ReportPreviewPage extends StatelessWidget {
                     child: SingleChildScrollView(
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(
-                          accentColor.withOpacity(0.1),
+                          accentColor.withValues(alpha: 0.1),
                         ),
                         headingTextStyle: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -244,7 +244,7 @@ class ReportPreviewPage extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),

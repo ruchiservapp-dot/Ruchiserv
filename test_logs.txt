@@ -1,0 +1,124 @@
+00:00 +0: loading /Users/vysakhg/RuchiServ/ruchiserv/test/sync_logic_test.dart                                                                                                                         00:01 +0: loading /Users/vysakhg/RuchiServ/ruchiserv/test/sync_logic_test.dart                                                                                                                         00:01 +0: (setUpAll)                                                                                                                                                                                   00:01 +0: Multi-Device Sync Logic Tests Push Sync: Calls AWS API with correct PUT payload                                                                                                              00:01 +0: Multi-Device Sync Logic Tests Push Sync: Calls AWS API with correct PUT payload                                                                                                              
+*** sqflite warning ***
+
+You are changing sqflite default factory.
+Be aware of the potential side effects. Any library using sqflite
+will have this factory as the default for all operations.
+
+*** sqflite warning ***
+
+Shell: evacuation failed
+Shell: evacuation failed
+Shell: evacuation failed
+Shell: Exhausted heap space, trying to allocate 1126144 bytes.
+00:24 +0 -1: Multi-Device Sync Logic Tests Push Sync: Calls AWS API with correct PUT payload                                                                                                           00:24 +0 -1: Multi-Device Sync Logic Tests Push Sync: Calls AWS API with correct PUT payload [E]                                                                                                       
+  Out of Memory
+  dart:core                                     _StringBase._interpolate
+  package:ruchiserv/core/app_logger.dart 38:42  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  .                                             ...
+  .                                             ...
+  
+
+To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/vysakhg/RuchiServ/ruchiserv/test/sync_logic_test.dart -p vm --plain-name 'Multi-Device Sync Logic Tests Push Sync: Calls AWS API with correct PUT payload'
+00:24 +0 -1: Multi-Device Sync Logic Tests Pull Sync: Merges cloud data into local DB                                                                                                                  00:24 +0 -1: Multi-Device Sync Logic Tests Pull Sync: Merges cloud data into local DB                                                                                                                  
+*** sqflite warning ***
+
+You are changing sqflite default factory.
+Be aware of the potential side effects. Any library using sqflite
+will have this factory as the default for all operations.
+
+*** sqflite warning ***
+
+Shell: Exhausted heap space, trying to allocate 1126080 bytes.
+00:43 +0 -2: Multi-Device Sync Logic Tests Pull Sync: Merges cloud data into local DB [E]                                                                                                              
+  Out of Memory
+  dart:core                                     _StringBase._interpolate
+  package:ruchiserv/core/app_logger.dart 38:42  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  package:ruchiserv/core/app_logger.dart 38:17  AppLogger.info
+  .                                             ...
+  .                                             ...
+  
+
+To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/vysakhg/RuchiServ/ruchiserv/test/sync_logic_test.dart -p vm --plain-name 'Multi-Device Sync Logic Tests Pull Sync: Merges cloud data into local DB'
+00:43 +0 -2: (tearDownAll)                                                                                                                                                                             00:44 +0 -2: (tearDownAll)                                                                                                                                                                             00:44 +0 -2: Some tests failed.                                                                                                                                                                        

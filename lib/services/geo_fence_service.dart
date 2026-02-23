@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/geo_fence_service.dart
 // SERVICE: GPS GEO-FENCING FOR STAFF ATTENDANCE
 // Uses Haversine formula to calculate distance between two GPS coordinates
@@ -94,7 +95,7 @@ class GeoFenceService {
         timeLimit: const Duration(seconds: 15),
       );
     } catch (e) {
-      print('❌ [GeoFenceService] Error getting position: $e');
+      AppLogger.error('❌ [GeoFenceService] Error getting position: $e');
       return null;
     }
   }

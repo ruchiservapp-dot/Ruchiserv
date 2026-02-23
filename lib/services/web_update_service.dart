@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -23,7 +24,7 @@ class WebUpdateService {
     if (!kIsWeb) return;
     
     _currentVersion = await _fetchVersion();
-    print('WebUpdateService: Initial version $_currentVersion');
+    AppLogger.info('WebUpdateService: Initial version $_currentVersion');
     
     // Start periodic check every 15 minutes
     _checkTimer = Timer.periodic(const Duration(minutes: 15), (timer) {
@@ -41,7 +42,7 @@ class WebUpdateService {
         return data['version']?.toString();
       }
     } catch (e) {
-      print('WebUpdateService error: $e');
+      AppLogger.info('WebUpdateService error: $e');
     }
     return null;
   }
@@ -51,7 +52,7 @@ class WebUpdateService {
 
     final newVersion = await _fetchVersion();
     if (newVersion != null && _currentVersion != null && newVersion != _currentVersion) {
-      print('WebUpdateService: Update detected! Old: $_currentVersion, New: $newVersion');
+      AppLogger.info('WebUpdateService: Update detected! Old: $_currentVersion, New: $newVersion');
       _isUpdateAvailable = true;
       _updateController.add(true);
     }

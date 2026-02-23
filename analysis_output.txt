@@ -1,0 +1,1211 @@
+Analyzing ruchiserv...                                          
+
+warning • Dead code • backup_2026-02-07_aws-first/aws_api.dart:29:36 • dead_code
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/aws_api.dart:47:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/aws_api.dart:141:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/aws_api.dart:150:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/aws_api.dart:153:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/aws_api.dart:162:7 • avoid_print
+  error • Target of URI doesn't exist: '../db/database_helper.dart' • backup_2026-02-07_aws-first/cloud_sync_service.dart:7:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../db/aws/aws_api.dart' • backup_2026-02-07_aws-first/cloud_sync_service.dart:8:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../db/sync_event.dart' • backup_2026-02-07_aws-first/cloud_sync_service.dart:9:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../config/app_config.dart' • backup_2026-02-07_aws-first/cloud_sync_service.dart:11:8 • uri_does_not_exist
+  error • The method 'DatabaseHelper' isn't defined for the type 'CloudSyncService' • backup_2026-02-07_aws-first/cloud_sync_service.dart:24:15 • undefined_method
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:85:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:93:7 • avoid_print
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/cloud_sync_service.dart:118:26 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:128:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:133:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:136:7 • avoid_print
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/cloud_sync_service.dart:163:26 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:176:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:180:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:183:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:195:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:201:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:205:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:211:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:215:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:218:7 • avoid_print
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/cloud_sync_service.dart:222:26 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:234:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:236:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:244:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:256:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:261:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:265:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:299:14 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:306:15 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:319:17 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:321:17 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:327:15 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:334:13 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:353:15 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:362:11 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:365:7 • avoid_print
+  error • The method 'SyncEvent' isn't defined for the type 'CloudSyncService' • backup_2026-02-07_aws-first/cloud_sync_service.dart:376:36 • undefined_method
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:382:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:384:7 • avoid_print
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/cloud_sync_service.dart:400:26 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:410:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:419:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:534:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:544:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:561:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:574:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:581:5 • avoid_print
+  error • Undefined name 'AppConfig' • backup_2026-02-07_aws-first/cloud_sync_service.dart:596:10 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:597:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:598:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:603:5 • avoid_print
+  error • The method 'DatabaseHelper' isn't defined for the type 'CloudSyncService' • backup_2026-02-07_aws-first/cloud_sync_service.dart:606:5 • undefined_method
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:607:8 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:677:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/cloud_sync_service.dart:683:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/connectivity_service.dart:22:7 • avoid_print
+  error • Target of URI doesn't exist: '../services/connectivity_service.dart' • backup_2026-02-07_aws-first/database_helper.dart:15:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../db/aws/aws_api.dart' • backup_2026-02-07_aws-first/database_helper.dart:16:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: 'schema_manager.dart' • backup_2026-02-07_aws-first/database_helper.dart:18:8 • uri_does_not_exist
+  error • Undefined name 'SchemaManager' • backup_2026-02-07_aws-first/database_helper.dart:73:11 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:87:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:100:11 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:126:5 • avoid_print
+  error • Undefined name 'SchemaManager' • backup_2026-02-07_aws-first/database_helper.dart:129:11 • undefined_identifier
+  error • Undefined name 'SchemaManager' • backup_2026-02-07_aws-first/database_helper.dart:1387:11 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:1392:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:1450:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:1452:7 • avoid_print
+warning • The declaration '_syncToAws' isn't referenced • backup_2026-02-07_aws-first/database_helper.dart:1466:16 • unused_element
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:1735:7 • avoid_print
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/database_helper.dart:1738:30 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:1781:13 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:1786:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:2132:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:2134:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:2200:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:2202:7 • avoid_print
+  error • The method 'ConnectivityService' isn't defined for the type 'DatabaseHelper' • backup_2026-02-07_aws-first/database_helper.dart:2323:22 • undefined_method
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/database_helper.dart:2343:24 • undefined_identifier
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/database_helper.dart:2351:24 • undefined_identifier
+  error • Undefined name 'AwsApi' • backup_2026-02-07_aws-first/database_helper.dart:2360:24 • undefined_identifier
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3817:3 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3834:3 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3835:3 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3849:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3850:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3854:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3864:3 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3881:3 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3887:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3901:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3906:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3919:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3935:11 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3938:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3944:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:3946:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4396:7 • avoid_print
+warning • The value of the local variable 'firmId' isn't used • backup_2026-02-07_aws-first/database_helper.dart:4401:11 • unused_local_variable
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4403:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4434:7 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4448:9 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4471:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4485:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4588:9 • avoid_print
+warning • The operand can't be 'null', so the condition is always 'true' • backup_2026-02-07_aws-first/database_helper.dart:4593:18 • unnecessary_null_comparison
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:4633:7 • avoid_print
+warning • The value of the local variable 'days90' isn't used • backup_2026-02-07_aws-first/database_helper.dart:4990:11 • unused_local_variable
+warning • The value of the local variable 'db' isn't used • backup_2026-02-07_aws-first/database_helper.dart:5047:11 • unused_local_variable
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:5420:5 • avoid_print
+   info • Don't invoke 'print' in production code • backup_2026-02-07_aws-first/database_helper.dart:5440:5 • avoid_print
+   info • Statements in an if should be enclosed in a block • backup_2026-02-07_aws-first/database_helper.dart:5616:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • backup_2026-02-07_aws-first/database_helper.dart:5617:38 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • backup_2026-02-07_aws-first/database_helper.dart:5618:37 • curly_braces_in_flow_control_structures
+   info • Unnecessary escape in string literal • backup_2026-02-07_aws-first/schema_definitions.dart:29:44 • unnecessary_string_escapes
+   info • Unnecessary escape in string literal • backup_2026-02-07_aws-first/schema_definitions.dart:29:53 • unnecessary_string_escapes
+warning • Unused import: 'package:ruchiserv/db/database_helper.dart' • integration_test/app_test.dart:7:8 • unused_import
+warning • Unused import: 'package:shared_preferences/shared_preferences.dart' • integration_test/app_test.dart:8:8 • unused_import
+   info • Don't invoke 'print' in production code • integration_test/app_test.dart:37:9 • avoid_print
+   info • Don't invoke 'print' in production code • integration_test/app_test.dart:69:10 • avoid_print
+   info • Don't invoke 'print' in production code • integration_test/app_test.dart:79:7 • avoid_print
+   info • Don't invoke 'print' in production code • integration_test/app_test.dart:88:7 • avoid_print
+   info • Don't invoke 'print' in production code • integration_test/app_test.dart:94:7 • avoid_print
+   info • Don't invoke 'print' in production code • integration_test/app_test.dart:115:7 • avoid_print
+warning • Unused import: 'package:ruchiserv/core/app_logger.dart' • lib/core/app_logger.dart:1:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/core/encryption_helper.dart:43:38 • unnecessary_non_null_assertion
+warning • Dead code • lib/db/aws/aws_api.dart:30:36 • dead_code
+   info • Unnecessary escape in string literal • lib/db/schema_definitions.dart:29:44 • unnecessary_string_escapes
+   info • Unnecessary escape in string literal • lib/db/schema_definitions.dart:29:53 • unnecessary_string_escapes
+   info • The constant name 'TAG' isn't a lowerCamelCase identifier • lib/db/schema_manager.dart:8:23 • constant_identifier_names
+warning • The value of the local variable 'db' isn't used • lib/db/seed_ledger_data.dart:10:11 • unused_local_variable
+warning • The value of the local variable 'r' isn't used • lib/db/seed_ledger_data.dart:74:11 • unused_local_variable
+warning • The value of the local variable 'categories' isn't used • lib/db/seed_ledger_data.dart:75:11 • unused_local_variable
+warning • Unused import: 'package:intl/intl.dart' • lib/db/seed_november_data.dart:3:8 • unused_import
+warning • Unused import: 'core/app_logger.dart' • lib/main.dart:6:8 • unused_import
+warning • Unused import: 'package:firebase_core/firebase_core.dart' • lib/main.dart:24:8 • unused_import
+warning • Unused import: 'package:ruchiserv/db/aws/aws_api.dart' • lib/repositories/finance_repository.dart:2:8 • unused_import
+warning • Unused import: 'dart:convert' • lib/repositories/finance_repository.dart:9:8 • unused_import
+   info • Statements in an if should be enclosed in a block • lib/repositories/finance_repository.dart:439:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/repositories/finance_repository.dart:440:38 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/repositories/finance_repository.dart:441:37 • curly_braces_in_flow_control_structures
+warning • Unused import: 'package:ruchiserv/db/aws/aws_api.dart' • lib/repositories/inventory_repository.dart:2:8 • unused_import
+warning • Unused import: 'package:ruchiserv/db/sync_event.dart' • lib/repositories/inventory_repository.dart:4:8 • unused_import
+warning • Unused import: 'package:ruchiserv/db/aws/aws_api.dart' • lib/repositories/operation_repository.dart:2:8 • unused_import
+warning • Unused import: 'package:ruchiserv/db/sync_event.dart' • lib/repositories/operation_repository.dart:4:8 • unused_import
+warning • Unused import: 'package:sqflite/sqflite.dart' • lib/repositories/operation_repository.dart:6:8 • unused_import
+   info • Statements in an if should be enclosed in a block • lib/repositories/operation_repository.dart:355:31 • curly_braces_in_flow_control_structures
+warning • Unused import: 'package:ruchiserv/repositories/order_repository.dart' • lib/repositories/order_repository.dart:1:8 • unused_import
+warning • Unused import: 'package:sqflite/sqflite.dart' • lib/repositories/order_repository.dart:7:8 • unused_import
+warning • Unused import: 'package:shared_preferences/shared_preferences.dart' • lib/screens/0.0_splash_screen.dart:2:8 • unused_import
+warning • Unused import: '../core/app_theme.dart' • lib/screens/0.0_splash_screen.dart:3:8 • unused_import
+warning • Unused import: '2.0_orders_calendar_screen.dart' • lib/screens/1.4_login_screen.dart:17:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:231:47 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:232:47 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:307:76 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:320:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:322:39 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:327:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:336:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:353:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:359:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:387:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:412:76 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/1.4_login_screen.dart:421:31 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:421:39 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/1.4_login_screen.dart:422:31 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:422:39 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:427:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:430:103 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:569:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:582:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:600:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:613:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:631:89 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:642:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:660:82 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:679:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:726:69 • unnecessary_non_null_assertion
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/1.4_login_screen.dart:728:29 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:752:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/1.4_login_screen.dart:761:67 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/1.7_create_firm_screen.dart:399:31 • use_build_context_synchronously
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/1.7_create_firm_screen.dart:580:11 • deprecated_member_use
+warning • Unused import: '../db/database_helper.dart' • lib/screens/2.0_orders_calendar_screen.dart:12:8 • unused_import
+   info • The private field _calendarFormat could be 'final' • lib/screens/2.0_orders_calendar_screen.dart:39:18 • prefer_final_fields
+warning • The value of the field '_monthTotalPax' isn't used • lib/screens/2.0_orders_calendar_screen.dart:49:7 • unused_field
+warning • The value of the field '_monthUtilization' isn't used • lib/screens/2.0_orders_calendar_screen.dart:50:10 • unused_field
+warning • The value of the field '_showOfflineChip' isn't used • lib/screens/2.0_orders_calendar_screen.dart:53:8 • unused_field
+warning • The value of the local variable 'result' isn't used • lib/screens/2.0_orders_calendar_screen.dart:258:11 • unused_local_variable
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.0_orders_calendar_screen.dart:396:95 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.0_orders_calendar_screen.dart:397:96 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.0_orders_calendar_screen.dart:398:93 • unnecessary_non_null_assertion
+warning • Duplicate import • lib/screens/2.1.1_order_fullscreen_view_screen.dart:12:8 • duplicate_import
+warning • Unused import: 'package:ruchiserv/repositories/operation_repository.dart' • lib/screens/2.1.1_order_fullscreen_view_screen.dart:14:8 • unused_import
+warning • Unused import: 'package:intl/intl.dart' • lib/screens/2.1.1_order_fullscreen_view_screen.dart:16:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:127:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:145:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:151:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:157:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:168:53 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/2.1.1_order_fullscreen_view_screen.dart:187:33 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/2.1.1_order_fullscreen_view_screen.dart:192:36 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/2.1.1_order_fullscreen_view_screen.dart:194:53 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:194:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:199:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:218:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:225:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:237:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:240:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:243:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:246:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:256:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:260:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:317:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:372:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:379:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:386:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:434:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:454:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:459:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:464:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:489:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:508:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:517:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:524:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:558:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:565:45 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:580:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:586:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:597:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:603:55 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/2.1.1_order_fullscreen_view_screen.dart:618:27 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:620:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:629:55 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/2.1.1_order_fullscreen_view_screen.dart:638:27 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:640:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:649:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:689:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:691:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:699:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:740:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:774:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:840:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:843:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:846:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:848:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:850:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1.1_order_fullscreen_view_screen.dart:853:43 • unnecessary_non_null_assertion
+warning • Unused import: '../db/database_helper.dart' • lib/screens/2.1_add_order_screen.dart:10:8 • unused_import
+warning • Two keys in a map literal shouldn't be equal • lib/screens/2.1_add_order_screen.dart:234:9 • equal_keys_in_map
+   info • The referenced identifier is a wildcard • lib/screens/2.1_add_order_screen.dart:493:58 • no_wildcard_variable_uses
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:522:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:530:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:562:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:619:43 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:620:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:620:95 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:647:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:648:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:660:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:718:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:719:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:743:84 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:744:97 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:753:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:763:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:766:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:797:84 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/2.1_add_order_screen.dart:805:23 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:807:102 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:808:98 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:809:99 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:810:106 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:813:90 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/2.1_add_order_screen.dart:819:23 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:821:96 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:822:100 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:825:90 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:834:45 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:859:96 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:872:96 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:885:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:901:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:906:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:920:62 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/2.1_add_order_screen.dart:924:33 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:948:100 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:961:100 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:980:100 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:991:70 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1000:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1010:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1027:100 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1036:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1050:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1058:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1066:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1074:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1086:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1099:84 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1114:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1114:124 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1299:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1399:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1420:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.1_add_order_screen.dart:1441:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:56:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:61:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:148:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:157:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:167:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:168:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:170:110 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:171:113 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:187:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:192:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:209:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:233:88 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:276:73 • unnecessary_non_null_assertion
+   info • 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre • lib/screens/2.2_orders_list_screen.dart:311:12 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:318:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:323:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:344:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:356:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:379:54 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:380:54 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:381:54 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.2_orders_list_screen.dart:390:57 • unnecessary_non_null_assertion
+warning • Unused import: '../db/database_helper.dart' • lib/screens/2.3_summary_screen.dart:4:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.3_summary_screen.dart:43:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.3_summary_screen.dart:46:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.3_summary_screen.dart:66:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.3_summary_screen.dart:81:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.3_summary_screen.dart:87:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.3_summary_screen.dart:121:80 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/2.3_summary_screen.dart:122:58 • unnecessary_non_null_assertion
+warning • The value of the local variable 'isDark' isn't used • lib/screens/3.0_operations_screen.dart:73:11 • unused_local_variable
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:88:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:100:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:121:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:122:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:137:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:138:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:147:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:148:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.0_operations_screen.dart:219:57 • unnecessary_non_null_assertion
+warning • Unused import: 'package:shared_preferences/shared_preferences.dart' • lib/screens/3.1_kitchen_screen.dart:9:8 • unused_import
+warning • Unused import: '../db/aws/aws_api.dart' • lib/screens/3.1_kitchen_screen.dart:12:8 • unused_import
+warning • Unused import: '../services/connectivity_service.dart' • lib/screens/3.1_kitchen_screen.dart:13:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/screens/3.1_kitchen_screen.dart:99:7 • avoid_print
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:162:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:169:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:170:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:171:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:205:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:231:97 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:232:93 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:233:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:234:93 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:315:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:315:117 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:315:177 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:336:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:341:47 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:368:69 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:374:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:395:76 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:395:113 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:398:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:398:108 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:409:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:425:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:438:47 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:442:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:450:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:459:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:480:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:507:53 • unnecessary_non_null_assertion
+  error • The getter 'production' isn't defined for the type 'AppLocalizations' • lib/screens/3.1_kitchen_screen.dart:507:55 • undefined_getter
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:526:72 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:539:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:545:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:563:69 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:569:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:608:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:649:70 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.1_kitchen_screen.dart:661:59 • unnecessary_non_null_assertion
+warning • Unused import: 'package:path_provider/path_provider.dart' • lib/screens/3.3.1_staff_detail_screen.dart:9:8 • unused_import
+warning • Unused import: 'package:path/path.dart' • lib/screens/3.3.1_staff_detail_screen.dart:10:8 • unused_import
+warning • Unused import: '../db/database_helper.dart' • lib/screens/3.3.1_staff_detail_screen.dart:11:8 • unused_import
+warning • Unused import: 'package:ruchiserv/core/app_logger.dart' • lib/screens/3.3.1_staff_detail_screen.dart:15:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:158:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:158:114 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:177:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:178:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:180:110 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:184:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:195:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:206:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:212:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:217:55 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/3.3.1_staff_detail_screen.dart:236:30 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/3.3.1_staff_detail_screen.dart:237:54 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:237:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:252:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:268:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:268:99 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:324:43 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:331:44 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:335:80 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:336:80 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:344:86 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/3.3.1_staff_detail_screen.dart:350:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:351:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:353:98 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:354:99 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:355:99 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:368:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:376:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:384:44 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:391:86 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/3.3.1_staff_detail_screen.dart:398:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:399:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:416:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:424:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:432:44 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:436:80 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:445:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:453:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:461:80 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:466:44 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:473:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:480:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:490:80 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:501:63 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.1_staff_detail_screen.dart:501:107 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.4_staff_attendance_calendar_screen.dart:110:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.4_staff_attendance_calendar_screen.dart:160:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.4_staff_attendance_calendar_screen.dart:161:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3.4_staff_attendance_calendar_screen.dart:162:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:97:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:119:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:164:45 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:165:45 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:214:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:214:180 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:243:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:247:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:265:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:266:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:294:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:295:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:339:72 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:343:72 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:343:132 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:353:92 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:353:172 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:353:215 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:409:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:426:79 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:450:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:451:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:452:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:462:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:469:76 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:483:84 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:488:142 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.3_staff_screen.dart:492:153 • unnecessary_non_null_assertion
+warning • Unused import: '../db/database_helper.dart' • lib/screens/3.4_utensils_screen.dart:5:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:53:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:60:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:61:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:70:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:71:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:88:72 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:114:74 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/3.4_utensils_screen.dart:122:66 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:122:74 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:127:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:148:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:156:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:164:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:173:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:191:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:192:63 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:194:118 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:198:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:209:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:216:72 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:238:74 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/3.4_utensils_screen.dart:246:66 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:246:74 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:251:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:269:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:282:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:300:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:305:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:327:84 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:332:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/3.4_utensils_screen.dart:344:59 • unnecessary_non_null_assertion
+warning • The value of the local variable 'isDark' isn't used • lib/screens/4.0_inventory_screen.dart:18:11 • unused_local_variable
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:40:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:41:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:53:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:54:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:88:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:89:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:110:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:111:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:123:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.0_inventory_screen.dart:124:65 • unnecessary_non_null_assertion
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/4.0_mrp_hub_screen.dart:4:8 • unused_import
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.0_mrp_hub_screen.dart:214:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.0_mrp_hub_screen.dart:221:7 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.0_mrp_hub_screen.dart:266:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.0_mrp_hub_screen.dart:273:7 • use_build_context_synchronously
+warning • Unused import: '../db/database_helper.dart' • lib/screens/4.1_ingredients_screen.dart:6:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:79:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:87:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:96:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:105:60 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.1_ingredients_screen.dart:111:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:113:60 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.1_ingredients_screen.dart:123:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:125:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:129:91 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:130:90 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:131:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:132:91 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:133:92 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:134:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:142:112 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:147:72 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:165:33 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:167:40 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:168:64 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:168:72 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:172:55 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:180:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:181:52 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:181:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:204:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:212:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:221:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:230:60 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.1_ingredients_screen.dart:236:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:238:60 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.1_ingredients_screen.dart:248:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:250:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:254:91 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:255:90 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:256:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:257:91 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:258:92 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:259:92 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:260:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:268:112 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:273:72 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:290:33 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:292:40 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:293:64 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:293:72 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:297:55 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:305:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.1_ingredients_screen.dart:306:52 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:306:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:323:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:345:61 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.1_ingredients_screen.dart:358:21 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:383:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:386:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:403:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.1_ingredients_screen.dart:408:71 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:60:26 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:85:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:93:63 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:103:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:113:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:133:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:156:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:163:72 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:174:31 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:176:55 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:184:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:185:52 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:185:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:200:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:208:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:222:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:236:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:257:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:259:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:265:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:281:87 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:283:77 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:283:140 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:298:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:361:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:389:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:400:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:446:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:492:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:504:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:511:74 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:524:33 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:526:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:549:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:549:127 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:554:46 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:561:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:572:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:578:70 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:588:31 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:590:38 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:591:62 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:591:70 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:595:53 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:605:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:606:52 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:606:60 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:615:26 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.2_bom_screen.dart:616:50 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:616:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:648:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:663:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:668:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:682:91 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:683:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.2_bom_screen.dart:683:134 • unnecessary_non_null_assertion
+warning • The value of the field '_subcontractors' isn't used • lib/screens/4.3_mrp_run_screen.dart:31:30 • unused_field
+   info • The private field _orderDishes could be 'final' • lib/screens/4.3_mrp_run_screen.dart:33:40 • prefer_final_fields
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.3_mrp_run_screen.dart:135:32 • use_build_context_synchronously
+warning • Unnecessary cast • lib/screens/4.3_mrp_run_screen.dart:221:49 • unnecessary_cast
+warning • Unnecessary cast • lib/screens/4.3_mrp_run_screen.dart:225:52 • unnecessary_cast
+warning • Unnecessary cast • lib/screens/4.3_mrp_run_screen.dart:231:53 • unnecessary_cast
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.3_mrp_run_screen.dart:236:28 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:305:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:335:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:395:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:453:64 • unnecessary_non_null_assertion
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/4.3_mrp_run_screen.dart:540:36 • deprecated_member_use
+   info • 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre • lib/screens/4.3_mrp_run_screen.dart:542:48 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:568:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:601:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:679:76 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.3_mrp_run_screen.dart:679:120 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:60:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:80:54 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:110:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:112:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:127:75 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:135:95 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:176:112 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.4_mrp_output_screen.dart:245:63 • unnecessary_non_null_assertion
+warning • Unused import: 'package:ruchiserv/repositories/order_repository.dart' • lib/screens/4.5_allotment_screen.dart:4:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:88:62 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.5_allotment_screen.dart:114:65 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:114:73 • unnecessary_non_null_assertion
+warning • Unnecessary cast • lib/screens/4.5_allotment_screen.dart:136:76 • unnecessary_cast
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:157:55 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.5_allotment_screen.dart:167:25 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.5_allotment_screen.dart:168:25 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:185:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:192:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:194:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:228:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:235:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:250:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:255:87 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.5_allotment_screen.dart:261:27 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:263:67 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:269:82 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:295:55 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.5_allotment_screen.dart:426:13 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:463:44 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:474:77 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:475:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:478:85 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:506:78 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:520:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:538:52 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.5_allotment_screen.dart:551:7 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:594:92 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:602:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.5_allotment_screen.dart:634:81 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:73:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:73:105 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:80:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:85:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:91:86 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.6_supplier_screen.dart:96:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:97:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:99:98 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:100:93 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:101:96 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:102:96 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:103:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:104:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:111:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:117:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:120:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:124:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:129:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:134:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:140:112 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:145:72 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.6_supplier_screen.dart:179:31 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:181:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:181:101 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.6_supplier_screen.dart:189:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.6_supplier_screen.dart:190:61 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:190:69 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.6_supplier_screen.dart:190:109 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:190:117 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:200:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:218:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:223:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:240:87 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.6_supplier_screen.dart:245:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:76:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:76:108 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:83:84 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/4.7_subcontractor_screen.dart:87:17 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:98:84 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:104:84 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:110:84 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:117:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:118:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:126:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:136:110 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:141:70 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.7_subcontractor_screen.dart:173:29 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:175:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:175:99 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.7_subcontractor_screen.dart:182:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.7_subcontractor_screen.dart:183:61 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:183:69 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.7_subcontractor_screen.dart:183:114 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:183:122 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:193:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:225:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:230:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:249:82 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:254:81 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.7_subcontractor_screen.dart:274:64 • unnecessary_non_null_assertion
+warning • Unused import: '../db/database_helper.dart' • lib/screens/4.8_purchase_orders_screen.dart:6:8 • unused_import
+   info • Don't use 'BuildContext's across async gaps • lib/screens/4.8_purchase_orders_screen.dart:61:7 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:104:92 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:114:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:121:56 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:152:81 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:175:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:191:79 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:209:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:225:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:227:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:255:88 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/4.8_purchase_orders_screen.dart:256:68 • unnecessary_non_null_assertion
+warning • Unused import: '../db/database_helper.dart' • lib/screens/5.0.1_dispatch_tracking_screen.dart:9:8 • unused_import
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/5.0.1_dispatch_tracking_screen.dart:10:8 • unused_import
+warning • Unused import: '../db/aws/aws_api.dart' • lib/screens/5.0_dispatch_hub_screen.dart:12:8 • unused_import
+warning • Unused import: '../services/connectivity_service.dart' • lib/screens/5.0_dispatch_hub_screen.dart:14:8 • unused_import
+warning • Unused import: '../services/notification_service.dart' • lib/screens/5.0_dispatch_hub_screen.dart:15:8 • unused_import
+warning • Unused import: '../widgets/access_widgets.dart' • lib/screens/5.0_dispatch_hub_screen.dart:20:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/screens/5.0_dispatch_hub_screen.dart:116:7 • avoid_print
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:125:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:135:88 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:136:94 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:137:97 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:138:91 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:207:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:249:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:277:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:277:114 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:290:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:407:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:435:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:450:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:461:61 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:476:55 • unnecessary_non_null_assertion
+warning • The declaration '_showLocation' isn't referenced • lib/screens/5.0_dispatch_hub_screen.dart:496:8 • unused_element
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:498:58 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/5.0_dispatch_hub_screen.dart:507:7 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:539:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:543:70 • unnecessary_non_null_assertion
+   info • Unnecessary use of string interpolation • lib/screens/5.0_dispatch_hub_screen.dart:555:44 • unnecessary_string_interpolations
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:555:75 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:582:63 • unnecessary_non_null_assertion
+   info • The private field _customUtensils could be 'final' • lib/screens/5.0_dispatch_hub_screen.dart:630:30 • prefer_final_fields
+   info • The private field _customConsumables could be 'final' • lib/screens/5.0_dispatch_hub_screen.dart:635:30 • prefer_final_fields
+   info • Don't invoke 'print' in production code • lib/screens/5.0_dispatch_hub_screen.dart:696:7 • avoid_print
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:727:101 • unnecessary_non_null_assertion
+warning • The value of the local variable 'dbHelper' isn't used • lib/screens/5.0_dispatch_hub_screen.dart:732:13 • unused_local_variable
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:836:103 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:842:103 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:894:86 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/5.0_dispatch_hub_screen.dart:931:19 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:932:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:959:54 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:960:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:967:54 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:968:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:975:54 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.0_dispatch_hub_screen.dart:976:57 • unnecessary_non_null_assertion
+warning • The value of the local variable 'item' isn't used • lib/screens/5.0_dispatch_hub_screen.dart:1034:25 • unused_local_variable
+   info • The 'child' argument should be last in widget constructor invocations • lib/screens/5.0_dispatch_hub_screen.dart:1144:62 • sort_child_properties_last
+warning • The value of the local variable 'isDark' isn't used • lib/screens/5.0_reports_screen.dart:53:11 • unused_local_variable
+warning • Duplicate import • lib/screens/5.1_finance_screen.dart:2:8 • duplicate_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:195:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:201:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:216:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:245:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:254:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:263:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:288:80 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:330:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.1_finance_screen.dart:335:122 • unnecessary_non_null_assertion
+warning • Duplicate import • lib/screens/5.2_transactions_screen.dart:2:8 • duplicate_import
+warning • Unused import: 'package:intl/intl.dart' • lib/screens/5.2_transactions_screen.dart:5:8 • unused_import
+warning • Unused import: '../db/database_helper.dart' • lib/screens/5.2_transactions_screen.dart:6:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.2_transactions_screen.dart:53:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.2_transactions_screen.dart:60:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.2_transactions_screen.dart:74:64 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.2_transactions_screen.dart:89:71 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.2_transactions_screen.dart:90:73 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.2_transactions_screen.dart:92:132 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.2_transactions_screen.dart:93:135 • unnecessary_non_null_assertion
+warning • Duplicate import • lib/screens/5.3.1_ledger_detail_screen.dart:2:8 • duplicate_import
+warning • Unused import: '../db/database_helper.dart' • lib/screens/5.3.1_ledger_detail_screen.dart:5:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.3.1_ledger_detail_screen.dart:135:50 • unnecessary_non_null_assertion
+warning • Unused import: '../db/database_helper.dart' • lib/screens/5.3_ledger_screen.dart:7:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.3_ledger_screen.dart:55:49 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/5.3_ledger_screen.dart:64:36 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.3_ledger_screen.dart:102:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.3_ledger_screen.dart:103:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.3_ledger_screen.dart:104:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/5.3_ledger_screen.dart:105:57 • unnecessary_non_null_assertion
+warning • Unused import: '../db/database_helper.dart' • lib/screens/5.4_invoices_screen.dart:7:8 • unused_import
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/5.4_invoices_screen.dart:401:15 • deprecated_member_use
+warning • The value of the local variable 'dbHelper' isn't used • lib/screens/5.4_return_tracking_screen.dart:82:11 • unused_local_variable
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/5.4_return_tracking_screen.dart:141:17 • deprecated_member_use
+warning • Unused import: '../services/auth_service.dart' • lib/screens/6.0_settings_screen.dart:4:8 • unused_import
+warning • Unused import: 'dart:io' • lib/screens/6.0_settings_screen.dart:16:8 • unused_import
+warning • Unused import: 'package:share_plus/share_plus.dart' • lib/screens/6.0_settings_screen.dart:17:8 • unused_import
+warning • Unused import: 'package:path/path.dart' • lib/screens/6.0_settings_screen.dart:18:8 • unused_import
+warning • Unused import: 'package:provider/provider.dart' • lib/screens/6.0_settings_screen.dart:19:8 • unused_import
+warning • Unused import: '../core/locale_provider.dart' • lib/screens/6.0_settings_screen.dart:20:8 • unused_import
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/6.10_utensil_master_screen.dart:111:19 • deprecated_member_use
+warning • The value of the local variable 'dbHelper' isn't used • lib/screens/6.10_utensil_master_screen.dart:136:23 • unused_local_variable
+   info • Don't use 'BuildContext's across async gaps • lib/screens/6.10_utensil_master_screen.dart:150:31 • use_build_context_synchronously
+warning • Unused import: 'package:ruchiserv/repositories/finance_repository.dart' • lib/screens/6.2_user_management_hub.dart:1:8 • unused_import
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/6.2_user_management_hub.dart:178:23 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/screens/6.2_user_management_hub.dart:328:31 • use_build_context_synchronously
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/6.2_user_management_hub.dart:386:11 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/screens/6.2_user_management_hub.dart:400:29 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/6.2_user_management_hub.dart:590:31 • use_build_context_synchronously
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/6.2_user_management_hub.dart:640:19 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/6.2_user_management_hub.dart:735:17 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/screens/6.2_user_management_hub.dart:770:29 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/6.2_user_management_hub.dart:834:29 • use_build_context_synchronously
+warning • The value of the field '_isLoading' isn't used • lib/screens/6.3_payment_settings_screen.dart:15:8 • unused_field
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/6.5_manage_authorized_mobiles_screen.dart:82:15 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/6.5_manage_authorized_mobiles_screen.dart:221:15 • deprecated_member_use
+warning • The value of the local variable 'isDesktop' isn't used • lib/screens/6.6_subscription_screen.dart:658:13 • unused_local_variable
+warning • Duplicate import • lib/screens/6.9_vehicle_master_screen.dart:2:8 • duplicate_import
+warning • Duplicate import • lib/screens/6.9_vehicle_master_screen.dart:9:8 • duplicate_import
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/6.9_vehicle_master_screen.dart:73:17 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/6.9_vehicle_master_screen.dart:148:37 • use_build_context_synchronously
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/7.0_driver_home_screen.dart:8:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/screens/7.0_driver_home_screen.dart:131:7 • avoid_print
+   info • Statements in an if should be enclosed in a block • lib/screens/7.0_driver_home_screen.dart:272:42 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/7.0_driver_home_screen.dart:273:30 • curly_braces_in_flow_control_structures
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:113:62 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.1_audit_report_screen.dart:154:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.1_audit_report_screen.dart:155:52 • use_build_context_synchronously
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:155:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:170:50 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:191:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:201:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:214:68 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/7.1_audit_report_screen.dart:224:27 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:226:68 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:260:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:290:70 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:293:70 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/7.1_audit_report_screen.dart:295:70 • unnecessary_non_null_assertion
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/7.1_driver_assignment_screen.dart:7:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/screens/7.1_driver_assignment_screen.dart:91:9 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.1_driver_assignment_screen.dart:119:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.1_driver_assignment_screen.dart:167:28 • use_build_context_synchronously
+   info • Statements in an if should be enclosed in a block • lib/screens/7.1_driver_assignment_screen.dart:215:18 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/7.1_driver_assignment_screen.dart:216:26 • curly_braces_in_flow_control_structures
+warning • Unused import: 'package:intl/intl.dart' • lib/screens/7.2_driver_dispatch_detail_screen.dart:5:8 • unused_import
+warning • Unused import: '../services/tracking_api_service.dart' • lib/screens/7.2_driver_dispatch_detail_screen.dart:9:8 • unused_import
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/7.2_driver_dispatch_detail_screen.dart:12:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/screens/7.2_driver_dispatch_detail_screen.dart:76:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.2_driver_dispatch_detail_screen.dart:117:29 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.2_driver_dispatch_detail_screen.dart:124:7 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.2_driver_dispatch_detail_screen.dart:197:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.2_driver_dispatch_detail_screen.dart:200:21 • use_build_context_synchronously
+warning • The value of the local variable 'type' isn't used • lib/screens/7.2_driver_dispatch_detail_screen.dart:375:11 • unused_local_variable
+   info • Statements in an if should be enclosed in a block • lib/screens/7.2_driver_dispatch_detail_screen.dart:379:32 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/7.2_driver_dispatch_detail_screen.dart:380:34 • curly_braces_in_flow_control_structures
+warning • Unused import: 'package:intl/intl.dart' • lib/screens/7.3_driver_active_dispatch_screen.dart:6:8 • unused_import
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/7.3_driver_active_dispatch_screen.dart:11:8 • unused_import
+warning • Duplicate import • lib/screens/7.3_driver_active_dispatch_screen.dart:14:8 • duplicate_import
+   info • Don't invoke 'print' in production code • lib/screens/7.3_driver_active_dispatch_screen.dart:99:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.3_driver_active_dispatch_screen.dart:129:7 • use_build_context_synchronously
+warning • The value of the local variable 'db' isn't used • lib/screens/7.3_driver_active_dispatch_screen.dart:145:13 • unused_local_variable
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.3_driver_active_dispatch_screen.dart:168:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.3_driver_active_dispatch_screen.dart:176:24 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.3_driver_active_dispatch_screen.dart:226:30 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.3_driver_active_dispatch_screen.dart:230:30 • use_build_context_synchronously
+warning • Unused import: 'package:intl/intl.dart' • lib/screens/7.4_driver_return_screen.dart:6:8 • unused_import
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/7.4_driver_return_screen.dart:8:8 • unused_import
+   info • The private field _itemStatus could be 'final' • lib/screens/7.4_driver_return_screen.dart:22:20 • prefer_final_fields
+   info • The private field _returnedQty could be 'final' • lib/screens/7.4_driver_return_screen.dart:23:17 • prefer_final_fields
+warning • The value of the local variable 'db' isn't used • lib/screens/7.4_driver_return_screen.dart:75:13 • unused_local_variable
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.4_driver_return_screen.dart:118:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.4_driver_return_screen.dart:122:21 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/7.4_driver_return_screen.dart:123:21 • use_build_context_synchronously
+warning • The value of the local variable 'statusColor' isn't used • lib/screens/7.4_driver_return_screen.dart:212:11 • unused_local_variable
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/7.5_driver_earnings_screen.dart:6:8 • unused_import
+warning • The value of the local variable 'paidAmount' isn't used • lib/screens/7.5_driver_earnings_screen.dart:116:11 • unused_local_variable
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/8.0_subcontractor_home_screen.dart:7:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/8.1_subcontractor_calendar_screen.dart:211:26 • unnecessary_non_null_assertion
+warning • Unused import: '../utils/file_storage_helper.dart' • lib/screens/8.3_subcontractor_ledger_screen.dart:8:8 • unused_import
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/8.3_subcontractor_ledger_screen.dart:158:48 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/8.3_subcontractor_ledger_screen.dart:164:48 • use_build_context_synchronously
+warning • Unused import: 'package:ruchiserv/l10n/app_localizations.dart' • lib/screens/9.0_supplier_home_screen.dart:7:8 • unused_import
+warning • The value of the local variable 'firmId' isn't used • lib/screens/9.0_supplier_home_screen.dart:40:11 • unused_local_variable
+   info • Statements in an if should be enclosed in a block • lib/screens/9.0_supplier_home_screen.dart:330:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/9.0_supplier_home_screen.dart:331:38 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/9.0_supplier_home_screen.dart:332:37 • curly_braces_in_flow_control_structures
+warning • Unused import: '9.2_supplier_po_screen.dart' • lib/screens/9.1_supplier_calendar_screen.dart:7:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/9.1_supplier_calendar_screen.dart:188:36 • unnecessary_non_null_assertion
+warning • Unused import: 'package:intl/intl.dart' • lib/screens/9.2_supplier_po_screen.dart:4:8 • unused_import
+warning • Unused import: '../db/database_helper.dart' • lib/screens/9.2_supplier_po_screen.dart:5:8 • unused_import
+   info • Don't use 'BuildContext's across async gaps • lib/screens/9.2_supplier_po_screen.dart:80:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/9.2_supplier_po_screen.dart:107:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/9.2_supplier_po_screen.dart:118:7 • use_build_context_synchronously
+   info • Statements in an if should be enclosed in a block • lib/screens/9.2_supplier_po_screen.dart:250:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/9.2_supplier_po_screen.dart:251:38 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/9.2_supplier_po_screen.dart:252:37 • curly_braces_in_flow_control_structures
+warning • Unused import: '../utils/file_storage_helper.dart' • lib/screens/9.3_supplier_ledger_screen.dart:8:8 • unused_import
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/9.3_supplier_ledger_screen.dart:167:48 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/9.3_supplier_ledger_screen.dart:173:48 • use_build_context_synchronously
+warning • Unused import: '../db/database_helper.dart' • lib/screens/add_transaction_screen.dart:7:8 • unused_import
+   info • 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre • lib/screens/add_transaction_screen.dart:196:37 • deprecated_member_use
+   info • 'MaterialState' is deprecated and shouldn't be used. Use WidgetState instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre • lib/screens/add_transaction_screen.dart:197:42 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/add_transaction_screen.dart:285:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/add_transaction_screen.dart:303:17 • deprecated_member_use
+warning • Duplicate import • lib/screens/customer_payment_screen.dart:2:8 • duplicate_import
+warning • Unused import: 'package:url_launcher/url_launcher.dart' • lib/screens/customer_payment_screen.dart:9:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:223:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:261:49 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:262:51 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:269:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:279:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:295:50 • unnecessary_non_null_assertion
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/customer_payment_screen.dart:304:25 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/customer_payment_screen.dart:305:25 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/customer_payment_screen.dart:312:25 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/customer_payment_screen.dart:313:25 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/customer_payment_screen.dart:320:25 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/customer_payment_screen.dart:321:25 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:322:65 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/customer_payment_screen.dart:340:92 • unnecessary_non_null_assertion
+warning • Duplicate import • lib/screens/finance/add_transaction_screen.dart:2:8 • duplicate_import
+warning • Unused import: '../../db/database_helper.dart' • lib/screens/finance/add_transaction_screen.dart:4:8 • unused_import
+   info • The private field _isGlobal could be 'final' • lib/screens/finance/add_transaction_screen.dart:26:8 • prefer_final_fields
+warning • The value of the field '_isGlobal' isn't used • lib/screens/finance/add_transaction_screen.dart:26:8 • unused_field
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:52:69 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:52:111 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:67:77 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:81:77 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:101:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:108:86 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:109:88 • unnecessary_non_null_assertion
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/finance/add_transaction_screen.dart:117:17 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:119:58 • unnecessary_non_null_assertion
+warning • The receiver can't be null, so the null-aware operator '?.' is unnecessary • lib/screens/finance/add_transaction_screen.dart:134:59 • invalid_null_aware_operator
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/finance/add_transaction_screen.dart:157:17 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:159:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:172:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:189:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/finance/add_transaction_screen.dart:216:103 • unnecessary_non_null_assertion
+warning • Duplicate import • lib/screens/finance/finance_dashboard.dart:2:8 • duplicate_import
+warning • Unused import: '../../db/database_helper.dart' • lib/screens/finance/finance_dashboard.dart:5:8 • unused_import
+  error • The method 'getPendingDisbursements' isn't defined for the type 'DatabaseHelper' • lib/screens/finance/salary_disbursement_screen.dart:57:27 • undefined_method
+  error • The method 'disburseSalary' isn't defined for the type 'DatabaseHelper' • lib/screens/finance/salary_disbursement_screen.dart:202:32 • undefined_method
+warning • Duplicate import • lib/screens/finance/transaction_list_screen.dart:2:8 • duplicate_import
+warning • Unused import: '../../db/database_helper.dart' • lib/screens/finance/transaction_list_screen.dart:5:8 • unused_import
+warning • Unused import: 'package:ruchiserv/repositories/finance_repository.dart' • lib/screens/ledger_detail_screen.dart:1:8 • unused_import
+warning • Unused import: '../utils/file_storage_helper.dart' • lib/screens/ledger_detail_screen.dart:8:8 • unused_import
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/ledger_detail_screen.dart:339:68 • unnecessary_non_null_assertion
+warning • The declaration '_buildSummaryItem' isn't referenced • lib/screens/ledger_detail_screen.dart:424:10 • unused_element
+warning • Unused import: 'package:shared_preferences/shared_preferences.dart' • lib/screens/main_menu_screen.dart:10:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/screens/main_menu_screen.dart:159:7 • avoid_print
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:214:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:215:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:427:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:428:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:429:60 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:430:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:431:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:432:59 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/main_menu_screen.dart:433:61 • unnecessary_non_null_assertion
+   info • Don't use 'BuildContext's across async gaps • lib/screens/report_preview_page.dart:43:29 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/report_preview_page.dart:73:29 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/report_preview_page.dart:96:29 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/report_preview_page.dart:272:33 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/report_preview_page.dart:302:33 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/report_preview_page.dart:332:33 • use_build_context_synchronously
+warning • Unused import: '../../db/database_helper.dart' • lib/screens/reports/dashboard_view.dart:4:8 • unused_import
+warning • The value of the local variable 'isDark' isn't used • lib/screens/reports/dashboard_view.dart:26:11 • unused_local_variable
+warning • Unused import: '../../db/database_helper.dart' • lib/screens/reports/detailed_reports_view.dart:9:8 • unused_import
+warning • Duplicate import • lib/screens/reports/detailed_reports_view.dart:10:8 • duplicate_import
+warning • Duplicate import • lib/screens/reports/detailed_reports_view.dart:11:8 • duplicate_import
+   info • The private field _drillDownData could be 'final' • lib/screens/reports/detailed_reports_view.dart:51:43 • prefer_final_fields
+warning • The value of the local variable 'finRepo' isn't used • lib/screens/reports/detailed_reports_view.dart:148:11 • unused_local_variable
+warning • The value of the local variable 'isDark' isn't used • lib/screens/reports/detailed_reports_view.dart:461:11 • unused_local_variable
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:489:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:495:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:496:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:497:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:498:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:527:69 • unnecessary_non_null_assertion
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/reports/detailed_reports_view.dart:536:32 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:670:62 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:874:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:875:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:876:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:877:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:883:48 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:885:51 • unnecessary_non_null_assertion
+   info • Unnecessary use of 'toList' in a spread • lib/screens/reports/detailed_reports_view.dart:1064:40 • unnecessary_to_list_in_spreads
+   info • Unnecessary use of 'toList' in a spread • lib/screens/reports/detailed_reports_view.dart:1075:26 • unnecessary_to_list_in_spreads
+   info • Unnecessary use of 'toList' in a spread • lib/screens/reports/detailed_reports_view.dart:1300:26 • unnecessary_to_list_in_spreads
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1398:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1399:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1400:52 • unnecessary_non_null_assertion
+   info • Unnecessary use of 'toList' in a spread • lib/screens/reports/detailed_reports_view.dart:1580:26 • unnecessary_to_list_in_spreads
+warning • The value of the local variable 'totalDishes' isn't used • lib/screens/reports/detailed_reports_view.dart:1631:9 • unused_local_variable
+warning • The value of the local variable 'completed' isn't used • lib/screens/reports/detailed_reports_view.dart:1631:26 • unused_local_variable
+warning • The value of the local variable 'inProgress' isn't used • lib/screens/reports/detailed_reports_view.dart:1631:41 • unused_local_variable
+warning • The value of the local variable 'pending' isn't used • lib/screens/reports/detailed_reports_view.dart:1631:57 • unused_local_variable
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1647:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1648:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1649:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1650:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1835:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1836:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1837:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1838:52 • unnecessary_non_null_assertion
+   info • Unnecessary use of 'toList' in a spread • lib/screens/reports/detailed_reports_view.dart:1909:32 • unnecessary_to_list_in_spreads
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1958:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1959:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1960:52 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/reports/detailed_reports_view.dart:1964:64 • unnecessary_non_null_assertion
+warning • Duplicate import • lib/screens/reports/finance_reports_screen.dart:2:8 • duplicate_import
+warning • Unused import: '../../db/database_helper.dart' • lib/screens/reports/finance_reports_screen.dart:6:8 • unused_import
+warning • Unused import: '../../db/database_helper.dart' • lib/screens/reports/gst_register_screen.dart:6:8 • unused_import
+warning • The declaration '_updateMandate' isn't referenced • lib/screens/saas_payment_screen.dart:57:16 • unused_element
+warning • Unnecessary type check; the result is always 'true' • lib/screens/saas_payment_screen.dart:317:22 • unnecessary_type_check
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/saas_payment_screen.dart:330:53 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/saas_payment_screen.dart:331:55 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/saas_payment_screen.dart:338:57 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/saas_payment_screen.dart:354:58 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/screens/saas_payment_screen.dart:360:46 • unnecessary_non_null_assertion
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/saas_payment_screen.dart:394:23 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/saas_payment_screen.dart:395:23 • deprecated_member_use
+   info • Unnecessary use of 'toList' in a spread • lib/screens/saas_payment_screen.dart:407:20 • unnecessary_to_list_in_spreads
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/saas_payment_screen.dart:420:25 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/saas_payment_screen.dart:421:25 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/saas_payment_screen.dart:429:25 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/screens/saas_payment_screen.dart:430:25 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/scripts/debug_login.dart:19:3 • avoid_print
+   info • Don't invoke 'print' in production code • lib/scripts/debug_login.dart:23:3 • avoid_print
+   info • Don't invoke 'print' in production code • lib/scripts/debug_login.dart:27:3 • avoid_print
+warning • Unused import: 'fcm_service.dart' • lib/services/auth_service.dart:13:8 • unused_import
+warning • Unused import: 'package:firebase_messaging/firebase_messaging.dart' • lib/services/auth_service.dart:14:8 • unused_import
+warning • The value of the local variable 'accessToken' isn't used • lib/services/auth_service.dart:68:15 • unused_local_variable
+   info • Statements in an if should be enclosed in a block • lib/services/auth_service.dart:365:38 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/services/auth_service.dart:366:72 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/services/auth_service.dart:367:73 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/services/auth_service.dart:386:43 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/services/auth_service.dart:387:80 • curly_braces_in_flow_control_structures
+warning • The value of the local variable 'firmResp' isn't used • lib/services/auth_service.dart:736:13 • unused_local_variable
+warning • The value of the local variable 'userResp' isn't used • lib/services/auth_service.dart:754:13 • unused_local_variable
+warning • Unused import: 'package:url_launcher/url_launcher.dart' • lib/services/battery_optimization_service.dart:3:8 • unused_import
+warning • The value of the field '_channel' isn't used • lib/services/battery_optimization_service.dart:9:30 • unused_field
+   info • Missing type annotation • lib/services/battery_optimization_service.dart:12:50 • strict_top_level_inference
+warning • The value of the local variable 'url' isn't used • lib/services/battery_optimization_service.dart:35:13 • unused_local_variable
+warning • The value of the local variable 'uri' isn't used • lib/services/battery_optimization_service.dart:37:17 • unused_local_variable
+   info • The import of 'package:flutter/material.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/foundation.dart' • lib/services/cashfree_payment_service.dart:5:8 • unnecessary_import
+   info • 'CFDropCheckoutPaymentBuilder' is deprecated and shouldn't be used. This integration is no longer supported. Please use CFWebCheckoutPayment • lib/services/cashfree_payment_service.dart:120:25 • deprecated_member_use
+   info • Unnecessary braces in a string interpolation • lib/services/cashfree_payment_service.dart:263:71 • unnecessary_brace_in_string_interps
+warning • Unused import: '../db/aws/aws_api.dart' • lib/services/fcm_service.dart:8:8 • unused_import
+warning • The value of the field '_localNotifications' isn't used • lib/services/fcm_service.dart:16:48 • unused_field
+   info • 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/services/geo_fence_service.dart:94:9 • deprecated_member_use
+   info • 'timeLimit' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/services/geo_fence_service.dart:95:9 • deprecated_member_use
+   info • 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/services/location_service.dart:75:9 • deprecated_member_use
+   info • 'timeLimit' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/services/location_service.dart:76:9 • deprecated_member_use
+warning • Unused import: 'dart:convert' • lib/services/messaging_service.dart:3:8 • unused_import
+warning • Unused import: '../db/database_helper.dart' • lib/services/order_cancellation_service.dart:4:8 • unused_import
+   info • Unnecessary braces in a string interpolation • lib/services/order_cancellation_service.dart:86:38 • unnecessary_brace_in_string_interps
+warning • Unused import: 'dart:io' • lib/services/pdf_service.dart:3:8 • unused_import
+   info • 'Table.fromTextArray' is deprecated and shouldn't be used. Use TableHelper.fromTextArray() instead • lib/services/pdf_service.dart:237:12 • deprecated_member_use
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:17:28 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:17:37 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:17:52 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:17:64 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:17:74 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:17:85 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:92:18 • unintended_html_in_doc_comment
+   info • Angle brackets will be interpreted as HTML • lib/services/upi_service.dart:92:27 • unintended_html_in_doc_comment
+   info • 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead • lib/services/web_update_web.dart:3:1 • deprecated_member_use
+warning • Unused import: 'package:path/path.dart' • lib/utils/file_storage_helper.dart:16:8 • unused_import
+warning • Unused import: '../db/database_helper.dart' • lib/widgets/staff_assignment_picker.dart:4:8 • unused_import
+warning • Unused import: 'package:ruchiserv/config/app_config.dart' • test/check_aws_user_test.dart:3:8 • unused_import
+warning • Unused import: 'dart:convert' • test/check_aws_user_test.dart:4:8 • unused_import
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:11:5 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:14:5 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:22:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:35:10 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:37:10 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:46:14 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:47:14 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:48:14 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:49:14 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:50:14 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:56:12 • avoid_print
+   info • Don't invoke 'print' in production code • test/check_aws_user_test.dart:60:7 • avoid_print
+   info • The import of 'package:sqflite/sqflite.dart' is unnecessary because all of the used elements are also provided by the import of 'package:sqflite_common_ffi/sqflite_ffi.dart' • test/cross_device_sync_test.dart:11:8 • unnecessary_import
+   info • Don't invoke 'print' in production code • test/cross_device_sync_test.dart:145:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/cross_device_sync_test.dart:172:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/cross_device_sync_test.dart:214:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/cross_device_sync_test.dart:249:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/cross_device_sync_test.dart:281:9 • avoid_print
+warning • Unused import: 'package:ruchiserv/db/database_helper.dart' • test/db_migration_test.dart:3:8 • unused_import
+warning • Unused import: 'package:ruchiserv/db/database_helper.dart' • test/finance_module_test.dart:3:8 • unused_import
+warning • Unused import: 'dart:convert' • test/inspect_firm_test.dart:3:8 • unused_import
+   info • Don't invoke 'print' in production code • test/inspect_firm_test.dart:8:5 • avoid_print
+   info • Don't invoke 'print' in production code • test/inspect_firm_test.dart:22:10 • avoid_print
+   info • Don't invoke 'print' in production code • test/inspect_firm_test.dart:24:10 • avoid_print
+   info • Don't invoke 'print' in production code • test/inspect_firm_test.dart:27:12 • avoid_print
+   info • Don't invoke 'print' in production code • test/inspect_firm_test.dart:29:14 • avoid_print
+   info • Don't invoke 'print' in production code • test/inspect_firm_test.dart:34:7 • avoid_print
+   info • The import of 'package:sqflite/sqflite.dart' is unnecessary because all of the used elements are also provided by the import of 'package:sqflite_common_ffi/sqflite_ffi.dart' • test/ledger_logic_test.dart:4:8 • unnecessary_import
+warning • The value of the local variable 'db' isn't used • test/ledger_logic_test.dart:13:19 • unused_local_variable
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:32:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:33:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:34:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:59:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:60:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:61:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:62:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:91:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:92:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:93:7 • avoid_print
+warning • The value of the local variable 'newRunId' isn't used • test/mrp_logic_test.dart:116:13 • unused_local_variable
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:127:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:128:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:129:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:155:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:156:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:157:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:185:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:186:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:187:7 • avoid_print
+warning • The value of the local variable 'lockedOrder' isn't used • test/mrp_logic_test.dart:204:13 • unused_local_variable
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:220:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:221:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:222:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:228:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:229:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:230:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:231:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:232:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/mrp_logic_test.dart:276:7 • avoid_print
+   info • The import of 'package:sqflite/sqflite.dart' is unnecessary because all of the used elements are also provided by the import of 'package:sqflite_common_ffi/sqflite_ffi.dart' • test/profitability_logic_test.dart:6:8 • unnecessary_import
+warning • The value of the local variable 'dbHelper' isn't used • test/profitability_logic_test.dart:18:11 • unused_local_variable
+warning • The value of the local variable 'monthYear' isn't used • test/profitability_logic_test.dart:21:18 • unused_local_variable
+   info • Don't invoke 'print' in production code • test/profitability_logic_test.dart:93:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/profitability_logic_test.dart:128:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/profitability_logic_test.dart:129:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/profitability_logic_test.dart:130:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/profitability_logic_test.dart:131:7 • avoid_print
+warning • Unused import: 'dart:convert' • test/repair_firm_test.dart:3:8 • unused_import
+   info • Don't invoke 'print' in production code • test/repair_firm_test.dart:8:5 • avoid_print
+   info • Don't invoke 'print' in production code • test/repair_firm_test.dart:32:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/repair_firm_test.dart:34:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/repair_firm_test.dart:37:7 • avoid_print
+warning • Unused import: 'package:ruchiserv/services/permission_service.dart' • test/responsive_layout_test.dart:4:8 • unused_import
+   info • The import of 'package:sqflite/sqflite.dart' is unnecessary because all of the used elements are also provided by the import of 'package:sqflite_common_ffi/sqflite_ffi.dart' • test/responsive_layout_test.dart:7:8 • unnecessary_import
+   info • Don't invoke 'print' in production code • test/responsive_layout_test.dart:88:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/responsive_layout_test.dart:107:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/responsive_layout_test.dart:120:7 • avoid_print
+   info • The import of 'package:sqflite/sqflite.dart' is unnecessary because all of the used elements are also provided by the import of 'package:sqflite_common_ffi/sqflite_ffi.dart' • test/sync_logic_test.dart:11:8 • unnecessary_import
+   info • Don't invoke 'print' in production code • test/sync_logic_test.dart:133:7 • avoid_print
+

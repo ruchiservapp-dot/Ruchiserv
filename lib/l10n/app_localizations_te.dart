@@ -120,6 +120,9 @@ class AppLocalizationsTe extends AppLocalizations {
   String get moduleSettings => 'సెట్టింగ్‌లు';
 
   @override
+  String get moduleInsights => 'Insights';
+
+  @override
   String get moduleAttendance => 'నా హాజరు';
 
   @override

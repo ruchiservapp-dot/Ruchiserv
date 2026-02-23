@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../db/database_helper.dart';
+import '../../repositories/finance_repository.dart';
 import '../report_preview_page.dart';
 
 class GstRegisterScreen extends StatefulWidget {
@@ -45,14 +46,14 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
     
     // Output tax: From sales invoices
-    final invoices = await DatabaseHelper().getInvoices(
+    final invoices = await FinanceRepository().getInvoices(
       _firmId,
       startDate: startStr,
       endDate: endStr,
     );
     
     // Input tax: From expense transactions (purchases)
-    final expenses = await DatabaseHelper().getTransactions(
+    final expenses = await FinanceRepository().getTransactions(
       firmId: _firmId,
       startDate: startStr,
       endDate: endStr,
@@ -245,7 +246,7 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

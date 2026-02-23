@@ -104,9 +104,13 @@ class SubscriptionService {
   /// Validate a promo code against backend
   Future<Map<String, dynamic>> validatePromoCode(String code, String planId) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentFirmId = prefs.getString('last_firm') ?? 'UNKNOWN';
+
       final response = await AwsApi.callDbHandler(
         method: 'POST',
         table: 'subscription/validate-promo',
+        firmId: currentFirmId, // Required for Lambda authentication
         data: {
           'code': code.toUpperCase(),
           'planId': planId,
@@ -134,6 +138,7 @@ class SubscriptionService {
       final response = await AwsApi.callDbHandler(
         method: 'POST',
         table: 'subscription/create',
+        firmId: firmId, // Required for Lambda authentication
         data: {
           'firmId': firmId,
           'planId': planId,
@@ -146,5 +151,47 @@ class SubscriptionService {
     } catch (e) {
       return {'error': 'Failed to create subscription: $e'};
     }
+  }
+
+  /// Grant a temporary extension (e.g. while awaiting manual verification)
+  /// Extends expiry by 7 days locally and marks status as PENDING_VERIFICATION
+  Future<void> grantManualExtension(String firmId) async {
+    final db = DatabaseHelper();
+    
+    // 1. Get current expiry
+    final firms = await db.database.then((d) => d.query(
+      'firms',
+      where: 'firmId = ?',
+      whereArgs: [firmId],
+      limit: 1,
+    ));
+
+    if (firms.isEmpty) return;
+
+    final currentExpiryStr = firms.first['subscriptionExpiry'] as String?;
+    DateTime newExpiry;
+    
+    if (currentExpiryStr != null) {
+      final current = DateTime.parse(currentExpiryStr);
+      // If already expired, start 7 days from NOW. If not, add 7 days to current.
+      if (current.isBefore(DateTime.now())) {
+        newExpiry = DateTime.now().add(const Duration(days: 7));
+      } else {
+        newExpiry = current.add(const Duration(days: 7));
+      }
+    } else {
+      // No expiry? Start 7 days from now
+      newExpiry = DateTime.now().add(const Duration(days: 7));
+    }
+
+    // 2. Update Local DB
+    await db.updateFirmDetails(firmId, {
+      'subscriptionExpiry': newExpiry.toIso8601String(),
+      'subscriptionStatus': 'PENDING_VERIFICATION', // New status flag
+    });
+
+    // 3. Update Shared Prefs for immediate access
+    final sp = await SharedPreferences.getInstance();
+    await sp.setString('subscription_expiry', newExpiry.toIso8601String());
   }
 }

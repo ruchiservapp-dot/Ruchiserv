@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/report_export_service.dart
 // Export service for Reports - Excel, PDF, Share
 // UPDATED: 2025-12-14 - Opens files in default apps for preview before saving
@@ -33,7 +34,7 @@ class ReportExportService {
       }
       return false;
     } catch (e) {
-      print('❌ Failed to open file: $e');
+      AppLogger.error('❌ Failed to open file: $e');
       return false;
     }
   }
@@ -49,11 +50,11 @@ class ReportExportService {
     bool openInApp = true, // Open in default app for viewing
   }) async {
     try {
-      print('📊 Excel: Starting export...');
+      AppLogger.info('📊 Excel: Starting export...');
       
       // Validate data
       if (rows.isEmpty) {
-        print('⚠️ Excel: No data to export');
+        AppLogger.warning('⚠️ Excel: No data to export');
         return null;
       }
       
@@ -94,7 +95,7 @@ class ReportExportService {
       // Save file
       final bytes = excel.encode();
       if (bytes == null) {
-        print('❌ Excel: Failed to encode workbook');
+        AppLogger.error('❌ Excel: Failed to encode workbook');
         return null;
       }
       
@@ -104,23 +105,23 @@ class ReportExportService {
       final file = File('${dir.path}/$fname');
       await file.writeAsBytes(bytes);
       
-      print('✅ Excel: File saved to ${file.path}');
-      print('📊 Excel: ${rows.length} rows exported');
+      AppLogger.success('✅ Excel: File saved to ${file.path}');
+      AppLogger.info('📊 Excel: ${rows.length} rows exported');
       
       // Open in default app (Numbers/Excel) so user can view and save
       if (openInApp) {
-        print('📂 Excel: Opening in default app...');
+        AppLogger.info('📂 Excel: Opening in default app...');
         final opened = await _openInDefaultApp(file.path);
         if (!opened) {
-          print('⚠️ Excel: Failed to open, falling back to share sheet...');
+          AppLogger.warning('⚠️ Excel: Failed to open, falling back to share sheet...');
           await Share.shareXFiles([XFile(file.path)], subject: title);
         }
       }
       
       return file;
     } catch (e, stack) {
-      print('❌ Excel export error: $e');
-      print('Stack: $stack');
+      AppLogger.error('❌ Excel export error: $e');
+      AppLogger.info('Stack: $stack');
       return null;
     }
   }
@@ -135,17 +136,17 @@ class ReportExportService {
     
     try {
       // Try loading Google Font with a 3-second timeout (reduced from 5)
-      print('📄 PDF: Loading font from Google Fonts...');
+      AppLogger.info('📄 PDF: Loading font from Google Fonts...');
       final font = await PdfGoogleFonts.notoSansRegular()
           .timeout(const Duration(seconds: 3), onTimeout: () {
-        print('⚠️ PDF: Font loading timed out, using fallback');
+        AppLogger.warning('⚠️ PDF: Font loading timed out, using fallback');
         throw TimeoutException('Font download timed out');
       });
       _cachedFont = font;
-      print('✅ PDF: Font loaded successfully');
+      AppLogger.success('✅ PDF: Font loaded successfully');
       return font;
     } catch (e) {
-      print('⚠️ PDF: Font load error: $e. Using Helvetica fallback.');
+      AppLogger.warning('⚠️ PDF: Font load error: $e. Using Helvetica fallback.');
       _useFallbackFont = true;
       _cachedFont = pw.Font.helvetica();
       return _cachedFont!;
@@ -168,11 +169,11 @@ class ReportExportService {
     String? subtitle,
   }) async {
     try {
-      print('📄 PDF: Starting export...');
+      AppLogger.info('📄 PDF: Starting export...');
       
       // Validate data
       if (rows.isEmpty) {
-        print('⚠️ PDF: No data to export');
+        AppLogger.warning('⚠️ PDF: No data to export');
         return null;
       }
       
@@ -233,11 +234,11 @@ class ReportExportService {
       final file = File('${dir.path}/$fname');
       await file.writeAsBytes(bytes);
       
-      print('✅ PDF: File saved to ${file.path}');
+      AppLogger.success('✅ PDF: File saved to ${file.path}');
       return file;
     } catch (e, stack) {
-      print('❌ PDF export error: $e');
-      print('Stack: $stack');
+      AppLogger.error('❌ PDF export error: $e');
+      AppLogger.info('Stack: $stack');
       return null;
     }
   }
@@ -252,17 +253,17 @@ class ReportExportService {
     String? subtitle,
   }) async {
     try {
-      print('📄 PDF Preview: Starting...');
+      AppLogger.info('📄 PDF Preview: Starting...');
       
       // Validate data
       if (rows.isEmpty) {
-        print('⚠️ PDF Preview: No data to preview');
+        AppLogger.warning('⚠️ PDF Preview: No data to preview');
         return false;
       }
       
-      print('📄 PDF Preview: Loading font...');
+      AppLogger.info('📄 PDF Preview: Loading font...');
       final font = await _loadFont();
-      print('📄 PDF Preview: Font loaded, creating document...');
+      AppLogger.info('📄 PDF Preview: Font loaded, creating document...');
       
       final pdf = pw.Document(
         theme: pw.ThemeData.withFont(base: font),
@@ -314,7 +315,7 @@ class ReportExportService {
         ),
       );
       
-      print('📄 PDF Preview: Document built, saving to file...');
+      AppLogger.info('📄 PDF Preview: Document built, saving to file...');
       final bytes = await pdf.save();
       
       // Save to temp directory and open in Preview app
@@ -323,19 +324,19 @@ class ReportExportService {
       final file = File('${dir.path}/$fname');
       await file.writeAsBytes(bytes);
       
-      print('📂 PDF Preview: Opening in Preview app...');
+      AppLogger.info('📂 PDF Preview: Opening in Preview app...');
       final opened = await _openInDefaultApp(file.path);
       
       if (!opened) {
-        print('⚠️ PDF Preview: Failed to open in Preview, falling back to share...');
+        AppLogger.warning('⚠️ PDF Preview: Failed to open in Preview, falling back to share...');
         await Printing.sharePdf(bytes: bytes, filename: fname);
       }
       
-      print('✅ PDF Preview: Complete!');
+      AppLogger.success('✅ PDF Preview: Complete!');
       return true;
     } catch (e, stack) {
-      print('❌ PDF preview error: $e');
-      print('Stack: $stack');
+      AppLogger.error('❌ PDF preview error: $e');
+      AppLogger.info('Stack: $stack');
       return false;
     }
   }
@@ -348,7 +349,7 @@ class ReportExportService {
         subject: subject ?? 'Report Export',
       );
     } catch (e) {
-      print('Share error: $e');
+      AppLogger.info('Share error: $e');
     }
   }
 

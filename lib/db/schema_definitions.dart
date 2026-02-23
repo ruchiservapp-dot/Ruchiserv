@@ -37,6 +37,8 @@ class AppSchema {
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
         'showUniversalData': 'INTEGER DEFAULT 1', // v23
+        'subscriptionTier': 'TEXT DEFAULT "BASIC"', // v13/v44
+        'enabledFeatures': 'TEXT', // v13/v44
         
         // v37: Firm Profile Extensions
         'contactPerson': 'TEXT',
@@ -56,6 +58,13 @@ class AppSchema {
         'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
         'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
         'synced_at': 'TEXT', // v42: Last successful sync timestamp
+        
+        // v44: Bank Account & Cashfree Configuration
+        'bankAccountNo': 'TEXT',
+        'bankIfsc': 'TEXT',
+        'bankName': 'TEXT',
+        'cashfreeAppId': 'TEXT',
+        'cashfreeSecretKey': 'TEXT',
       },
     ),
 
@@ -263,6 +272,7 @@ class AppSchema {
       tableName: 'dishes', // Corrected to match existing code usage
       columns: {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'firmId': 'TEXT', // v43: Required for cloud sync
         'orderId': 'INTEGER NOT NULL',
         'dishId': 'INTEGER', // Optional/Deprecated in favor of name?
         'dishMasterId': 'INTEGER', // v35: Link to dish_master.id for ID-based BOM lookup

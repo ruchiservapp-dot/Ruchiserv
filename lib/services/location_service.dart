@@ -1,7 +1,9 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/location_service.dart
 // GPS Location Tracking Service for Driver location updates
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
 import 'connectivity_service.dart';
@@ -36,7 +38,7 @@ class LocationService {
     // Check permission
     final hasPermission = await requestPermission();
     if (!hasPermission) {
-      print('📍 Location permission denied or permanent');
+      AppLogger.info('📍 Location permission denied or permanent');
       return false;
     }
 
@@ -53,7 +55,7 @@ class LocationService {
       }
     });
 
-    print('📍 Location tracking started for dispatch $dispatchId');
+    AppLogger.info('📍 Location tracking started for dispatch $dispatchId');
     return true;
   }
 
@@ -63,7 +65,7 @@ class LocationService {
     _locationTimer = null;
     _isTracking = false;
     _activeDispatchId = null;
-    print('📍 Location tracking stopped');
+    AppLogger.info('📍 Location tracking stopped');
   }
 
   /// Get current location (Public)
@@ -74,7 +76,7 @@ class LocationService {
         timeLimit: const Duration(seconds: 10),
       );
     } catch (e) {
-      print('📍 Error getting location: $e');
+      AppLogger.info('📍 Error getting location: $e');
       return null;
     }
   }
@@ -100,10 +102,14 @@ class LocationService {
 
       // Sync to AWS via SQS (Phase 2 compliance)
       if (await ConnectivityService().isOnline()) {
+        final prefs = await SharedPreferences.getInstance();
+        final firmId = prefs.getString('last_firm') ?? 'UNKNOWN';
+
         await AwsApi.pushToQueue(
           payload: {
             'method': 'PUT',
             'table': 'dispatch_locations',
+            'firmId': firmId,
             'data': {
               'dispatchId': _activeDispatchId,
               'lat': lat,
@@ -114,9 +120,9 @@ class LocationService {
         );
       }
 
-      print('📍 Location updated: $lat, $lng');
+      AppLogger.info('📍 Location updated: $lat, $lng');
     } catch (e) {
-      print('📍 Location error: $e');
+      AppLogger.info('📍 Location error: $e');
     }
   }
 
@@ -139,16 +145,20 @@ class LocationService {
   /// Get location from AWS (for web tracker)
   static Future<Map<String, dynamic>?> getAwsLocation(int dispatchId) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final firmId = prefs.getString('last_firm') ?? 'UNKNOWN';
+
       final result = await AwsApi.callDbHandler(
         method: 'GET',
         table: 'dispatch_locations',
+        firmId: firmId, // Required for Lambda authentication
         filters: {'dispatchId': dispatchId},
       );
       if (result['status'] == 'success' && result['data'] != null) {
         return result['data'] as Map<String, dynamic>;
       }
     } catch (e) {
-      print('AWS location error: $e');
+      AppLogger.info('AWS location error: $e');
     }
     return null;
   }

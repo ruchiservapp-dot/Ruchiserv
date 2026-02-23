@@ -27,7 +27,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "☁️ STEP 3: Syncing to S3 (ruchiserv-events-web)..."
-aws s3 sync build/web/ s3://ruchiserv-events-web/ --region ap-south-1 --delete
+aws s3 sync build/web/ s3://ruchiserv-events-web/web/ --region ap-south-1 --delete
 if [ $? -ne 0 ]; then
     echo "❌ FAILURE: S3 sync failed."
     exit 1

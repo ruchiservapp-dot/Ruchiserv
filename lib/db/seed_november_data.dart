@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
@@ -47,11 +48,11 @@ Future<void> seedNovember2025Data() async {
   );
   
   if ((existingCheck.first['count'] as int) > 5) {
-    print('⚠️ November 2025 data seems to already exist. Skipping seed.');
+    AppLogger.warning('⚠️ November 2025 data seems to already exist. Skipping seed.');
     return;
   }
 
-  print('🌱 Seeding November 2025 Data...');
+  AppLogger.info('🌱 Seeding November 2025 Data...');
   final rng = Random();
 
   // === 1. STAFF (Ensure we have some staff) ===
@@ -168,7 +169,7 @@ Future<void> seedNovember2025Data() async {
       });
     }
   }
-  print('✅ Created $totalOrders orders with income transactions.');
+  AppLogger.success('✅ Created $totalOrders orders with income transactions.');
 
   // === 3. EXPENSES ===
   // A. Daily/Weekly Procurement expenses
@@ -230,7 +231,7 @@ Future<void> seedNovember2025Data() async {
       'createdAt': '2025-11-30T18:00:00',
     });
   }
-  print('✅ Created expenses (Procurement, Fixed, Payroll).');
+  AppLogger.success('✅ Created expenses (Procurement, Fixed, Payroll).');
 
   // === 4. ATTENDANCE ===
   // Generate attendance for all staff
@@ -270,7 +271,7 @@ Future<void> seedNovember2025Data() async {
       });
     }
   }
-  print('✅ Created attendance records.');
+  AppLogger.success('✅ Created attendance records.');
   
-  print('🎉 November 2025 Seeding Complete!');
+  AppLogger.info('🎉 November 2025 Seeding Complete!');
 }

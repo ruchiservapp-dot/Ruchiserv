@@ -1,3 +1,5 @@
+import 'package:ruchiserv/repositories/finance_repository.dart';
+import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -44,8 +46,8 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
       groupBy = 'month';
     }
 
-    final summary = await DatabaseHelper().getFinanceSummary(_firmId, startDate.toIso8601String(), endDate.toIso8601String());
-    final trend = await DatabaseHelper().getSummaryByPeriod(_firmId, startDate.toIso8601String(), endDate.toIso8601String(), groupBy);
+    final summary = await FinanceRepository().getFinanceSummary(_firmId, startDate.toIso8601String(), endDate.toIso8601String());
+    final trend = await FinanceRepository().getSummaryByPeriod(_firmId, startDate.toIso8601String(), endDate.toIso8601String(), groupBy);
 
     setState(() {
       _totalIncome = summary['income'] ?? 0;
@@ -176,7 +178,7 @@ class _FinanceReportsScreenState extends State<FinanceReportsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

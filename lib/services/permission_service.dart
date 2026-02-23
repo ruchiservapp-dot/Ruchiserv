@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // Permission Service - Role-Based Access Control (RBAC)
 // Manages user permissions and module access based on role
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,7 +29,7 @@ class PermissionService {
   // Module definitions
   static const allModules = [
     'ORDERS', 'CALENDAR', 'KITCHEN', 'DISPATCH', 'INVENTORY',
-    'FINANCE', 'REPORTS', 'SETTINGS', 'STAFF', 'SUBSCRIPTION', 'ATTENDANCE',
+    'FINANCE', 'REPORTS', 'SETTINGS', 'STAFF', 'SUBSCRIPTION', 'ATTENDANCE', 'INSIGHTS',
   ];
 
   /// Initialize permissions after login
@@ -37,16 +38,16 @@ class PermissionService {
     final firmId = sp.getString('last_firm');
     final mobile = sp.getString('last_mobile');
     
-    // PRIORITY 1: Check if role was already set by AuthService (from Cognito token)
+    // v43: Don't return early here! We want to check if there's a custom DB override.
+    // But we use this as a base/fallback.
     final spRole = sp.getString('user_role');
     if (spRole != null && spRole.isNotEmpty && spRole != 'Staff') {
-      print('PermissionService: Using SharedPreferences role: $spRole');
+      AppLogger.info('PermissionService: Found role in SharedPreferences: $spRole');
       _cachedRole = spRole;
-      final rolePerms = rolePermissions[_cachedRole] ?? 'ALL';
+      final rolePerms = rolePermissions[_cachedRole] ?? 'ORDERS';
       _cachedModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
       _cachedShowRates = sp.getBool('show_rates') ?? true;
       _cachedPermissions = sp.getString('user_permissions');
-      return;
     }
     
     if (firmId == null || mobile == null) return;
@@ -81,7 +82,7 @@ class PermissionService {
       await sp.setStringList('allowed_modules', _cachedModules!);
     } else {
       // PRIORITY 3: Fallback - use any role from SharedPreferences even if 'Staff'
-      print('PermissionService: No user in DB, using SP fallback: $spRole');
+      AppLogger.info('PermissionService: No user in DB, using SP fallback: $spRole');
       _cachedRole = spRole ?? 'Staff';
       final rolePerms = rolePermissions[_cachedRole] ?? 'ORDERS';
       _cachedModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
@@ -125,8 +126,17 @@ class PermissionService {
     }
     
     final sp = await SharedPreferences.getInstance();
-    final modules = sp.getStringList('allowed_modules') ?? [];
-    return modules.contains(module);
+    final modules = sp.getStringList('allowed_modules');
+    if (modules != null) {
+      _cachedModules = modules; // Cache it for next time
+      return modules.contains(module);
+    }
+    
+    // Last resort: role-based defaults
+    final spRole = sp.getString('user_role') ?? 'Staff';
+    final rolePerms = rolePermissions[spRole] ?? 'ORDERS';
+    final defaultModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
+    return defaultModules.contains(module);
   }
 
   /// Check if current user can write/edit (not read-only)

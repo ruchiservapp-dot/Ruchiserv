@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
@@ -104,7 +105,7 @@ class LanguageService {
       // Reload cache after seeding
       await loadTranslations(languageCode);
     } catch (e) {
-      print("Error seeding translations for $languageCode: $e");
+      AppLogger.info("Error seeding translations for $languageCode: $e");
     }
   }
 }

@@ -64,7 +64,7 @@ void main() {
 
     test('3. Subcontract Exclusion - Subcontracted dishes skip MRP', () {
       /*
-       * FILE: lib/screens/4.3_mrp_run_screen.dart
+       * FILE: lib/screens/mrp_run_screen.dart
        * FUNCTION: _runMrp() at lines 172-176
        * 
        * CODE:
@@ -89,7 +89,7 @@ void main() {
       expect(shouldProcess(subcontractDish), false);
       
       print('✅ SUBCONTRACT EXCLUSION VERIFIED');
-      print('   File: lib/screens/4.3_mrp_run_screen.dart:_runMrp()');
+      print('   File: lib/screens/mrp_run_screen.dart:_runMrp()');
       print('   Check: productionType != SUBCONTRACT');
     });
 
@@ -159,7 +159,7 @@ void main() {
 
     test('6. Partial PO Support - Remaining items stay for next PO', () {
       /*
-       * FILE: lib/screens/4.5_allotment_screen.dart
+       * FILE: lib/screens/allotment_screen.dart
        * FUNCTION: _generatePOs()
        * 
        * FLOW:
@@ -244,7 +244,7 @@ void main() {
 │                                                                 │
 │ 3. SUBCONTRACT EXCLUSION                                        │
 │    ✓ productionType == 'SUBCONTRACT' → Skip ingredient calc    │
-│    ✓ File: 4.3_mrp_run_screen.dart:_runMrp()                   │
+│    ✓ File: mrp_run_screen.dart:_runMrp()                   │
 │                                                                 │
 │ 4. ORDER LOCKING                                                │
 │    ✓ mrpRunId NEVER overwritten on processed orders            │

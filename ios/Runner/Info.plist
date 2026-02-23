@@ -50,6 +50,10 @@
 	<string>This app requires location access to track dispatch delivery.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app requires location access to track dispatch delivery even when in background.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires camera access to scan invoices and take staff photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires photo library access to upload invoice images from your gallery.</string>
 
 	<!-- ✅ Allow external HTTPS requests (for AWS API Gateway) -->
 	<key>NSAppTransportSecurity</key>

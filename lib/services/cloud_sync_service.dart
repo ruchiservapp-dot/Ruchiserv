@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/cloud_sync_service.dart
 // @locked
 // Full AWS DynamoDB sync service for multi-device, multi-user cloud operations
@@ -10,6 +11,7 @@ import '../db/sync_event.dart'; // Added
 import 'connectivity_service.dart';
 import '../config/app_config.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart';
 
 /// CloudSyncService - Handles bidirectional sync between local SQLite and AWS DynamoDB.
 /// 
@@ -22,6 +24,7 @@ class CloudSyncService {
   factory CloudSyncService() => _instance;
   CloudSyncService._internal();
 
+  final ValueNotifier<bool> isSyncing = ValueNotifier<bool>(false);
   final _db = DatabaseHelper();
   
   // Tables that sync to AWS
@@ -57,19 +60,20 @@ class CloudSyncService {
   /// Get current firm ID
   Future<String?> _getFirmId() async {
     final sp = await SharedPreferences.getInstance();
-    return sp.getString('last_firm');
+    final f = sp.getString('last_firm');
+    return f?.toUpperCase().trim();
   }
 
   // ============ SYNC METADATA ============
   
   Future<String?> _getLastSync(String table, String firmId) async {
     final sp = await SharedPreferences.getInstance();
-    return sp.getString('last_sync_${table}_$firmId');
+    return sp.getString('last_sync_${table}_${firmId.toUpperCase()}');
   }
 
   Future<void> _setLastSync(String table, String firmId, String timestamp) async {
     final sp = await SharedPreferences.getInstance();
-    await sp.setString('last_sync_${table}_$firmId', timestamp);
+    await sp.setString('last_sync_${table}_${firmId.toUpperCase()}', timestamp);
   }
   // ============ AWS-FIRST WRITE (v38) ============
 
@@ -85,12 +89,14 @@ class CloudSyncService {
   }) async {
     final firmId = await _getFirmId();
     if (firmId == null || firmId == 'DEFAULT') {
-      print('⚠️ CloudSync: No firmId, cannot write');
+      AppLogger.warning('⚠️ CloudSync: No firmId, cannot write');
       return null;
     }
     
-    final isOnline = await ConnectivityService().isOnline();
-    final now = DateTime.now().toIso8601String();
+    isSyncing.value = true;
+    try {
+      final isOnline = await ConnectivityService().isOnline();
+      final now = DateTime.now().toIso8601String();
     
     // Prepare data with required fields
     data['uuid'] = data['uuid'] ?? const Uuid().v4();
@@ -119,13 +125,13 @@ class CloudSyncService {
           data['synced_at'] = now;
           
           final localId = await db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
-          print('✅ CloudSync [AWS-First]: $table#$localId synced to cloud and cached locally');
+          AppLogger.success('✅ CloudSync [AWS-First]: $table#$localId synced to cloud and cached locally');
           return localId;
         } else {
-           print('⚠️ CloudSync [AWS-First]: Backend Error: ${resp['message'] ?? resp['error']}');
+           AppLogger.warning('⚠️ CloudSync [AWS-First]: Backend Error: ${resp['message'] ?? resp['error']}');
         }
       } catch (e) {
-        print('⚠️ CloudSync [AWS-First]: Cloud write failed, falling back to queue: $e');
+        AppLogger.warning('⚠️ CloudSync [AWS-First]: Cloud write failed, falling back to queue: $e');
       }
     }
     
@@ -135,8 +141,11 @@ class CloudSyncService {
     
     final localId = await db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
     await _queuePendingSyncEnhanced(table, localId, data, 'PUT');
-    print('📥 CloudSync [AWS-First]: $table#$localId queued locally (offline/error)');
+    AppLogger.info('📥 CloudSync [AWS-First]: $table#$localId queued locally (offline/error)');
     return localId;
+    } finally {
+      isSyncing.value = false;
+    }
   }
 
   /// AWS-First update: Similar to write but for existing records
@@ -148,13 +157,15 @@ class CloudSyncService {
     final firmId = await _getFirmId();
     if (firmId == null || firmId == 'DEFAULT') return false;
     
-    final isOnline = await ConnectivityService().isOnline();
-    final now = DateTime.now().toIso8601String();
-    
-    data['updatedAt'] = now;
-    data['id'] = recordId;
-    
-    final db = await _db.database;
+    isSyncing.value = true;
+    try {
+      final isOnline = await ConnectivityService().isOnline();
+      final now = DateTime.now().toIso8601String();
+      
+      data['updatedAt'] = now;
+      data['id'] = recordId;
+      
+      final db = await _db.database;
     
     if (isOnline) {
       try {
@@ -172,21 +183,24 @@ class CloudSyncService {
           data['sync_status'] = 'SYNCED';
           data['synced_at'] = now;
           await db.update(table, data, where: 'id = ?', whereArgs: [recordId]);
-          print('✅ CloudSync [AWS-First]: $table#$recordId updated and synced');
+          AppLogger.success('✅ CloudSync [AWS-First]: $table#$recordId updated and synced');
           return true;
         } else {
-           print('⚠️ CloudSync [AWS-First]: Backend Update Error: ${resp['message'] ?? resp['error']}');
+           AppLogger.warning('⚠️ CloudSync [AWS-First]: Backend Update Error: ${resp['message'] ?? resp['error']}');
         }
       } catch (e) {
-        print('⚠️ CloudSync [AWS-First]: Update failed, queueing: $e');
+        AppLogger.warning('⚠️ CloudSync [AWS-First]: Update failed, queueing: $e');
       }
     }
     
     data['sync_status'] = 'PENDING';
     await db.update(table, data, where: 'id = ?', whereArgs: [recordId]);
     await _queuePendingSyncEnhanced(table, recordId, data, 'PUT');
-    print('📥 CloudSync [AWS-First]: $table#$recordId queued for update');
+    AppLogger.info('📥 CloudSync [AWS-First]: $table#$recordId queued for update');
     return true;
+    } finally {
+      isSyncing.value = false;
+    }
   }
 
   /// AWS-First delete: Delete from cloud first, then local
@@ -197,8 +211,10 @@ class CloudSyncService {
     final firmId = await _getFirmId();
     if (firmId == null) return false;
     
-    final isOnline = await ConnectivityService().isOnline();
-    final db = await _db.database;
+    isSyncing.value = true;
+    try {
+      final isOnline = await ConnectivityService().isOnline();
+      final db = await _db.database;
     
     // Get record data for SK generation
     final localData = await _db.getRecordById(table, recordId);
@@ -222,19 +238,22 @@ class CloudSyncService {
         
         if (resp['error'] == null && resp['status'] != 'error') {
           await db.delete(table, where: 'id = ?', whereArgs: [recordId]);
-          print('✅ CloudSync [AWS-First]: $table#$recordId deleted from cloud and local');
+          AppLogger.success('✅ CloudSync [AWS-First]: $table#$recordId deleted from cloud and local');
           return true;
         }
       } catch (e) {
-        print('⚠️ CloudSync [AWS-First]: Delete failed, queueing: $e');
+        AppLogger.warning('⚠️ CloudSync [AWS-First]: Delete failed, queueing: $e');
       }
     }
     
     // Queue delete and mark local as deleted (soft delete or queue)
     await _queuePendingSyncEnhanced(table, recordId, {}, 'DELETE');
     await db.delete(table, where: 'id = ?', whereArgs: [recordId]);
-    print('📥 CloudSync [AWS-First]: $table#$recordId queued for delete');
+    AppLogger.info('📥 CloudSync [AWS-First]: $table#$recordId queued for delete');
     return true;
+    } finally {
+      isSyncing.value = false;
+    }
   }
 
   /// Prepare AWS record with required DynamoDB fields
@@ -288,7 +307,7 @@ class CloudSyncService {
   }) async {
     final firmId = await _getFirmId();
     if (firmId == null || firmId == 'DEFAULT') {
-      print('⚠️ CloudSync: No firmId, skipping sync');
+      AppLogger.warning('⚠️ CloudSync: No firmId, skipping sync');
       return false;
     }
 
@@ -296,7 +315,7 @@ class CloudSyncService {
     if (!isOnline) {
       // Queue for later sync
       await _queuePendingSync(table, recordId, data, 'PUT');
-      print('📥 CloudSync: Offline - queued for later');
+      AppLogger.info('📥 CloudSync: Offline - queued for later');
       return false;
     }
 
@@ -331,15 +350,15 @@ class CloudSyncService {
       );
 
       if (resp['error'] != null || resp['status'] == 'error') {
-        print('❌ CloudSync: Failed to queue $table#$recordId: ${resp['error'] ?? resp['message']}');
+        AppLogger.error('❌ CloudSync: Failed to queue $table#$recordId: ${resp['error'] ?? resp['message']}');
         await _queuePendingSync(table, recordId, data, 'PUT');
         return false;
       }
 
-      print('✅ CloudSync: Queued $table#$recordId for SQS');
+      AppLogger.success('✅ CloudSync: Queued $table#$recordId for SQS');
       return true;
     } catch (e) {
-      print('❌ CloudSync: Exception syncing $table#$recordId: $e');
+      AppLogger.error('❌ CloudSync: Exception syncing $table#$recordId: $e');
       await _queuePendingSync(table, recordId, data, 'PUT');
       return false;
     }
@@ -379,14 +398,14 @@ class CloudSyncService {
       );
 
       if (resp['error'] != null || resp['status'] == 'error') {
-        print('❌ CloudSync: Failed to queue delete $table#$recordId: ${resp['error'] ?? resp['message']}');
+        AppLogger.error('❌ CloudSync: Failed to queue delete $table#$recordId: ${resp['error'] ?? resp['message']}');
         return false;
       }
 
-      print('✅ CloudSync: Queued delete $table#$recordId for SQS');
+      AppLogger.success('✅ CloudSync: Queued delete $table#$recordId for SQS');
       return true;
     } catch (e) {
-      print('❌ CloudSync: Exception deleting $table#$recordId: $e');
+      AppLogger.error('❌ CloudSync: Exception deleting $table#$recordId: $e');
       return false;
     }
   }
@@ -398,32 +417,35 @@ class CloudSyncService {
   Future<void> fullSyncFromCloud() async {
     final firmId = await _getFirmId();
     if (firmId == null || firmId == 'DEFAULT') {
-      print('⚠️ CloudSync: No firmId for full sync');
+      AppLogger.warning('⚠️ CloudSync: No firmId for full sync');
       return;
     }
 
     final isOnline = await ConnectivityService().isOnline();
     if (!isOnline) {
-      print('⚠️ CloudSync: Offline, cannot sync from cloud');
+      AppLogger.warning('⚠️ CloudSync: Offline, cannot sync from cloud');
       return;
     }
 
-    print('🔄 CloudSync: Starting full sync for firm $firmId...');
+    AppLogger.info('🔄 CloudSync: Starting full sync for firm $firmId...');
 
     for (final table in syncTables) {
       await syncTableFromCloud(table, firmId);
     }
 
-    print('✅ CloudSync: Full sync complete');
+    AppLogger.success('✅ CloudSync: Full sync complete');
   }
 
-  Future<void> syncTableFromCloud(String table, String firmId) async {
-    print('🔄 CloudSync: Syncing table $table for firm $firmId...');
+  Future<void> syncTableFromCloud(String table, String firmId, {bool force = false}) async {
+    // 1. Normalize Firm ID
+    firmId = firmId.trim().toUpperCase();
+
+    AppLogger.info('🔄 CloudSync: Syncing table $table for firm $firmId... (force: $force)');
     try {
       // DEBUG: Print query params
-      print('  👉 Querying AWS: pk=$firmId, sk_prefix=$table#');
+      AppLogger.info('  👉 Querying AWS: pk=$firmId, sk_prefix=$table#');
       
-      final lastSync = await _getLastSync(table, firmId);
+      final lastSync = force ? null : await _getLastSync(table, firmId);
       
       final resp = await AwsApi.callDbHandler(
         method: 'GET',
@@ -437,9 +459,9 @@ class CloudSyncService {
       );
 
       // DEBUG: Print raw response keys
-      print('  📥 AWS Response Keys: ${resp.keys.toList()}');
+      AppLogger.info('  📥 AWS Response Keys: ${resp.keys.toList()}');
       if (resp.containsKey('Items')) {
-        print('  📥 Items count: ${(resp['Items'] as List).length}');
+        AppLogger.info('  📥 Items count: ${(resp['Items'] as List).length}');
       }
 
       // Handle response - Lambda returns items directly as a List in response body
@@ -447,7 +469,7 @@ class CloudSyncService {
       List<dynamic> records = [];
       
       if (resp['error'] != null) {
-        print('  ❌ $table: API error: ${resp['error']}');
+        AppLogger.info('  ❌ $table: API error: ${resp['error']}');
         return;
       }
       
@@ -459,16 +481,16 @@ class CloudSyncService {
         // Single item response
         records = [resp];
       } else {
-        print('  📥 $table: No cloud data (resp: $resp)');
+        AppLogger.info('  📥 $table: No cloud data (resp: $resp)');
         return;
       }
       
       if (records.isEmpty) {
-        print('  📥 $table: No cloud data found (empty list)');
+        AppLogger.info('  📥 $table: No cloud data found (empty list)');
         return;
       }
 
-      print('  📥 $table: Received ${records.length} records to processing...');
+      AppLogger.info('  📥 $table: Received ${records.length} records to processing...');
 
       final db = await _db.database;
 
@@ -502,14 +524,14 @@ class CloudSyncService {
           
           // DEBUG: Print first record to check sanitization
           if (records.indexOf(record) == 0) {
-             print('  📝 Processing first record: $sanitized');
+             AppLogger.info('  📝 Processing first record: $sanitized');
           }
 
           // v38: Handle 'firms' table specially - uses firmId as unique key, not id
           if (table == 'firms') {
             final recordFirmId = sanitized['firmId']?.toString();
             if (recordFirmId == null || recordFirmId.isEmpty) {
-              print('  ⚠️ Skipping firms record without firmId');
+              AppLogger.info('  ⚠️ Skipping firms record without firmId');
               continue;
             }
             
@@ -522,15 +544,15 @@ class CloudSyncService {
             if (existing.isEmpty) {
               try {
                 await db.insert('firms', sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
-                print('    ✅ Inserted firms #$recordFirmId');
+                AppLogger.info('    ✅ Inserted firms #$recordFirmId');
               } catch (e) {
-                print('    ❌ firms insert failed for firmId=$recordFirmId: $e');
+                AppLogger.info('    ❌ firms insert failed for firmId=$recordFirmId: $e');
               }
             } else {
               // Update existing record, preserving local id
               sanitized['id'] = existing.first['id'];
               await db.insert('firms', sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
-              print('    ✅ Updated firms #$recordFirmId');
+              AppLogger.info('    ✅ Updated firms #$recordFirmId');
             }
             continue; // Skip standard processing
           }
@@ -560,21 +582,21 @@ class CloudSyncService {
             // Truly new record (no ID, no UUID match)
             try {
               await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
-              // print('    ✅ Inserted new $table record');
+              // AppLogger.info('    ✅ Inserted new $table record');
             } catch (e) {
-              print('    ❌ $table initial insert failed: $e');
+              AppLogger.info('    ❌ $table initial insert failed: $e');
             }
           } else {
             // Update existing record
             sanitized['id'] = localIdMatch;
             await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
-            // print('    ✅ Updated $table #$localIdMatch');
+            // AppLogger.info('    ✅ Updated $table #$localIdMatch');
           }
         } catch (e) {
-          print('  ⚠️ Error processing record: $e');
+          AppLogger.info('  ⚠️ Error processing record: $e');
         }
       }
-      print('  ✅ $table sync processing complete');
+      AppLogger.info('  ✅ $table sync processing complete');
       // After successful sync, update timestamp and notify UI
       final latestTimestamp = records.isNotEmpty 
           ? records.map((r) => r['updatedAt']?.toString() ?? '').reduce((a, b) => a.compareTo(b) > 0 ? a : b)
@@ -591,9 +613,9 @@ class CloudSyncService {
         data: {'count': records.length},
       ));
 
-      print('✅ $table sync finished. Notified listeners.');
+      AppLogger.success('✅ $table sync finished. Notified listeners.');
     } catch (e) {
-      print('  ❌ $table sync error: $e');
+      AppLogger.info('  ❌ $table sync error: $e');
     }
   }
 
@@ -605,7 +627,7 @@ class CloudSyncService {
     required String endDate,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final firmId = prefs.getString('firmId');
+    final firmId = prefs.getString('last_firm'); // FIX: Use correct key 'last_firm'
     if (firmId == null) return [];
 
     try {
@@ -613,24 +635,47 @@ class CloudSyncService {
         table: 'ruchiserv_data',
         indexName: 'GSI_FirmTable_Date',
         pkValue: '$firmId#$table',
+        firmId: firmId, // FIX: Pass firmId for Lambda auth
         skValue: startDate,
         skValueEnd: endDate,
         skOp: 'between',
       );
 
       if (resp['error'] != null) {
-        print('🔴 [Cloud Report Error] ${resp['error']}');
+        AppLogger.info('🔴 [Cloud Report Error] ${resp['error']}');
         return [];
       }
 
       final items = resp['Items'] as List?;
       if (items == null) return [];
 
-      return items.map((i) => sanitizeForSqlite(Map<String, dynamic>.from(i))).toList();
+      return items.map((i) {
+        if (i is Map) {
+          final stringMap = _deepCastMap(i);
+          return sanitizeForSqlite(stringMap);
+        }
+        return <String, dynamic>{};
+      }).toList();
     } catch (e) {
-      print('🔴 [Cloud Report Exception] $e');
+      AppLogger.info('🔴 [Cloud Report Exception] $e');
       return [];
     }
+  }
+
+  /// Recursively casts a Map<dynamic, dynamic> to Map<String, dynamic>
+  static Map<String, dynamic> _deepCastMap(Map dynamicMap) {
+    var stringMap = <String, dynamic>{};
+    for (var key in dynamicMap.keys) {
+      final value = dynamicMap[key];
+      if (value is Map) {
+         stringMap[key.toString()] = _deepCastMap(value);
+      } else if (value is List) {
+         stringMap[key.toString()] = value.map((e) => e is Map ? _deepCastMap(e) : e).toList();
+      } else {
+         stringMap[key.toString()] = value;
+      }
+    }
+    return stringMap;
   }
 
   /// Injects GSI attributes for optimized cloud queries
@@ -743,7 +788,7 @@ class CloudSyncService {
 
     if (pending.isEmpty) return;
 
-    print('🔄 CloudSync: Processing ${pending.length} pending syncs...');
+    AppLogger.info('🔄 CloudSync: Processing ${pending.length} pending syncs...');
 
     for (final item in pending) {
       final table = item['table_name'] as String;
@@ -754,7 +799,7 @@ class CloudSyncService {
       final retryCount = item['retry_count'] as int? ?? 0;
       
       if (recordId == 0) {
-        print('⚠️ CloudSync: Invalid record ID in pending queue. Deleting item ${item['id']}');
+        AppLogger.warning('⚠️ CloudSync: Invalid record ID in pending queue. Deleting item ${item['id']}');
         await db.delete('pending_sync', where: 'id = ?', whereArgs: [item['id']]);
         continue;
       }
@@ -770,7 +815,7 @@ class CloudSyncService {
         }
       } catch (e) {
         errorMessage = e.toString();
-        print('❌ CloudSync: Exception processing pending sync: $e');
+        AppLogger.error('❌ CloudSync: Exception processing pending sync: $e');
       }
 
       if (success) {
@@ -783,9 +828,9 @@ class CloudSyncService {
               where: 'id = ?',
               whereArgs: [recordId],
             );
-            print('✅ CloudSync: Updated $table#$recordId sync_status to SYNCED');
+            AppLogger.success('✅ CloudSync: Updated $table#$recordId sync_status to SYNCED');
           } catch (e) {
-            print('⚠️ CloudSync: Could not update sync_status for $table#$recordId: $e');
+            AppLogger.warning('⚠️ CloudSync: Could not update sync_status for $table#$recordId: $e');
           }
         }
         await db.delete('pending_sync', where: 'id = ?', whereArgs: [item['id']]);
@@ -800,11 +845,11 @@ class CloudSyncService {
           where: 'id = ?',
           whereArgs: [item['id']],
         );
-        print('⚠️ CloudSync: Retry $retryCount failed for $table#$recordId');
+        AppLogger.warning('⚠️ CloudSync: Retry $retryCount failed for $table#$recordId');
       }
     }
 
-    print('✅ CloudSync: Pending sync complete');
+    AppLogger.success('✅ CloudSync: Pending sync complete');
   }
 
   // ============ BATCH SYNC HELPERS ============
@@ -817,14 +862,14 @@ class CloudSyncService {
     final db = await _db.database;
     final records = await db.query(table);
 
-    print('📤 CloudSync: Syncing ${records.length} $table records to cloud...');
+    AppLogger.info('📤 CloudSync: Syncing ${records.length} $table records to cloud...');
 
     for (final record in records) {
       final id = record['id'] as int;
       await syncRecord(table: table, recordId: id, data: record);
     }
 
-    print('✅ CloudSync: $table batch sync complete');
+    AppLogger.success('✅ CloudSync: $table batch sync complete');
   }
 
   // ============ POLLING & BACKGROUND SYNC ============
@@ -842,18 +887,18 @@ class CloudSyncService {
     // Need to import '../config/app_config.dart' at top of file
     // But since it's a static access, we can add import and use it
     if (!AppConfig.enableCloudSync) {
-      print('🛡️ SAFE MODE: Cloud Sync is DISABLED to protect Production DB.');
-      print('👉 To enable: flutter run --dart-define=FORCE_DEV_SYNC=true');
+      AppLogger.info('🛡️ SAFE MODE: Cloud Sync is DISABLED to protect Production DB.');
+      AppLogger.info('👉 To enable: flutter run --dart-define=FORCE_DEV_SYNC=true');
       return;
     }
     
     _isPolling = true;
-    print('🔄 CloudSync: Starting Push-Pull sync (no polling)...');
+    AppLogger.info('🔄 CloudSync: Starting Push-Pull sync (no polling)...');
 
     // MUTATION LISTENER: Listen to all DB changes and sync them (PUSH)
     // This is the "Push" part of Push-Pull: local changes → cloud
     DatabaseHelper().syncStreamController.stream.listen((event) async {
-       print('📥 CloudSync: Received event: ${event.table} ${event.action}');
+       AppLogger.info('📥 CloudSync: Received event: ${event.table} ${event.action}');
        final recordId = int.tryParse(event.data['id']?.toString() ?? '0') ?? 0;
        if (recordId == 0) return;
 
@@ -895,13 +940,13 @@ class CloudSyncService {
   /// Call this when app goes to background (paused/inactive)
   void setAppBackgrounded() {
     _isFrontendActive = false;
-    print('🌙 CloudSync: App backgrounded - pausing polling');
+    AppLogger.info('🌙 CloudSync: App backgrounded - pausing polling');
   }
 
   /// Call this when app resumes (foreground)
   void setAppForegrounded() {
     _isFrontendActive = true;
-    print('☀️ CloudSync: App foregrounded - resuming polling');
+    AppLogger.info('☀️ CloudSync: App foregrounded - resuming polling');
     // Trigger immediate check on resume
     processPendingSync();
     fullSyncFromCloud(); 

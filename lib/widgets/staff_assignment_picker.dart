@@ -2,6 +2,7 @@
 // Reusable widget for selecting staff to assign to orders
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
+import '../repositories/operation_repository.dart';
 
 class StaffAssignmentPicker extends StatefulWidget {
   final int orderId;
@@ -34,15 +35,15 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
   }
 
   Future<void> _loadData() async {
-    final db = DatabaseHelper();
+    final opRepo = OperationRepository();
     
     // Load all active staff
-    final staff = await db.getAllStaff();
+    final staff = await opRepo.getAllStaff();
     _allStaff = staff.where((s) => s['isActive'] == 1).toList();
     
     // Load already assigned staff for this order
     if (widget.orderId > 0) {
-      _assignedStaff = await db.getOrderStaffAssignments(widget.orderId);
+      _assignedStaff = await opRepo.getOrderStaffAssignments(widget.orderId);
     }
     
     setState(() => _isLoading = false);
@@ -82,7 +83,7 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
     );
     
     if (role != null && widget.orderId > 0) {
-      await DatabaseHelper().assignStaffToOrder(widget.orderId, staffId, role);
+      await OperationRepository().assignStaffToOrder(widget.orderId, staffId, role);
       await _loadData();
       widget.onChanged?.call(_assignedStaff);
     }
@@ -97,7 +98,7 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
   }
 
   Future<void> _removeAssignment(int assignmentId) async {
-    await DatabaseHelper().removeStaffAssignment(assignmentId);
+    await OperationRepository().removeStaffAssignment(assignmentId);
     await _loadData();
     widget.onChanged?.call(_assignedStaff);
   }

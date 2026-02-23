@@ -1,3 +1,5 @@
+import 'package:ruchiserv/repositories/finance_repository.dart';
+import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import '../../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
@@ -33,6 +35,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _type = widget.type ?? 'INCOME';
     _selectedCategory = _type == 'INCOME' ? _incomeCategories.first : _expenseCategories.first;
     _dateController.text = _selectedDate.toString().split(' ')[0];
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _descriptionController.dispose();
+    _dateController.dispose();
+    super.dispose();
   }
 
   @override
@@ -121,7 +131,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 controller: _dateController,
                 readOnly: true,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.dateLabel,
+                  labelText: (AppLocalizations.of(context)?.dateLabel ?? 'Date') as String,
                   suffixIcon: const Icon(Icons.calendar_today),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -201,7 +211,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     };
 
     try {
-      await DatabaseHelper().insertTransaction(data);
+      await FinanceRepository().insertTransaction(data);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.transactionSaved)));
         Navigator.pop(context);

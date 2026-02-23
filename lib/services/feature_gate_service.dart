@@ -42,6 +42,7 @@ class FeatureGateService {
       'SUPPLIERS',
       'SUBCONTRACTORS',
       'FINANCE',
+      'INSIGHTS',
     ],
     'ENTERPRISE': [
       'ALL', // Includes everything
@@ -76,6 +77,7 @@ class FeatureGateService {
     'API_ACCESS': 'API Access',
     'PRIORITY_SUPPORT': 'Priority Support',
     'CUSTOM_INTEGRATIONS': 'Custom Integrations',
+    'INSIGHTS': 'Business Insights',
   };
 
   /// Initialize tier after login

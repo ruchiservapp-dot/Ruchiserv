@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../db/database_helper.dart';
+import '../../repositories/operation_repository.dart';
 import '../../services/report_export_service.dart';
 
 class MySalarySlipsScreen extends StatefulWidget {
@@ -14,6 +14,7 @@ class MySalarySlipsScreen extends StatefulWidget {
 }
 
 class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
+  final _operationRepo = OperationRepository();
   bool _isLoading = true;
   Map<String, dynamic>? _staffRecord;
   Map<String, dynamic>? _salaryData;
@@ -42,36 +43,27 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
       return;
     }
     
-    final db = DatabaseHelper();
-    
     // Find staff record by mobile
-    final dbHandle = await db.database;
-    final staffList = await dbHandle.query(
-      'staff',
-      where: 'mobile = ? AND isActive = 1',
-      whereArgs: [userMobile],
-      limit: 1,
-    );
+    _staffRecord = await _operationRepo.getStaffByMobile(userMobile, firmId: firmId);
     
-    if (staffList.isEmpty) {
+    if (_staffRecord == null) {
       setState(() => _isLoading = false);
       return;
     }
     
-    _staffRecord = staffList.first;
     final staffId = _staffRecord!['id'] as int;
     
     // Get OT multiplier
-    final firm = await db.getFirmDetails(firmId);
+    final firm = await _operationRepo.getFirmDetails(firmId);
     if (firm != null && firm['otMultiplier'] != null) {
       _otMultiplier = (firm['otMultiplier'] as num).toDouble();
     }
     
     // Get salary slip data for selected month
-    _salaryData = await db.getSalarySlipData(staffId, _monthYear);
+    _salaryData = await _operationRepo.getSalarySlipData(staffId, _monthYear);
     
     // Get history
-    _history = await db.getStaffSalaryHistory(staffId, limit: 12);
+    _history = await _operationRepo.getStaffSalaryHistory(staffId, limit: 12);
     
     setState(() => _isLoading = false);
   }

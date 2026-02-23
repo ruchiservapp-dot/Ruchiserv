@@ -3,21 +3,17 @@
 // Replacing Razorpay with Cashfree for 0% UPI fees
 
 import 'package:flutter/material.dart';
-import 'package:flutter_cashfree_pg_sdk/api/cferrorresponse/cferrorresponse.dart';
 import 'package:flutter_cashfree_pg_sdk/api/cfpayment/cfdropcheckoutpayment.dart';
 import 'package:flutter_cashfree_pg_sdk/api/cfpaymentgateway/cfpaymentgatewayservice.dart';
 import 'package:flutter_cashfree_pg_sdk/api/cfsession/cfsession.dart';
 import 'package:flutter_cashfree_pg_sdk/api/cftheme/cftheme.dart';
 import 'package:flutter_cashfree_pg_sdk/utils/cfenums.dart';
 import 'package:flutter_cashfree_pg_sdk/utils/cfexceptions.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../config/app_config.dart';
 import '../db/aws/aws_api.dart';
 
 /// Cashfree Payment Service for handling one-time and subscription payments
 import 'package:flutter/foundation.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Cashfree Payment Service for handling one-time and subscription payments
 class CashfreePaymentService {
@@ -143,6 +139,12 @@ class CashfreePaymentService {
     required String customerName,
     String? description,
   }) async {
+    // Check configuration
+    if (!AppConfig.isCashfreeConfigured) {
+      onFailure('CONFIG_ERROR', 'Cashfree is not configured. Please add App ID and Secret Key in settings.');
+      return;
+    }
+
     // Create payment session
     final session = await createPaymentSession(
       amount: amount,
@@ -231,6 +233,12 @@ class CashfreePaymentService {
     required String customerPhone,
     required String customerName,
   }) async {
+    // Check configuration
+    if (!AppConfig.isCashfreeConfigured) {
+      onFailure('CONFIG_ERROR', 'Cashfree is not configured. Please add App ID and Secret Key in settings.');
+      return;
+    }
+
     // For Web/Desktop, we need a return URL
     String? returnUrl;
     if (kIsWeb) {
@@ -252,26 +260,20 @@ class CashfreePaymentService {
     }
 
     // CHECK PLATFORM
+    debugPrint('Cashfree: Checking platform. kIsWeb=$kIsWeb, Platform=${defaultTargetPlatform}');
     if (kIsWeb || (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
         // WEB / DESKTOP FLOW
         final authLink = sub['auth_link'];
         if (authLink != null && authLink.isNotEmpty) {
-           final uri = Uri.parse(authLink);
-           if (await canLaunchUrl(uri)) {
-             await launchUrl(uri, mode: LaunchMode.externalApplication);
-             // Notify the caller that they should check for status manually (or via polling)
-             // We reuse orderId to pass the subID back
-             onSuccess(sub['subscription_id']!, "started_web"); 
-           } else {
-             onFailure('LINK_ERROR', 'Could not launch payment link');
-           }
+           // Instead of launching, we pass the link back to UI to show QR Code
+           onSuccess(sub['subscription_id']!, "QR_CODE:$authLink"); 
         } else {
            onFailure('LINK_ERROR', 'No payment link received from backend');
         }
     } else {
       // MOBILE FLOW (SDK)
       await openCheckout(
-        orderId: sub['order_id']!, // Note: SDK usually needs Payment Session ID, not just Order ID. But `openCheckout` uses `paymentSessionId` arg.
+        orderId: sub['order_id']!, 
         paymentSessionId: sub['payment_session_id']!,
         amount: amount,
         description: 'Subscription: $planName Plan',
@@ -291,6 +293,12 @@ class CashfreePaymentService {
       );
       
       if (response['payment_session_id'] != null) {
+        // Web guard for update mandate
+        if (kIsWeb || (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
+             onFailure('PLATFORM_ERROR', 'Please use mobile app to update UPI mandate');
+             return;
+        }
+
         await openCheckout(
           orderId: (response['order_id'] ?? 'update_$subscriptionId').toString(),
           paymentSessionId: response['payment_session_id']!.toString(),

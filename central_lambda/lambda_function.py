@@ -5,7 +5,7 @@ import time
 import datetime
 import os
 from decimal import Decimal
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 
 # Push-Pull Architecture: FCM for real-time sync
 _fcm_service = None
@@ -125,8 +125,12 @@ def lambda_handler(event, context):
         # 3. Check for Public Access (Filters/Login)
         is_public_request = False
         if body.get('method') == 'GET' and body.get('table') == 'ruchiserv_data' and body.get('filters', {}).get('pk'):
-            is_public_request = True
-            firm_id = body['filters']['pk']
+            sk_prefix = body.get('filters', {}).get('sk_prefix', '')
+            sk = body.get('filters', {}).get('sk', '')
+            # Allow public access for firm registration/auth checks
+            if sk.startswith('firms#') or sk.startswith('authorized_mobiles#') or sk_prefix.startswith('firms#'):
+                is_public_request = True
+                firm_id = body['filters']['pk']
         elif body.get('method') == 'GET' and body.get('table') == 'firms' and body.get('filters'):
             is_public_request = True
         elif body.get('firmId') and body.get('mobile') and body.get('password'):
@@ -146,21 +150,50 @@ def lambda_handler(event, context):
 
         # 5. Legacy Login Handler
         if body.get('firmId') and body.get('mobile') and body.get('password'):
-            f_id = body['firmId']
-            mob = body['mobile']
-            pwd = body['password']
+            f_id = str(body['firmId']).upper()
+            mob = str(body['mobile']).strip()
+            pwd = str(body['password']).strip()
             
             db = get_db()
+            
+            # --- 1. FIRM CHECK ---
+            firm_item = None
+            # Try Legacy Table
             f_res = db.Table('ruchiserv-firms').query(KeyConditionExpression=Key('firmid').eq(f_id))
-            if not f_res.get('Items'): return error("firm_not_found")
+            if f_res.get('Items'):
+                firm_item = f_res['Items'][0]
+            else:
+                # Try Unified Table
+                f_res = db.Table('ruchiserv_data').query(
+                    KeyConditionExpression=Key('pk').eq(f_id) & Key('sk').eq(f'firms#{f_id}')
+                )
+                if f_res.get('Items'):
+                    firm_item = f_res['Items'][0]
             
+            if not firm_item: return error("firm_not_found")
+            
+            # --- 2. USER CHECK ---
+            user_item = None
+            # Try Legacy Table
             u_res = db.Table('ruchiserv-users').get_item(Key={'ruchiserv-firms': f_id, 'mobile': mob})
-            u_item = u_res.get('Item')
+            if u_res.get('Item'):
+                user_item = u_res['Item']
+            else:
+                # Try Unified Table
+                u_res = db.Table('ruchiserv_data').query(
+                    KeyConditionExpression=Key('pk').eq(f_id) & Key('sk').eq(f'users#{mob}')
+                )
+                if u_res.get('Items'):
+                    user_item = u_res['Items'][0]
             
-            if not u_item: return error("mobile_not_found")
-            if u_item.get('passwordHash') != pwd: return error("wrong_password")
+            if not user_item: return error("mobile_not_found")
+            
+            # --- 3. PASSWORD CHECK ---
+            # Handle float/int hashes if any (should be strings)
+            stored_pwd = str(user_item.get('passwordHash', ''))
+            if stored_pwd != pwd: return error("wrong_password")
                 
-            return success({'status': 'success', 'user': u_item})
+            return success({'status': 'success', 'user': user_item})
 
         # 6. Payment Handler (Lazy load expensive service)
         payment_type = body.get('payment_type')
@@ -293,6 +326,33 @@ def lambda_handler(event, context):
                 else:
                     return error("Invalid Transaction Type", 400)
 
+        # 7.5. S3 File Handler (Presigned URLs for image upload/download)
+        if table_name.startswith('files/'):
+            from services.s3_files import generate_upload_url, generate_download_url
+            
+            if table_name == 'files/upload-url':
+                if not firm_id:
+                    return error("firmId required for file upload", 400)
+                file_type = data.get('fileType', 'invoices')
+                file_name = data.get('fileName')
+                
+                result = generate_upload_url(firm_id, file_type, file_name)
+                _log("INFO", "S3 upload URL generated", firm_id=firm_id, 
+                     duration=time.time()-start_time, file_type=file_type)
+                return success(result)
+            
+            elif table_name == 'files/download-url':
+                s3_key = data.get('s3Key')
+                if not s3_key:
+                    return error("s3Key required", 400)
+                
+                result = generate_download_url(s3_key)
+                _log("INFO", "S3 download URL generated", firm_id=firm_id,
+                     duration=time.time()-start_time)
+                return success(result)
+            
+            return error(f"Unknown file route: {table_name}", 400)
+
         # 8. Database Handler
         db = get_db()
         # (Variables method, table_name, data, filters are now defined at the top)
@@ -340,7 +400,7 @@ def lambda_handler(event, context):
                     query_kwargs['KeyConditionExpression'] &= Key('sk').begins_with(sk_prefix)
                 
                 if filters.get('since'):
-                    query_kwargs['FilterExpression'] = Key('updatedAt').gt(filters['since'])
+                    query_kwargs['FilterExpression'] = Attr('updatedAt').gt(filters['since'])
                 
                 res = table.query(**query_kwargs)
                 

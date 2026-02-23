@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
+
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -20,7 +20,7 @@ import 'sync_event.dart';
 import 'dart:async';
 import 'package:uuid/uuid.dart';
 import '../services/cloud_sync_service.dart'; // v38: AWS-first sync
-// import 'seed_cashfree_user.dart'; // File missing
+import '../core/app_logger.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -28,6 +28,11 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
+
+  /// Testing hook to inject a mock or in-memory database
+  static void setTestDatabase(Database db) {
+    _database = db;
+  }
 
   /// Event stream for database mutations that need cloud sync.
   /// Decouples DatabaseHelper from CloudSyncService to avoid circular dependencies.
@@ -64,7 +69,7 @@ class DatabaseHelper {
       final path = join(dir.path, fileName);
       db = await openDatabase(
         path,
-        version: 38, // v38: AWS-first sync architecture
+        version: 39, // v39: Added firmId to dishes table for cloud sync
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -85,7 +90,7 @@ class DatabaseHelper {
   /// v40: Backfills UUIDs for any existing records that don't have one.
   /// This ensures legacy data can be synced without collisions moving forward.
   Future<void> _backfillUuids(Database db) async {
-    print('📦 [DB] Checking for missing UUIDs to backfill...');
+    AppLogger.debug('📦 [DB] Checking for missing UUIDs to backfill...');
     for (var table in [
       'firms', 'users', 'authorized_mobiles', 'staff', 'attendance', 
       'customers', 'orders', 'dishes', 'finance', 'utensils', 
@@ -98,7 +103,7 @@ class DatabaseHelper {
       try {
         final records = await db.query(table, where: 'uuid IS NULL');
         if (records.isNotEmpty) {
-          print('📦 [DB] Backfilling ${records.length} UUIDs in $table...');
+          AppLogger.info('📦 [DB] Backfilling ${records.length} UUIDs in $table...');
           for (var row in records) {
             final id = row['id'];
             await db.update(
@@ -111,7 +116,7 @@ class DatabaseHelper {
         }
       } catch (e) {
         // Table might not exist or doesn't have uuid column yet
-        // print('⚠️ [DB] Skip backfill for $table: $e');
+        // AppLogger.warning('⚠️ [DB] Skip backfill for $table: $e');
       }
     }
   }
@@ -124,7 +129,7 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    print('📦 [DB] Creating new database with version $version');
+    AppLogger.info('📦 [DB] Creating new database with version $version');
     
     // Use SchemaManager to create all tables from central definition
     await SchemaManager.createAllTables(db);
@@ -1387,7 +1392,7 @@ class DatabaseHelper {
     
     // v38: AWS-First Sync Architecture - Add sync_status and synced_at columns
     if (oldVersion < 38) {
-      print('📦 [DB] Migrating to v38: AWS-first sync architecture...');
+      AppLogger.info('📦 [DB] Migrating to v38: AWS-first sync architecture...');
       
       // List of all tables that need sync_status/synced_at columns
       final syncTables = [
@@ -1409,7 +1414,7 @@ class DatabaseHelper {
       try { await db.execute("ALTER TABLE pending_sync ADD COLUMN retry_count INTEGER DEFAULT 0;"); } catch (_) {}
       try { await db.execute("ALTER TABLE pending_sync ADD COLUMN last_error TEXT;"); } catch (_) {}
       
-      print('✅ [DB] v38 migration complete');
+      AppLogger.success('✅ [DB] v38 migration complete');
     }
     
     await SchemaManager.syncSchema(db);
@@ -1417,7 +1422,7 @@ class DatabaseHelper {
 
   // ---------- SEED DATA LOADER ----------
   Future<void> _loadSeeds(Database db) async {
-    print('🌱 Loading Seed Data for v22 (multi-tenant)...');
+    AppLogger.info('🌱 Loading Seed Data for v22 (multi-tenant)...');
     try {
       final batch = db.batch(); // Use batch for performance
 
@@ -1475,9 +1480,9 @@ class DatabaseHelper {
       // in _onUpgrade to avoid duplicates. Do NOT insert them here in _loadSeeds.
 
       await batch.commit(noResult: true);
-      print('✅ Seed Data Loaded Successfully!');
+      AppLogger.success('✅ Seed Data Loaded Successfully!');
     } catch (e) {
-      print('❌ Error loading seeds: $e');
+      AppLogger.error('❌ Error loading seeds: $e');
     }
   }
 
@@ -1485,24 +1490,7 @@ class DatabaseHelper {
   Future<void> testDB() async {
     final db = await database;
     // ignore: avoid_print
-    print('✅ Database initialized at ${db.path}');
-  }
-  // ---------- AWS SYNC HELPER ----------
-  /// Syncs data to AWS if online. Fails silently to prioritize local-first.
-  // Deprecated: Use _syncOrQueue instead which handles both
-  Future<void> _syncToAws({
-    required String method,
-    required String table,
-    Map<String, dynamic>? data,
-    Map<String, dynamic>? filters,
-  }) async {
-    // Forward to new logic for backward compatibility if called directly
-    return _syncOrQueue(
-      table: table,
-      data: data ?? filters ?? {},
-      action: method == 'POST' ? 'INSERT' : (method == 'PUT' ? 'UPDATE' : 'DELETE'),
-      filters: filters,
-    );
+    AppLogger.success('✅ Database initialized at ${db.path}');
   }
 
   /// Unified Sync Trigger: Emits an event for CloudSyncService to handle.
@@ -1522,590 +1510,11 @@ class DatabaseHelper {
   }
 
 
-  // ---------- ORDERS CRUD (LOCAL + AWS SYNC) ----------
-  Future<int?> insertOrder(
-    Map<String, dynamic> order,
-    List<Map<String, dynamic>> dishes, {
-    bool queueIfOffline = false, // Deprecated param, always auto-queues now
-  }) async {
-    final now = DateTime.now().toIso8601String();
-    final cloudSync = CloudSyncService();
 
-    // Normalize
-    order['uuid'] = order['uuid'] ?? _generateUuid();
-    order['createdAt'] = order['createdAt'] ?? now;
-    order['updatedAt'] = now;
-    order['totalPax'] = order['totalPax'] ?? 0;
-    order['isLocked'] = order['isLocked'] ?? 0;
-
-    // v38: AWS-First - Write order to cloud first, then cache locally
-    final orderId = await cloudSync.awsFirstWrite(
-      table: 'orders',
-      data: order,
-    );
-
-    if (orderId == null) {
-      print('❌ [Order] Failed to create order');
-      return null;
-    }
-
-    // Insert dishes - also using AWS-first
-    for (final dish in dishes) {
-      dish['orderId'] = orderId;
-      dish['uuid'] = dish['uuid'] ?? _generateUuid();
-      dish['createdAt'] = now;
-      
-      await cloudSync.awsFirstWrite(
-        table: 'dishes',
-        data: dish,
-      );
-    }
-
-    print('✅ [Order] Created order #$orderId with ${dishes.length} dishes (AWS-first)');
-    return orderId;
-  }
-
-  Future<bool> updateOrder(
-    int orderId,
-    Map<String, dynamic> order,
-    List<Map<String, dynamic>> dishes, {
-    bool queueIfOffline = false,
-  }) async {
-    final now = DateTime.now().toIso8601String();
-    final cloudSync = CloudSyncService();
-    final db = await database;
-
-    order['updatedAt'] = now;
-    order['totalPax'] = order['totalPax'] ?? 0;
-    order['id'] = orderId;
-
-    // v38: AWS-First - Update order via cloud sync
-    final success = await cloudSync.awsFirstUpdate(
-      table: 'orders',
-      recordId: orderId,
-      data: order,
-    );
-
-    if (!success) {
-      print('⚠️ [Order] Update queued for order #$orderId');
-    }
-
-    // Get existing dish IDs for deletion
-    final existingDishes = await db.query('dishes', columns: ['id'], where: 'orderId = ?', whereArgs: [orderId]);
-    
-    // Delete existing dishes via AWS-first
-    for (final existingDish in existingDishes) {
-      final dishId = existingDish['id'] as int;
-      await cloudSync.awsFirstDelete(table: 'dishes', recordId: dishId);
-    }
-
-    // Insert new dishes via AWS-first
-    for (final dish in dishes) {
-      dish['orderId'] = orderId;
-      dish['uuid'] = dish['uuid'] ?? _generateUuid();
-      dish['createdAt'] = now;
-      
-      await cloudSync.awsFirstWrite(
-        table: 'dishes',
-        data: dish,
-      );
-    }
-
-    print('✅ [Order] Updated order #$orderId with ${dishes.length} dishes (AWS-first)');
-    return true;
-  }
-
-  Future<bool> deleteOrder(
-    int orderId, {
-    bool queueIfOffline = false,
-  }) async {
-    final cloudSync = CloudSyncService();
-    final db = await database;
-
-    // Get dishes for this order to delete them via AWS-first
-    final existingDishes = await db.query('dishes', columns: ['id'], where: 'orderId = ?', whereArgs: [orderId]);
-    
-    // Delete dishes via AWS-first
-    for (final dish in existingDishes) {
-      final dishId = dish['id'] as int;
-      await cloudSync.awsFirstDelete(table: 'dishes', recordId: dishId);
-    }
-
-    // Delete order via AWS-first
-    final success = await cloudSync.awsFirstDelete(
-      table: 'orders',
-      recordId: orderId,
-    );
-
-    print('✅ [Order] Deleted order #$orderId and ${existingDishes.length} dishes (AWS-first)');
-    return success;
-  }
-
-  Future<List<Map<String, dynamic>>> getOrdersWithPax(String date) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT o.*, IFNULL(o.totalPax, 0) AS pax
-      FROM orders o
-      WHERE o.date = ?
-      ORDER BY o.time ASC
-    ''', [date]);
-  }
-
-  Future<List<Map<String, dynamic>>> getDishesForOrder(int orderId) async {
-    final db = await database;
-    return await db.query(
-      'dishes',
-      where: "orderId = ? AND dishName IS NOT NULL AND dishName != '' AND dishName != 'Unnamed'",
-      whereArgs: [orderId],
-      orderBy: 'id ASC',
-    );
-  }
-
-  /// Toggle subcontract status for a specific dish
-  Future<bool> toggleDishSubcontract(int dishId, bool isSubcontracted, {int? subcontractorId}) async {
-    if (await isDishLocked(dishId)) return false;
-
-    final db = await database;
-    await db.update(
-      'dishes',
-      {
-        'isSubcontracted': isSubcontracted ? 1 : 0,
-        'subcontractorId': isSubcontracted ? subcontractorId : null,
-        'productionType': isSubcontracted ? 'SUBCONTRACT' : 'INTERNAL',
-      },
-      where: 'id = ?',
-      whereArgs: [dishId],
-    );
-    
-    // Auto Sync
-    await _syncOrQueue(
-      table: 'dishes',
-      data: {
-        'id': dishId, 
-        'isSubcontracted': isSubcontracted ? 1 : 0, 
-        'subcontractorId': subcontractorId,
-        'productionType': isSubcontracted ? 'SUBCONTRACT' : 'INTERNAL',
-      },
-      action: 'UPDATE',
-      filters: {'id': dishId}
-    );
-    
-    return true;
-  }
-
-  /// Check if a dish is locked (via its order being locked for MRP/PO)
-  Future<bool> isDishLocked(int dishId) async {
-    final db = await database;
-    // Join dishes -> orders to check lock status
-    final res = await db.rawQuery('''
-      SELECT o.isLocked 
-      FROM dishes d
-      JOIN orders o ON d.orderId = o.id
-      WHERE d.id = ?
-    ''', [dishId]);
-    
-    if (res.isEmpty) return false;
-    return (res.first['isLocked'] as int?) == 1;
-  }
+  // ---------- ORDERS CRUD moved to OrderRepository ----------
 
 
-  Future<Map<String, int>> getTotalPaxForDate(String date) async {
-    try {
-      final db = await database;
-      final result = await db
-          .rawQuery('SELECT IFNULL(SUM(totalPax), 0) as total FROM orders WHERE date = ?', [date]);
-      final totalPax = (result.first['total'] as int?) ?? 0;
-      // Simple split; adjust if you store per-dish foodType for totals
-      return {'total': totalPax, 'veg': totalPax ~/ 2, 'nonVeg': totalPax ~/ 2};
-    } catch (_) {
-      return {'total': 0, 'veg': 0, 'nonVeg': 0};
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getAllOrdersWithPax() async {
-  final db = await database;
-  // Fixed: Sum BOTH 'pax' (new schema) and 'totalPax' (legacy schema) to support all data
-  // Using COALESCE to handle NULLs safely
-  // Added: hasMrpRun flag for calendar indicators
-  return await db.rawQuery('''
-    SELECT 
-      o.date,
-      0 AS vegPax,
-      0 AS nonVegPax,
-      SUM(COALESCE(o.pax, 0) + COALESCE(o.totalPax, 0)) AS totalPax,
-      MAX(CASE WHEN o.mrpRunId IS NOT NULL THEN 1 ELSE 0 END) AS hasMrpRun,
-      MAX(CASE WHEN o.mrpStatus = 'PO_SENT' THEN 1 ELSE 0 END) AS hasPOSent
-    FROM orders o
-    WHERE o.date IS NOT NULL
-    GROUP BY o.date
-    ORDER BY o.date ASC
-  ''');
-}
-
-  // Simple getter for all orders by date (used by your UI)
-  Future<List<Map<String, dynamic>>> getOrdersByDate(String date) async {
-    final db = await database;
-    return db.query(
-      'orders',
-      where: 'date = ?',
-      whereArgs: [date],
-      orderBy: 'eventTime ASC',
-    );
-  }
-
-  /// Refresh clientStatus from AWS for orders on a given date (v37 Interactive Flow)
-  /// Call this on pull-to-refresh to sync confirmation status from WhatsApp button clicks
-  Future<void> refreshClientStatusFromAws(String date, String firmId) async {
-    try {
-      print('🔄 Refreshing clientStatus from AWS for $date...');
-      
-      // Fetch orders from DynamoDB
-      final response = await AwsApi.callDbHandler(
-        method: 'GET',
-        table: 'orders',
-        filters: {
-          'pk': firmId,
-          'sk_prefix': 'ORDER#$date',
-        },
-      );
-      
-      // Handle response - AwsApi.callDbHandler always returns Map
-      // DynamoDB results are in 'Items' key, or directly if single scan
-      List<dynamic> orders = [];
-      if (response.containsKey('Items')) {
-        orders = response['Items'] as List? ?? [];
-      } else if (response.containsKey('data') && response['data'] is List) {
-        orders = response['data'] as List;
-      } else if (response.containsKey('id')) {
-        // Single order response
-        orders = [response];
-      }
-      
-      if (orders.isNotEmpty) {
-        final db = await database;
-        for (final awsOrder in orders) {
-          if (awsOrder is! Map) continue;
-          final orderId = awsOrder['id'];
-          final clientStatus = awsOrder['clientStatus'];
-          final confirmedAt = awsOrder['confirmedAt'];
-          final changeRequestedAt = awsOrder['changeRequestedAt'];
-          final sentAt = awsOrder['sentAt'];
-          
-          if (orderId != null && clientStatus != null) {
-            await db.update(
-              'orders',
-              {
-                'clientStatus': clientStatus,
-                if (confirmedAt != null) 'confirmedAt': confirmedAt,
-                if (changeRequestedAt != null) 'changeRequestedAt': changeRequestedAt,
-                if (sentAt != null) 'sentAt': sentAt,
-              },
-              where: 'id = ? AND firmId = ?',
-              whereArgs: [orderId, firmId],
-            );
-            print('✅ Updated order $orderId → $clientStatus');
-          }
-        }
-      }
-    } catch (e) {
-      print('⚠️ Failed to refresh clientStatus from AWS: $e');
-    }
-  }
-
-  /// Get orders eligible for MRP Run (STRICT: Only PENDING status)
-  Future<List<Map<String, dynamic>>> getPendingOrdersForMrp(String date) async {
-    final db = await database;
-    return db.query(
-      'orders',
-      where: "date = ? AND (mrpStatus IS NULL OR mrpStatus = 'PENDING')",
-      whereArgs: [date],
-      orderBy: 'eventTime ASC',
-    );
-  }
-
-  /// Get already processed orders (for display only - not selectable for MRP)
-  Future<List<Map<String, dynamic>>> getProcessedOrdersForMrp(String date) async {
-    final db = await database;
-    return db.query(
-      'orders',
-      where: "date = ? AND mrpStatus IS NOT NULL AND mrpStatus != 'PENDING'",
-      whereArgs: [date],
-      orderBy: 'eventTime ASC',
-    );
-  }
-
-  /// Get order with its dependencies for cancellation validation
-  Future<Map<String, dynamic>> getOrderDependencies(int orderId, String firmId) async {
-    final db = await database;
-    
-    // Get order
-    final orders = await db.query('orders', where: 'id = ? AND firmId = ?', whereArgs: [orderId, firmId]);
-    if (orders.isEmpty) {
-      return {'error': 'Order not found'};
-    }
-    
-    final order = orders.first;
-    
-    // Get dish count
-    final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [orderId]);
-    final dishCount = dishes.length;
-    
-    // Check for dispatch records (if table exists)
-    int dispatchCount = 0;
-    bool hasDispatch = false;
-    try {
-      final dispatches = await db.query('dispatch', where: 'orderId = ?', whereArgs: [orderId]);
-      dispatchCount = dispatches.length;
-      hasDispatch = dispatchCount > 0;
-    } catch (_) {
-      // dispatch table might not exist
-    }
-    
-    return {
-      'order': order,
-      'dishCount': dishCount,
-      'hasDispatch': hasDispatch,
-      'dispatchCount': dispatchCount,
-    };
-  }
-
-  /// Cancel an order (soft delete)
-  Future<bool> cancelOrder(int orderId, {required String firmId, required String userId}) async {
-    try {
-      final db = await database;
-      final now = DateTime.now().toIso8601String();
-      
-      await db.update(
-        'orders',
-        {
-          'isCancelled': 1,
-          'cancelledAt': now,
-          'cancelledBy': userId,
-          'status': 'CANCELLED',
-          'updatedAt': now,
-        },
-        where: 'id = ? AND firmId = ?',
-        whereArgs: [orderId, firmId],
-      );
-      
-      // Sync update to cloud
-      await _syncOrQueue(
-        table: 'orders',
-        data: {
-          'id': orderId,
-          'isCancelled': 1,
-          'cancelledAt': now,
-          'cancelledBy': userId,
-          'status': 'CANCELLED',
-          'updatedAt': now,
-        },
-        action: 'UPDATE',
-        filters: {'id': orderId}
-      );
-      
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Dish summary for a date (used by your Summary screen)
-  Future<List<Map<String, dynamic>>> getDishesSummaryByDate(String date) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT d.dishName AS name,
-             COALESCE(d.foodType, 'Veg') AS foodType,
-             COALESCE(o.mealType, 'Snacks/Others') AS mealType,
-             SUM(COALESCE(d.pax, 0)) AS totalPax,
-             SUM(COALESCE(d.pax * d.pricePerPlate, 0)) AS totalCost
-      FROM dishes d
-      JOIN orders o ON o.id = d.orderId
-      WHERE o.date = ?
-      GROUP BY d.dishName, d.foodType, o.mealType
-      ORDER BY o.mealType, d.dishName
-    ''', [date]);
-  }
-
-  // Get all dishes for a date with status (for Reports)
-  Future<List<Map<String, dynamic>>> getDishesForDate(String date) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT d.*, o.customerName, o.status as orderStatus, o.time
-      FROM dishes d
-      JOIN orders o ON d.orderId = o.id
-      WHERE o.date = ?
-      ORDER BY o.time, o.id
-    ''', [date]);
-  }
-
-  // Get dispatches for a date (for Reports)
-  Future<List<Map<String, dynamic>>> getDispatchesForDate(String date) async {
-    final db = await database;
-    // Check if dispatch table exists first (defensive)
-    try {
-      return await db.rawQuery('''
-        SELECT d.*, o.customerName, o.totalPax, o.location
-        FROM dispatch d
-        JOIN orders o ON d.orderId = o.id
-        WHERE d.date = ?
-        ORDER BY d.timeOut
-      ''', [date]);
-    } catch (_) {
-      return [];
-    }
-  }
-
-  // ---------- DISH MASTER (Autocomplete Suggestions) ----------
-  /// Get all saved dishes for a category (for autocomplete)
-/// Maps UI categories to DB categories using pattern matching
-Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
-  try {
-    final db = await database;
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
-    final showUniversal = await getFirmUniversalDataVisibility(firmId);
-
-    String whereClause = "(firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
-    List<dynamic> args = [firmId];
-
-    if (category != null && category.isNotEmpty) {
-      // Map UI category names to DB category patterns
-      // UI uses: 'Starters', 'Main Course', 'Desserts', 'Beverages', 'Specialties'
-      // DB has: 'Starter', 'Starter/Main', 'Main Course', 'Dessert', 'Beverage', 'Specialty', etc.
-      String pattern;
-      switch (category) {
-        case 'Starters':
-          pattern = 'Starter%';
-          break;
-        case 'Main Course':
-          pattern = 'Main Course%'; // Or 'Main%' but might be too broad
-          break;
-        case 'Desserts':
-          pattern = 'Dessert%';
-          break;
-        case 'Beverages':
-          pattern = 'Beverage%';
-          break;
-        case 'Specialties':
-          pattern = 'Special%'; // Matches Special, Specialty
-          break;
-        default:
-          pattern = '$category%'; // For 'Main Course' etc.
-      }
-      whereClause += " AND category LIKE ?";
-      args.add(pattern);
-      
-      return await db.query(
-        'dish_master',
-        where: whereClause,
-        whereArgs: args,
-        orderBy: 'name ASC',
-      );
-    }
-    return await db.query('dish_master', where: whereClause, whereArgs: args, orderBy: 'category, name ASC');
-  } catch (_) {
-    // Return empty list if table doesn't exist or other error
-    return [];
-  }
-}
-  
-
-  /// Upsert a dish to the master table (called when order is saved)
-  /// Uses Check-Update-Insert to preserve IDs (Critical for BOM integrity)
-  /// V22: Implements Copy-On-Write logic for Multi-Tenancy (Seed -> Firm)
-  Future<void> upsertDishMaster({
-    required String name,
-    required String category,
-    required int rate,
-    String foodType = 'Veg',
-  }) async {
-    if (name.trim().isEmpty) return;
-    
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm');
-
-    // If no firmId, we can't save legally.
-    if (firmId == null) return; 
-
-    try {
-      // 1. Check for Firm-Specific Version
-      final firmDish = await db.query(
-        'dish_master',
-        where: 'name = ? AND category = ? AND firmId = ?',
-        whereArgs: [name.trim(), category, firmId],
-        limit: 1,
-      );
-
-      if (firmDish.isNotEmpty) {
-        // Update Firm Dish
-        await db.update(
-          'dish_master',
-          {
-            'rate': rate,
-            'foodType': foodType,
-            'updatedAt': now,
-            'isModified': 1,
-          },
-          where: 'id = ?',
-          whereArgs: [firmDish.first['id']],
-        );
-      } else {
-        // 2. Check for Seed Version
-        final seedDish = await db.query(
-          'dish_master',
-          where: 'name = ? AND category = ? AND firmId = ?',
-          whereArgs: [name.trim(), category, 'SEED'],
-          limit: 1,
-        );
-
-        if (seedDish.isNotEmpty) {
-          // Found Seed Dish. Check if values differ.
-          final s = seedDish.first;
-          final currentRate = (s['rate'] as num).toInt();
-          final currentType = s['foodType'] as String;
-
-          if (currentRate != rate || currentType != foodType) {
-            // Values changed! Copy-On-Write.
-            await db.insert(
-              'dish_master',
-              {
-                'firmId': firmId,
-                'baseId': s['id'], // Link to seed
-                'name': name.trim(),
-                'category': category,
-                'rate': rate, // New rate
-                'foodType': foodType, // New type
-                'createdAt': now,
-                'updatedAt': now,
-                'isModified': 1,
-              },
-            );
-          }
-          // Else: Seed is fine, no need to duplicate.
-        } else {
-          // 3. New Dish entirely
-          await db.insert(
-            'dish_master',
-            {
-              'firmId': firmId,
-              'name': name.trim(),
-              'category': category,
-              'rate': rate,
-              'foodType': foodType,
-              'createdAt': now,
-              'updatedAt': now,
-              'isModified': 1,
-            },
-          );
-        }
-      }
-    } catch (_) {
-      // Ignore errors (e.g., constraint violations)
-    }
-  }
+  // ---------- DISH Master and SECONDARY Order methods moved to OrderRepository ----------
 
   // ---------- FIRMS & USERS (LOCAL) ----------
   Future<int?> insertFirm(Map<String, dynamic> firm) async {
@@ -2154,9 +1563,9 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
             action: 'INSERT'
           );
         }
-        print('✅ [DB] User $username ($mobile) auto-authorized for login');
+        AppLogger.success('✅ [DB] User $username ($mobile) auto-authorized for login');
       } catch (e) {
-        print('⚠️ [DB] Failed to auto-authorize mobile: $e');
+        AppLogger.warning('⚠️ [DB] Failed to auto-authorize mobile: $e');
       }
     }
     
@@ -2222,9 +1631,9 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
         action: 'INSERT',
         filters: {'firmId': data['firmId'], 'mobile': data['mobile']},
       );
-      print('✅ [DB] Added ${data['mobile']} to authorized list');
+      AppLogger.success('✅ [DB] Added ${data['mobile']} to authorized list');
     } catch (e) {
-      print('⚠️ [DB] Failed to insert authorized mobile: $e');
+      AppLogger.warning('⚠️ [DB] Failed to insert authorized mobile: $e');
     }
   }
 
@@ -2238,10 +1647,10 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
       // ignore: avoid_print
-      print("🟢 Local user cached: ${user['username']}");
+      AppLogger.info("🟢 Local user cached: ${user['username']}");
     } catch (e) {
       // ignore: avoid_print
-      print('❌ Error caching local user: $e');
+      AppLogger.error('❌ Error caching local user: $e');
     }
   }
 
@@ -2257,13 +1666,13 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       );
       if (result.isNotEmpty) {
         // ignore: avoid_print
-        print("🟠 Offline login success for $username");
+        AppLogger.info("🟠 Offline login success for $username");
         return result.first;
       }
       return null;
     } catch (e) {
       // ignore: avoid_print
-      print('❌ Offline login check failed: $e');
+      AppLogger.error('❌ Offline login check failed: $e');
       return null;
     }
   }
@@ -2363,11 +1772,15 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       try {
         Map<String, dynamic> resp;
 
+        final prefs = await SharedPreferences.getInstance();
+        final firmId = prefs.getString('last_firm') ?? 'UNKNOWN';
+
         if (action == 'INSERT') {
           // POST
           resp = await AwsApi.callDbHandler(
             method: 'POST',
             table: table,
+            firmId: firmId, // Required for Lambda authentication
             data: data,
           );
         } else if (action == 'UPDATE') {
@@ -2376,6 +1789,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
           resp = await AwsApi.callDbHandler(
             method: 'PUT',
             table: table,
+            firmId: firmId, // Required for Lambda authentication
             data: data,
             filters: (idVal != null) ? {'id': idVal} : null,
           );
@@ -2385,6 +1799,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
           resp = await AwsApi.callDbHandler(
             method: 'DELETE',
             table: table,
+            firmId: firmId, // Required for Lambda authentication
             filters: (idVal != null) ? {'id': idVal} : null,
           );
         } else {
@@ -2416,7 +1831,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final db = await database;
     await db.delete('firms');
     // ignore: avoid_print
-    print('🗑️ All firms deleted from local DB');
+    AppLogger.info('🗑️ All firms deleted from local DB');
   }
 
   // Helper to fetch distinct customers from orders for toggle
@@ -2519,6 +1934,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     String? category,
     String? relatedEntityType,
     int? relatedEntityId,
+    String? searchText,
     int? limit
   }) async {
     final db = await database;
@@ -2532,8 +1948,14 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     if (startDate != null && endDate != null) {
       where += ' AND date BETWEEN ? AND ?';
       args.add(startDate);
+    } else if (startDate != null) {
+      where += ' AND date >= ?';
+      args.add(startDate);
+    } else if (endDate != null) {
+      where += ' AND date <= ?';
       args.add(endDate);
     }
+
     if (type != null) {
       where += ' AND type = ?';
       args.add(type);
@@ -2550,6 +1972,11 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       where += ' AND relatedEntityId = ?';
       args.add(relatedEntityId);
     }
+    if (searchText != null && searchText.isNotEmpty) {
+      where += ' AND (category LIKE ? OR description LIKE ?)';
+      args.add('%$searchText%');
+      args.add('%$searchText%');
+    }
 
     return await db.query(
       'transactions',
@@ -2558,6 +1985,40 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       orderBy: 'date DESC, id DESC',
       limit: limit,
     );
+  }
+
+  Future<double> getOpeningBalance({
+    required String relatedEntityType,
+    required int relatedEntityId,
+    required String date,
+    String? firmId,
+  }) async {
+    final db = await database;
+    final res = await db.rawQuery('''
+      SELECT SUM(CASE WHEN type = 'INCOME' THEN amount ELSE -amount END) as balance
+      FROM transactions
+      WHERE relatedEntityType = ? AND relatedEntityId = ? AND date < ?
+      ${firmId != null ? 'AND firmId = ?' : ''}
+    ''', [relatedEntityType, relatedEntityId, date, if (firmId != null) firmId]);
+    
+    return (res.first['balance'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  Future<double> getClosingBalance({
+    required String relatedEntityType,
+    required int relatedEntityId,
+    required String date,
+    String? firmId,
+  }) async {
+    final db = await database;
+    final res = await db.rawQuery('''
+      SELECT SUM(CASE WHEN type = 'INCOME' THEN amount ELSE -amount END) as balance
+      FROM transactions
+      WHERE relatedEntityType = ? AND relatedEntityId = ? AND date <= ?
+      ${firmId != null ? 'AND firmId = ?' : ''}
+    ''', [relatedEntityType, relatedEntityId, date, if (firmId != null) firmId]);
+    
+    return (res.first['balance'] as num?)?.toDouble() ?? 0.0;
   }
   
   Future<Map<String, double>> getFinanceSummary(String firmId, String startDate, String endDate, {String? relatedEntityType}) async {
@@ -2611,92 +2072,58 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
   }
   
   Future<int> insertSupplierOrder(Map<String, dynamic> data, [List<Map<String, dynamic>>? items]) async {
-    final db = await database;
+    final cloudSync = CloudSyncService();
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    final orderId = await db.insert('supplier_orders', data);
-    
-    await _syncOrQueue(table: 'supplier_orders', data: {...data, 'id': orderId}, action: 'INSERT');
+    final orderId = await cloudSync.awsFirstWrite(table: 'supplier_orders', data: data);
+    AppLogger.success('✅ [SupplierOrders] Created supplier order #$orderId (AWS-first)');
 
     if (items != null && items.isNotEmpty) {
       for (var item in items) {
         item['orderId'] = orderId;
         item['uuid'] = item['uuid'] ?? _generateUuid();
-        final itemId = await db.insert('supplier_order_items', item);
-        await _syncOrQueue(table: 'supplier_order_items', data: {...item, 'id': itemId}, action: 'INSERT');
+        await cloudSync.awsFirstWrite(table: 'supplier_order_items', data: item);
       }
     }
     
-    return orderId;
+    return orderId ?? 0;
   }
   
-  // Operations Module  
-  Future<List<Map<String, dynamic>>> getAllStaff() async {
-    final db = await database;
-    return await db.query('staff');
-  }
-  
-  Future<int?> insertStaff(Map<String, dynamic> data) async {
+
+  // ---------- OPERATIONS moved to OperationRepository ----------
+
+  // --- DISH MASTER (AWS-first) ---
+  Future<int?> insertDishMaster(Map<String, dynamic> data) async {
     final cloudSync = CloudSyncService();
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    final id = await cloudSync.awsFirstWrite(table: 'staff', data: data);
-    print('✅ [Staff] Created staff member #$id (AWS-first)');
-    return id;
-  }
-  
-  Future<int?> insertAttendance(Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['uuid'] = data['uuid'] ?? _generateUuid();
-    final id = await cloudSync.awsFirstWrite(table: 'attendance', data: data);
-    print('✅ [Attendance] Recorded attendance #$id (AWS-first)');
-    return id;
-  }
-  
-  Future<List<Map<String, dynamic>>> getPendingDispatches() async {
-    final db = await database;
-    return await db.query('dispatch', where: "status = 'Pending'");
-  }
-  
-  Future<List<Map<String, dynamic>>> getOrdersWithoutDispatch(String date) async {
-    final db = await database;
-    return await db.rawQuery(
-      "SELECT * FROM orders WHERE date = ? AND id NOT IN (SELECT orderId FROM dispatch)",
-      [date]
-    );
-  }
-  
-  Future<int?> insertDispatch(Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['uuid'] = data['uuid'] ?? _generateUuid();
-    final id = await cloudSync.awsFirstWrite(table: 'dispatch', data: data);
-    print('✅ [Dispatch] Created dispatch #$id (AWS-first)');
-    return id;
-  }
-  
-  Future<List<Map<String, dynamic>>> getAllUtensils() async {
-    final db = await database;
-    return await db.query('utensils');
-  }
-  
-  Future<int?> insertUtensil(Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['uuid'] = data['uuid'] ?? _generateUuid();
-    final id = await cloudSync.awsFirstWrite(table: 'utensils', data: data);
-    print('✅ [Utensils] Added utensil #$id (AWS-first)');
+    data['createdAt'] ??= DateTime.now().toIso8601String();
+    data['updatedAt'] = DateTime.now().toIso8601String();
+    final id = await cloudSync.awsFirstWrite(table: 'dish_master', data: data);
+    AppLogger.success('✅ [DishMaster] Created dish #$id (AWS-first)');
     return id;
   }
 
-  Future<bool> updateUtensil(Map<String, dynamic> data) async {
+  // --- PURCHASE ORDERS update (AWS-first) ---
+  Future<bool> updatePurchaseOrderFields(int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
-    final id = data['id'] as int;
-    final success = await cloudSync.awsFirstUpdate(table: 'utensils', recordId: id, data: data);
-    print('✅ [Utensils] Updated utensil #$id (AWS-first)');
+    updates['id'] = id;
+    final success = await cloudSync.awsFirstUpdate(table: 'purchase_orders', recordId: id, data: updates);
+    AppLogger.success('✅ [PurchaseOrders] Updated PO #$id (AWS-first)');
     return success;
   }
 
-  Future<bool> deleteUtensil(int id) async {
+  // --- SUPPLIERS delete (AWS-first) ---
+  Future<bool> deleteSupplier(int id) async {
     final cloudSync = CloudSyncService();
-    final success = await cloudSync.awsFirstDelete(table: 'utensils', recordId: id);
-    print('✅ [Utensils] Deleted utensil #$id (AWS-first)');
+    final success = await cloudSync.awsFirstDelete(table: 'suppliers', recordId: id);
+    AppLogger.success('✅ [Suppliers] Deleted supplier #$id (AWS-first)');
+    return success;
+  }
+
+  // --- SUBCONTRACTORS delete (AWS-first) ---
+  Future<bool> deleteSubcontractor(int id) async {
+    final cloudSync = CloudSyncService();
+    final success = await cloudSync.awsFirstDelete(table: 'subcontractors', recordId: id);
+    AppLogger.success('✅ [Subcontractors] Deleted subcontractor #$id (AWS-first)');
     return success;
   }
 
@@ -2716,7 +2143,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final cloudSync = CloudSyncService();
     final id = user['id'] as int;
     final success = await cloudSync.awsFirstUpdate(table: 'users', recordId: id, data: user);
-    print('✅ [User] Updated user #$id (AWS-first)');
+    AppLogger.success('✅ [User] Updated user #$id (AWS-first)');
     return success;
   }
 
@@ -2724,7 +2151,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
     final success = await cloudSync.awsFirstUpdate(table: 'dishes', recordId: id, data: updates);
-    print('✅ [Dishes] Updated dish #$id (AWS-first)');
+    AppLogger.success('✅ [Dishes] Updated dish #$id (AWS-first)');
     return success;
   }
 
@@ -2732,7 +2159,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
     final success = await cloudSync.awsFirstUpdate(table: 'dispatch', recordId: id, data: updates);
-    print('✅ [Dispatch] Updated dispatch #$id (AWS-first)');
+    AppLogger.success('✅ [Dispatch] Updated dispatch #$id (AWS-first)');
     return success;
   }
 
@@ -2740,15 +2167,60 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
     final success = await cloudSync.awsFirstUpdate(table: 'dispatches', recordId: id, data: updates);
-    print('✅ [Dispatches] Updated dispatch #$id (AWS-first)');
+    AppLogger.success('✅ [Dispatches] Updated dispatch #$id (AWS-first)');
+
+    // ERP Integration: Auto-record earnings if completed
+    if (success && updates['dispatchStatus'] == 'COMPLETED') {
+      _recordDriverEarning(id);
+    }
+
     return success;
+  }
+
+  Future<void> _recordDriverEarning(int dispatchId) async {
+    final db = await database;
+    final dispatchRes = await db.query('dispatches', where: 'id = ?', whereArgs: [dispatchId]);
+    if (dispatchRes.isEmpty) return;
+    
+    final dispatch = dispatchRes.first;
+    final driverId = dispatch['driverId'] as int?;
+    final driverShare = (dispatch['driverShare'] as num?)?.toDouble() ?? 0;
+    final firmId = (dispatch['firmId']?.toString()) ?? 'DEFAULT';
+    
+    if (driverId == null || driverShare <= 0) return;
+    
+    // Check if transaction already exists for this dispatch
+    final existing = await getTransactions(
+      relatedEntityType: 'DRIVER',
+      relatedEntityId: driverId,
+      searchText: 'Dispatch #$dispatchId',
+    );
+    
+    if (existing.isNotEmpty) {
+      AppLogger.info('ℹ️ [Finance] Earning for Dispatch #$dispatchId already recorded. Skipping.');
+      return;
+    }
+    
+    // Record earning as INCOME (Credit) for the driver's ledger
+    await insertTransaction({
+      'firmId': firmId,
+      'date': DateTime.now().toIso8601String().split('T')[0],
+      'type': 'INCOME', // Using INCOME as Credit (standard in this app's ledger logic)
+      'category': 'Driver Earning',
+      'amount': driverShare,
+      'description': 'Earnings for Dispatch #$dispatchId',
+      'relatedEntityType': 'DRIVER',
+      'relatedEntityId': driverId,
+      'mode': 'Accrued',
+    });
+    AppLogger.success('✅ [Finance] Automatically recorded ₹$driverShare as earnings for Driver #$driverId (Dispatch #$dispatchId)');
   }
 
   Future<bool> updateOrderFields(int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
     final success = await cloudSync.awsFirstUpdate(table: 'orders', recordId: id, data: updates);
-    print('✅ [Orders] Updated order #$id (AWS-first)');
+    AppLogger.success('✅ [Orders] Updated order #$id (AWS-first)');
     return success;
   }
 
@@ -2756,7 +2228,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
     final success = await cloudSync.awsFirstUpdate(table: 'dispatch_items', recordId: id, data: updates);
-    print('✅ [DispatchItems] Updated item #$id (AWS-first)');
+    AppLogger.success('✅ [DispatchItems] Updated item #$id (AWS-first)');
     return success;
   }
 
@@ -2770,7 +2242,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
       final id = records.first['id'] as int;
       updates['id'] = id;
       await cloudSync.awsFirstUpdate(table: 'utensils', recordId: id, data: updates);
-      print('✅ [Utensils] Updated utensil "$name" (AWS-first)');
+      AppLogger.success('✅ [Utensils] Updated utensil "$name" (AWS-first)');
     }
     return rows > 0;
   }
@@ -2778,7 +2250,7 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
   Future<bool> deleteUser(int id) async {
     final cloudSync = CloudSyncService();
     final success = await cloudSync.awsFirstDelete(table: 'users', recordId: id);
-    print('✅ [User] Deleted user #$id (AWS-first)');
+    AppLogger.success('✅ [User] Deleted user #$id (AWS-first)');
     return success;
   }
   
@@ -2845,285 +2317,10 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
   
   // ============== PAYROLL & HR REPORTS ==============
   
-  /// Get monthly attendance summary for a staff member
-  Future<Map<String, dynamic>> getMonthlyAttendanceSummary(int staffId, String monthYear) async {
-    final db = await database;
-    // monthYear format: 'YYYY-MM'
-    final startDate = '$monthYear-01';
-    final endDate = '$monthYear-31'; // Will work for any month
-    
-    final result = await db.rawQuery('''
-      SELECT 
-        COUNT(*) as daysPresent,
-        COALESCE(SUM(hoursWorked), 0) as totalHours,
-        COALESCE(SUM(overtime), 0) as totalOvertime,
-        SUM(CASE WHEN isWithinGeoFence = 1 THEN 1 ELSE 0 END) as daysWithinGeoFence
-      FROM attendance
-      WHERE staffId = ? AND date BETWEEN ? AND ? AND status = 'Present'
-    ''', [staffId, startDate, endDate]);
-    
-    return result.isNotEmpty ? result.first : {
-      'daysPresent': 0,
-      'totalHours': 0.0,
-      'totalOvertime': 0.0,
-      'daysWithinGeoFence': 0,
-    };
-  }
   
-  /// Get pending (not yet deducted) advances for a staff member
-  Future<double> getPendingAdvances(int staffId) async {
-    final db = await database;
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(amount), 0) as total
-      FROM staff_advances
-      WHERE staffId = ? AND deductedFromPayroll = 0
-    ''', [staffId]);
-    
-    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
-  }
+  // ============== (Migrated to OperationRepository) ==============
   
-  /// Mark advances as deducted for a payroll month
-  Future<void> markAdvancesDeducted(int staffId, String payrollMonth) async {
-    final db = await database;
-    await db.update(
-      'staff_advances',
-      {'deductedFromPayroll': 1, 'payrollMonth': payrollMonth},
-      where: 'staffId = ? AND deductedFromPayroll = 0',
-      whereArgs: [staffId],
-    );
-  }
-  
-  /// Get all staff with their payroll summary for a month
-  Future<List<Map<String, dynamic>>> getMonthlyPayrollSummary(String monthYear) async {
-    final db = await database;
-    final startDate = '$monthYear-01';
-    final endDate = '$monthYear-31';
-    
-    return await db.rawQuery('''
-      SELECT 
-        s.id,
-        s.name,
-        s.staffType,
-        s.salary,
-        s.dailyWageRate,
-        s.hourlyRate,
-        s.payoutFrequency,
-        COUNT(a.id) as daysPresent,
-        COALESCE(SUM(a.hoursWorked), 0) as totalHours,
-        COALESCE(SUM(a.overtime), 0) as totalOvertime,
-        (SELECT COALESCE(SUM(amount), 0) FROM staff_advances 
-         WHERE staffId = s.id AND deductedFromPayroll = 0) as pendingAdvances
-      FROM staff s
-      LEFT JOIN attendance a ON s.id = a.staffId 
-        AND a.date BETWEEN ? AND ? 
-        AND a.status = 'Present'
-      WHERE s.isActive = 1
-      GROUP BY s.id
-      ORDER BY s.name
-    ''', [startDate, endDate]);
-  }
-  
-  // === SALARY DISBURSEMENT METHODS ===
-  
-  /// Get complete salary slip data for an employee
-  Future<Map<String, dynamic>?> getSalarySlipData(int staffId, String monthYear) async {
-    final db = await database;
-    final startDate = '$monthYear-01';
-    final endDate = '$monthYear-31';
-    
-    // Get staff details
-    final staffList = await db.query('staff', where: 'id = ?', whereArgs: [staffId], limit: 1);
-    if (staffList.isEmpty) return null;
-    final staff = staffList.first;
-    
-    // Get firm details for header
-    final firmId = staff['firmId'] as String?;
-    Map<String, dynamic>? firm;
-    if (firmId != null) {
-      firm = await getFirmDetails(firmId);
-    }
-    
-    // Get attendance summary
-    final attendance = await db.rawQuery('''
-      SELECT 
-        COUNT(*) as daysPresent,
-        COALESCE(SUM(hoursWorked), 0) as totalHours,
-        COALESCE(SUM(overtime), 0) as totalOvertime
-      FROM attendance
-      WHERE staffId = ? AND date BETWEEN ? AND ? AND status = 'Present'
-    ''', [staffId, startDate, endDate]);
-    
-    // Get pending advances
-    final advances = await db.rawQuery('''
-      SELECT COALESCE(SUM(amount), 0) as total
-      FROM staff_advances
-      WHERE staffId = ? AND deductedFromPayroll = 0
-    ''', [staffId]);
-    
-    // Get disbursement status if exists
-    final disbursement = await db.query(
-      'salary_disbursements',
-      where: 'staffId = ? AND monthYear = ?',
-      whereArgs: [staffId, monthYear],
-      limit: 1,
-    );
-    
-    return {
-      'staff': staff,
-      'firm': firm,
-      'monthYear': monthYear,
-      'attendance': attendance.first,
-      'pendingAdvances': (advances.first['total'] as num?)?.toDouble() ?? 0,
-      'disbursement': disbursement.isNotEmpty ? disbursement.first : null,
-    };
-  }
-  
-  /// Get salary disbursement record
-  Future<Map<String, dynamic>?> getSalaryDisbursement(int staffId, String monthYear) async {
-    final db = await database;
-    final result = await db.query(
-      'salary_disbursements',
-      where: 'staffId = ? AND monthYear = ?',
-      whereArgs: [staffId, monthYear],
-      limit: 1,
-    );
-    return result.isNotEmpty ? result.first : null;
-  }
-  
-  /// Disburse salary and create ledger entry
-  Future<int> disburseSalary({
-    required String firmId,
-    required int staffId,
-    required String monthYear,
-    required double basePay,
-    required double otPay,
-    required double deductions,
-    required double netPay,
-    required String paymentMode,
-    String? paymentRef,
-    String? paidBy,
-    String? notes,
-  }) async {
-    final db = await database;
-    final now = DateTime.now().toIso8601String();
-    
-    // Insert or update disbursement record
-    final existing = await getSalaryDisbursement(staffId, monthYear);
-    
-    int id;
-    if (existing != null) {
-      await db.update(
-        'salary_disbursements',
-        {
-          'basePay': basePay,
-          'otPay': otPay,
-          'deductions': deductions,
-          'netPay': netPay,
-          'status': 'PAID',
-          // The instruction requested to insert 'title: const Text("Payment Started"),' here.
-          // However, this is a database update map, and 'title' with a Flutter Text widget
-          // is not a valid database column or value. Assuming this was a misunderstanding
-          // or a placeholder for a different kind of update, I'm omitting it to maintain
-          // syntactic correctness and database compatibility.
-          'paidAt': now,
-          'paidBy': paidBy,
-          'notes': notes,
-          'updatedAt': now,
-        },
-        where: 'id = ?',
-        whereArgs: [existing['id']],
-      );
-      id = existing['id'] as int;
-    } else {
-      id = await db.insert('salary_disbursements', {
-        'firmId': firmId,
-        'staffId': staffId,
-        'monthYear': monthYear,
-        'basePay': basePay,
-        'otPay': otPay,
-        'deductions': deductions,
-        'netPay': netPay,
-        'status': 'PAID',
-        'paymentMode': paymentMode,
-        'paymentRef': paymentRef,
-        'paidAt': now,
-        'paidBy': paidBy,
-        'notes': notes,
-        'createdAt': now,
-        'updatedAt': now,
-      });
-    }
-    
-    // Get staff name for transaction
-    final staff = await db.query('staff', where: 'id = ?', whereArgs: [staffId], limit: 1);
-    final staffName = (staff.isNotEmpty ? staff.first['name'] : 'Staff') as String;
-    
-    // Create ledger transaction (expense)
-    await db.insert('transactions', {
-      'firmId': firmId,
-      'type': 'EXPENSE',
-      'category': 'Salary',
-      'amount': netPay,
-      'date': now.substring(0, 10),
-      'description': 'Salary for $staffName - $monthYear',
-      'paymentMode': paymentMode,
-      'referenceId': 'SAL-$monthYear-$staffId',
-      'createdAt': now,
-    });
-    
-    // Mark advances as deducted if any
-    if (deductions > 0) {
-      await markAdvancesDeducted(staffId, monthYear);
-    }
-    
-    return id;
-  }
-  
-  /// Get all pending disbursements for a month
-  Future<List<Map<String, dynamic>>> getPendingDisbursements(String firmId, String monthYear) async {
-    final db = await database;
-    final startDate = '$monthYear-01';
-    final endDate = '$monthYear-31';
-    
-    return await db.rawQuery('''
-      SELECT 
-        s.id,
-        s.name,
-        s.staffType,
-        s.salary,
-        s.dailyWageRate,
-        s.hourlyRate,
-        COUNT(a.id) as daysPresent,
-        COALESCE(SUM(a.hoursWorked), 0) as totalHours,
-        COALESCE(SUM(a.overtime), 0) as totalOvertime,
-        (SELECT COALESCE(SUM(amount), 0) FROM staff_advances 
-         WHERE staffId = s.id AND deductedFromPayroll = 0) as pendingAdvances,
-        sd.status as disbursementStatus,
-        sd.paidAt,
-        sd.paymentMode,
-        sd.netPay as paidAmount
-      FROM staff s
-      LEFT JOIN attendance a ON s.id = a.staffId 
-        AND a.date BETWEEN ? AND ? 
-        AND a.status = 'Present'
-      LEFT JOIN salary_disbursements sd ON s.id = sd.staffId AND sd.monthYear = ?
-      WHERE s.isActive = 1 AND s.firmId = ?
-      GROUP BY s.id
-      ORDER BY sd.status ASC, s.name
-    ''', [startDate, endDate, monthYear, firmId]);
-  }
-  
-  /// Get staff salary history
-  Future<List<Map<String, dynamic>>> getStaffSalaryHistory(int staffId, {int limit = 12}) async {
-    final db = await database;
-    return await db.query(
-      'salary_disbursements',
-      where: 'staffId = ?',
-      whereArgs: [staffId],
-      orderBy: 'monthYear DESC',
-      limit: limit,
-    );
-  }
+
 
   
   /// Get HR attendance report with hours and OT
@@ -3188,221 +2385,14 @@ Future<List<Map<String, dynamic>>> getDishSuggestions(String? category) async {
     ''', [staffId, startDate, endDate]);
   }
   
-  // ============== STAFF ASSIGNMENTS ==============
-  
-  /// Assign staff to an order
-  Future<int> assignStaffToOrder(int orderId, int staffId, String role) async {
-    final db = await database;
-    return await db.insert('staff_assignments', {
-      'orderId': orderId,
-      'staffId': staffId,
-      'role': role,
-      'assignedAt': DateTime.now().toIso8601String(),
-      'status': 'ASSIGNED',
-    });
-  }
-  
-  /// Get staff assigned to an order
-  Future<List<Map<String, dynamic>>> getOrderStaffAssignments(int orderId) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT sa.*, s.name, s.mobile, s.role as staffRole
-      FROM staff_assignments sa
-      JOIN staff s ON sa.staffId = s.id
-      WHERE sa.orderId = ?
-    ''', [orderId]);
-  }
-  
-  /// Remove staff assignment
-  Future<int> removeStaffAssignment(int assignmentId) async {
-    final db = await database;
-    return await db.delete('staff_assignments', where: 'id = ?', whereArgs: [assignmentId]);
-  }
-  
-  /// Get available staff (not assigned to orders on a date)
-  Future<List<Map<String, dynamic>>> getAvailableStaff(String date) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT s.*
-      FROM staff s
-      WHERE s.isActive = 1
-        AND s.id NOT IN (
-          SELECT sa.staffId FROM staff_assignments sa
-          JOIN orders o ON sa.orderId = o.id
-          WHERE o.date = ?
-        )
-      ORDER BY s.name
-    ''', [date]);
-  }
+
+  // ---------- STAFF ASSIGNMENTS moved to OperationRepository ----------
 
   
   // ============== COMPREHENSIVE REPORTS ==============
   
-  /// Order Summary Report - Orders by status
-  Future<List<Map<String, dynamic>>> getOrderStatusReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        date,
-        COUNT(*) as totalOrders,
-        SUM(CASE WHEN status = 'Confirmed' THEN 1 ELSE 0 END) as confirmed,
-        SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN isCancelled = 1 THEN 1 ELSE 0 END) as cancelled,
-        SUM(totalPax) as totalPax,
-        SUM(CASE WHEN isCancelled = 0 OR isCancelled IS NULL THEN finalAmount ELSE 0 END) as revenue
-      FROM orders
-      WHERE date BETWEEN ? AND ?
-      GROUP BY date
-      ORDER BY date DESC
-    ''', [startDate, endDate]);
-  }
-  
-  /// Order by Food Type Report
-  Future<List<Map<String, dynamic>>> getOrdersByFoodTypeReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        foodType,
-        COUNT(*) as orderCount,
-        SUM(totalPax) as totalPax,
-        SUM(CASE WHEN isCancelled = 0 OR isCancelled IS NULL THEN finalAmount ELSE 0 END) as revenue
-      FROM orders
-      WHERE date BETWEEN ? AND ? AND (isCancelled = 0 OR isCancelled IS NULL)
-      GROUP BY foodType
-      ORDER BY orderCount DESC
-    ''', [startDate, endDate]);
-  }
-  
-  /// Order by Meal Type Report
-  Future<List<Map<String, dynamic>>> getOrdersByMealTypeReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        mealType,
-        COUNT(*) as orderCount,
-        SUM(totalPax) as totalPax,
-        SUM(CASE WHEN isCancelled = 0 OR isCancelled IS NULL THEN finalAmount ELSE 0 END) as revenue
-      FROM orders
-      WHERE date BETWEEN ? AND ? AND (isCancelled = 0 OR isCancelled IS NULL)
-      GROUP BY mealType
-      ORDER BY orderCount DESC
-    ''', [startDate, endDate]);
-  }
-  
-  /// Kitchen Production Report - Dishes by status
-  Future<List<Map<String, dynamic>>> getKitchenProductionReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        o.date,
-        COUNT(d.id) as totalDishes,
-        SUM(CASE WHEN d.productionStatus = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN d.productionStatus = 'IN_PROGRESS' THEN 1 ELSE 0 END) as inProgress,
-        SUM(CASE WHEN d.productionStatus IS NULL OR d.productionStatus = 'PENDING' THEN 1 ELSE 0 END) as pending,
-        SUM(COALESCE(d.pax, 0)) as totalPax
-      FROM dishes d
-      JOIN orders o ON d.orderId = o.id
-      WHERE o.date BETWEEN ? AND ?
-      GROUP BY o.date
-      ORDER BY o.date DESC
-    ''', [startDate, endDate]);
-  }
-  
-  /// Top Dishes Report
-  Future<List<Map<String, dynamic>>> getTopDishesReport(String startDate, String endDate, {int limit = 10}) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        d.dishName AS name,
-        d.category,
-        COUNT(*) as orderCount,
-        SUM(COALESCE(d.pax, 0)) as totalPax,
-        SUM(COALESCE(d.pax * d.pricePerPlate, 0)) as totalRevenue
-      FROM dishes d
-      JOIN orders o ON d.orderId = o.id
-      WHERE o.date BETWEEN ? AND ? AND (o.isCancelled = 0 OR o.isCancelled IS NULL)
-      GROUP BY d.dishName
-      ORDER BY orderCount DESC
-      LIMIT ?
-    ''', [startDate, endDate, limit]);
-  }
-  
-  /// Dishes by Category Report
-  Future<List<Map<String, dynamic>>> getDishesByCategoryReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        COALESCE(d.category, 'Uncategorized') as category,
-        COUNT(*) as dishCount,
-        SUM(COALESCE(d.pax, 0)) as totalPax,
-        SUM(COALESCE(d.pax * d.pricePerPlate, 0)) as totalRevenue
-      FROM dishes d
-      JOIN orders o ON d.orderId = o.id
-      WHERE o.date BETWEEN ? AND ? AND (o.isCancelled = 0 OR o.isCancelled IS NULL)
-      GROUP BY d.category
-      ORDER BY dishCount DESC
-    ''', [startDate, endDate]);
-  }
-  
-  /// Dispatch Performance Report
-  Future<List<Map<String, dynamic>>> getDispatchReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        o.date,
-        COUNT(DISTINCT d.id) as totalDispatches,
-        SUM(CASE WHEN d.dispatchStatus = 'DELIVERED' THEN 1 ELSE 0 END) as delivered,
-        SUM(CASE WHEN d.dispatchStatus = 'DISPATCHED' THEN 1 ELSE 0 END) as inTransit,
-        SUM(CASE WHEN d.dispatchStatus = 'PENDING' OR d.dispatchStatus IS NULL THEN 1 ELSE 0 END) as pending,
-        COUNT(DISTINCT o.id) as ordersCount
-      FROM dispatches d
-      JOIN orders o ON d.orderId = o.id
-      WHERE o.date BETWEEN ? AND ?
-      GROUP BY o.date
-      ORDER BY o.date DESC
-    ''', [startDate, endDate]);
-  }
-  
-  /// Delivery by Time Slot Report
-  Future<List<Map<String, dynamic>>> getDeliveryTimeReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        CASE 
-          WHEN CAST(SUBSTR(o.time, 1, 2) AS INTEGER) < 12 THEN 'Morning (6-12)'
-          WHEN CAST(SUBSTR(o.time, 1, 2) AS INTEGER) < 17 THEN 'Afternoon (12-5)'
-          ELSE 'Evening (5-10)'
-        END as timeSlot,
-        COUNT(*) as orderCount,
-        SUM(totalPax) as totalPax
-      FROM orders o
-      WHERE o.date BETWEEN ? AND ? AND (o.isCancelled = 0 OR o.isCancelled IS NULL)
-      GROUP BY timeSlot
-      ORDER BY 
-        CASE timeSlot
-          WHEN 'Morning (6-12)' THEN 1
-          WHEN 'Afternoon (12-5)' THEN 2
-          ELSE 3
-        END
-    ''', [startDate, endDate]);
-  }
-  
-  /// Revenue by Location Report
-  Future<List<Map<String, dynamic>>> getRevenueByLocationReport(String startDate, String endDate) async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        COALESCE(location, venue, 'Unknown') as location,
-        COUNT(*) as orderCount,
-        SUM(totalPax) as totalPax,
-        SUM(CASE WHEN isCancelled = 0 OR isCancelled IS NULL THEN finalAmount ELSE 0 END) as revenue
-      FROM orders
-      WHERE date BETWEEN ? AND ?
-      GROUP BY location
-      ORDER BY revenue DESC
-      LIMIT 10
-    ''', [startDate, endDate]);
-  }
+
+  // ---------- ORDER & KITCHEN REPORTS moved to OrderRepository ----------
   
   /// Daily Capacity Report
   Future<List<Map<String, dynamic>>> getDailyCapacityReport(String startDate, String endDate) async {
@@ -3705,309 +2695,10 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   // ========== INVENTORY MODULE HELPERS ==========
 
   // --- INGREDIENTS ---
-  Future<List<Map<String, dynamic>>> getAllIngredients(String firmId) async {
-    final db = await database;
-    
-    // 1. Get Firm Specific Data
-    final firmData = await db.query(
-      'ingredients_master',
-      where: 'firmId = ?',
-      whereArgs: [firmId],
-      orderBy: 'category, name',
-    );
 
-    // 2. Get Seed Data (excluding overridden)
-    // Check if firm allows universal data
-    bool showUniversal = await getFirmUniversalDataVisibility(firmId);
-    if (!showUniversal) {
-      // If not showing universal, just return firm data
-      return firmData;
-    }
+  // ---------- INVENTORY & RECIPES moved to InventoryRepository ----------
 
-    // Collect both baseIds and names from firm data to properly exclude duplicates
-    final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
-    final firmIngNames = firmData.map((r) => (r['name'] as String?)?.toLowerCase()).where((n) => n != null).toSet();
-    
-    String seedWhere = "firmId = 'SEED'";
-    if (customizedBaseIds.isNotEmpty) {
-      seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
-    }
-
-    final seedData = await db.rawQuery(
-      'SELECT * FROM ingredients_master WHERE $seedWhere ORDER BY category, name',
-    );
-    
-    // Also filter out SEED ingredients whose names match firm ingredients (case-insensitive)
-    final filteredSeedData = seedData.where((sd) {
-      final seedName = (sd['name'] as String?)?.toLowerCase();
-      return seedName == null || !firmIngNames.contains(seedName);
-    }).toList();
-    
-    // 3. Merge & Sort
-    final combined = [...firmData, ...filteredSeedData];
-    combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
-    
-    return combined;
-  }
-
-  Future<int> insertIngredient(Map<String, dynamic> data) async {
-    final db = await database;
-    
-    if (data['firmId'] == null) {
-       final sp = await SharedPreferences.getInstance();
-       final fid = sp.getString('last_firm');
-       if (fid != null) data['firmId'] = fid;
-    }
-
-    data['createdAt'] = DateTime.now().toIso8601String();
-    data['updatedAt'] = DateTime.now().toIso8601String();
-    data['uuid'] = data['uuid'] ?? _generateUuid();
-    // Use master table
-    return await db.insert('ingredients_master', data);
-  }
-
-  Future<int> updateIngredient(int id, Map<String, dynamic> data) async {
-    final db = await database;
-    data['updatedAt'] = DateTime.now().toIso8601String();
-    return await db.update('ingredients_master', data, where: 'id = ?', whereArgs: [id]);
-  }
-
-  Future<void> seedIngredientsFromJson(String firmId, List<Map<String, dynamic>> ingredients) async {
-    final db = await database;
-    final batch = db.batch();
-    final now = DateTime.now().toIso8601String();
-    for (var ing in ingredients) {
-      batch.insert('ingredients', {
-        ...ing,
-        'firmId': firmId,
-        'isSystemPreloaded': 1,
-        'isActive': 1,
-        'createdAt': now,
-      }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    }
-    await batch.commit(noResult: true);
-  }
-
-  // --- BOM ---
-  Future<List<Map<String, dynamic>>> getBomForDish(String firmId, int dishId) async {
-    final db = await database;
-    
-    // First try firm-specific BOM (uses actual dish_id)
-    var result = await db.rawQuery('''
-      SELECT rd.*, 
-             i.name as ingredientName, 
-             i.category, 
-             COALESCE(rd.unit_override, i.unit_of_measure) as unit,
-             (rd.quantity_per_base_pax * 100) as quantityPer100Pax
-      FROM recipe_detail rd
-      JOIN ingredients_master i ON rd.ing_id = i.id
-      WHERE rd.dish_id = ? AND rd.firmId = ?
-      ORDER BY i.category, i.name
-    ''', [dishId, firmId]);
-    
-    // If no firm-specific BOM, fallback to SEED data
-    // NOTE: SEED BOM uses baseId values for dish_id and ing_id, NOT auto-generated ids
-    if (result.isEmpty) {
-      // Get the dish's baseId (if it's a seed dish)
-      final dish = await db.query('dish_master', where: 'id = ?', whereArgs: [dishId]);
-      if (dish.isNotEmpty) {
-        final baseId = dish.first['baseId'];
-        if (baseId != null) {
-          // Query SEED BOM using baseId and join ingredients by baseId
-          result = await db.rawQuery('''
-            SELECT rd.*, 
-                   i.name as ingredientName, 
-                   i.category, 
-                   COALESCE(rd.unit_override, i.unit_of_measure) as unit,
-                   (rd.quantity_per_base_pax * 100) as quantityPer100Pax
-            FROM recipe_detail rd
-            JOIN ingredients_master i ON rd.ing_id = i.baseId AND i.firmId = 'SEED'
-            WHERE rd.dish_id = ? AND rd.firmId = 'SEED'
-            ORDER BY i.category, i.name
-          ''', [baseId]);
-        }
-      }
-    }
-    
-    return result;
-  }
-
-  /// Get recipe ingredients for a dish by NAME (for Kitchen Production view)
-/// Returns empty list if dish not in master or has no recipe.
-Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int paxQty) async {
-  final db = await database;
-
-  // Get Context
-  final sp = await SharedPreferences.getInstance();
-  final firmId = sp.getString('last_firm') ?? 'DEFAULT';
-  final showUniversal = await getFirmUniversalDataVisibility(firmId);
-  
-  print('🔍 [BOM] Looking up recipe for: "$dishName" (pax: $paxQty, firmId: $firmId, showUniversal: $showUniversal)');
-  
-  // Step 1: Find dish_master by name
-  // Prioritize FIRM specific dish over SEED dish
-  // First try exact match, then fallback to LIKE match
-  var where = "name = ? AND (firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
-  var args = <Object>[dishName.trim(), firmId];
-
-  var dishMaster = await db.query(
-    'dish_master',
-    columns: ['id', 'baseId', 'base_pax', 'firmId', 'name'],
-    where: where,
-    whereArgs: args,
-    orderBy: "CASE WHEN firmId = '$firmId' THEN 0 ELSE 1 END", // Firm first
-    limit: 1,
-  );
-  
-  print('🔍 [BOM] Exact match query: $where, args: $args');
-  print('🔍 [BOM] Exact match result: ${dishMaster.length} dishes found');
-  
-  // Fallback: Try case-insensitive LIKE match if exact match fails
-  if (dishMaster.isEmpty) {
-    where = "name LIKE ? AND (firmId = ? ${showUniversal ? "OR firmId = 'SEED'" : ""})";
-    args = ['%${dishName.trim()}%', firmId];
-    dishMaster = await db.query(
-      'dish_master',
-      columns: ['id', 'baseId', 'base_pax', 'firmId', 'name'],
-      where: where,
-      whereArgs: args,
-      orderBy: "CASE WHEN firmId = '$firmId' THEN 0 ELSE 1 END",
-      limit: 1,
-    );
-    print('🔍 [BOM] LIKE match query: $where, args: $args');
-    print('🔍 [BOM] LIKE match result: ${dishMaster.length} dishes found');
-  }
-
-  if (dishMaster.isEmpty) {
-    print('❌ [BOM] No dish found in dish_master for "$dishName"');
-    return [];
-  }
-  
-  final dishId = dishMaster.first['id'] as int;
-  final baseId = dishMaster.first['baseId'];
-  final basePax = (dishMaster.first['base_pax'] as int?) ?? 1;
-  final isSeedDish = dishMaster.first['firmId'] == 'SEED';
-  final foundName = dishMaster.first['name'] as String;
-  
-  print('✅ [BOM] Found dish: id=$dishId, baseId=$baseId, basePax=$basePax, isSeed=$isSeedDish, name="$foundName"');
-  
-  // Step 2: First try firm-specific BOM
-  var recipe = await db.rawQuery('''
-    SELECT rd.*, 
-           i.name as ingredientName, 
-           i.id as ing_id,
-           i.category, 
-           COALESCE(i.cost_per_unit, 0) as cost_per_unit,
-           COALESCE(rd.unit_override, i.unit_of_measure) as unit,
-           (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
-    FROM recipe_detail rd
-    JOIN ingredients_master i ON rd.ing_id = i.id
-    WHERE rd.dish_id = ? AND rd.firmId = ?
-    ORDER BY i.category, i.name
-  ''', [paxQty, basePax, dishId, firmId]);
-  
-  print('🔍 [BOM] Firm-specific BOM query (dish_id=$dishId, firmId=$firmId): ${recipe.length} ingredients');
-  
-  // Step 3: If no firm-specific BOM, try SEED BOM
-  if (recipe.isEmpty) {
-    // First, if it's a SEED dish with baseId, use that
-    if (isSeedDish && baseId != null) {
-      print('🔍 [BOM] Trying SEED BOM with baseId=$baseId');
-      recipe = await db.rawQuery('''
-        SELECT rd.*, 
-               i.name as ingredientName, 
-               i.id as ing_id,
-               i.category, 
-               COALESCE(i.cost_per_unit, 0) as cost_per_unit,
-               COALESCE(rd.unit_override, i.unit_of_measure) as unit,
-               (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
-        FROM recipe_detail rd
-        JOIN ingredients_master i ON rd.ing_id = i.baseId AND i.firmId = 'SEED'
-        WHERE rd.dish_id = ? AND rd.firmId = 'SEED'
-        ORDER BY i.category, i.name
-      ''', [paxQty, basePax, baseId]);
-      print('🔍 [BOM] SEED BOM query result: ${recipe.length} ingredients');
-    }
-    
-    // If still empty AND it's a firm dish, try finding SEED dish by name
-    if (recipe.isEmpty && !isSeedDish && showUniversal) {
-      print('🔍 [BOM] Firm dish has no BOM, trying to find SEED dish by name...');
-      // Look for a SEED dish with the same name
-      final seedDish = await db.query(
-        'dish_master',
-        columns: ['id', 'baseId', 'base_pax'],
-        where: "name = ? AND firmId = 'SEED'",
-        whereArgs: [foundName.trim()],
-        limit: 1,
-      );
-      
-      if (seedDish.isNotEmpty) {
-        final seedBaseId = seedDish.first['baseId'];
-        final seedBasePax = (seedDish.first['base_pax'] as int?) ?? 1;
-        print('✅ [BOM] Found SEED dish with baseId=$seedBaseId');
-        
-        if (seedBaseId != null) {
-          recipe = await db.rawQuery('''
-            SELECT rd.*, 
-                   i.name as ingredientName, 
-                   i.id as ing_id,
-                   i.category, 
-                   COALESCE(i.cost_per_unit, 0) as cost_per_unit,
-                   COALESCE(rd.unit_override, i.unit_of_measure) as unit,
-                   (rd.quantity_per_base_pax * ? / ?) as scaledQuantity
-            FROM recipe_detail rd
-            JOIN ingredients_master i ON rd.ing_id = i.baseId AND i.firmId = 'SEED'
-            WHERE rd.dish_id = ? AND rd.firmId = 'SEED'
-            ORDER BY i.category, i.name
-          ''', [paxQty, seedBasePax, seedBaseId]);
-          print('🔍 [BOM] SEED BOM (by name) query result: ${recipe.length} ingredients');
-        }
-      } else {
-        print('⚠️ [BOM] No SEED dish found with name "$foundName"');
-      }
-    }
-  }
-  
-  if (recipe.isEmpty) {
-    print('⚠️ [BOM] No ingredients found for "$dishName"');
-  } else {
-    print('✅ [BOM] Found ${recipe.length} ingredients for "$dishName"');
-  }
-  
-  return recipe;
-}
-
-  Future<int> insertBomItem(Map<String, dynamic> data) async {
-    final db = await database;
-    // Map old 'bom' fields to 'recipe_detail' fields if necessary
-    // data: { firmId, dishId, ingredientId, quantityPer100Pax, unit }
-    // recipe_detail: { firmId, dish_id, ing_id, quantity_per_base_pax, unit_override }
-    // Note: BOM screen inputs "Quantity for 100 pax".
-    // recipe_detail stores "quantity_per_base_pax". dish_master base_pax is usually 1.
-    // For V19, let's store per-pax. So input / 100.
-    
-    return await db.insert('recipe_detail', {
-      'firmId': data['firmId'] ?? 'SEED', // Include firmId for proper firm-specific BOM
-      'dish_id': data['dishId'],
-      'ing_id': data['ingredientId'],
-      'quantity_per_base_pax': (data['quantityPer100Pax'] as num) / 100.0, // Normalize to 1 pax
-      'unit_override': data['unit'], 
-      'isModified': 1, // Mark as modified for sync
-      'uuid': data['uuid'] ?? _generateUuid(),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<void> deleteBomItem(int id) async {
-    final db = await database;
-    await db.delete('recipe_detail', where: 'id = ?', whereArgs: [id]);
-  }
-
-  Future<void> updateBomItem(int id, Map<String, dynamic> data) async {
-    final db = await database;
-    await db.update('recipe_detail', data, where: 'id = ?', whereArgs: [id]);
-  }
-
-  // --- SUPPLIERS ---
+// --- SUPPLIERS ---
   Future<List<Map<String, dynamic>>> getAllSuppliers(String firmId) async {
     final db = await database;
     return await db.query('suppliers',
@@ -4022,7 +2713,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     data['createdAt'] = DateTime.now().toIso8601String();
     data['uuid'] = data['uuid'] ?? _generateUuid();
     final id = await cloudSync.awsFirstWrite(table: 'suppliers', data: data);
-    print('✅ [Suppliers] Created supplier #$id (AWS-first)');
+    AppLogger.success('✅ [Suppliers] Created supplier #$id (AWS-first)');
     return id;
   }
 
@@ -4031,10 +2722,12 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
     final success = await cloudSync.awsFirstUpdate(table: 'suppliers', recordId: id, data: data);
-    print('✅ [Suppliers] Updated supplier #$id (AWS-first)');
+    AppLogger.success('✅ [Suppliers] Updated supplier #$id (AWS-first)');
     return success;
   }
 
+
+  // --- PURCHASE ORDERS ---
   // --- CUSTOMERS ---
   Future<List<Map<String, dynamic>>> getAllCustomers(String firmId) async {
     final db = await database;
@@ -4050,7 +2743,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     data['createdAt'] = DateTime.now().toIso8601String();
     data['uuid'] = data['uuid'] ?? _generateUuid();
     final id = await cloudSync.awsFirstWrite(table: 'customers', data: data);
-    print('✅ [Customers] Created customer #$id (AWS-first)');
+    AppLogger.success('✅ [Customers] Created customer #$id (AWS-first)');
     return id;
   }
 
@@ -4070,7 +2763,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     data['isActive'] = 1; // Ensure new subcontractors are active by default
     data['uuid'] = data['uuid'] ?? _generateUuid();
     final id = await cloudSync.awsFirstWrite(table: 'subcontractors', data: data);
-    print('✅ [Subcontractors] Created subcontractor #$id (AWS-first)');
+    AppLogger.success('✅ [Subcontractors] Created subcontractor #$id (AWS-first)');
     return id;
   }
 
@@ -4079,7 +2772,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
     final success = await cloudSync.awsFirstUpdate(table: 'subcontractors', recordId: id, data: data);
-    print('✅ [Subcontractors] Updated subcontractor #$id (AWS-first)');
+    AppLogger.success('✅ [Subcontractors] Updated subcontractor #$id (AWS-first)');
     return success;
   }
 
@@ -4121,7 +2814,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     data['uuid'] = data['uuid'] ?? _generateUuid();
     
     final id = await cloudSync.awsFirstWrite(table: 'mrp_runs', data: data);
-    print('✅ [MRP] Created MRP run #$id "$runName" (AWS-first)');
+    AppLogger.success('✅ [MRP] Created MRP run #$id "$runName" (AWS-first)');
     return id;
   }
 
@@ -4424,14 +3117,13 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     );
     
     if (dish.isEmpty) {
-      print('❌ [BOM] Dish ID $dishMasterId not found');
+      AppLogger.error('❌ [BOM] Dish ID $dishMasterId not found');
       return [];
     }
     
     final basePax = (dish.first['base_pax'] as int?) ?? 1;
-    final firmId = dish.first['firmId'] as String?;
     
-    print('🔍 [BOM-ID] Looking up recipe for dish ID: $dishMasterId (pax: $paxQty, basePax: $basePax)');
+    AppLogger.info('🔍 [BOM-ID] Looking up recipe for dish ID: $dishMasterId (pax: $paxQty, basePax: $basePax)');
     
     return db.rawQuery('''
       SELECT rd.*, 
@@ -4462,7 +3154,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     );
     
     if (order.isEmpty) {
-      print('❌ [MRP Reset] Order $orderId not found');
+      AppLogger.error('❌ [MRP Reset] Order $orderId not found');
       return false;
     }
     
@@ -4476,7 +3168,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       );
       
       if (activePOs.isNotEmpty) {
-        print('❌ [MRP Reset] Cannot reset order $orderId - ${activePOs.length} active POs exist');
+        AppLogger.error('❌ [MRP Reset] Cannot reset order $orderId - ${activePOs.length} active POs exist');
         return false; // Block reset
       }
       
@@ -4499,7 +3191,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       'lockedAt': null,
     }, where: 'id = ?', whereArgs: [orderId]);
     
-    print('✅ [MRP Reset] Order $orderId safely reset for re-run');
+    AppLogger.success('✅ [MRP Reset] Order $orderId safely reset for re-run');
     return true;
   }
 
@@ -4513,7 +3205,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       'cancelledAt': DateTime.now().toIso8601String(),
     }, where: 'id = ?', whereArgs: [orderId]);
     
-    print('📦 [DB] Cancelled order $orderId after MRP: $reason');
+    AppLogger.info('📦 [DB] Cancelled order $orderId after MRP: $reason');
   }
 
   /// Transaction-wrapped MRP execution for race condition prevention
@@ -4616,14 +3308,12 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
           }, where: 'id = ?', whereArgs: [orderId]);
         }
         
-        print('✅ [MRP Transaction] Run #$mrpRunId completed for ${orderIds.length} orders');
+        AppLogger.success('✅ [MRP Transaction] Run #$mrpRunId completed for ${orderIds.length} orders');
         return mrpRunId;
       });
       
       // SYNC: Post-transaction sync (outside txn to avoid locking)
-      if (result != null) {
-        final mrpRunId = result;
-        final db = await database;
+      final mrpRunId = result;
         
         // 1. Sync MRP Run
         final runData = await db.query('mrp_runs', where: 'id = ?', whereArgs: [mrpRunId], limit: 1);
@@ -4658,22 +3348,20 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
             filters: {'id': orderId}
           );
         }
-      }
       return result;
     } catch (e) {
-      print('❌ [MRP Transaction] Failed: $e');
+      AppLogger.error('❌ [MRP Transaction] Failed: $e');
       return null;
     }
   }
 
-  // --- PURCHASE ORDERS ---
   Future<int?> createPurchaseOrder(Map<String, dynamic> data) async {
     final cloudSync = CloudSyncService();
     data['createdAt'] = DateTime.now().toIso8601String();
     data['sentAt'] = DateTime.now().toIso8601String();
     data['uuid'] = data['uuid'] ?? _generateUuid();
     final id = await cloudSync.awsFirstWrite(table: 'purchase_orders', data: data);
-    print('✅ [PO] Created purchase order #$id (AWS-first)');
+    AppLogger.success('✅ [PO] Created purchase order #$id (AWS-first)');
     return id;
   }
 
@@ -4761,7 +3449,6 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
 
   /// Create invoice with items (returns invoice ID)
   Future<int?> insertInvoice(Map<String, dynamic> data, {List<Map<String, dynamic>>? items}) async {
-    final db = await database;
     final cloudSync = CloudSyncService();
     final now = DateTime.now().toIso8601String();
     data['createdAt'] = now;
@@ -4786,7 +3473,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     final invoiceId = await cloudSync.awsFirstWrite(table: 'invoices', data: data);
     
     if (invoiceId == null) {
-      print('❌ [Invoice] Failed to create invoice');
+      AppLogger.error('❌ [Invoice] Failed to create invoice');
       return null;
     }
     
@@ -4795,7 +3482,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       await insertInvoiceItems(invoiceId, items);
     }
     
-    print('✅ [Invoice] Created invoice #$invoiceId (AWS-first)');
+    AppLogger.success('✅ [Invoice] Created invoice #$invoiceId (AWS-first)');
     return invoiceId;
   }
 
@@ -4894,7 +3581,7 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     }
     
     final success = await cloudSync.awsFirstUpdate(table: 'invoices', recordId: id, data: data);
-    print('✅ [Invoice] Updated invoice #$id (AWS-first)');
+    AppLogger.success('✅ [Invoice] Updated invoice #$id (AWS-first)');
     return success;
   }
 
@@ -5029,7 +3716,6 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     final today = now.toIso8601String().substring(0, 10);
     final days30 = now.subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
     final days60 = now.subtract(const Duration(days: 60)).toIso8601String().substring(0, 10);
-    final days90 = now.subtract(const Duration(days: 90)).toIso8601String().substring(0, 10);
     
     final result = await db.rawQuery('''
       SELECT 
@@ -5086,7 +3772,6 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
 
   /// Get total AP for firm
   Future<double> getTotalAP(String firmId) async {
-    final db = await database;
     final suppliers = await getAllSuppliers(firmId);
     double totalAP = 0;
     
@@ -5378,109 +4063,148 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     };
   }
 
-  /// Get event/order profitability
-
-  Future<Map<String, dynamic>> getEventProfitability(int orderId, String firmId) async {
+  /// Get daily profitability trend (Revenue, Cost, Expense)
+  Future<List<Map<String, dynamic>>> getProfitabilityTrend(String firmId, String startDate, String endDate) async {
     final db = await database;
     
-    // Get order revenue
-    final order = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
-    if (order.isEmpty) return {};
-    
-    final orderData = order.first;
-    final revenue = (orderData['grandTotal'] as num?)?.toDouble() ?? 
-                   (orderData['totalAmount'] as num?)?.toDouble() ?? 0;
-    
-    // Get linked expenses
-    final expenses = await db.rawQuery('''
-      SELECT category, COALESCE(SUM(amount), 0) as total
+    // Get daily income
+    final incomeTrend = await db.rawQuery('''
+      SELECT date, COALESCE(SUM(amount), 0) as income
       FROM transactions
-      WHERE relatedEntityType = 'ORDER' AND relatedEntityId = ? AND type = 'EXPENSE'
-      GROUP BY category
-    ''', [orderId]);
+      WHERE firmId = ? AND type = 'INCOME' AND date BETWEEN ? AND ?
+      GROUP BY date
+      ORDER BY date
+    ''', [firmId, startDate, endDate]);
     
-    double totalCost = 0;
-    for (var e in expenses) {
-      totalCost += (e['total'] as num?)?.toDouble() ?? 0;
+    // Get daily material costs (COGS categories)
+    final cogsTrend = await db.rawQuery('''
+      SELECT date, COALESCE(SUM(amount), 0) as cost
+      FROM transactions
+      WHERE firmId = ? AND type = 'EXPENSE' AND date BETWEEN ? AND ?
+        AND category IN ('Raw Materials', 'Ingredients', 'Groceries', 'Supplies', 'Purchase')
+      GROUP BY date
+      ORDER BY date
+    ''', [firmId, startDate, endDate]);
+    
+    // Get daily other expenses
+    final expenseTrend = await db.rawQuery('''
+      SELECT date, COALESCE(SUM(amount), 0) as expense
+      FROM transactions
+      WHERE firmId = ? AND type = 'EXPENSE' AND date BETWEEN ? AND ?
+        AND category NOT IN ('Raw Materials', 'Ingredients', 'Groceries', 'Supplies', 'Purchase')
+      GROUP BY date
+      ORDER BY date
+    ''', [firmId, startDate, endDate]);
+    
+    // Merge into a single timeline
+    final Map<String, Map<String, double>> timeline = {};
+    
+    for (var row in incomeTrend) {
+      final date = row['date'] as String;
+      timeline[date] = timeline[date] ?? {'income': 0, 'cost': 0, 'expense': 0};
+      timeline[date]!['income'] = (row['income'] as num).toDouble();
     }
     
-    return {
-      'orderId': orderId,
-      'revenue': revenue,
-      'costs': expenses,
-      'totalCost': totalCost,
-      'profit': revenue - totalCost,
-      'margin': revenue > 0 ? ((revenue - totalCost) / revenue * 100) : 0,
-    };
+    for (var row in cogsTrend) {
+      final date = row['date'] as String;
+      timeline[date] = timeline[date] ?? {'income': 0, 'cost': 0, 'expense': 0};
+      timeline[date]!['cost'] = (row['cost'] as num).toDouble();
+    }
+    
+    for (var row in expenseTrend) {
+      final date = row['date'] as String;
+      timeline[date] = timeline[date] ?? {'income': 0, 'cost': 0, 'expense': 0};
+      timeline[date]!['expense'] = (row['expense'] as num).toDouble();
+    }
+    
+    final sortedDates = timeline.keys.toList()..sort();
+    return sortedDates.map((date) => {
+      'date': date,
+      'income': timeline[date]!['income'],
+      'cost': timeline[date]!['cost'],
+      'expense': timeline[date]!['expense'],
+      'profit': timeline[date]!['income']! - (timeline[date]!['cost']! + timeline[date]!['expense']!),
+    }).toList();
   }
 
-  // Generate PO Number
-  Future<String> generatePoNumber(String firmId) async {
+  /// Get expense breakdown by category group
+  Future<List<Map<String, dynamic>>> getExpenseBreakdown(String firmId, String startDate, String endDate) async {
     final db = await database;
-    final today = DateTime.now();
-    final prefix = 'PO${today.year}${today.month.toString().padLeft(2, '0')}${today.day.toString().padLeft(2, '0')}';
-    final count = Sqflite.firstIntValue(await db.rawQuery(
-      "SELECT COUNT(*) FROM purchase_orders WHERE firmId = ? AND poNumber LIKE ?",
-      [firmId, '$prefix%'],
-    )) ?? 0;
-    return '$prefix-${(count + 1).toString().padLeft(3, '0')}';
+    return await db.rawQuery('''
+      SELECT 
+        CASE 
+          WHEN category IN ('Raw Materials', 'Ingredients', 'Groceries', 'Supplies', 'Purchase') THEN 'Materials'
+          WHEN category IN ('Salary', 'Wages', 'Overtime', 'Advance', 'Staff Payment') THEN 'Staff'
+          WHEN category IN ('Transport', 'Fuel', 'Vehicle', 'Driver', 'Logistics') THEN 'Logistics'
+          WHEN category IN ('Rent', 'Electricity', 'Gas', 'Water', 'Utilities') THEN 'Utilities'
+          ELSE 'Other'
+        END as groupName,
+        COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE firmId = ? AND type = 'EXPENSE' AND date BETWEEN ? AND ?
+      GROUP BY groupName
+      ORDER BY total DESC
+    ''', [firmId, startDate, endDate]);
   }
+
+  /// Get event/order profitability
+
+
+
+  // ============== (Migrated to FinanceRepository) ==============
+  
+
 
   // --- MRP RE-RUN SUPPORT ---
   
   /// Cancel all POs for a specific order (soft-delete with status = 'CANCELLED')
-  /// Returns list of cancelled PO IDs for notification purposes
-  Future<List<Map<String, dynamic>>> cancelPOsForOrder(int orderId) async {
-    final db = await database;
-    
-    // Find all POs that include this order
-    final allPOs = await db.query('purchase_orders');
-    final cancelledPOs = <Map<String, dynamic>>[];
-    
-    for (final po in allPOs) {
-      final orderIds = po['orderIds']?.toString() ?? '';
-      if (orderIds.split(',').map((s) => s.trim()).contains(orderId.toString())) {
-        // Skip already cancelled POs
-        if (po['status'] == 'CANCELLED') continue;
-        
-        // Update PO status to CANCELLED
-        await db.update(
-          'purchase_orders',
-          {
-            'status': 'CANCELLED',
-            'cancelledAt': DateTime.now().toIso8601String(),
-            'cancelReason': 'Order updated - MRP re-run required',
-          },
-          where: 'id = ?',
-          whereArgs: [po['id']],
-        );
-        
-        cancelledPOs.add(po);
-      }
+/// Returns list of cancelled PO IDs for notification purposes
+Future<List<Map<String, dynamic>>> cancelPOsForOrder(int orderId) async {
+  final db = await database;
+  final cloudSync = CloudSyncService();
+  
+  // Find all POs that include this order
+  final allPOs = await db.query('purchase_orders');
+  final cancelledPOs = <Map<String, dynamic>>[];
+  
+  for (final po in allPOs) {
+    final orderIds = po['orderIds']?.toString() ?? '';
+    if (orderIds.split(',').map((s) => s.trim()).contains(orderId.toString())) {
+      // Skip already cancelled POs
+      if (po['status'] == 'CANCELLED') continue;
+      
+      final poId = po['id'] as int;
+      final updates = {
+        'id': poId,
+        'status': 'CANCELLED',
+        'cancelledAt': DateTime.now().toIso8601String(),
+        'cancelReason': 'Order updated - MRP re-run required',
+      };
+      await cloudSync.awsFirstUpdate(table: 'purchase_orders', recordId: poId, data: updates);
+      
+      cancelledPOs.add(po);
     }
-    
-    print('📦 [DB] Cancelled ${cancelledPOs.length} POs for order $orderId');
-    return cancelledPOs;
   }
+  
+  AppLogger.info('📦 [DB] Cancelled ${cancelledPOs.length} POs for order $orderId (AWS-first)');
+  return cancelledPOs;
+}
 
-  /// Reset order MRP status to allow re-running MRP
-  Future<void> resetOrderForMRP(int orderId) async {
-    final db = await database;
-    
-    await db.update(
-      'orders',
-      {
-        'mrpStatus': 'PENDING',
-        'mrpRunId': null,
-        'isLocked': 0,
-        'lockedAt': null,
-      },
-      where: 'id = ?',
-      whereArgs: [orderId],
-    );
-    
-    print('📦 [DB] Reset order $orderId for MRP re-run');
-  }
+/// Reset order MRP status to allow re-running MRP
+Future<void> resetOrderForMRP(int orderId) async {
+  final cloudSync = CloudSyncService();
+  
+  final updates = {
+    'id': orderId,
+    'mrpStatus': 'PENDING',
+    'mrpRunId': null,
+    'isLocked': 0,
+    'lockedAt': null,
+  };
+  await cloudSync.awsFirstUpdate(table: 'orders', recordId: orderId, data: updates);
+  
+  AppLogger.info('📦 [DB] Reset order $orderId for MRP re-run (AWS-first)');
+}
 
   /// Get all POs for an order (both active and cancelled) for history view
   Future<List<Map<String, dynamic>>> getPurchaseOrdersForOrder(int orderId) async {
@@ -5529,10 +4253,10 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
 
   /// Update dispatch assignment status (accept/reject)
   Future<void> updateDispatchAssignment(int dispatchId, String status, {String? rejectionReason}) async {
-    final db = await database;
+    final cloudSync = CloudSyncService();
     final now = DateTime.now().toIso8601String();
     
-    Map<String, dynamic> updates = {'assignmentStatus': status};
+    Map<String, dynamic> updates = {'id': dispatchId, 'assignmentStatus': status};
     if (status == 'ACCEPTED') {
       updates['acceptedAt'] = now;
     } else if (status == 'REJECTED') {
@@ -5541,7 +4265,8 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
       updates['driverId'] = null; // Unassign so admin can reassign
     }
     
-    await db.update('dispatches', updates, where: 'id = ?', whereArgs: [dispatchId]);
+    await cloudSync.awsFirstUpdate(table: 'dispatches', recordId: dispatchId, data: updates);
+    AppLogger.success('✅ [Dispatch] Updated assignment #$dispatchId to $status (AWS-first)');
   }
 
   /// Update dispatch km tracking and earnings
@@ -5550,13 +4275,14 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     double? kmReturn,
     double? driverShare,
   }) async {
-    final db = await database;
-    Map<String, dynamic> updates = {'updatedAt': DateTime.now().toIso8601String()};
+    final cloudSync = CloudSyncService();
+    Map<String, dynamic> updates = {'id': dispatchId, 'updatedAt': DateTime.now().toIso8601String()};
     if (kmForward != null) updates['kmForward'] = kmForward;
     if (kmReturn != null) updates['kmReturn'] = kmReturn;
     if (driverShare != null) updates['driverShare'] = driverShare;
     
-    await db.update('dispatches', updates, where: 'id = ?', whereArgs: [dispatchId]);
+    await cloudSync.awsFirstUpdate(table: 'dispatches', recordId: dispatchId, data: updates);
+    AppLogger.success('✅ [Dispatch] Updated km/earnings for #$dispatchId (AWS-first)');
   }
 
   /// Get driver earnings report for date range
@@ -5655,9 +4381,13 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
     final now = DateTime.now().toIso8601String();
     
     Map<String, dynamic> updates = {'status': status};
-    if (status == 'ACCEPTED') updates['acceptedAt'] = now;
-    else if (status == 'DISPATCHED') updates['dispatchedAt'] = now;
-    else if (status == 'DELIVERED') updates['deliveredAt'] = now;
+    if (status == 'ACCEPTED') {
+      updates['acceptedAt'] = now;
+    } else if (status == 'DISPATCHED') {
+      updates['dispatchedAt'] = now;
+    } else if (status == 'DELIVERED') {
+      updates['deliveredAt'] = now;
+    }
     
     await db.update('purchase_orders', updates, where: 'id = ?', whereArgs: [poId]);
   }
@@ -5725,15 +4455,16 @@ Future<List<Map<String, dynamic>>> getRecipeForDishByName(String dishName, int p
 
   // Update order service assignments
   Future<void> updateOrderServiceAssignment(int orderId, {int? serviceSubId, int? counterSubId}) async {
-    final db = await database;
-    final updates = <String, dynamic>{};
+    final cloudSync = CloudSyncService();
+    final updates = <String, dynamic>{'id': orderId};
     if (serviceSubId != -1) updates['serviceSubcontractorId'] = serviceSubId; // -1 means no change check passed
     if (counterSubId != -1) updates['counterSubcontractorId'] = counterSubId;
     
-    if (updates.isNotEmpty) {
-      // If passing null, it means unassign
-      await db.update('orders', updates, where: 'id = ?', whereArgs: [orderId]);
+    if (updates.length > 1) { // More than just 'id'
+      await cloudSync.awsFirstUpdate(table: 'orders', recordId: orderId, data: updates);
+      AppLogger.success('✅ [Orders] Updated service assignments for order #$orderId (AWS-first)');
     }
   }
+
 
 }

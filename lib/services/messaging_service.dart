@@ -1,3 +1,5 @@
+import 'email_service.dart';
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:convert';
 import '../db/aws/aws_api.dart';
 import '../db/database_helper.dart';
@@ -9,42 +11,14 @@ class MessagingService {
   MessagingService._internal();
 
   /// Send Order Confirmation Email (Fire & Forget)
+  /// Send Order Confirmation Email (Fire & Forget)
   Future<void> sendOrderConfirmation(Map<String, dynamic> order, List<Map<String, dynamic>> dishes) async {
-    try {
-      final email = order['email'];
-      if (email == null || email.toString().isEmpty) {
-        print('🚫 Email skipped: No customer email provided');
-        return;
-      }
-
-      print('📧 Triggering Order Confirmation Email for Order #${order['id']}...');
-
-      final payload = {
-        'type': 'ORDER',
-        'to': email,
-        'data': {
-          'firmId': order['firmId'],
-          'order': order,
-          'dishes': dishes,
-        }
-      };
-
-      // Call Lambda directly
-      await AwsApi.callDbHandler(
-        method: 'POST',
-        table: 'messaging/transactional/send',
-        data: payload,
-      ).then((resp) {
-        if (resp['error'] != null) {
-          print('❌ Email Error: ${resp['error']}');
-        } else {
-          print('✅ Email Queued Successfully');
-        }
-      });
-
-    } catch (e) {
-      print('❌ Email Exception: $e');
-    }
+    // Delegate to centralized EmailService
+    // We ignore the boolean return since this is fire-and-forget for the caller
+    await EmailService.sendOrderConfirmation(
+      orderData: order, 
+      dishes: dishes
+    );
   }
 
   /// Send Purchase Order Email (Fire & Forget)
@@ -71,14 +45,14 @@ class MessagingService {
       }
 
       if (vendorEmail == null || vendorEmail.isEmpty) {
-        print('🚫 PO Email skipped: No vendor email found');
+        AppLogger.info('🚫 PO Email skipped: No vendor email found');
         return;
       }
 
       // Fetch Items
       final items = await db.getPoItems(po['id']);
 
-      print('📧 Triggering PO Email #${po['poNumber']}...');
+      AppLogger.info('📧 Triggering PO Email #${po['poNumber']}...');
 
       final payload = {
         'type': 'PO',
@@ -93,11 +67,12 @@ class MessagingService {
       await AwsApi.callDbHandler(
         method: 'POST',
         table: 'messaging/transactional/send',
+        firmId: po['firmId'], // Required for Lambda authentication
         data: payload,
       );
 
     } catch (e) {
-      print('❌ PO Email Exception: $e');
+      AppLogger.error('❌ PO Email Exception: $e');
     }
   }
 }

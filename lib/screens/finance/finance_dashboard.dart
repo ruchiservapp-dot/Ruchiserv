@@ -1,8 +1,11 @@
+import 'package:ruchiserv/repositories/finance_repository.dart';
+import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../db/database_helper.dart';
 import 'add_transaction_screen.dart';
 import 'transaction_list_screen.dart';
+import '../../widgets/shimmer_loader.dart';
 
 class FinanceDashboard extends StatefulWidget {
   const FinanceDashboard({super.key});
@@ -31,13 +34,13 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
     final startOfMonth = DateTime(now.year, now.month, 1);
     final endOfMonth = DateTime(now.year, now.month + 1, 0);
 
-    final summary = await DatabaseHelper().getFinanceSummary(
+    final summary = await FinanceRepository().getFinanceSummary(
       _firmId, 
       startOfMonth.toIso8601String(), 
       endOfMonth.toIso8601String()
     );
 
-    final recent = await DatabaseHelper().getTransactions(
+    final recent = await FinanceRepository().getTransactions(
       firmId: _firmId, 
       limit: 5
     );
@@ -130,7 +133,7 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: (netProfit >= 0 ? Colors.green : Colors.red).withOpacity(0.3),
+                color: (netProfit >= 0 ? Colors.green : Colors.red).withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -149,7 +152,7 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -249,7 +252,7 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -262,7 +265,7 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
   }
 
   Widget _buildRecentTransactionsList() {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_isLoading) return const ShimmerListLoader(itemCount: 3);
     if (_recentTransactions.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(32),

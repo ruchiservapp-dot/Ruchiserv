@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../db/database_helper.dart';
+import '../../repositories/finance_repository.dart';
 import '../report_preview_page.dart';
+import '../../widgets/network_error_widget.dart';
 
 class EventProfitabilityScreen extends StatefulWidget {
   const EventProfitabilityScreen({super.key});
@@ -20,6 +22,7 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
   Map<int, Map<String, dynamic>> _profitability = {};
   bool _isLoading = true;
   String _firmId = 'DEFAULT';
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -28,8 +31,12 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     
+    try {
     final prefs = await SharedPreferences.getInstance();
     _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
     
@@ -47,9 +54,10 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
     
     // Calculate profitability for each order
     final profMap = <int, Map<String, dynamic>>{};
+    final financeRepo = FinanceRepository();
     for (var order in orders) {
       final orderId = order['id'] as int;
-      final profit = await DatabaseHelper().getEventProfitability(orderId, _firmId);
+      final profit = await financeRepo.getEventProfitability(orderId, _firmId);
       profMap[orderId] = profit;
     }
     
@@ -58,6 +66,14 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
       _profitability = profMap;
       _isLoading = false;
     });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _pickDate(bool isStart) async {
@@ -85,12 +101,15 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
   void _exportReport() {
     if (_orders.isEmpty) return;
     
-    final headers = ['Order ID', 'Date', 'Customer', 'Revenue', 'Cost', 'Profit', 'Margin %'];
+    final headers = ['Order ID', 'Date', 'Customer', 'Revenue', 'Material Cost', 'Operational Cost', 'Direct Cost', 'Total Cost', 'Profit', 'Margin %'];
     final rows = _orders.map((order) {
       final orderId = order['id'] as int;
       final profit = _profitability[orderId] ?? {};
       final revenue = (profit['revenue'] as num?)?.toDouble() ?? 0;
-      final cost = (profit['totalCost'] as num?)?.toDouble() ?? 0;
+      final materialCost = (profit['materialCost'] as num?)?.toDouble() ?? 0;
+      final allocatedCost = (profit['allocatedFixedCost'] as num?)?.toDouble() ?? 0;
+      final directCost = (profit['directLinkedCost'] as num?)?.toDouble() ?? 0;
+      final totalCost = (profit['totalCost'] as num?)?.toDouble() ?? 0;
       final netProfit = (profit['profit'] as num?)?.toDouble() ?? 0;
       final margin = (profit['margin'] as num?)?.toDouble() ?? 0;
       
@@ -99,7 +118,10 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
         order['date'] ?? '',
         order['customerName'] ?? 'Customer',
         revenue,
-        cost,
+        materialCost,
+        allocatedCost,
+        directCost,
+        totalCost,
         netProfit,
         '${margin.toStringAsFixed(1)}%',
       ];
@@ -107,13 +129,17 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
     
     // Add totals row
     double totalRevenue = 0, totalCost = 0, totalProfit = 0;
+    double tMaterial = 0, tAllocated = 0, tDirect = 0;
     for (var p in _profitability.values) {
       totalRevenue += (p['revenue'] as num?)?.toDouble() ?? 0;
+      tMaterial += (p['materialCost'] as num?)?.toDouble() ?? 0;
+      tAllocated += (p['allocatedFixedCost'] as num?)?.toDouble() ?? 0;
+      tDirect += (p['directLinkedCost'] as num?)?.toDouble() ?? 0;
       totalCost += (p['totalCost'] as num?)?.toDouble() ?? 0;
       totalProfit += (p['profit'] as num?)?.toDouble() ?? 0;
     }
     final avgMargin = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
-    rows.add(['TOTAL', '', '', totalRevenue, totalCost, totalProfit, '${avgMargin.toStringAsFixed(1)}%']);
+    rows.add(['TOTAL', '', '', totalRevenue, tMaterial, tAllocated, tDirect, totalCost, totalProfit, '${avgMargin.toStringAsFixed(1)}%']);
     
     Navigator.push(
       context,
@@ -153,7 +179,14 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          : _errorMessage != null
+              ? NetworkErrorWidget(
+                  message: _errorMessage!,
+                  onRetry: _loadData,
+                  isOffline: _errorMessage!.toLowerCase().contains('socket') || 
+                             _errorMessage!.toLowerCase().contains('network'),
+                )
+              : RefreshIndicator(
               onRefresh: _loadData,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -306,9 +339,26 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                                   children: [
                                     _buildMiniStat('Revenue', revenue, Colors.blue),
-                                    _buildMiniStat('Cost', cost, Colors.red),
+                                    _buildMiniStat('Total Cost', cost, Colors.red),
                                     _buildMiniStat('Profit', netProfit, Colors.green),
                                   ],
+                                ),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      _buildCostRow('Material (BOM)', (profit['materialCost'] as num?)?.toDouble() ?? 0),
+                                      _buildCostRow('Operational (Allocated)', (profit['allocatedFixedCost'] as num?)?.toDouble() ?? 0, 
+                                          subtitle: '₹${((profit['perPlateOperational'] as num?)?.toDouble() ?? 0).toStringAsFixed(1)}/plate'),
+                                      _buildCostRow('Direct (Linked)', (profit['directLinkedCost'] as num?)?.toDouble() ?? 0),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -349,6 +399,31 @@ class _EventProfitabilityScreenState extends State<EventProfitabilityScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, color: color),
         ),
       ],
+    );
+  }
+
+  Widget _buildCostRow(String label, double amount, {String? subtitle}) {
+    if (amount == 0 && subtitle == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Text(label, style: TextStyle(color: Colors.grey.shade700, fontSize: 11)),
+              if (subtitle != null) ...[
+                const SizedBox(width: 4),
+                Text('($subtitle)', style: TextStyle(color: Colors.grey.shade500, fontSize: 10)),
+              ],
+            ],
+          ),
+          Text(
+            '₹${amount.toStringAsFixed(0)}',
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 11, color: Colors.grey.shade800),
+          ),
+        ],
+      ),
     );
   }
 }

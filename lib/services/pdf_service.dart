@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/pdf_service.dart
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -56,7 +57,7 @@ class PdfService {
 
       return pdf.save();
     } catch (e) {
-      print('❌ PdfService.generateOrderPdfBytes error: $e');
+      AppLogger.error('❌ PdfService.generateOrderPdfBytes error: $e');
       return null;
     }
   }

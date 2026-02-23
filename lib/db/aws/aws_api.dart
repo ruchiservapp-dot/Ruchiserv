@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
@@ -44,7 +45,7 @@ class AwsApi {
     Map<String, dynamic>? query,
   }) async {
     final uri = _uri(path).replace(queryParameters: query);
-    print('🚀 AWS POST Request: $uri'); // DEBUG
+    AppLogger.info('🚀 AWS POST Request: $uri'); // DEBUG
     final res = await http.post(
       uri,
       headers: _headers,
@@ -106,6 +107,7 @@ class AwsApi {
     required String table,
     required String indexName,
     required String pkValue,
+    String? firmId, // NEW: Required for authenticated requests
     String? skValue,
     String? skValueEnd,
     String skOp = 'eq',
@@ -113,6 +115,7 @@ class AwsApi {
     return callDbHandler(
       method: 'GET',
       table: table,
+      firmId: firmId,
       filters: {
         'index_name': indexName,
         'gsi_pk': pkValue,
@@ -138,7 +141,7 @@ class AwsApi {
       );
       return _decode(res);
     } catch (e) {
-      print('🔴 [SQS Error] Failed to push to queue: $e');
+      AppLogger.info('🔴 [SQS Error] Failed to push to queue: $e');
       return {
         'status': 'error',
         'message': 'Failed to queue notification: $e',
@@ -147,10 +150,10 @@ class AwsApi {
   }
 
   static Map<String, dynamic> _decode(http.Response res) {
-    print('📥 AWS Raw Response: "${res.body}" (Status: ${res.statusCode})'); // DEBUG
+    AppLogger.info('📥 AWS Raw Response: "${res.body}" (Status: ${res.statusCode})'); // DEBUG
     try {
       final decoded = jsonDecode(res.body);
-      print('🤔 Decoded Type: ${decoded.runtimeType}'); // DEBUG
+      AppLogger.debug('🤔 Decoded Type: ${decoded.runtimeType}'); // DEBUG
       
       if (decoded is Map<String, dynamic>) return decoded;
       // Handle List responses (e.g., query results from Lambda)
@@ -159,7 +162,7 @@ class AwsApi {
       }
       return {'status': 'error', 'message': 'Invalid JSON format (Expected Map, got ${decoded.runtimeType})'};
     } catch (e) {
-      print('🔴 Decode Error Body: "${res.body}"'); // DEBUG
+      AppLogger.info('🔴 Decode Error Body: "${res.body}"'); // DEBUG
       return {'status': 'error', 'message': 'Decode failed: $e. Body: ${res.body}', 'code': res.statusCode};
     }
   }

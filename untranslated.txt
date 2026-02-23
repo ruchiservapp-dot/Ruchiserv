@@ -1,5 +1,6 @@
 {
   "hi": [
+    "moduleInsights",
     "viewOrder",
     "viewOnlyMode",
     "upgradeToEnterprise",
@@ -40,6 +41,7 @@
   ],
 
   "kn": [
+    "moduleInsights",
     "viewOrder",
     "viewOnlyMode",
     "upgradeToEnterprise",
@@ -80,6 +82,7 @@
   ],
 
   "ml": [
+    "moduleInsights",
     "viewOrder",
     "viewOnlyMode",
     "upgradeToEnterprise",
@@ -120,6 +123,7 @@
   ],
 
   "ta": [
+    "moduleInsights",
     "viewOrder",
     "viewOnlyMode",
     "upgradeToEnterprise",
@@ -160,6 +164,7 @@
   ],
 
   "te": [
+    "moduleInsights",
     "viewOrder",
     "viewOnlyMode",
     "upgradeToEnterprise",

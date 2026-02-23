@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/db/schema_manager.dart
 // @locked
 import 'package:sqflite/sqflite.dart';
@@ -9,20 +10,20 @@ class SchemaManager {
   /// Synchronizes the database schema with the definitions in AppSchema.
   /// This ensures that all tables and columns exist as defined.
   static Future<void> syncSchema(Database db) async {
-    print('$TAG Starting schema synchronization...');
+    AppLogger.info('$TAG Starting schema synchronization...');
     
     for (var table in AppSchema.tables) {
       await _syncTable(db, table);
     }
     
-    print('$TAG Schema synchronization complete.');
+    AppLogger.info('$TAG Schema synchronization complete.');
   }
 
   /// Creates all tables for a fresh database.
   static Future<void> createAllTables(Database db) async {
-    print('$TAG Creating all tables for fresh database...');
+    AppLogger.info('$TAG Creating all tables for fresh database...');
     for (var table in AppSchema.tables) {
-      print('$TAG Creating table: ${table.tableName}');
+      AppLogger.info('$TAG Creating table: ${table.tableName}');
       await db.execute(table.createTableSql);
     }
   }
@@ -32,7 +33,7 @@ class SchemaManager {
     final tableExists = await _tableExists(db, schema.tableName);
     
     if (!tableExists) {
-      print('$TAG Table "${schema.tableName}" missing. Creating...');
+      AppLogger.info('$TAG Table "${schema.tableName}" missing. Creating...');
       await db.execute(schema.createTableSql);
       return;
     }
@@ -48,16 +49,16 @@ class SchemaManager {
       final colDef = entry.value;
 
       if (!existingColumns.contains(colName)) {
-        print('$TAG Column "$colName" missing in "${schema.tableName}". Adding...');
+        AppLogger.info('$TAG Column "$colName" missing in "${schema.tableName}". Adding...');
         try {
           await db.execute('ALTER TABLE ${schema.tableName} ADD COLUMN $colName $colDef');
-          print('$TAG ✅ Added column "$colName" to "${schema.tableName}"');
+          AppLogger.info('$TAG ✅ Added column "$colName" to "${schema.tableName}"');
         } catch (e) {
-          print('$TAG ❌ Failed to add column "$colName" to "${schema.tableName}": $e');
+          AppLogger.info('$TAG ❌ Failed to add column "$colName" to "${schema.tableName}": $e');
         }
       }
     }
-    print('$TAG Table ${schema.tableName} sync done.');
+    AppLogger.info('$TAG Table ${schema.tableName} sync done.');
   }
 
   static Future<bool> _tableExists(Database db, String tableName) async {

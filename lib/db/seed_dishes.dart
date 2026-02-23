@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
 
@@ -12,11 +13,11 @@ Future<void> seedDishesAndIngredients() async {
   );
   
   if ((existingDishes ?? 0) > 5) {
-    print('⚠️ Dishes already seeded. Skipping.');
+    AppLogger.warning('⚠️ Dishes already seeded. Skipping.');
     return;
   }
 
-  print('🍽️ Seeding Dishes and Ingredients...');
+  AppLogger.info('🍽️ Seeding Dishes and Ingredients...');
   
   // ========== INGREDIENTS MASTER ==========
   final ingredients = <Map<String, dynamic>>[
@@ -104,7 +105,7 @@ Future<void> seedDishesAndIngredients() async {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
     if (id > 0) ingIdMap[ing['name'] as String] = id;
   }
-  print('✅ Seeded ${ingIdMap.length} ingredients.');
+  AppLogger.success('✅ Seeded ${ingIdMap.length} ingredients.');
 
   // ========== DISH MASTER ==========
   final dishes = <Map<String, dynamic>>[
@@ -213,7 +214,7 @@ Future<void> seedDishesAndIngredients() async {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
     dishCount++;
   }
-  print('✅ Seeded $dishCount dishes.');
+  AppLogger.success('✅ Seeded $dishCount dishes.');
   
-  print('🎉 Dishes and Ingredients seeding complete!');
+  AppLogger.info('🎉 Dishes and Ingredients seeding complete!');
 }

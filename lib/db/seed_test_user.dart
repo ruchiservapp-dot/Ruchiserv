@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:ruchiserv/db/database_helper.dart';
 
 /// Run this once to create a test user account with UNIVERSAL ACCESS
@@ -15,7 +16,7 @@ Future<void> seedTestUser() async {
   final db = DatabaseHelper();
   final database = await db.database;
   
-  print('🌱 Seeding test data with UNIVERSAL ACCESS...');
+  AppLogger.info('🌱 Seeding test data with UNIVERSAL ACCESS...');
   
   // 1. Create test firm with ENTERPRISE tier (all features)
   try {
@@ -32,7 +33,7 @@ Future<void> seedTestUser() async {
       'createdAt': DateTime.now().toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
     });
-    print('✅ Test firm created: RCHSRV (ENTERPRISE tier)');
+    AppLogger.success('✅ Test firm created: RCHSRV (ENTERPRISE tier)');
   } catch (e) {
     // Try update if exists
     try {
@@ -42,9 +43,9 @@ Future<void> seedTestUser() async {
         'enabledFeatures': 'GPS_TRACKING,WHATSAPP,EMAIL,ANALYTICS,MULTI_BRANCH,API_ACCESS',
         'updatedAt': DateTime.now().toIso8601String(),
       }, where: 'firmId = ?', whereArgs: ['RCHSRV']);
-      print('✅ Updated RCHSRV to ENTERPRISE tier');
+      AppLogger.success('✅ Updated RCHSRV to ENTERPRISE tier');
     } catch (_) {
-      print('⚠️  Firm update failed: $e');
+      AppLogger.warning('⚠️  Firm update failed: $e');
     }
   }
   
@@ -65,7 +66,7 @@ Future<void> seedTestUser() async {
       'createdAt': DateTime.now().toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
     });
-    print('✅ Admin user created: 9999999999');
+    AppLogger.success('✅ Admin user created: 9999999999');
   } catch (e) {
     // Try update if exists
     try {
@@ -77,9 +78,9 @@ Future<void> seedTestUser() async {
         'isActive': 1,
         'updatedAt': DateTime.now().toIso8601String(),
       }, where: 'mobile = ? AND firmId = ?', whereArgs: ['9999999999', 'RCHSRV']);
-      print('✅ Updated user to Admin with full access');
+      AppLogger.success('✅ Updated user to Admin with full access');
     } catch (_) {
-      print('⚠️  User update failed: $e');
+      AppLogger.warning('⚠️  User update failed: $e');
     }
   }
   
@@ -92,9 +93,9 @@ Future<void> seedTestUser() async {
       name: 'Admin User',
       addedBy: 'SEED_SCRIPT',
     );
-    print('✅ Mobile authorized');
+    AppLogger.success('✅ Mobile authorized');
   } catch (e) {
-    print('⚠️  Mobile may already be authorized');
+    AppLogger.warning('⚠️  Mobile may already be authorized');
   }
   
   // 4. Create test staff member for attendance/punching
@@ -111,7 +112,7 @@ Future<void> seedTestUser() async {
       'joinDate': DateTime.now().toIso8601String().split('T')[0],
       'createdAt': DateTime.now().toIso8601String(),
     });
-    print('✅ Staff member created for punching module');
+    AppLogger.success('✅ Staff member created for punching module');
   } catch (e) {
     // Try update if exists
     try {
@@ -119,22 +120,22 @@ Future<void> seedTestUser() async {
         'isActive': 1,
         'updatedAt': DateTime.now().toIso8601String(),
       }, where: 'mobile = ? AND firmId = ?', whereArgs: ['9999999999', 'RCHSRV']);
-      print('✅ Staff member updated');
+      AppLogger.success('✅ Staff member updated');
     } catch (_) {
-      print('⚠️  Staff creation may have failed: $e');
+      AppLogger.warning('⚠️  Staff creation may have failed: $e');
     }
   }
   
-  print('\n🎉 TEST ACCOUNT READY WITH UNIVERSAL ACCESS!');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  print('📱 Firm ID:   RCHSRV');
-  print('📱 Mobile:    9999999999');
-  print('🔑 Password:  test1234');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  print('🏅 Tier:      ENTERPRISE (All Features)');
-  print('👤 Role:      Admin (All Modules)');
-  print('💰 Rates:     VISIBLE');
-  print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  AppLogger.info('\n🎉 TEST ACCOUNT READY WITH UNIVERSAL ACCESS!');
+  AppLogger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  AppLogger.info('📱 Firm ID:   RCHSRV');
+  AppLogger.info('📱 Mobile:    9999999999');
+  AppLogger.info('🔑 Password:  test1234');
+  AppLogger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  AppLogger.info('🏅 Tier:      ENTERPRISE (All Features)');
+  AppLogger.info('👤 Role:      Admin (All Modules)');
+  AppLogger.info('💰 Rates:     VISIBLE');
+  AppLogger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 }
 
 /// Quick method to reset test firm to ENTERPRISE tier
@@ -154,5 +155,5 @@ Future<void> resetToEnterprise() async {
     'showRates': 1,
   }, where: 'firmId = ?', whereArgs: ['RCHSRV']);
   
-  print('✅ RCHSRV reset to ENTERPRISE with full Admin access');
+  AppLogger.success('✅ RCHSRV reset to ENTERPRISE with full Admin access');
 }

@@ -1,9 +1,14 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ConnectivityService {
-  // Returns stream of single ConnectivityResult, not List
-  Stream<ConnectivityResult> get onConnectivityChanged =>
-      Connectivity().onConnectivityChanged.map((event) => event.first);
+  // Cache the mapped stream as a broadcast stream and provide it as a static instance.
+  // This prevents StreamBuilder from receiving a new stream instance on every rebuild,
+  // which causes an infinite unsubscribe/subscribe -> initial event -> rebuild loop.
+  static final Stream<ConnectivityResult> _connectivityStream =
+      Connectivity().onConnectivityChanged.map((event) => event.first).asBroadcastStream();
+
+  Stream<ConnectivityResult> get onConnectivityChanged => _connectivityStream;
 
   // Helper for testing
   static bool? testOnlineStatus;
@@ -19,7 +24,7 @@ class ConnectivityService {
           result.contains(ConnectivityResult.ethernet);
     } catch (e) {
       // If platform channel fails (e.g. during test without mock), assume offline or handle gracefully
-      print('Connectivity check failed: $e');
+      AppLogger.info('Connectivity check failed: $e');
       return false;
     }
   }

@@ -188,9 +188,9 @@ class _FeatureBadgeState extends State<FeatureBadge> {
         if (widget.showLockOverlay)
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               child: Center(
-                child: Icon(Icons.lock, color: Colors.white.withOpacity(0.7), size: 32),
+                child: Icon(Icons.lock, color: Colors.white.withValues(alpha: 0.7), size: 32),
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/master_data_sync_service.dart
 // Multi-tenant master data sync service for DynamoDB
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,23 +43,23 @@ class MasterDataSyncService {
   Future<void> syncToAWS() async {
     final firmId = await _getFirmId();
     if (firmId == null || firmId == 'DEFAULT') {
-      print('⚠️ MasterDataSync: No firmId, skipping sync');
+      AppLogger.warning('⚠️ MasterDataSync: No firmId, skipping sync');
       return;
     }
 
     final isOnline = await ConnectivityService().isOnline();
     if (!isOnline) {
-      print('⚠️ MasterDataSync: Offline, will sync later');
+      AppLogger.warning('⚠️ MasterDataSync: Offline, will sync later');
       return;
     }
 
-    print('🔄 MasterDataSync: Syncing modified data for firm $firmId...');
+    AppLogger.info('🔄 MasterDataSync: Syncing modified data for firm $firmId...');
 
     for (final table in _syncTables) {
       await _syncTableToAWS(table, firmId);
     }
 
-    print('✅ MasterDataSync: Sync complete');
+    AppLogger.success('✅ MasterDataSync: Sync complete');
   }
 
   Future<void> _syncTableToAWS(String table, String firmId) async {
@@ -73,11 +74,11 @@ class MasterDataSyncService {
       );
 
       if (records.isEmpty) {
-        print('  📤 $table: No modified records');
+        AppLogger.info('  📤 $table: No modified records');
         return;
       }
 
-      print('  📤 $table: Syncing ${records.length} records...');
+      AppLogger.info('  📤 $table: Syncing ${records.length} records...');
 
       for (final record in records) {
         final success = await CloudSyncService().syncRecord(
@@ -91,7 +92,7 @@ class MasterDataSyncService {
         }
       }
     } catch (e) {
-      print('  ❌ $table sync error: $e');
+      AppLogger.info('  ❌ $table sync error: $e');
     }
   }
 
@@ -102,23 +103,23 @@ class MasterDataSyncService {
   Future<void> syncFromAWS() async {
     final firmId = await _getFirmId();
     if (firmId == null || firmId == 'DEFAULT') {
-      print('⚠️ MasterDataSync: No firmId, using seed data only');
+      AppLogger.warning('⚠️ MasterDataSync: No firmId, using seed data only');
       return;
     }
 
     final isOnline = await ConnectivityService().isOnline();
     if (!isOnline) {
-      print('⚠️ MasterDataSync: Offline, using local data');
+      AppLogger.warning('⚠️ MasterDataSync: Offline, using local data');
       return;
     }
 
-    print('🔄 MasterDataSync: Fetching data for firm $firmId...');
+    AppLogger.info('🔄 MasterDataSync: Fetching data for firm $firmId...');
 
     for (final table in _syncTables) {
       await _syncTableFromAWS(table, firmId);
     }
 
-    print('✅ MasterDataSync: Data fetched');
+    AppLogger.success('✅ MasterDataSync: Data fetched');
   }
 
   Future<void> _syncTableFromAWS(String table, String firmId) async {
@@ -127,6 +128,7 @@ class MasterDataSyncService {
       final resp = await AwsApi.callDbHandler(
         method: 'GET',
         table: 'ruchiserv_data',
+        firmId: firmId, // Pass firmId for Lambda authentication
         filters: {
           'pk': firmId,
           'sk_prefix': '$table#', // All records for this table
@@ -136,11 +138,11 @@ class MasterDataSyncService {
       // Unified Lambda returns {'Items': [...]} or {'Items': [], ...}
       final records = resp['Items'] as List?;
       if (records == null || records.isEmpty) {
-        print('  📥 $table: No cloud data found');
+        AppLogger.info('  📥 $table: No cloud data found');
         return;
       }
 
-      print('  📥 $table: Received ${records.length} records from cloud');
+      AppLogger.info('  📥 $table: Received ${records.length} records from cloud');
 
       final db = await _db.database;
       
@@ -172,7 +174,7 @@ class MasterDataSyncService {
         await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     } catch (e) {
-      print('  ❌ $table fetch error: $e');
+      AppLogger.info('  ❌ $table fetch error: $e');
     }
   }
 
@@ -213,7 +215,7 @@ class MasterDataSyncService {
     // Insert firm-specific copy
     final newId = await db.insert(table, newRecord);
     
-    print('📝 Created firm copy: $table #$newId (from seed #$baseId)');
+    AppLogger.debug('📝 Created firm copy: $table #$newId (from seed #$baseId)');
     
     return newId;
   }

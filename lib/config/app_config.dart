@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/config/app_config.dart
 // Production-ready configuration using compile-time environment variables
 // Usage: flutter build --dart-define=KEY=VALUE
@@ -28,8 +29,9 @@ class AppConfig {
 
   /// SAFETY: Allow sync in dev mode (DANGEROUS: affects prod DB)
   /// Usage: flutter run --dart-define=FORCE_DEV_SYNC=true
+  /// CHANGED: Defaults to TRUE for testing phase as per user request
   static bool get forceDevSync => 
-      const bool.fromEnvironment('FORCE_DEV_SYNC', defaultValue: false);
+      const bool.fromEnvironment('FORCE_DEV_SYNC', defaultValue: true);
 
   /// Master switch for Cloud Sync
   /// Returns FALSE by default in Dev Mode to protect Production DB
@@ -54,11 +56,8 @@ class AppConfig {
       cashfreeAppId.isNotEmpty && cashfreeSecretKey.isNotEmpty;
 
   /// 2Factor.in API Key
-  static String get twoFactorApiKey {
-    const envKey = String.fromEnvironment('TWOFACTOR_API_KEY', defaultValue: '');
-    // Fallback to hardcoded key for development builds
-    return envKey.isNotEmpty ? envKey : '383edc87-bd32-11f0-bdde-0200cd936042';
-  }
+  static String get twoFactorApiKey =>
+      const String.fromEnvironment('TWOFACTOR_API_KEY', defaultValue: '');
 
   /// Check if 2Factor is properly configured
   static bool get isTwoFactorConfigured => twoFactorApiKey.isNotEmpty;
@@ -75,11 +74,11 @@ class AppConfig {
   
   /// Meta WhatsApp Business API Token
   static String get metaWhatsAppToken => 
-      const String.fromEnvironment('META_WHATSAPP_TOKEN', defaultValue: 'EAAV2vfaMyi4BQnvlNE1UcDB1IvqSULZAO55UgaaK9EZCECrhpQxMnkL3venvSFLZAz9Ab2Pyj0Nd9jdpzIiflsduKB6G9rfirpClLl0ihMOzXrp6WElzmuDHNulUNcUq2tYSpBZAEWZA5iX4dHC9uo8pZBTa5sW7e4EbzfgmIVDHXAzsAxFBqqnxYsJymVzAZDZD');
+      const String.fromEnvironment('META_WHATSAPP_TOKEN', defaultValue: '');
   
   /// Meta WhatsApp Phone Number ID
   static String get metaWhatsAppPhoneId => 
-      const String.fromEnvironment('META_WHATSAPP_PHONE_ID', defaultValue: '1008830502312691');
+      const String.fromEnvironment('META_WHATSAPP_PHONE_ID', defaultValue: '');
 
   static bool get isWhatsAppConfigured => 
       metaWhatsAppToken.isNotEmpty && metaWhatsAppPhoneId.isNotEmpty;
@@ -88,11 +87,11 @@ class AppConfig {
 
   /// AWS Cognito User Pool ID
   static String get cognitoUserPoolId =>
-      const String.fromEnvironment('COGNITO_USER_POOL_ID', defaultValue: 'ap-south-1_Or5Ziy7vX');
+      const String.fromEnvironment('COGNITO_USER_POOL_ID', defaultValue: '');
 
   /// AWS Cognito App Client ID
   static String get cognitoClientId =>
-      const String.fromEnvironment('COGNITO_CLIENT_ID', defaultValue: '3hghkvaekrqcrfv3nsec45242v');
+      const String.fromEnvironment('COGNITO_CLIENT_ID', defaultValue: '');
 
   static bool get isCognitoConfigured =>
       cognitoUserPoolId.isNotEmpty && cognitoClientId.isNotEmpty;
@@ -102,13 +101,13 @@ class AppConfig {
   /// Print configuration status (for debugging only)
   static void printConfigStatus() {
     if (!enableDebugLogs) return;
-    print('=== AppConfig Status ===');
-    print('Production: $isProduction');
-    print('Cashfree: ${isCashfreeConfigured ? '✅ Configured' : '❌ Missing'}');
-    print('Cashfree Sandbox: $cashfreeSandbox');
-    print('2Factor: ${isTwoFactorConfigured ? '✅ Configured' : '❌ Missing'}');
-    print('SendGrid: ${isSendgridConfigured ? '✅ Configured' : '❌ Missing'}');
-    print('WhatsApp: ${isWhatsAppConfigured ? '✅ Configured' : '❌ Missing'}');
-    print('========================');
+    AppLogger.info('=== AppConfig Status ===');
+    AppLogger.info('Production: $isProduction');
+    AppLogger.info('Cashfree: ${isCashfreeConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info('Cashfree Sandbox: $cashfreeSandbox');
+    AppLogger.info('2Factor: ${isTwoFactorConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info('SendGrid: ${isSendgridConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info('WhatsApp: ${isWhatsAppConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info('========================');
   }
 }

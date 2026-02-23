@@ -46,22 +46,29 @@ void main() {
       bool putCalled = false;
 
       final mockClient = MockClient((request) async {
-        if (request.url.path.contains('/dbhandler') && request.method == 'POST') {
+        // Handle both legacy dbhandler and new pushToQueue (Lambda Function URL)
+        final isDbHandler = request.url.path.contains('/dbhandler');
+        final isFunctionUrl = request.url.host.contains('lambda-url');
+
+        if ((isDbHandler || isFunctionUrl) && request.method == 'POST') {
           final json = jsonDecode(request.body);
           
           // Verify it's a PUT operation to DynamoDB
-          if (json['method'] == 'PUT' && json['table'] == 'ruchiserv_data') {
-             final data = json['data'];
+          // payload wrapper for pushToQueue, or direct body for dbhandler
+          final payload = isFunctionUrl ? json : json; // In pushToQueue, we send the whole payload
+          
+          if (payload['method'] == 'PUT' && payload['table'] == 'ruchiserv_data') {
+             final data = payload['data'];
              // Verify Partition Key and Sort Key generation
              if (data['gsi_partition'] == 'TEST_FIRM#orders' && 
                  data['pk'] == 'TEST_FIRM' &&
-                 data['sk'] == 'orders#101') {
+                 data['sk'] != null && data['sk'].toString().startsWith('orders#')) {
                putCalled = true;
                return http.Response(jsonEncode({'success': true}), 200);
              }
           }
         }
-        return http.Response('{}', 200);
+        return http.Response(jsonEncode({'success': true}), 200);
       });
 
       // Execute syncRecord within runWithClient scope
@@ -94,9 +101,10 @@ void main() {
                'Items': [
                  {
                    'pk': 'TEST_FIRM',
-                   'sk': 'orders#202',
+                   'sk': 'orders#202-uuid',
                    'firmId': 'TEST_FIRM', // Required by local DB
                    'local_id': 202,
+                   'uuid': '202-uuid',
                    'customerName': 'Device B Customer', // Data created on Device B
                    'mobile': '8888888888',
                    'date': '2024-02-02',
@@ -107,7 +115,7 @@ void main() {
              }), 200);
           }
         }
-        return http.Response('{}', 200);
+        return http.Response(jsonEncode({'success': true}), 200);
       });
 
       // Execute syncTableFromCloud within runWithClient scope

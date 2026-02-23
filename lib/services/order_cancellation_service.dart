@@ -1,3 +1,4 @@
+import 'package:ruchiserv/repositories/order_repository.dart';
 // lib/services/order_cancellation_service.dart
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
@@ -17,7 +18,7 @@ class OrderCancellationService {
       // Get order dependencies with better error handling
       Map<String, dynamic> dependencies;
       try {
-        dependencies = await DatabaseHelper().getOrderDependencies(orderId, firmId);
+        dependencies = await OrderRepository().getOrderDependencies(orderId, firmId);
       } catch (dbError) {
         return {
           'canCancel': false,
@@ -139,7 +140,7 @@ class OrderCancellationService {
       }
 
       // Perform the cancellation
-      final success = await DatabaseHelper().cancelOrder(
+      final success = await OrderRepository().cancelOrder(
         orderId,
         firmId: firmId,
         userId: userId,

@@ -1,3 +1,6 @@
+import 'package:ruchiserv/core/app_logger.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:io';
@@ -6,11 +9,15 @@ import 'package:path_provider/path_provider.dart';
 
 /// COMPLIANCE: Rule C.3 - Data Encryption at Rest
 /// Encrypts PII fields (mobile, email) using AES-256 encryption
+/// Uses random IV per encryption for proper security.
 class EncryptionHelper {
   static final _storage = const FlutterSecureStorage();
   static const _keyName = 'pii_encryption_key';
   static Encrypter? _encrypter;
-  static IV? _iv;
+  static Key? _key;
+
+  // Legacy fixed IV for migrating old data
+  static final _legacyIV = IV.fromLength(16);
 
   /// Initialize encryption on app startup
   /// CRITICAL: Must be called before any database operations
@@ -20,7 +27,7 @@ class EncryptionHelper {
     try {
       keyStr = await _storage.read(key: _keyName);
     } catch (e) {
-      print('WARNING: Secure Storage failed ($e). Using local file fallback for DEV.');
+      AppLogger.info('WARNING: Secure Storage failed ($e). Using local file fallback for DEV.');
       keyStr = await _readFallbackKey();
     }
     
@@ -32,15 +39,13 @@ class EncryptionHelper {
       try {
         await _storage.write(key: _keyName, value: keyStr);
       } catch (e) {
-        print('WARNING: Secure Storage write failed ($e). Saving to local file fallback for DEV.');
+        AppLogger.info('WARNING: Secure Storage write failed ($e). Saving to local file fallback for DEV.');
         await _saveFallbackKey(keyStr!);
       }
     }
     
-    final key = Key.fromBase64(keyStr);
-    // Fixed IV for deterministic encryption (allows searchability)
-    _iv = IV.fromLength(16);
-    _encrypter = Encrypter(AES(key));
+    _key = Key.fromBase64(keyStr);
+    _encrypter = Encrypter(AES(_key!));
   }
 
   // FALLBACK: For local macOS dev without signing (Rule C.3 Exception)
@@ -70,26 +75,52 @@ class EncryptionHelper {
   }
 
   /// Encrypt PII field (mobile, email)
-  /// Returns base64-encoded ciphertext or null if input is empty
+  /// Returns base64-encoded string: first 16 bytes = IV, rest = ciphertext
   static String? encrypt(String? plaintext) {
     if (plaintext == null || plaintext.isEmpty) return null;
     if (_encrypter == null) {
       throw Exception('Encryption not initialized. Call EncryptionHelper.initialize() first.');
     }
-    return _encrypter!.encrypt(plaintext, iv: _iv!).base64;
+    // Generate random IV for every encryption operation
+    final iv = IV.fromSecureRandom(16);
+    final encrypted = _encrypter!.encrypt(plaintext, iv: iv);
+    // Prepend IV bytes to ciphertext bytes, then base64-encode the whole thing
+    final combined = Uint8List.fromList(iv.bytes + encrypted.bytes);
+    return base64.encode(combined);
   }
 
   /// Decrypt PII field
-  /// Returns plaintext or null if ciphertext is invalid/empty
+  /// Extracts IV from first 16 bytes of ciphertext, then decrypts.
+  /// Falls back to legacy fixed-IV decryption for old data.
   static String? decrypt(String? ciphertext) {
     if (ciphertext == null || ciphertext.isEmpty) return null;
     if (_encrypter == null) {
       throw Exception('Encryption not initialized. Call EncryptionHelper.initialize() first.');
     }
     try {
-      return _encrypter!.decrypt64(ciphertext, iv: _iv!);
+      final combined = base64.decode(ciphertext);
+      if (combined.length <= 16) {
+        // Too short — try legacy decryption
+        return _legacyDecrypt(ciphertext);
+      }
+      // Extract IV (first 16 bytes) and ciphertext (rest)
+      final iv = IV(Uint8List.fromList(combined.sublist(0, 16)));
+      final encryptedBytes = Uint8List.fromList(combined.sublist(16));
+      final encrypted = Encrypted(encryptedBytes);
+      return _encrypter!.decrypt(encrypted, iv: iv);
     } catch (_) {
-      // Return null for invalid ciphertext (e.g., corrupted data or plain text)
+      // Fallback: try legacy fixed-IV decryption for old data
+      return _legacyDecrypt(ciphertext);
+    }
+  }
+
+  /// Legacy decryption with fixed IV for backward compatibility
+  static String? _legacyDecrypt(String? ciphertext) {
+    if (ciphertext == null || ciphertext.isEmpty) return null;
+    try {
+      return _encrypter!.decrypt64(ciphertext, iv: _legacyIV);
+    } catch (_) {
+      // Return null for genuinely invalid data
       return null;
     }
   }

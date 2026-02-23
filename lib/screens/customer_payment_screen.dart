@@ -1,8 +1,14 @@
+import 'package:ruchiserv/repositories/finance_repository.dart';
+import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:ruchiserv/db/database_helper.dart';
 import 'package:ruchiserv/services/cashfree_payment_service.dart';
 import 'package:intl/intl.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
+import 'package:ruchiserv/services/upi_service.dart';
 
 class CustomerPaymentScreen extends StatefulWidget {
   final int orderId;
@@ -23,6 +29,8 @@ class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
   late CashfreePaymentService _paymentService;
   bool _isLoading = false;
   Map<String, dynamic>? _orderDetails;
+  String? _firmUpiId;
+  String? _firmName;
 
   @override
   void initState() {
@@ -44,9 +52,20 @@ class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
     final db = DatabaseHelper();
     final rows = await (await db.database).query('orders', where: 'id = ?', whereArgs: [widget.orderId]);
     if (rows.isNotEmpty) {
+      final order = rows.first;
       setState(() {
-        _orderDetails = rows.first;
+        _orderDetails = order;
       });
+      
+      // Load Firm Details for UPI
+      final firmId = order['firmId'] ?? 'DEFAULT';
+      final firm = await db.getFirmDetails(firmId.toString());
+      if (firm != null) {
+        setState(() {
+          _firmUpiId = firm['client_upi_id'];
+          _firmName = firm['firmName'];
+        });
+      }
     }
   }
 
@@ -55,8 +74,11 @@ class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
 
     if (_selectedMethod == 'Cash') {
       _recordTransaction(mode: 'Cash');
+    } else if (_selectedMethod == 'UPI' && _firmUpiId != null && _firmUpiId!.isNotEmpty) {
+      // DIRECT UPI FLOW
+      _initiateDirectUpi();
     } else {
-      // Cashfree Payment
+      // Cashfree Payment (Mandate/Gateway)
       setState(() => _isLoading = true);
       _paymentService.initiatePayment(
         amount: widget.orderAmount,
@@ -68,7 +90,128 @@ class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
     }
   }
 
+  Future<void> _initiateDirectUpi() async {
+    final amount = widget.orderAmount;
+    final note = 'Payment for Order #${widget.orderId}';
+    final firmId = _orderDetails!['firmId']?.toString() ?? 'UNK';
+    final txnRef = UPIService.generateTransactionRef(firmId);
+
+    if (kIsWeb || (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS)) {
+      // Desktop/Web QR
+      final qrData = UPIService.generateUpiQrData(
+        amount: amount,
+        transactionNote: note,
+        transactionRef: txnRef,
+        customMerchantId: _firmUpiId,
+        customMerchantName: _firmName,
+      );
+      _showQrDialog(txnRef, qrData);
+    } else {
+      // Mobile Intent
+      final success = await UPIService.launchUpiPayment(
+        amount: amount,
+        transactionNote: note,
+        transactionRef: txnRef,
+        customMerchantId: _firmUpiId,
+        customMerchantName: _firmName,
+      );
+      if (success) {
+        _showVerifyDialog(txnRef);
+      } else {
+        _handlePaymentError('UPI_LAUNCH_FAILED', 'No UPI apps found');
+      }
+    }
+  }
+
+  void _showQrDialog(String refId, String data) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Scan to Pay"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 200,
+              width: 200,
+              child: QrImageView(
+                data: data,
+                version: QrVersions.auto,
+                size: 200.0,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "1. Scan with any UPI app to pay.\n2. Share screenshot on WhatsApp to verify.",
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _shareScreenshotAndVerify(refId);
+              },
+              icon: const Icon(Icons.share, color: Colors.white),
+              label: const Text("Share Screenshot & Verify"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+        ],
+      ),
+    );
+  }
+
+  void _showVerifyDialog(String refId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm Payment"),
+        content: const Text("Please share the payment screenshot on WhatsApp to verify your order."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _shareScreenshotAndVerify(refId);
+            },
+            icon: const Icon(Icons.share, color: Colors.white),
+            label: const Text("Share Screenshot"),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _shareScreenshotAndVerify(String refId) async {
+    // Launch WhatsApp
+    await UPIService.launchWhatsAppForVerification(
+      amount: widget.orderAmount,
+      orderId: 'ORDER-${widget.orderId}',
+      transactionRef: refId,
+    );
+    
+    // Record as Direct UPI (Pending Verification)
+    if (mounted) {
+      _recordTransaction(mode: 'Direct UPI', txnRef: refId);
+    }
+  }
+
   Future<void> _handlePaymentSuccess(String orderId, String? paymentId) async {
+    // Check for QR Link from Cashfree
+    if (paymentId != null && paymentId.startsWith("QR_CODE:")) {
+      final authLink = paymentId.replaceFirst("QR_CODE:", "");
+      _showQrDialog(orderId, authLink);
+      return;
+    }
     // Cashfree Success
     await _recordTransaction(mode: 'Cashfree', txnRef: paymentId ?? orderId);
   }
@@ -85,7 +228,7 @@ class _CustomerPaymentScreenState extends State<CustomerPaymentScreen> {
     try {
       final firmId = _orderDetails?['firmId'] ?? 'DEFAULT';
       
-      await DatabaseHelper().insertTransaction({
+      await FinanceRepository().insertTransaction({
         'firmId': firmId,
         'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
         'type': 'INCOME', // Income for the Firm

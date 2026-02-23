@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/invoice_pdf_service.dart
 // GST-Compliant Invoice PDF Generation
 // Created: 2025-12-17 | Generates professional invoice PDFs with CGST/SGST/IGST
@@ -22,7 +23,7 @@ class InvoicePdfService {
       await Printing.layoutPdf(onLayout: (_) async => Uint8List.fromList(pdfBytes));
       return true;
     } catch (e) {
-      print('❌ Invoice PDF preview error: $e');
+      AppLogger.error('❌ Invoice PDF preview error: $e');
       return false;
     }
   }
@@ -47,7 +48,7 @@ class InvoicePdfService {
       
       return file;
     } catch (e) {
-      print('❌ Invoice share error: $e');
+      AppLogger.error('❌ Invoice share error: $e');
       return null;
     }
   }

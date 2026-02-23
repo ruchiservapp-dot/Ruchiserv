@@ -1,3 +1,5 @@
+import 'package:ruchiserv/repositories/finance_repository.dart';
+import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../db/database_helper.dart';
@@ -22,7 +24,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
 
   Future<void> _loadTransactions() async {
     setState(() => _isLoading = true);
-    final data = await DatabaseHelper().getTransactions(
+    final data = await FinanceRepository().getTransactions(
       firmId: 'DEFAULT', 
       type: _filterType,
       limit: 100
@@ -97,7 +99,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
             onPressed: () async {
-              await DatabaseHelper().deleteTransaction(id);
+              await FinanceRepository().deleteTransaction(id);
               if (mounted) Navigator.pop(context);
               _loadTransactions();
             },

@@ -63,6 +63,7 @@
   "moduleFinance": "Finance",
   "moduleReports": "Reports",
   "moduleSettings": "Settings",
+  "moduleInsights": "Insights",
   "moduleAttendance": "My Attendance",
   "noModulesAvailable": "No modules available",
   "contactAdministrator": "Contact your administrator",

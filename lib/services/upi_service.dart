@@ -8,39 +8,51 @@ import 'package:url_launcher/url_launcher.dart';
 /// Service to launch UPI payment intents
 /// Uses the standard UPI deep link format supported by all UPI apps
 class UPIService {
-  /// Your merchant UPI ID (RuchiServ's receiving account)
-  /// TODO: Update this with your actual UPI ID for receiving payments
-  static const String merchantUpiId = 'ruchiserv@ybl'; // Replace with your VPA
-  static const String merchantName = 'RuchiServ Events';
+  /// Your merchant UPI ID (RuchiServ's receiving account for SaaS subscriptions)
+  /// Dummy ID as requested - will be updated later
+  static const String merchantUpiId = 'ruchiserv@ybl'; 
+  static const String merchantName = 'RuchiServ SaaS';
+
+  /// Get the UPI deep link URL string
+  /// Format: upi://pay?pa=<VPA>&pn=<PayeeName>&am=<Amount>&tn=<Note>&tr=<RefID>&cu=<Currency>
+  static String getUpiUrl({
+    required double amount,
+    required String transactionNote,
+    required String transactionRef,
+    String? customMerchantId,
+    String? customMerchantName,
+  }) {
+    return Uri(
+      scheme: 'upi',
+      host: 'pay',
+      queryParameters: {
+        'pa': customMerchantId ?? merchantUpiId,    // Use custom ID if provided (e.g. for Firm-level pay)
+        'pn': customMerchantName ?? merchantName,   // Payee Name
+        'am': amount.toStringAsFixed(2),            // Amount
+        'tn': transactionNote,                       // Transaction Note
+        'tr': transactionRef,                        // Transaction Reference
+        'cu': 'INR',                                 // Currency
+      },
+    ).toString();
+  }
 
   /// Launch UPI payment intent
   /// Opens user's UPI app with pre-filled payment details
-  /// 
-  /// Parameters:
-  /// - [amount]: Amount in INR
-  /// - [transactionNote]: Description shown in UPI app
-  /// - [transactionRef]: Unique reference ID for tracking
-  /// 
-  /// Returns true if UPI app was launched successfully
   static Future<bool> launchUpiPayment({
     required double amount,
     required String transactionNote,
     required String transactionRef,
+    String? customMerchantId,
+    String? customMerchantName,
   }) async {
-    // Build UPI URL
-    // Format: upi://pay?pa=<VPA>&pn=<PayeeName>&am=<Amount>&tn=<Note>&tr=<RefID>&cu=<Currency>
-    final upiUrl = Uri(
-      scheme: 'upi',
-      host: 'pay',
-      queryParameters: {
-        'pa': merchantUpiId,          // Payee VPA (receiving UPI ID)
-        'pn': merchantName,           // Payee Name
-        'am': amount.toStringAsFixed(2), // Amount
-        'tn': transactionNote,        // Transaction Note
-        'tr': transactionRef,         // Transaction Reference
-        'cu': 'INR',                  // Currency
-      },
+    final upiUrlStr = getUpiUrl(
+      amount: amount,
+      transactionNote: transactionNote,
+      transactionRef: transactionRef,
+      customMerchantId: customMerchantId,
+      customMerchantName: customMerchantName,
     );
+    final upiUrl = Uri.parse(upiUrlStr);
 
     try {
       // Try to launch UPI app
@@ -59,6 +71,23 @@ class UPIService {
     }
   }
 
+  /// Generate UPI QR Data (Same as Intent URL)
+  static String generateUpiQrData({
+    required double amount,
+    required String transactionNote,
+    required String transactionRef,
+    String? customMerchantId,
+    String? customMerchantName,
+  }) {
+    return getUpiUrl(
+      amount: amount,
+      transactionNote: transactionNote,
+      transactionRef: transactionRef,
+      customMerchantId: customMerchantId,
+      customMerchantName: customMerchantName,
+    );
+  }
+
   /// Generate a unique transaction reference
   /// Format: RS-<FirmID>-<Timestamp>
   static String generateTransactionRef(String firmId) {
@@ -71,12 +100,10 @@ class UPIService {
   /// Calculate subscription amount based on plan
   static double getPlanAmount(String planName) {
     switch (planName.toUpperCase()) {
-      case 'BASIC':
+      case 'MONTHLY':
         return 999.0;
-      case 'PRO':
-        return 2499.0;
-      case 'ENTERPRISE':
-        return 4999.0;
+      case 'YEARLY':
+        return 9999.0;
       default:
         return 999.0;
     }
@@ -84,7 +111,7 @@ class UPIService {
 
   /// Get plan duration in days
   static int getPlanDurationDays(String planName) {
-    // All plans are monthly for now
+    if (planName.toUpperCase() == 'YEARLY') return 365;
     return 30;
   }
 
@@ -96,5 +123,34 @@ class UPIService {
         : now;
     
     return base.add(Duration(days: getPlanDurationDays(planName)));
+  }
+
+  /// Launch WhatsApp with a verification message
+  static Future<void> launchWhatsAppForVerification({
+    required double amount,
+    required String orderId,
+    String? transactionRef,
+  }) async {
+    // 1. Build the message
+    final message = Uri.encodeComponent(
+      "Hi RuchiServ, I have made a payment of ₹$amount for Order/Sub ID: $orderId.\n"
+      "Ref: ${transactionRef ?? 'N/A'}\n\n"
+      "Here is the payment screenshot attached below:"
+    );
+
+    // 2. RuchiServ Support Number (Hardwired for now)
+    // TODO: Move to AppConfig if needed
+    const supportNumber = "919074067332"; // Replace with actual support number if different
+
+    // 3. Create URL
+    final url = "https://wa.me/$supportNumber?text=$message";
+    
+    // 4. Launch
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint("Could not launch WhatsApp: $url");
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // lib/services/notification_service.dart
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/aws/aws_api.dart';
@@ -200,7 +201,7 @@ Have feedback? Reply to this message!''',
     try {
       await AwsApi.pushToQueue(payload: payload);
     } catch (e) {
-      print('Delivery notification error: $e');
+      AppLogger.info('Delivery notification error: $e');
     }
   }
 
@@ -269,7 +270,7 @@ Thank you for your understanding.''',
         'notes': 'Error: $e',
         'timestamp': DateTime.now().toIso8601String(),
       }));
-      print('PO cancellation notification error: $e');
+      AppLogger.info('PO cancellation notification error: $e');
     }
   }
 
@@ -338,7 +339,7 @@ Thank you for your patience!''',
         'notes': 'Error: $e',
         'timestamp': DateTime.now().toIso8601String(),
       }));
-      print('Order update notification error: $e');
+      AppLogger.info('Order update notification error: $e');
     }
   }
 
@@ -379,7 +380,7 @@ Thank you!''',
     try {
       await AwsApi.pushToQueue(payload: payload);
     } catch (e) {
-      print('New PO notification error: $e');
+      AppLogger.info('New PO notification error: $e');
     }
   }
 
@@ -420,7 +421,7 @@ Please open the app to accept this delivery.''',
     try {
       await AwsApi.pushToQueue(payload: payload);
     } catch (e) {
-      print('Driver assignment notification error: $e');
+      AppLogger.info('Driver assignment notification error: $e');
     }
   }
 
@@ -459,7 +460,7 @@ Open the RuchiServ app for full details.''',
     try {
       await AwsApi.pushToQueue(payload: payload);
     } catch (e) {
-      print('Subcontractor assignment notification error: $e');
+      AppLogger.info('Subcontractor assignment notification error: $e');
     }
   }
 }

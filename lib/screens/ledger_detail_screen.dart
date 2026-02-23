@@ -1,20 +1,23 @@
+import 'package:ruchiserv/repositories/finance_repository.dart';
+import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
-import 'add_transaction_screen.dart';
+import 'report_preview_page.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
-import '../services/report_export_service.dart';
 
 class LedgerDetailScreen extends StatefulWidget {
-  final String entityName;
-  final String entityType; // Supplier, Staff, Customer
+  final String entityType; // SUPPLIER, STAFF, CUSTOMER, SUBCONTRACTOR
   final int entityId;
+  final String entityName;
+  final String? entityMobile;
 
   const LedgerDetailScreen({
     super.key,
-    required this.entityName,
     required this.entityType,
     required this.entityId,
+    required this.entityName,
+    this.entityMobile,
   });
 
   @override
@@ -24,255 +27,239 @@ class LedgerDetailScreen extends StatefulWidget {
 class _LedgerDetailScreenState extends State<LedgerDetailScreen> {
   List<Map<String, dynamic>> _transactions = [];
   bool _isLoading = true;
-  double _totalIncome = 0;
-  double _totalExpense = 0;
+  DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  DateTime _endDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _loadLedger();
+    _loadData();
   }
 
-  Future<void> _loadLedger() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final list = await DatabaseHelper().getTransactions(
-      relatedEntityType: widget.entityType.toUpperCase(),
-      relatedEntityId: widget.entityId,
-    );
-    
-    double income = 0;
-    double expense = 0;
-    
-    for (var t in list) {
-       if (t['type'] == 'INCOME') {
-         income += (t['amount'] as num).toDouble();
-       } else {
-         expense += (t['amount'] as num).toDouble();
-       }
-    }
-
-    setState(() {
-      _transactions = list;
-      _totalIncome = income;
-      _totalExpense = expense;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _addTransaction() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddTransactionScreen(
-          initialPartyType: widget.entityType,
-          initialPartyName: widget.entityName,
-          initialPartyId: widget.entityId,
-        ),
-      ),
-    );
-    if (result == true) {
-      _loadLedger();
-    }
-  }
-
-  Future<void> _showExportDialog() async {
-    if (_transactions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No transactions to export')),
-      );
-      return;
-    }
-
-    final format = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Export Ledger'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.table_chart, color: Colors.green),
-              title: const Text('Excel (.xlsx)'),
-              onTap: () => Navigator.pop(ctx, 'excel'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              title: const Text('PDF'),
-              onTap: () => Navigator.pop(ctx, 'pdf'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (format == null || !mounted) return;
-
-    // Prepare data for export
-    final headers = ['Date', 'Type', 'Category', 'Mode', 'Amount', 'Description'];
-    final rows = _transactions.map((t) => [
-      t['date'] ?? '',
-      t['type'] ?? '',
-      t['category'] ?? '',
-      t['paymentMode'] ?? t['mode'] ?? 'Cash',
-      (t['amount'] as num).toStringAsFixed(2),
-      t['description'] ?? '',
-    ]).toList();
-
-    // Add summary row
-    rows.add(['', '', '', '', '', '']);
-    rows.add(['', '', 'Total Debit', '', _totalExpense.toStringAsFixed(2), '']);
-    rows.add(['', '', 'Total Credit', '', _totalIncome.toStringAsFixed(2), '']);
-    rows.add(['', '', 'Net Balance', '', (_totalIncome - _totalExpense).toStringAsFixed(2), '']);
-
-    final title = '${widget.entityName} Ledger';
-    final subtitle = '${widget.entityType} • ${DateFormat('dd MMM yyyy').format(DateTime.now())}';
+    final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
+    final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
 
     try {
-      final exportService = ReportExportService();
-      if (format == 'excel') {
-        await exportService.exportToExcel(
-          title: title,
-          headers: headers,
-          rows: rows,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Excel exported successfully'), backgroundColor: Colors.green),
-          );
-        }
-      } else if (format == 'pdf') {
-        await exportService.exportToPdf(
-          title: title,
-          subtitle: subtitle,
-          headers: headers,
-          rows: rows,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('PDF exported successfully'), backgroundColor: Colors.green),
-          );
-        }
-      }
+      // For CUSTOMER, we might need special handling if ID is 0/dummy
+      // But assuming core entities have valid IDs.
+      // Note: currently getTransactions filters by relatedEntityId (int)
+      
+      final list = await FinanceRepository().getTransactions(
+        startDate: startStr,
+        endDate: endStr,
+        relatedEntityType: widget.entityType,
+        relatedEntityId: widget.entityId,
+      );
+
+      setState(() {
+        _transactions = list;
+        _isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e'), backgroundColor: Colors.red),
-        );
-      }
+      debugPrint('Error loading ledger: $e');
+      setState(() => _isLoading = false);
     }
+  }
+  
+  void _openExportPreview() {
+    final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
+    final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
+    
+    final headers = ['Date', 'Type', 'Category', 'Mode', 'Description', 'Amount'];
+    final rows = _transactions.map((t) => [
+      t['date'],
+      t['type'],
+      t['category'] ?? '-',
+      t['mode'] ?? '-',
+      t['description'] ?? '-',
+      t['amount']
+    ]).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReportPreviewPage(
+          title: '${widget.entityName} - Ledger',
+          subtitle: '$startStr to $endStr',
+          headers: headers,
+          rows: rows,
+          accentColor: Colors.purple,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final netBalance = _totalIncome - _totalExpense;
-    final isPositive = netBalance >= 0;
+    // Calculate Balance
+    double totalCredit = 0; // Income/Recieved
+    double totalDebit = 0; // Expense/Paid
+    
+    // In Ledger context:
+    // If I am looking at a Supplier Ledger:
+    // - Expense (Payment to Supplier) -> Debit? or Credit? 
+    // Usually: Credit = Payable increased (Purchase), Debit = Payable decreased (Payment).
+    // But typically apps store 'INCOME' (Money IN) and 'EXPENSE' (Money OUT) from current firm perspective.
+    // So for Supplier:
+    // - EXPENSE transaction = Payment made to Supplier.
+    // - INCOME transaction = Refund from Supplier?
+    
+    // Let's stick to simple In/Out for now based on transaction type.
+    
+    for (var t in _transactions) {
+      if (t['type'] == 'INCOME') {
+        totalCredit += (t['amount'] as num).toDouble();
+      } else {
+        totalDebit += (t['amount'] as num).toDouble();
+      }
+    }
+    
+    double netBalance = totalCredit - totalDebit;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.entityName} Ledger"),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.entityName, style: const TextStyle(fontSize: 16)),
+            if (widget.entityMobile != null)
+              Text(widget.entityMobile!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.file_download),
-            tooltip: 'Export',
-            onPressed: _showExportDialog,
+            onPressed: _openExportPreview,
+            tooltip: AppLocalizations.of(context)!.export,
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addTransaction,
-        child: const Icon(Icons.add),
-      ),
       body: Column(
         children: [
-          // Summary Card
-          Card(
-            margin: const EdgeInsets.all(16),
-            color: Colors.white,
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildSummaryItem("Debit (-)", _totalExpense, Colors.red),
-                      _buildSummaryItem("Credit (+)", _totalIncome, Colors.green),
-                    ],
-                  ),
-                  const Divider(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                       const Text("Net Balance", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                       Text(
-                         "₹ ${netBalance.abs().toStringAsFixed(2)} ${isPositive ? 'Cr' : 'Dr'}",
-                         style: TextStyle(
-                           fontSize: 20, 
-                           fontWeight: FontWeight.bold,
-                           color: isPositive ? Colors.green : Colors.red,
-                         ),
-                       ),
-                    ],
-                  )
-                ],
-              ),
-            ),
-          ),
-
-          // Transaction List
-          Expanded(
-            child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _transactions.isEmpty
-                  ? Center(child: Text(AppLocalizations.of(context)!.noTransactionsFound))
-                  : ListView.builder(
-                      itemCount: _transactions.length,
-                      itemBuilder: (context, index) {
-                        final t = _transactions[index];
-                        final isIncome = t['type'] == 'INCOME';
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: isIncome ? Colors.green.shade100 : Colors.red.shade100,
-                            child: Icon(
-                              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                              color: isIncome ? Colors.green : Colors.red,
-                            ),
+          // Date Filter & Summary
+          Container(
+            padding: const EdgeInsets.all(12),
+            color: Colors.purple.shade50,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final picked = await showDateRangePicker(
+                            context: context,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                            initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              _startDate = picked.start;
+                              _endDate = picked.end;
+                            });
+                            _loadData();
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.purple.shade200),
                           ),
-                          title: Text(t['category'] ?? 'Uncategorized'),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text("${t['date']} • ${t['paymentMode'] ?? (t['mode'] ?? 'Cash')}"),
-                              if (t['description'] != null && t['description'].toString().isNotEmpty)
-                                Text(t['description'], style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                              const Icon(Icons.calendar_today, size: 16, color: Colors.purple),
+                              const SizedBox(width: 8),
+                              Text(
+                                "${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d').format(_endDate)}",
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple),
+                              ),
                             ],
                           ),
-                          trailing: Text(
-                            "${isIncome ? '+' : '-'} ₹ ${t['amount']}",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: isIncome ? Colors.green : Colors.red,
-                              fontSize: 16,
-                            ),
-                          ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildSummaryItem('Total Paid', totalDebit, Colors.red),
+                    _buildSummaryItem('Total Recieved', totalCredit, Colors.green),
+                    _buildSummaryItem('Net', netBalance, netBalance >= 0 ? Colors.green : Colors.red),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _transactions.isEmpty
+                    ? Center(
+                        child: Text(
+                          "No transactions found for this period",
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _transactions.length,
+                        itemBuilder: (context, index) {
+                          final t = _transactions[index];
+                          final isIncome = t['type'] == 'INCOME';
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: isIncome ? Colors.green.shade100 : Colors.red.shade100,
+                                child: Icon(
+                                  isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                                  color: isIncome ? Colors.green : Colors.red,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(t['category'] ?? 'Transaction'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(DateFormat('MMM d, yyyy').format(DateTime.parse(t['date']))),
+                                  if (t['description'] != null && t['description'].toString().isNotEmpty)
+                                    Text(t['description'], maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ],
+                              ),
+                              trailing: Text(
+                                "₹${t['amount']}",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: isIncome ? Colors.green : Colors.red,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryItem(String label, double amount, Color color) {
+  Widget _buildSummaryItem(String label, double val, Color color) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey)),
+        Text(label, style: TextStyle(color: Colors.grey.shade700, fontSize: 12)),
         const SizedBox(height: 4),
         Text(
-          "₹ ${amount.toStringAsFixed(2)}",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
+          "₹${val.abs().toStringAsFixed(0)}",
+          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ],
     );

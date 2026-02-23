@@ -24,6 +24,7 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: AppColors.white,
+    fontFamily: 'Poppins',
     
     colorScheme: const ColorScheme.light(
       primary: AppColors.primary,
@@ -126,6 +127,7 @@ class AppTheme {
     brightness: Brightness.dark,
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: AppColors.black,
+    fontFamily: 'Poppins',
     
     colorScheme: const ColorScheme.dark(
       primary: AppColors.primary,

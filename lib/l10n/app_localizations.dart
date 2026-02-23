@@ -304,6 +304,12 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get moduleSettings;
 
+  /// No description provided for @moduleInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get moduleInsights;
+
   /// No description provided for @moduleAttendance.
   ///
   /// In en, this message translates to:

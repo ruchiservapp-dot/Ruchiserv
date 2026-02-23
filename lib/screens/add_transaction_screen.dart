@@ -1,7 +1,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ruchiserv/repositories/order_repository.dart';
+import 'package:ruchiserv/repositories/operation_repository.dart';
+import 'package:ruchiserv/repositories/finance_repository.dart';
 import '../db/database_helper.dart';
+import '../widgets/invoice_scanner_widget.dart';
+import '../utils/file_storage_helper.dart';
+import 'dart:io';
 
 class AddTransactionScreen extends StatefulWidget {
   final String? initialPartyType;
@@ -55,9 +61,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _partyType = 'Other'; // Staff, Supplier, Customer, Subcontractor, Other
   int? _selectedEntityId; // if picked from autocomplete
   String? _selectedEntityName; // if picked from autocomplete
+  String? _imageUrl; // from scanner
 
   // Dropdown options
-  final List<String> _partyTypes = ['Other', 'Staff', 'Supplier', 'Customer', 'Subcontractor'];
+  final List<String> _partyTypes = ['Other', 'Staff', 'Supplier', 'Customer', 'Subcontractor', 'DRIVER'];
   
   // Category Suggestions
   final List<String> _expenseCategories = [
@@ -100,9 +107,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         // New Fields
         'relatedEntityType': _partyType == 'Other' ? null : _partyType.toUpperCase(),
         'relatedEntityId': _selectedEntityId,
+        'imageUrl': _imageUrl,
       };
       
-      await DatabaseHelper().insertTransaction(txn);
+      await FinanceRepository().insertTransaction(txn);
       
       if (mounted) {
         Navigator.pop(context, true); // Return success
@@ -128,6 +136,49 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 0. OCR Scanner (New)
+              if (_type == 'EXPENSE')
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: InvoiceScannerWidget(
+                    onScanComplete: (result) {
+                      setState(() {
+                        if (result['amount'] != null && result['amount'] > 0) {
+                          _amountCtrl.text = result['amount'].toString();
+                        }
+                        if (result['date'] != null && result['date'].toString().isNotEmpty) {
+                          try {
+                            _date = DateTime.parse(result['date']);
+                          } catch (_) {}
+                        }
+                        _imageUrl = result['imageUrl'];
+                        _categoryCtrl.text = 'Purchase'; // Default for scanned invoices
+                      });
+                    },
+                  ),
+                ),
+
+              if (_imageUrl != null && FileStorageHelper.fileExists(_imageUrl))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(File(_imageUrl!), height: 100, width: double.infinity, fit: BoxFit.cover),
+                      ),
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: IconButton(
+                          icon: const Icon(Icons.cancel, color: Colors.red),
+                          onPressed: () => setState(() => _imageUrl = null),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               // 1. Transaction Type
               SegmentedButton<String>(
                 segments: const [
@@ -302,17 +353,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       optionsBuilder: (textEditingValue) async {
         if (_partyType == 'Other') return [];
         
-        final db = DatabaseHelper();
         List<Map<String, dynamic>> list = [];
         
         if (_partyType == 'Staff') {
-          list = await db.getAllStaff(); 
+          list = await OperationRepository().getAllStaff(); 
         } else if (_partyType == 'Supplier') {
-          list = await db.getAllSuppliers('DEFAULT'); // Using default for now
+          list = await FinanceRepository().getAllSuppliers('DEFAULT'); // Using default for now
         } else if (_partyType == 'Subcontractor') {
-          list = await db.getAllSubcontractors('DEFAULT');
+          list = await FinanceRepository().getAllSubcontractors('DEFAULT');
         } else if (_partyType == 'Customer') {
-          list = await db.getAllCustomers('DEFAULT'); 
+          list = await OrderRepository().getAllCustomers('DEFAULT'); 
+        } else if (_partyType == 'DRIVER') {
+          list = await OperationRepository().getDrivers('DEFAULT');
         }
         
         return list.where((e) {

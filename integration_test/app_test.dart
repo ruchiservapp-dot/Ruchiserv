@@ -1,63 +1,87 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:ruchiserv/screens/add_order_screen.dart';
+import 'package:ruchiserv/screens/finance_screen.dart';
+import 'package:ruchiserv/screens/main_menu_screen.dart';
+import 'package:ruchiserv/screens/orders_calendar_screen.dart';
 import 'package:ruchiserv/main.dart' as app;
 import 'package:ruchiserv/db/seed_test_user.dart';
-import 'package:ruchiserv/db/database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+const MethodChannel _localAuthChannel = MethodChannel(
+  'plugins.flutter.io/local_auth',
+);
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('RuchiServ End-to-End Test', () {
     setUpAll(() async {
-      // Initialize DB and Seed User
-      // Note: In a real device test, this persists to disk.
-      // We might want to clear DB before running?
-      // For now, let's just seed. `seedTestUser` handles updates if exists.
-      
-      // We need to ensure plugins are initialized
-      // IntegrationTestWidgetsFlutterBinding.ensureInitialized() handles this.
+      // Keep integration flow deterministic by disabling biometric prompts.
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_localAuthChannel, (methodCall) async {
+        switch (methodCall.method) {
+          case 'canCheckBiometrics':
+          case 'deviceSupportsBiometrics':
+          case 'isDeviceSupported':
+            return false;
+          case 'getAvailableBiometrics':
+          case 'getEnrolledBiometrics':
+            return <String>[];
+          case 'authenticate':
+          case 'authenticateWithBiometrics':
+            return false;
+          case 'stopAuthentication':
+            return true;
+          default:
+            return null;
+        }
+      });
     });
 
-    testWidgets('Full App Flow: Login -> Add Order -> Check Finance', (tester) async {
+    tearDownAll(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_localAuthChannel, null);
+    });
+
+    testWidgets('Full App Flow: Login -> Add Order -> Check Finance',
+        (tester) async {
+      // Ensure deterministic startup state.
+      await seedTestUser();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
       // 1. App Launch
       app.main();
       await tester.pumpAndSettle();
 
       // 2. Splash Screen -> Login Screen
       // Splash has a 2-3 sec delay.
-      await tester.pump(const Duration(seconds: 4)); 
+      await tester.pump(const Duration(seconds: 4));
       await tester.pumpAndSettle();
 
-      // Check if we are at Login Screen or Home (if already logged in)
+      // Check if we are at Login Screen or Home
       if (find.byKey(const Key('firmIdField')).evaluate().isNotEmpty) {
-        // We are at Login Screen
         print('✅ At Login Screen');
-        
-        // Seed user now (doing it here to ensure DB is ready if main initialized it)
-        await seedTestUser();
 
-        // Enter Credentials
-        // Firm ID: RCHSRV
+        // Enter credentials for seeded Admin.
         await tester.enterText(
-          find.byKey(const Key('firmIdField')), 
-          'RCHSRV'
+          find.byKey(const Key('firmIdField')),
+          'RCHSRV',
         );
         await tester.pumpAndSettle();
 
-        // Mobile: 9999999999
         await tester.enterText(
           find.byKey(const Key('mobileField')),
-          '9999999999'
+          '9999999999',
         );
         await tester.pumpAndSettle();
 
-        // Password: test1234
         await tester.enterText(
           find.byKey(const Key('passwordField')),
-          'test1234'
+          'test1234',
         );
         await tester.pumpAndSettle();
 
@@ -66,54 +90,64 @@ void main() {
         await tester.pumpAndSettle();
         await tester.pump(const Duration(seconds: 2)); // Wait for async login
       } else {
-         print('ℹ️ Already Logged In or Login Screen not found?');
-         // Print what we see
-         // tester.binding.debugDumpApp();
+        print('ℹ️ Login screen not shown; continuing with current session.');
       }
 
-      // 3. Verify Home Screen (Dashboard)
-      // The dashboard title changes based on the selected tab. Default is "Orders".
-      // We can also check for BottomNavigationBar.
-      await tester.pumpAndSettle();
-      expect(find.byType(BottomNavigationBar), findsOneWidget);
-      print('✅ Logged in successfully. Dashboard (BottomNav) Visible.');
+      // Dismiss optional prompts (e.g., biometric enrollment) if shown.
+      Future<void> dismissOptionalDialogs() async {
+        if (find.byType(AlertDialog).evaluate().isEmpty) return;
+        final notNow = find.text('Not Now');
+        final cancel = find.text('Cancel');
+        if (notNow.evaluate().isNotEmpty) {
+          await tester.tap(notNow.first);
+        } else if (cancel.evaluate().isNotEmpty) {
+          await tester.tap(cancel.first);
+        } else if (find.byType(TextButton).evaluate().isNotEmpty) {
+          await tester.tap(find.byType(TextButton).first);
+        }
+        await tester.pumpAndSettle();
+      }
+
+      await dismissOptionalDialogs();
+
+      // 3. Verify Home Screen shell.
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.byType(MainMenuScreen), findsOneWidget);
+      print('✅ Logged in successfully. Main menu visible.');
 
       // 4. Navigate to Orders
-      // Find "Orders" tile or button.
-      // Main menu usually has "Orders" text
-      await tester.tap(find.text('Orders'));
+      expect(find.text('Orders'), findsWidgets);
+      await tester.tap(find.text('Orders').first);
       await tester.pumpAndSettle();
+      await dismissOptionalDialogs();
 
-      // Verify Orders Screen
-      print('✅ Navigated to Orders Screen');
-      
+      expect(find.byType(OrderCalendarScreen), findsOneWidget);
+      print('✅ Navigated to Orders screen');
+
       // 5. Add New Order
-      await tester.tap(find.byIcon(Icons.add));
+      expect(find.byIcon(Icons.add), findsWidgets);
+      await tester.tap(find.byIcon(Icons.add).first);
       await tester.pumpAndSettle();
-      
-      print('✅ Opened Add Order Screen');
-      
-      // Enter Order Details
-      // Just verify screen opens for now, entering complex forms in integration test 
-      // can be flaky with date pickers/dropdowns without specific keys.
-      expect(find.text('New Order'), findsOneWidget);
+      await dismissOptionalDialogs();
+
+      expect(find.byType(AddOrderScreen), findsOneWidget);
+      print('✅ Opened Add Order screen');
 
       await tester.pageBack();
       await tester.pumpAndSettle();
 
-      // 6. Navigate Back to Home
-      await tester.pageBack(); 
+      // 6. Navigate back if still on Orders details.
+      await tester.pageBack();
       await tester.pumpAndSettle();
 
       // 7. Check Finance
-      // Tapping on "Reports" or "Finance"?
-      // Main menu usually has "Finance"
-      await tester.tap(find.text('Finance'));
+      expect(find.text('Finance'), findsWidgets);
+      await tester.tap(find.text('Finance').first);
       await tester.pumpAndSettle();
-      
-      expect(find.text('Finance Dashboard'), findsOneWidget);
-      print('✅ Navigated to Finance Screen');
+      await dismissOptionalDialogs();
 
+      expect(find.byType(FinanceScreen), findsOneWidget);
+      print('✅ Navigated to Finance screen');
     });
   });
 }

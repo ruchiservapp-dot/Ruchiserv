@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -16,7 +17,7 @@ class TrackingApiService {
     Map<String, dynamic>? body,
   }) async {
     final uri = _uri(path);
-    print('🚀 Tracking API Request: $uri');
+    AppLogger.info('🚀 Tracking API Request: $uri');
     
     try {
       final res = await http.post(
@@ -26,7 +27,7 @@ class TrackingApiService {
       );
       return _decode(res);
     } catch (e) {
-      print('🔴 API Error: $e');
+      AppLogger.info('🔴 API Error: $e');
       return {'status': 'error', 'message': e.toString()};
     }
   }

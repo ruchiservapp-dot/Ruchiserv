@@ -1,9 +1,11 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // @locked
 // lib/services/otp_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import '../secrets.dart'; // holds twoFactorApiKey
+import '../config/app_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// OTP Service using 2Factor.in AUTOGEN/VERIFY flow.
 /// sendOtp() returns a sessionId (Details field). Use that in verifyOtp().
@@ -16,7 +18,7 @@ class OtpService {
     String? senderId,       // optional, template must be pre-approved on 2Factor
     String? templateName,   // optional, if you use a custom template name
   }) async {
-    final apiKey = twoFactorApiKey; // from secrets.dart
+    final apiKey = AppConfig.twoFactorApiKey;
     
     // MOCK MODE: If API key not configured, return mock session for testing
     // Users can verify with OTP "1234"
@@ -26,31 +28,74 @@ class OtpService {
       return 'MOCK_SESSION_${DateTime.now().millisecondsSinceEpoch}';
     }
 
+    // RATE LIMIT CHECK: Max 3 OTPs per 10 minutes per mobile
+    final isAllowed = await _checkRateLimit(mobile);
+    if (!isAllowed) {
+      debugPrint('🔴 OtpService: Rate limit exceeded for $mobile');
+      return 'RATE_LIMIT_EXCEEDED';
+    }
+
     // AUTOGEN endpoint: /{APIKEY}/SMS/{MOBILE}/AUTOGEN[/TEMPLATE]
     // If you don't use a template, omit it.
     final path = templateName == null || templateName.trim().isEmpty
         ? '$_base/$apiKey/SMS/$mobile/AUTOGEN'
         : '$_base/$apiKey/SMS/$mobile/AUTOGEN/$templateName';
 
-    print('OtpService: Sending OTP to $mobile via 2Factor.in');
+    AppLogger.info('OtpService: Sending OTP to $mobile via 2Factor.in');
     try {
       final resp = await http.get(Uri.parse(path)); // 2Factor often prefers GET
-      print('OtpService: Response ${resp.statusCode}');
-      print('OtpService: Response Body: ${resp.body}'); // DEBUG: Full response
+      AppLogger.info('OtpService: Response ${resp.statusCode}');
+      AppLogger.info('OtpService: Response Body: ${resp.body}'); // DEBUG: Full response
 
       if (resp.statusCode == 200) {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;
-        print('OtpService: Status=${json['Status']}, Details=${json['Details']}'); // DEBUG
+        AppLogger.info('OtpService: Status=${json['Status']}, Details=${json['Details']}'); // DEBUG
         if ((json['Status'] ?? '').toString().toLowerCase() == 'success') {
+          await _recordRequest(mobile); // Record successful request
           return json['Details']?.toString(); // <-- sessionId
         } else {
-          print('OtpService: API returned error: ${json['Details']}');
+          AppLogger.info('OtpService: API returned error: ${json['Details']}');
         }
       }
     } catch (e) {
-      print('OtpService: Exception $e');
+      AppLogger.info('OtpService: Exception $e');
     }
     return null;
+  }
+
+  /// Check if mobile is within rate limits (3 requests per 10 mins)
+  static Future<bool> _checkRateLimit(String mobile) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'otp_request_history_$mobile';
+    final history = prefs.getStringList(key) ?? [];
+    
+    final now = DateTime.now();
+    final tenMinsAgo = now.subtract(const Duration(minutes: 10));
+    
+    // Filter to keep only requests from the last 10 minutes
+    final recent = history
+        .map((ts) => DateTime.tryParse(ts))
+        .where((dt) => dt != null && dt.isAfter(tenMinsAgo))
+        .toList();
+        
+    return recent.length < 3;
+  }
+
+  /// Record a successfully requested OTP timestamp
+  static Future<void> _recordRequest(String mobile) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'otp_request_history_$mobile';
+    final history = prefs.getStringList(key) ?? [];
+    
+    final now = DateTime.now();
+    history.add(now.toIso8601String());
+    
+    // Cleanup: keep only last 10 requests total
+    if (history.length > 10) {
+      history.removeRange(0, history.length - 10);
+    }
+    
+    await prefs.setStringList(key, history);
   }
 
   /// Verify with sessionId + otp. Returns true when correct.
@@ -64,7 +109,7 @@ class OtpService {
       return true;
     }
 
-    final apiKey = twoFactorApiKey;
+    final apiKey = AppConfig.twoFactorApiKey;
     if (apiKey.isEmpty) {
       debugPrint('🔴 OtpService: API key not configured and OTP was not "1234"');
       return false;

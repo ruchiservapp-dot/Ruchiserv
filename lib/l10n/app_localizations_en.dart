@@ -120,6 +120,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleSettings => 'Settings';
 
   @override
+  String get moduleInsights => 'Insights';
+
+  @override
   String get moduleAttendance => 'My Attendance';
 
   @override

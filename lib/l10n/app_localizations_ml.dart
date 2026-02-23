@@ -120,6 +120,9 @@ class AppLocalizationsMl extends AppLocalizations {
   String get moduleSettings => 'ക്രമീകരണങ്ങൾ';
 
   @override
+  String get moduleInsights => 'Insights';
+
+  @override
   String get moduleAttendance => 'ഹാജർ';
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'pdf_service.dart';
 import '../db/aws/aws_api.dart';
 
@@ -30,10 +31,16 @@ class WhatsAppService {
         });
       }
 
+      // Get firmId for authentication
+      final prefs = await SharedPreferences.getInstance();
+      final firmId = prefs.getString('last_firm') ?? 'UNKNOWN';
+      debugPrint('💬 [WhatsApp] Using firmId: $firmId');
+
       // Call Backend
       final resp = await AwsApi.callDbHandler(
         method: 'POST',
         table: 'messaging/whatsapp/send',
+        firmId: firmId, // Required for Lambda authentication
         data: {
           'to': toNumber,
           'template': templateName,
@@ -148,10 +155,15 @@ class WhatsAppService {
             }
           } catch (_) {}
 
-          debugPrint('🚀 Sending Text+PDF via Backend...');
+          // Get firmId for authentication
+          final prefs = await SharedPreferences.getInstance();
+          final currentFirmId = prefs.getString('last_firm') ?? orderData['firmId'] ?? 'UNKNOWN';
+
+          debugPrint('🚀 Sending Text+PDF via Backend for firm: $currentFirmId...');
           final resp = await AwsApi.callDbHandler(
             method: 'POST',
             table: 'messaging/whatsapp/send_order_pdf',
+            firmId: currentFirmId, // Required for Lambda authentication
             data: {
               'to': toNumber,
               'pdf_base64': pdfBase64,

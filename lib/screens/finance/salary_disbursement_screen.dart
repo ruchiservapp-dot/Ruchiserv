@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../db/database_helper.dart';
+import '../../repositories/operation_repository.dart';
 
 class SalaryDisbursementScreen extends StatefulWidget {
   const SalaryDisbursementScreen({super.key});
@@ -45,7 +46,7 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
       return;
     }
     
-    final db = DatabaseHelper();
+    final db = OperationRepository();
     
     // Get OT multiplier
     final firm = await db.getFirmDetails(_firmId!);
@@ -199,17 +200,17 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
     
     if (confirmed == true && selectedMode != null && _firmId != null) {
       try {
-        await DatabaseHelper().disburseSalary(
-          firmId: _firmId!,
-          staffId: staffId,
-          monthYear: _monthYear,
-          basePay: (staff['basePay'] as num).toDouble(),
-          otPay: (staff['otPay'] as num).toDouble(),
-          deductions: (staff['deductions'] as num).toDouble(),
-          netPay: netPay,
-          paymentMode: selectedMode!,
-          paymentRef: paymentRef,
-        );
+        await OperationRepository().disburseSalary({
+          'firmId': _firmId!,
+          'staffId': staffId,
+          'monthYear': _monthYear,
+          'basePay': (staff['basePay'] as num).toDouble(),
+          'otPay': (staff['otPay'] as num).toDouble(),
+          'deductions': (staff['deductions'] as num).toDouble(),
+          'netPay': netPay,
+          'paymentMode': selectedMode!,
+          'paymentRef': paymentRef,
+        });
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -300,9 +301,9 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +369,7 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: typeColor.withOpacity(0.2),
+                color: typeColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(staffType, style: TextStyle(fontSize: 10, color: typeColor)),

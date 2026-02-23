@@ -120,6 +120,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get moduleSettings => 'அமைப்புகள்';
 
   @override
+  String get moduleInsights => 'Insights';
+
+  @override
   String get moduleAttendance => 'வருகை பதிவு';
 
   @override

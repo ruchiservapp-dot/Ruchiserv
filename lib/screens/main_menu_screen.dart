@@ -1,20 +1,29 @@
+import 'package:ruchiserv/core/app_logger.dart';
 // Main Menu Screen - HIDDEN MODULES FOR UNAUTHORIZED USERS
 // Only shows modules user is allowed to access
+// Responsive: bottom nav on mobile/tablet, sidebar rail on desktop
 import 'package:flutter/material.dart';
+import 'dart:ui';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/responsive_utils.dart';
 import '../services/permission_service.dart';
 import '../services/feature_gate_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
-import '2.0_orders_calendar_screen.dart';
-import '3.0_operations_screen.dart';
-import '4.0_inventory_screen.dart';
-import '5.1_finance_screen.dart';
-import '5.0_reports_screen.dart';
-import '6.0_settings_screen.dart';
+
+import 'home_dashboard_screen.dart';
+import 'orders_calendar_screen.dart';
+import 'operations_screen.dart';
+import 'inventory_screen.dart';
+import 'finance_screen.dart';
+import 'reports_screen.dart';
+import 'settings_screen.dart';
 // Portal screens for external user roles (v34)
-import '7.0_driver_home_screen.dart';
-import '8.0_subcontractor_home_screen.dart';
-import '9.0_supplier_home_screen.dart';
+import 'driver_home_screen.dart';
+import 'subcontractor_home_screen.dart';
+import 'supplier_home_screen.dart';
+import 'reports/analytics_dashboard_screen.dart';
+import '../widgets/cloud_sync_indicator.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -38,45 +47,49 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   // All possible menu items - My Attendance is accessed via Operations, not a standalone module
   final List<Map<String, dynamic>> _allMenuItems = [
+    {'icon': Icons.dashboard_rounded, 'label': 'Home', 'module': 'HOME', 'tier': 'BASIC'},
     {'icon': Icons.receipt_long, 'label': 'Orders', 'module': 'ORDERS', 'tier': 'BASIC'},
     {'icon': Icons.inventory_2, 'label': 'Inventory', 'module': 'INVENTORY', 'tier': 'BASIC'},
     {'icon': Icons.settings_suggest, 'label': 'Operations', 'module': 'KITCHEN', 'tier': 'BASIC'},
     {'icon': Icons.account_balance_wallet, 'label': 'Finance', 'module': 'FINANCE', 'tier': 'PRO'},
     {'icon': Icons.bar_chart_rounded, 'label': 'Reports', 'module': 'REPORTS', 'tier': 'BASIC'},
+    {'icon': Icons.insights, 'label': 'Insights', 'module': 'INSIGHTS', 'tier': 'PRO'},
     {'icon': Icons.settings, 'label': 'Settings', 'module': 'SETTINGS', 'tier': 'BASIC'},
   ];
 
   final List<Widget> _allScreens = const [
+    HomeDashboardScreen(),
     OrderCalendarScreen(),
     InventoryScreen(),
     OperationsScreen(),
     FinanceScreen(),
     ReportsScreen(),
+    AnalyticsDashboardScreen(),
     SettingsScreen(),
   ];
 
   @override
   void initState() {
     super.initState();
-    print('MainMenuDebug: initState started');
+    AppLogger.info('MainMenuDebug: initState started');
     _loadPermissions();
   }
 
   Future<void> _loadPermissions() async {
-    print('MainMenuDebug: _loadPermissions started');
+    AppLogger.info('MainMenuDebug: _loadPermissions started');
     try {
       final role = await PermissionService.instance.getUserRole();
-      print('MainMenuDebug: Role found: $role');
+      AppLogger.info('MainMenuDebug: Role found: $role');
       final allowedModules = await PermissionService.instance.getAllowedModules();
-      print('MainMenuDebug: Modules: ${allowedModules.length}');
+      AppLogger.info('MainMenuDebug: Modules: ${allowedModules.length}');
       final tier = await FeatureGateService.instance.getCurrentTier();
-      print('MainMenuDebug: Tier: $tier');
+      AppLogger.info('MainMenuDebug: Tier: $tier');
       
       // Check for external portal users (Driver, Subcontractor, Supplier)
       // These users get a dedicated single-screen portal instead of the standard menu
       final roleLower = role.toLowerCase();
       if (roleLower == 'driver') {
-        print('MainMenuDebug: User is DRIVER. Setting portal screen.');
+        AppLogger.info('MainMenuDebug: User is DRIVER. Setting portal screen.');
         setState(() {
           _userRole = role;
           _isExternalPortal = true;
@@ -114,13 +127,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         final module = item['module'] as String;
         
         // Check if user can access this module
-        bool hasAccess = role == 'Admin' || 
+        bool hasAccess = module == 'HOME' || role == 'Admin' || 
             allowedModules.contains(module) || 
             allowedModules.contains('ALL');
         
         // Check tier requirements
         final requiredTier = item['tier'] as String;
-        bool hasTier = _checkTierAccess(tier, requiredTier);
+        bool hasTier = role == 'Admin' || _checkTierAccess(tier, requiredTier);
         
         if (hasAccess && hasTier) {
           visible.add(item);
@@ -149,10 +162,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         _selectedIndex = 0;
         _isLoading = false;
       });
-      print('MainMenuDebug: _loadPermissions complete');
+      AppLogger.info('MainMenuDebug: _loadPermissions complete');
     } catch (e, stack) {
-      print('MainMenuDebug error: $e');
-      print(stack);
+      AppLogger.error('MainMenuDebug error: $e', stack);
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -207,138 +219,197 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             children: [
               Icon(Icons.lock, size: 64, color: Colors.grey.shade400),
               const SizedBox(height: 16),
-              Text(AppLocalizations.of(context)!.noModulesAvailable),
-              Text(AppLocalizations.of(context)!.contactAdministrator, style: TextStyle(color: Colors.grey.shade600)),
+              Text(AppLocalizations.of(context).noModulesAvailable),
+              Text(AppLocalizations.of(context).contactAdministrator, style: TextStyle(color: Colors.grey.shade600)),
             ],
           ),
         ),
       );
     }
-    
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     final moduleName = _getLocalizedLabel(context, _visibleMenuItems[_selectedIndex]['module']);
-    
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(
-          moduleName,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    final useSideNav = Responsive.useSideNav(context);
+
+    // ── Shared AppBar ────────────────────────────────────────────────────────
+    final appBar = AppBar(
+      elevation: 0,
+      title: Text(
+        moduleName,
+        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+      centerTitle: true,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0D47A1), Color(0xFF42A5F5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF0D47A1), Color(0xFF42A5F5)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      ),
+      actions: [
+        if (_userRole == 'Admin' || _userRole == 'Manager')
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getTierColor(_subscriptionTier),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _subscriptionTier,
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
             ),
           ),
-        ),
-        actions: [
-          // Only show tier badge for Admin/Manager
-          if (_userRole == 'Admin' || _userRole == 'Manager')
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Center(
+        const CloudSyncIndicator(),
+        // Logout button visible in AppBar on desktop (no bottom nav)
+        if (useSideNav)
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Logout',
+            onPressed: _showLogoutDialog,
+          ),
+      ],
+    );
+
+    // ── Desktop: NavigationRail sidebar ─────────────────────────────────────
+    if (useSideNav) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: appBar,
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: _onMenuTap,
+              labelType: NavigationRailLabelType.all,
+              backgroundColor: theme.cardColor,
+              selectedIconTheme: IconThemeData(color: isDark ? Colors.blue.shade300 : Colors.blue.shade800),
+              selectedLabelTextStyle: TextStyle(
+                color: isDark ? Colors.blue.shade300 : Colors.blue.shade800,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              unselectedIconTheme: IconThemeData(color: isDark ? Colors.white54 : Colors.grey.shade600),
+              unselectedLabelTextStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey.shade600, fontSize: 12),
+              leading: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getTierColor(_subscriptionTier),
-                    borderRadius: BorderRadius.circular(12),
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0D47A1), Color(0xFF42A5F5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    _subscriptionTier,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  child: const Icon(Icons.restaurant, color: Colors.white, size: 22),
+                ),
+              ),
+              destinations: _visibleMenuItems.map((item) {
+                return NavigationRailDestination(
+                  icon: Icon(item['icon']),
+                  label: Text(_getLocalizedLabel(context, item['module'])),
+                );
+              }).toList(),
+            ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: _visibleScreens[_selectedIndex],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── Mobile / Tablet: Bottom navigation bar ───────────────────────────────
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: appBar,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _visibleScreens[_selectedIndex],
+      ),
+      bottomNavigationBar: _visibleMenuItems.length > 1
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black.withValues(alpha: 0.85) : Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05)),
+                    boxShadow: [
+                      BoxShadow(color: isDark ? Colors.black54 : Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 8)),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: List.generate(_visibleMenuItems.length, (index) {
+                          final item = _visibleMenuItems[index];
+                          final isSelected = _selectedIndex == index;
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () => _onMenuTap(index),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      item['icon'],
+                                      size: 26,
+                                      color: isSelected ? (isDark ? Colors.blue.shade300 : Colors.blueAccent) : (isDark ? Colors.white54 : Colors.grey.shade400),
+                                    ),
+                                    if (isSelected) const SizedBox(height: 4),
+                                    if (isSelected) 
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          _getLocalizedLabel(context, item['module']),
+                                          maxLines: 1,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.blue.shade300 : Colors.blueAccent,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-            // --- FCM DEBUGGING TOOL ---
-
-            // ---------------------------
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _visibleScreens[_selectedIndex],
-              ),
-            ),
-        ],
-      ),
-      // Only show bottom nav if more than 1 item
-      bottomNavigationBar: _visibleMenuItems.length > 1 
-          ? Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: const Offset(0, -1),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(_visibleMenuItems.length, (index) {
-                  final item = _visibleMenuItems[index];
-                  final isSelected = _selectedIndex == index;
-                  
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => _onMenuTap(index),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.blue.shade50
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              item['icon'],
-                              size: 24,
-                              color: isSelected ? Colors.blue.shade800 : Colors.grey.shade600,
-                            ),
-                            const SizedBox(height: 4),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                _getLocalizedLabel(context, item['module']),
-                                maxLines: 1,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Colors.blue.shade800 : Colors.grey.shade600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
             )
-          : null, // Hide nav bar for single item (Staff)
+          : null,
     );
   }
 
@@ -377,13 +448,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   String _getLocalizedLabel(BuildContext context, String module) {
     switch (module) {
-      case 'ORDERS': return AppLocalizations.of(context)!.moduleOrders;
-      case 'KITCHEN': return AppLocalizations.of(context)!.moduleOperations;
-      case 'INVENTORY': return AppLocalizations.of(context)!.moduleInventory;
-      case 'FINANCE': return AppLocalizations.of(context)!.moduleFinance;
-      case 'REPORTS': return AppLocalizations.of(context)!.moduleReports;
-      case 'SETTINGS': return AppLocalizations.of(context)!.moduleSettings;
-      case 'ATTENDANCE': return AppLocalizations.of(context)!.moduleAttendance;
+      case 'HOME': return 'Dashboard';
+      case 'ORDERS': return AppLocalizations.of(context).moduleOrders;
+      case 'KITCHEN': return AppLocalizations.of(context).moduleOperations;
+      case 'INVENTORY': return AppLocalizations.of(context).moduleInventory;
+      case 'FINANCE': return AppLocalizations.of(context).moduleFinance;
+      case 'REPORTS': return AppLocalizations.of(context).moduleReports;
+      case 'INSIGHTS': return 'Insights';
+      case 'SETTINGS': return AppLocalizations.of(context).moduleSettings;
+      case 'ATTENDANCE': return AppLocalizations.of(context).moduleAttendance;
       default: return module;
     }
   }
