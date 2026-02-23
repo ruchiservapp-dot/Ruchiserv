@@ -2,7 +2,6 @@
 // Last Locked: 2025-12-08 | Features: Stock Management, Add/Edit/Delete, Firm-scoped Data
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../db/database_helper.dart';
 import 'package:ruchiserv/repositories/operation_repository.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -44,31 +43,34 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
   Future<void> _addUtensil() async {
     final nameController = TextEditingController();
     final stockController = TextEditingController();
-    
+
+    // Capture localized strings BEFORE the dialog to avoid _dependents.isEmpty assertion
+    final l10n = AppLocalizations.of(context);
+
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.addUtensil),
+          title: Text(l10n.addUtensil),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: nameController, 
+                controller: nameController,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.utensilName,
-                  hintText: AppLocalizations.of(context)!.utensilNameHint,
+                  labelText: l10n.utensilName,
+                  hintText: l10n.utensilNameHint,
                   border: const OutlineInputBorder(),
                 ),
                 autofocus: true,
               ),
               const SizedBox(height: 12),
               TextField(
-                controller: stockController, 
+                controller: stockController,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.totalStock,
-                  hintText: AppLocalizations.of(context)!.enterQuantity,
+                  labelText: l10n.totalStock,
+                  hintText: l10n.enterQuantity,
                   border: const OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
@@ -77,7 +79,7 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext), 
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text("Cancel"),
             ),
             ElevatedButton(
@@ -85,18 +87,20 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                 final name = nameController.text.trim();
                 if (name.isEmpty) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.enterUtensilName), backgroundColor: Colors.red),
+                    SnackBar(
+                        content: Text(l10n.enterUtensilName),
+                        backgroundColor: Colors.red),
                   );
                   return;
                 }
-                
+
                 final stock = int.tryParse(stockController.text) ?? 0;
-                
+
                 try {
                   // Get firmId from SharedPreferences
                   final sp = await SharedPreferences.getInstance();
                   final firmId = sp.getString('last_firm') ?? 'DEFAULT';
-                  
+
                   await OperationRepository().insertUtensil({
                     'firmId': firmId,
                     'name': name,
@@ -104,14 +108,16 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                     'availableStock': stock,
                     'createdAt': DateTime.now().toIso8601String(),
                   });
-                  
+
                   if (dialogContext.mounted) {
                     Navigator.pop(dialogContext);
                   }
-                  
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context)!.utensilAdded), backgroundColor: Colors.green),
+                      SnackBar(
+                          content: Text(l10n.utensilAdded),
+                          backgroundColor: Colors.green),
                     );
                     _loadUtensils();
                   }
@@ -119,58 +125,65 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                   debugPrint('Error inserting utensil: $e');
                   if (dialogContext.mounted) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context)!.error(e.toString())), backgroundColor: Colors.red),
+                      SnackBar(
+                          content: Text(l10n.error(e.toString())),
+                          backgroundColor: Colors.red),
                     );
                   }
                 }
               },
-              child: Text(AppLocalizations.of(context)!.add),
+              child: Text(l10n.add),
             ),
           ],
         );
       },
     );
-    
+
     nameController.dispose();
     stockController.dispose();
   }
 
   Future<void> _editUtensil(Map<String, dynamic> utensil) async {
     final nameController = TextEditingController(text: utensil['name'] ?? '');
-    final totalStockController = TextEditingController(text: (utensil['totalStock'] ?? 0).toString());
-    final availableController = TextEditingController(text: (utensil['availableStock'] ?? 0).toString());
+    final totalStockController =
+        TextEditingController(text: (utensil['totalStock'] ?? 0).toString());
+    final availableController = TextEditingController(
+        text: (utensil['availableStock'] ?? 0).toString());
+
+    // Capture localized strings BEFORE the dialog to avoid _dependents.isEmpty assertion
+    final l10n = AppLocalizations.of(context);
 
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.editUtensil(utensil['name'])),
+          title: Text(l10n.editUtensil(utensil['name'])),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
-                  controller: nameController, 
+                  controller: nameController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.utensilName,
+                    labelText: l10n.utensilName,
                     border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: totalStockController, 
+                  controller: totalStockController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.totalStock,
+                    labelText: l10n.totalStock,
                     border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: availableController, 
+                  controller: availableController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.availableStock,
+                    labelText: l10n.availableStock,
                     border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
@@ -180,7 +193,7 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext), 
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text("Cancel"),
             ),
             TextButton(
@@ -188,14 +201,17 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                 final confirm = await showDialog<bool>(
                   context: dialogContext,
                   builder: (ctx) => AlertDialog(
-                    title: Text(AppLocalizations.of(context)!.deleteUtensil),
-                    content: Text(AppLocalizations.of(context)!.deleteUtensilConfirm(utensil['name'])),
+                    title: Text(l10n.deleteUtensil),
+                    content: Text(l10n.deleteUtensilConfirm(utensil['name'])),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context)!.cancel)),
+                      TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(l10n.cancel)),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                        child: Text(AppLocalizations.of(context)!.delete),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red),
+                        child: Text(l10n.delete),
                       ),
                     ],
                   ),
@@ -206,36 +222,39 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                 }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text(AppLocalizations.of(context)!.delete),
+              child: Text(l10n.delete),
             ),
             ElevatedButton(
               onPressed: () async {
                 final name = nameController.text.trim();
                 if (name.isEmpty) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.enterUtensilName), backgroundColor: Colors.red),
+                    SnackBar(
+                        content: Text(l10n.enterUtensilName),
+                        backgroundColor: Colors.red),
                   );
                   return;
                 }
-                
+
                 try {
-                  await OperationRepository().updateUtensil(
-                    utensil['id'] as int,
-                    {
-                      'name': name,
-                      'totalStock': int.tryParse(totalStockController.text) ?? 0,
-                      'availableStock': int.tryParse(availableController.text) ?? 0,
-                      'updatedAt': DateTime.now().toIso8601String(),
-                    }
-                  );
-                  
+                  await OperationRepository()
+                      .updateUtensil(utensil['id'] as int, {
+                    'name': name,
+                    'totalStock': int.tryParse(totalStockController.text) ?? 0,
+                    'availableStock':
+                        int.tryParse(availableController.text) ?? 0,
+                    'updatedAt': DateTime.now().toIso8601String(),
+                  });
+
                   if (dialogContext.mounted) {
                     Navigator.pop(dialogContext);
                   }
-                  
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context)!.utensilUpdated), backgroundColor: Colors.green),
+                      SnackBar(
+                          content: Text(l10n.utensilUpdated),
+                          backgroundColor: Colors.green),
                     );
                     _loadUtensils();
                   }
@@ -243,18 +262,20 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                   debugPrint('Error updating utensil: $e');
                   if (dialogContext.mounted) {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context)!.error(e.toString())), backgroundColor: Colors.red),
+                      SnackBar(
+                          content: Text(l10n.error(e.toString())),
+                          backgroundColor: Colors.red),
                     );
                   }
                 }
               },
-              child: Text(AppLocalizations.of(context)!.save),
+              child: Text(l10n.save),
             ),
           ],
         );
       },
     );
-    
+
     nameController.dispose();
     totalStockController.dispose();
     availableController.dispose();
@@ -263,10 +284,12 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
   Future<void> _deleteUtensil(int id) async {
     try {
       await OperationRepository().deleteUtensil(id);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.utensilDeleted), backgroundColor: Colors.orange),
+          SnackBar(
+              content: Text(AppLocalizations.of(context).utensilDeleted),
+              backgroundColor: Colors.orange),
         );
         _loadUtensils();
       }
@@ -279,7 +302,7 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.utensilsTracking),
+        title: Text(AppLocalizations.of(context).utensilsTracking),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadUtensils),
         ],
@@ -295,14 +318,16 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade400),
+                      Icon(Icons.inventory_2_outlined,
+                          size: 64, color: Colors.grey.shade400),
                       const SizedBox(height: 16),
-                      Text(AppLocalizations.of(context)!.noUtensilsAdded),
+                      Text(AppLocalizations.of(context).noUtensilsAdded),
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
                         onPressed: _addUtensil,
                         icon: const Icon(Icons.add),
-                        label: Text(AppLocalizations.of(context)!.addFirstUtensil),
+                        label:
+                            Text(AppLocalizations.of(context).addFirstUtensil),
                       ),
                     ],
                   ),
@@ -312,37 +337,55 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                   itemCount: _utensils.length,
                   itemBuilder: (context, index) {
                     final utensil = _utensils[index];
-                    final totalStock = (utensil['totalStock'] as num?)?.toInt() ?? 0;
-                    final available = (utensil['availableStock'] as num?)?.toInt() ?? 0;
+                    final totalStock =
+                        (utensil['totalStock'] as num?)?.toInt() ?? 0;
+                    final available =
+                        (utensil['availableStock'] as num?)?.toInt() ?? 0;
                     final issued = totalStock - available;
-                    final utilizationPercent = totalStock > 0 ? (issued / totalStock) * 100 : 0;
-                    
+                    final utilizationPercent =
+                        totalStock > 0 ? (issued / totalStock) * 100 : 0;
+
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: available > 0 ? Colors.green : Colors.red,
-                          child: const Icon(Icons.inventory_2, color: Colors.white),
+                          backgroundColor:
+                              available > 0 ? Colors.green : Colors.red,
+                          child: const Icon(Icons.inventory_2,
+                              color: Colors.white),
                         ),
-                        title: Text(utensil['name'] ?? AppLocalizations.of(context)!.unknown, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        title: Text(
+                            utensil['name'] ??
+                                AppLocalizations.of(context).unknown,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              AppLocalizations.of(context)!.availableCount(available, totalStock),
-                              style: TextStyle(color: available > 0 ? Colors.green : Colors.red)),
+                                AppLocalizations.of(context)
+                                    .availableCount(available, totalStock),
+                                style: TextStyle(
+                                    color: available > 0
+                                        ? Colors.green
+                                        : Colors.red)),
                             const SizedBox(height: 4),
                             LinearProgressIndicator(
-                              value: totalStock > 0 ? available / totalStock : 0,
+                              value:
+                                  totalStock > 0 ? available / totalStock : 0,
                               backgroundColor: Colors.grey.shade300,
                               valueColor: AlwaysStoppedAnimation(
-                                available > totalStock * 0.3 ? Colors.green : Colors.orange,
+                                available > totalStock * 0.3
+                                    ? Colors.green
+                                    : Colors.orange,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              AppLocalizations.of(context)!.issuedCount(issued, utilizationPercent.toStringAsFixed(0)),
-                              style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                                AppLocalizations.of(context).issuedCount(issued,
+                                    utilizationPercent.toStringAsFixed(0)),
+                                style: TextStyle(
+                                    fontSize: 11, color: Colors.grey.shade600)),
                           ],
                         ),
                         isThreeLine: true,

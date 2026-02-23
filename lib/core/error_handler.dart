@@ -4,13 +4,13 @@ import 'app_logger.dart';
 
 /// Categorized error types for user-friendly messaging
 enum ErrorCategory {
-  network,     // No internet, timeout, DNS
-  auth,        // Session expired, invalid credentials
-  validation,  // Form errors, invalid data
-  server,      // 500, Lambda errors, DynamoDB issues
-  permission,  // Forbidden, subscription tier limit
-  sync,        // Cloud sync failures
-  unknown,     // Uncategorized
+  network, // No internet, timeout, DNS
+  auth, // Session expired, invalid credentials
+  validation, // Form errors, invalid data
+  server, // 500, Lambda errors, DynamoDB issues
+  permission, // Forbidden, subscription tier limit
+  sync, // Cloud sync failures
+  unknown, // Uncategorized
 }
 
 class ErrorHandler {

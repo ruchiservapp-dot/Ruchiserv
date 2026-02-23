@@ -23,27 +23,29 @@ class EncryptionHelper {
   /// CRITICAL: Must be called before any database operations
   static Future<void> initialize() async {
     String? keyStr;
-    
+
     try {
       keyStr = await _storage.read(key: _keyName);
     } catch (e) {
-      AppLogger.info('WARNING: Secure Storage failed ($e). Using local file fallback for DEV.');
+      AppLogger.info(
+          'WARNING: Secure Storage failed ($e). Using local file fallback for DEV.');
       keyStr = await _readFallbackKey();
     }
-    
+
     if (keyStr == null) {
       // Generate new 256-bit key on first run
       final key = Key.fromSecureRandom(32); // 32 bytes = 256 bits
       keyStr = key.base64;
-      
+
       try {
         await _storage.write(key: _keyName, value: keyStr);
       } catch (e) {
-        AppLogger.info('WARNING: Secure Storage write failed ($e). Saving to local file fallback for DEV.');
-        await _saveFallbackKey(keyStr!);
+        AppLogger.info(
+            'WARNING: Secure Storage write failed ($e). Saving to local file fallback for DEV.');
+        await _saveFallbackKey(keyStr);
       }
     }
-    
+
     _key = Key.fromBase64(keyStr);
     _encrypter = Encrypter(AES(_key!));
   }
@@ -56,7 +58,9 @@ class EncryptionHelper {
       if (await file.exists()) {
         return await file.readAsString();
       }
-    } catch (_) {}
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
     return null;
   }
 
@@ -66,7 +70,9 @@ class EncryptionHelper {
     try {
       final file = await _getFallbackFile();
       await file.writeAsString(key);
-    } catch (_) {}
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
   }
 
   static Future<File> _getFallbackFile() async {
@@ -79,7 +85,8 @@ class EncryptionHelper {
   static String? encrypt(String? plaintext) {
     if (plaintext == null || plaintext.isEmpty) return null;
     if (_encrypter == null) {
-      throw Exception('Encryption not initialized. Call EncryptionHelper.initialize() first.');
+      throw Exception(
+          'Encryption not initialized. Call EncryptionHelper.initialize() first.');
     }
     // Generate random IV for every encryption operation
     final iv = IV.fromSecureRandom(16);
@@ -95,7 +102,8 @@ class EncryptionHelper {
   static String? decrypt(String? ciphertext) {
     if (ciphertext == null || ciphertext.isEmpty) return null;
     if (_encrypter == null) {
-      throw Exception('Encryption not initialized. Call EncryptionHelper.initialize() first.');
+      throw Exception(
+          'Encryption not initialized. Call EncryptionHelper.initialize() first.');
     }
     try {
       final combined = base64.decode(ciphertext);

@@ -1,5 +1,6 @@
 // lib/db/database_helper.dart
 // @locked
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart';
@@ -46,7 +47,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     String fileName = 'ruchiserv_v2.db';
-    
+
     Database db;
     if (kIsWeb) {
       // Web initialization
@@ -74,13 +75,13 @@ class DatabaseHelper {
         onUpgrade: _onUpgrade,
       );
     }
-    
+
     // Always sync schema on startup to ensure all columns exist
     await SchemaManager.syncSchema(db);
-    
+
     // v40: Backfill missing UUIDs for offline/legacy data
     await _backfillUuids(db);
-    
+
     return db;
   }
 
@@ -92,26 +93,43 @@ class DatabaseHelper {
   Future<void> _backfillUuids(Database db) async {
     AppLogger.debug('📦 [DB] Checking for missing UUIDs to backfill...');
     for (var table in [
-      'firms', 'users', 'authorized_mobiles', 'staff', 'attendance', 
-      'customers', 'orders', 'dishes', 'finance', 'utensils', 
-      'vehicles', 'ingredients_master', 'dish_master', 'recipe_detail',
-      'mrp_runs', 'mrp_run_orders', 'mrp_output', 'suppliers', 
-      'subcontractors', 'purchase_orders', 'po_items', 'dispatches', 
-      'invoices', 'invoice_items', 'salary_disbursements', 
-      'service_rates', 'dispatch_items'
+      'firms',
+      'users',
+      'authorized_mobiles',
+      'staff',
+      'attendance',
+      'customers',
+      'orders',
+      'dishes',
+      'finance',
+      'utensils',
+      'vehicles',
+      'ingredients_master',
+      'dish_master',
+      'recipe_detail',
+      'mrp_runs',
+      'mrp_run_orders',
+      'mrp_output',
+      'suppliers',
+      'subcontractors',
+      'purchase_orders',
+      'po_items',
+      'dispatches',
+      'invoices',
+      'invoice_items',
+      'salary_disbursements',
+      'service_rates',
+      'dispatch_items'
     ]) {
       try {
         final records = await db.query(table, where: 'uuid IS NULL');
         if (records.isNotEmpty) {
-          AppLogger.info('📦 [DB] Backfilling ${records.length} UUIDs in $table...');
+          AppLogger.info(
+              '📦 [DB] Backfilling ${records.length} UUIDs in $table...');
           for (var row in records) {
             final id = row['id'];
-            await db.update(
-              table, 
-              {'uuid': _generateUuid()}, 
-              where: 'id = ?', 
-              whereArgs: [id]
-            );
+            await db.update(table, {'uuid': _generateUuid()},
+                where: 'id = ?', whereArgs: [id]);
           }
         }
       } catch (e) {
@@ -124,16 +142,17 @@ class DatabaseHelper {
   /// General helper to get a single record by ID from any table
   Future<Map<String, dynamic>?> getRecordById(String table, int id) async {
     final db = await database;
-    final res = await db.query(table, where: 'id = ?', whereArgs: [id], limit: 1);
+    final res =
+        await db.query(table, where: 'id = ?', whereArgs: [id], limit: 1);
     return res.isNotEmpty ? res.first : null;
   }
 
   Future<void> _onCreate(Database db, int version) async {
     AppLogger.info('📦 [DB] Creating new database with version $version');
-    
+
     // Use SchemaManager to create all tables from central definition
     await SchemaManager.createAllTables(db);
-    
+
     // Seed initial data
     await _loadSeeds(db);
   }
@@ -143,11 +162,17 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       // Add columns if they don't exist
       try {
-        await db.execute('ALTER TABLE orders ADD COLUMN totalPax INTEGER DEFAULT 0;');
-      } catch (_) {}
+        await db.execute(
+            'ALTER TABLE orders ADD COLUMN totalPax INTEGER DEFAULT 0;');
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       try {
-        await db.execute('ALTER TABLE orders ADD COLUMN isLocked INTEGER DEFAULT 0;');
-      } catch (_) {}
+        await db.execute(
+            'ALTER TABLE orders ADD COLUMN isLocked INTEGER DEFAULT 0;');
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
 
       // Ensure pending_sync exists with action column
       await db.execute('''
@@ -177,9 +202,11 @@ class DatabaseHelper {
           UNIQUE(firmId, mobile)
         );
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_firm ON authorized_mobiles(firmId);');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_mobile ON authorized_mobiles(firmId, mobile);');
-      
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_firm ON authorized_mobiles(firmId);');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_authorized_mobiles_mobile ON authorized_mobiles(firmId, mobile);');
+
       // Migrate existing users to authorized_mobiles
       final existingUsers = await db.query('users');
       for (var user in existingUsers) {
@@ -193,7 +220,9 @@ class DatabaseHelper {
             'addedBy': 'SYSTEM_MIGRATION',
             'addedAt': DateTime.now().toIso8601String(),
           });
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
       }
     }
 
@@ -211,14 +240,19 @@ class DatabaseHelper {
           UNIQUE(name, category)
         );
       ''');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_dish_master_category ON dish_master(category);');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_dish_master_category ON dish_master(category);');
     }
 
-    // Upgrade to v6: Defensive add for showRates in users 
-    if (oldVersion < 37) { // Bumped version check safely
-       try {
-         await db.execute('ALTER TABLE users ADD COLUMN showRates INTEGER DEFAULT 1;');
-       } catch (_) {}
+    // Upgrade to v6: Defensive add for showRates in users
+    if (oldVersion < 37) {
+      // Bumped version check safely
+      try {
+        await db.execute(
+            'ALTER TABLE users ADD COLUMN showRates INTEGER DEFAULT 1;');
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v36: Order Emails & Enhanced Fields
@@ -244,9 +278,11 @@ class DatabaseHelper {
       for (final sql in orderCols) {
         try {
           await db.execute(sql);
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
       }
-      
+
       // Dishes table columns
       final dishCols = [
         'ALTER TABLE dishes ADD COLUMN foodType TEXT DEFAULT "Veg";',
@@ -257,7 +293,9 @@ class DatabaseHelper {
       for (final sql in dishCols) {
         try {
           await db.execute(sql);
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
       }
     }
 
@@ -281,6 +319,7 @@ class DatabaseHelper {
           await db.execute(sql);
         } catch (_) {
           // Column already exists, ignore
+          AppLogger.error('Caught error: $_');
         }
       }
     }
@@ -302,7 +341,9 @@ class DatabaseHelper {
       for (final sql in cols) {
         try {
           await db.execute(sql);
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
       }
 
       // Create service_rates table for storing last used rates
@@ -333,9 +374,13 @@ class DatabaseHelper {
         'ALTER TABLE firms ADD COLUMN primaryEmail TEXT;',
       ];
       for (final sql in firmCols) {
-        try { await db.execute(sql); } catch (_) {}
+        try {
+          await db.execute(sql);
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
       }
-      
+
       // 2. Ensure Orders table has service columns (Defensive)
       final orderCols = [
         'ALTER TABLE orders ADD COLUMN serviceRequired INTEGER DEFAULT 0;',
@@ -350,7 +395,11 @@ class DatabaseHelper {
         'ALTER TABLE orders ADD COLUMN grandTotal REAL DEFAULT 0;',
       ];
       for (final sql in orderCols) {
-        try { await db.execute(sql); } catch (_) {}
+        try {
+          await db.execute(sql);
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
       }
 
       // 3. Ensure service_rates exists
@@ -369,35 +418,53 @@ class DatabaseHelper {
     // Upgrade to v9: Fix missing firmId in Orders (Legacy Migration)
     if (oldVersion < 9) {
       try {
-        await db.execute("ALTER TABLE orders ADD COLUMN firmId TEXT DEFAULT 'DEFAULT';");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE orders ADD COLUMN firmId TEXT DEFAULT 'DEFAULT';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v35: Add UPI Subscription Fields (Client UPI ID)
     if (oldVersion < 35) {
       try {
         await db.execute("ALTER TABLE firms ADD COLUMN client_upi_id TEXT;");
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       try {
-        await db.execute("ALTER TABLE firms ADD COLUMN subscription_end_date TEXT;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE firms ADD COLUMN subscription_end_date TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       try {
-        await db.execute("ALTER TABLE firms ADD COLUMN subscription_plan TEXT;");
-      } catch (_) {}
+        await db
+            .execute("ALTER TABLE firms ADD COLUMN subscription_plan TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
-
 
     // Upgrade to v10: Kitchen & Production workflow
     if (oldVersion < 10) {
       try {
-        await db.execute("ALTER TABLE dishes ADD COLUMN productionStatus TEXT DEFAULT 'PENDING';");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE dishes ADD COLUMN productionStatus TEXT DEFAULT 'PENDING';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       try {
-        await db.execute("ALTER TABLE dishes ADD COLUMN productionType TEXT DEFAULT 'INTERNAL';");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE dishes ADD COLUMN productionType TEXT DEFAULT 'INTERNAL';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       try {
         await db.execute("ALTER TABLE dishes ADD COLUMN subcontractorId TEXT;");
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v11: Dispatch module tables
@@ -469,27 +536,66 @@ class DatabaseHelper {
       ''');
 
       // Orders table - add dispatch tracking columns
-      try { await db.execute("ALTER TABLE orders ADD COLUMN dispatchStatus TEXT DEFAULT 'PENDING';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE orders ADD COLUMN dispatchedAt TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE orders ADD COLUMN deliveredAt TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE orders ADD COLUMN returnedAt TEXT;"); } catch (_) {}
+      try {
+        await db.execute(
+            "ALTER TABLE orders ADD COLUMN dispatchStatus TEXT DEFAULT 'PENDING';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN dispatchedAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN deliveredAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN returnedAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v12: Add vehicleType column to vehicles
     if (oldVersion < 12) {
-      try { await db.execute("ALTER TABLE vehicles ADD COLUMN vehicleType TEXT;"); } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE vehicles ADD COLUMN vehicleType TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v13: RBAC & Subscription Tiers
     if (oldVersion < 13) {
       // Users table - RBAC columns
-      try { await db.execute("ALTER TABLE users ADD COLUMN showRates INTEGER DEFAULT 1;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE users ADD COLUMN moduleAccess TEXT;"); } catch (_) {}
-      
+      try {
+        await db.execute(
+            "ALTER TABLE users ADD COLUMN showRates INTEGER DEFAULT 1;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE users ADD COLUMN moduleAccess TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+
       // Firms table - Subscription tier columns
-      try { await db.execute("ALTER TABLE firms ADD COLUMN subscriptionTier TEXT DEFAULT 'BASIC';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE firms ADD COLUMN enabledFeatures TEXT;"); } catch (_) {}
-      
+      try {
+        await db.execute(
+            "ALTER TABLE firms ADD COLUMN subscriptionTier TEXT DEFAULT 'BASIC';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE firms ADD COLUMN enabledFeatures TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+
       // Suppliers table
       await db.execute('''
         CREATE TABLE IF NOT EXISTS suppliers (
@@ -507,7 +613,7 @@ class DatabaseHelper {
           updatedAt TEXT
         );
       ''');
-      
+
       // Subcontractors table
       await db.execute('''
         CREATE TABLE IF NOT EXISTS subcontractors (
@@ -527,19 +633,41 @@ class DatabaseHelper {
         );
       ''');
     }
-    
+
     // Upgrade to v14: Add readyAt timestamp for dishes (sort Ready Queue by newest)
     if (oldVersion < 14) {
-      try { await db.execute("ALTER TABLE dishes ADD COLUMN readyAt TEXT;"); } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE dishes ADD COLUMN readyAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v15: Staff Management enhancements with GPS geo-fencing
     if (oldVersion < 15) {
       // --- FIRMS TABLE: GPS Kitchen Location & OT Multiplier ---
-      try { await db.execute("ALTER TABLE firms ADD COLUMN kitchenLatitude REAL;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE firms ADD COLUMN kitchenLongitude REAL;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE firms ADD COLUMN geoFenceRadius INTEGER DEFAULT 100;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE firms ADD COLUMN otMultiplier REAL DEFAULT 1.5;"); } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE firms ADD COLUMN kitchenLatitude REAL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE firms ADD COLUMN kitchenLongitude REAL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE firms ADD COLUMN geoFenceRadius INTEGER DEFAULT 100;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE firms ADD COLUMN otMultiplier REAL DEFAULT 1.5;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
 
       // --- STAFF TABLE: Create if not exists with enhanced fields ---
       await db.execute('''
@@ -570,20 +698,82 @@ class DatabaseHelper {
         );
       ''');
       // Add new columns to existing staff table if it already exists
-      try { await db.execute("ALTER TABLE staff ADD COLUMN firmId TEXT DEFAULT 'DEFAULT';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN staffType TEXT DEFAULT 'PERMANENT';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN dailyWageRate REAL DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN hourlyRate REAL DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN payoutFrequency TEXT DEFAULT 'MONTHLY';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN bankAccountNo TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN bankIfsc TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN bankName TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN aadharNumber TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN emergencyContact TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN emergencyContactName TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN address TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN photoUrl TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE staff ADD COLUMN email TEXT;"); } catch (_) {}
+      try {
+        await db.execute(
+            "ALTER TABLE staff ADD COLUMN firmId TEXT DEFAULT 'DEFAULT';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE staff ADD COLUMN staffType TEXT DEFAULT 'PERMANENT';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE staff ADD COLUMN dailyWageRate REAL DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db
+            .execute("ALTER TABLE staff ADD COLUMN hourlyRate REAL DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE staff ADD COLUMN payoutFrequency TEXT DEFAULT 'MONTHLY';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN bankAccountNo TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN bankIfsc TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN bankName TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN aadharNumber TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN emergencyContact TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db
+            .execute("ALTER TABLE staff ADD COLUMN emergencyContactName TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN address TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN photoUrl TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE staff ADD COLUMN email TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
 
       // --- ATTENDANCE TABLE: Create with GPS columns ---
       await db.execute('''
@@ -608,14 +798,50 @@ class DatabaseHelper {
         );
       ''');
       // Add GPS columns to existing attendance table
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN punchOutTime TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN punchInLat REAL;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN punchInLng REAL;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN punchOutLat REAL;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN punchOutLng REAL;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN isWithinGeoFence INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN hoursWorked REAL DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE attendance ADD COLUMN overtime REAL DEFAULT 0;"); } catch (_) {}
+      try {
+        await db
+            .execute("ALTER TABLE attendance ADD COLUMN punchOutTime TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE attendance ADD COLUMN punchInLat REAL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE attendance ADD COLUMN punchInLng REAL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE attendance ADD COLUMN punchOutLat REAL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE attendance ADD COLUMN punchOutLng REAL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE attendance ADD COLUMN isWithinGeoFence INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE attendance ADD COLUMN hoursWorked REAL DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE attendance ADD COLUMN overtime REAL DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
 
       // --- STAFF ASSIGNMENTS TABLE: Link staff to orders ---
       await db.execute('''
@@ -646,7 +872,7 @@ class DatabaseHelper {
           FOREIGN KEY(staffId) REFERENCES staff(id)
         );
       ''');
-      
+
       // --- UTENSILS TABLE ---
       await db.execute('''
         CREATE TABLE IF NOT EXISTS utensils (
@@ -661,7 +887,7 @@ class DatabaseHelper {
         );
       ''');
     }
-    
+
     // v16: Ensure utensils table exists with correct columns
     if (oldVersion < 16) {
       // Create table if it doesn't exist
@@ -677,26 +903,80 @@ class DatabaseHelper {
           updatedAt TEXT
         );
       ''');
-      
+
       // Add missing columns if table already existed with old schema
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN totalStock INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN availableStock INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN category TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN unit TEXT DEFAULT 'pcs';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN createdAt TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN updatedAt TEXT;"); } catch (_) {}
+      try {
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN totalStock INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN availableStock INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN category TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN unit TEXT DEFAULT 'pcs';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN createdAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN updatedAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
-    
+
     // v17: Fix utensils table columns (for users already at v16)
     if (oldVersion < 17) {
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN totalStock INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN availableStock INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN category TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN unit TEXT DEFAULT 'pcs';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN createdAt TEXT;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE utensils ADD COLUMN updatedAt TEXT;"); } catch (_) {}
+      try {
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN totalStock INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN availableStock INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN category TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN unit TEXT DEFAULT 'pcs';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN createdAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE utensils ADD COLUMN updatedAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
-    
+
     // v18: Inventory Module - Ingredients, BOM, MRP, Suppliers, PO
     if (oldVersion < 18) {
       // Ingredients Master
@@ -716,7 +996,7 @@ class DatabaseHelper {
           updatedAt TEXT
         );
       ''');
-      
+
       // BOM (Bill of Materials) - Dish to Ingredients
       await db.execute('''
         CREATE TABLE IF NOT EXISTS bom (
@@ -732,7 +1012,7 @@ class DatabaseHelper {
           UNIQUE(firmId, dishId, ingredientId)
         );
       ''');
-      
+
       // MRP Runs
       await db.execute('''
         CREATE TABLE IF NOT EXISTS mrp_runs (
@@ -748,7 +1028,7 @@ class DatabaseHelper {
           completedAt TEXT
         );
       ''');
-      
+
       // MRP Run Orders
       await db.execute('''
         CREATE TABLE IF NOT EXISTS mrp_run_orders (
@@ -761,7 +1041,7 @@ class DatabaseHelper {
           UNIQUE(mrpRunId, orderId)
         );
       ''');
-      
+
       // MRP Output
       await db.execute('''
         CREATE TABLE IF NOT EXISTS mrp_output (
@@ -776,7 +1056,7 @@ class DatabaseHelper {
           status TEXT DEFAULT 'PENDING'
         );
       ''');
-      
+
       // Suppliers
       await db.execute('''
         CREATE TABLE IF NOT EXISTS suppliers (
@@ -796,7 +1076,7 @@ class DatabaseHelper {
           updatedAt TEXT
         );
       ''');
-      
+
       // Subcontractors
       await db.execute('''
         CREATE TABLE IF NOT EXISTS subcontractors (
@@ -814,7 +1094,7 @@ class DatabaseHelper {
           updatedAt TEXT
         );
       ''');
-      
+
       // Purchase Orders
       await db.execute('''
         CREATE TABLE IF NOT EXISTS purchase_orders (
@@ -836,7 +1116,7 @@ class DatabaseHelper {
           createdAt TEXT
         );
       ''');
-      
+
       // PO Line Items
       await db.execute('''
         CREATE TABLE IF NOT EXISTS po_items (
@@ -851,7 +1131,7 @@ class DatabaseHelper {
           amount REAL DEFAULT 0
         );
       ''');
-      
+
       // Invoices
       await db.execute('''
         CREATE TABLE IF NOT EXISTS invoices (
@@ -874,11 +1154,24 @@ class DatabaseHelper {
           createdAt TEXT
         );
       ''');
-      
+
       // Add order locking columns
-      try { await db.execute("ALTER TABLE orders ADD COLUMN mrpRunId INTEGER;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE orders ADD COLUMN isLocked INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE orders ADD COLUMN lockedAt TEXT;"); } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN mrpRunId INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE orders ADD COLUMN isLocked INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE orders ADD COLUMN lockedAt TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // v19: Integrated Master Data (Ingredients, Dishes, BOM)
@@ -967,10 +1260,11 @@ class DatabaseHelper {
           UNIQUE(entity_type, entity_id, language_code, field_name)
         );
       ''');
-      
+
       // Index for fast lookups
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_content_translations_lookup ON content_translations(entity_type, entity_id, language_code);');
-      
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_content_translations_lookup ON content_translations(entity_type, entity_id, language_code);');
+
       // Defensive: Ensure pending_sync table exists (may have been missed in early migrations)
       await db.execute('''
         CREATE TABLE IF NOT EXISTS pending_sync (
@@ -986,58 +1280,144 @@ class DatabaseHelper {
     // v22: Multi-Tenant Master Data (firmId partitioning)
     if (oldVersion < 22) {
       // Add firmId, baseId, isModified to ingredients_master
-      try { await db.execute("ALTER TABLE ingredients_master ADD COLUMN firmId TEXT DEFAULT 'SEED';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE ingredients_master ADD COLUMN baseId INTEGER;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE ingredients_master ADD COLUMN isModified INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute('CREATE INDEX IF NOT EXISTS idx_ingredients_firmId ON ingredients_master(firmId);'); } catch (_) {}
-      
+      try {
+        await db.execute(
+            "ALTER TABLE ingredients_master ADD COLUMN firmId TEXT DEFAULT 'SEED';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE ingredients_master ADD COLUMN baseId INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE ingredients_master ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_ingredients_firmId ON ingredients_master(firmId);');
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+
       // Add firmId, baseId, isModified to dish_master
-      try { await db.execute("ALTER TABLE dish_master ADD COLUMN firmId TEXT DEFAULT 'SEED';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE dish_master ADD COLUMN baseId INTEGER;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE dish_master ADD COLUMN isModified INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute('CREATE INDEX IF NOT EXISTS idx_dish_firmId ON dish_master(firmId);'); } catch (_) {}
-      
+      try {
+        await db.execute(
+            "ALTER TABLE dish_master ADD COLUMN firmId TEXT DEFAULT 'SEED';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute("ALTER TABLE dish_master ADD COLUMN baseId INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE dish_master ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_dish_firmId ON dish_master(firmId);');
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+
       // Add firmId, baseId, isModified to recipe_detail
-      try { await db.execute("ALTER TABLE recipe_detail ADD COLUMN firmId TEXT DEFAULT 'SEED';"); } catch (_) {}
-      try { await db.execute("ALTER TABLE recipe_detail ADD COLUMN baseId INTEGER;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE recipe_detail ADD COLUMN isModified INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute('CREATE INDEX IF NOT EXISTS idx_recipe_firmId ON recipe_detail(firmId);'); } catch (_) {}
-      
+      try {
+        await db.execute(
+            "ALTER TABLE recipe_detail ADD COLUMN firmId TEXT DEFAULT 'SEED';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db
+            .execute("ALTER TABLE recipe_detail ADD COLUMN baseId INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE recipe_detail ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_recipe_firmId ON recipe_detail(firmId);');
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+
       // Copy existing seed data's id to baseId for reference
-      try { await db.execute("UPDATE ingredients_master SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
-      try { await db.execute("UPDATE dish_master SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
-      try { await db.execute("UPDATE recipe_detail SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;"); } catch (_) {}
+      try {
+        await db.execute(
+            "UPDATE ingredients_master SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "UPDATE dish_master SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "UPDATE recipe_detail SET baseId = id WHERE firmId = 'SEED' AND baseId IS NULL;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v23: Show Universal Data Flag
     if (oldVersion < 23) {
       try {
-        await db.execute("ALTER TABLE firms ADD COLUMN showUniversalData INTEGER DEFAULT 1;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE firms ADD COLUMN showUniversalData INTEGER DEFAULT 1;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v24: Add readyAt to dishes (for Ready Queue sorting)
     if (oldVersion < 24) {
       try {
         await db.execute("ALTER TABLE dishes ADD COLUMN readyAt TEXT;");
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v25: Add mrpRunId to purchase_orders for MRP integration
     if (oldVersion < 25) {
       try {
-        await db.execute("ALTER TABLE purchase_orders ADD COLUMN mrpRunId INTEGER;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE purchase_orders ADD COLUMN mrpRunId INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v25: Add dispatch status fields to orders
     if (oldVersion < 25) {
       try {
         await db.execute("ALTER TABLE orders ADD COLUMN dispatchStatus TEXT;");
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       try {
         await db.execute("ALTER TABLE orders ADD COLUMN dispatchedAt TEXT;");
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v26: Fix Dispatch Schema (audit_log, returnedAt, isModified)
@@ -1059,47 +1439,70 @@ class DatabaseHelper {
       // 2. Add returnedAt to orders
       try {
         await db.execute("ALTER TABLE orders ADD COLUMN returnedAt TEXT;");
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
 
       // 3. Add isModified to vehicles
       try {
-        await db.execute("ALTER TABLE vehicles ADD COLUMN isModified INTEGER DEFAULT 0;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE vehicles ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
 
       // 4. Add isModified to utensils
       try {
-        await db.execute("ALTER TABLE utensils ADD COLUMN isModified INTEGER DEFAULT 0;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       // 4. Add isModified to utensils
       try {
-        await db.execute("ALTER TABLE utensils ADD COLUMN isModified INTEGER DEFAULT 0;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE utensils ADD COLUMN isModified INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // Upgrade to v38: Subcontractor Categories & Service Assignment
     if (oldVersion < 38) {
       // 1. Add category to subcontractors
       try {
-        await db.execute("ALTER TABLE subcontractors ADD COLUMN category TEXT DEFAULT 'FOOD';");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE subcontractors ADD COLUMN category TEXT DEFAULT 'FOOD';");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
 
       // 2. Add assignment columns to orders
       try {
-        await db.execute("ALTER TABLE orders ADD COLUMN serviceSubcontractorId INTEGER;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE orders ADD COLUMN serviceSubcontractorId INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       try {
-        await db.execute("ALTER TABLE orders ADD COLUMN counterSubcontractorId INTEGER;");
-      } catch (_) {}
+        await db.execute(
+            "ALTER TABLE orders ADD COLUMN counterSubcontractorId INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     // === DEFENSIVE: Always ensure critical tables exist (for any DB version) ===
     // This fixes issues where tables were added in migrations but not in _onCreate
-    
+
     // Ensure purchase_orders has mrpRunId column (may be missing in older DBs)
     try {
-      await db.execute("ALTER TABLE purchase_orders ADD COLUMN mrpRunId INTEGER;");
-    } catch (_) {}
-    
+      await db
+          .execute("ALTER TABLE purchase_orders ADD COLUMN mrpRunId INTEGER;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+
     // Staff table (missed in some DBs)
     await db.execute('''
       CREATE TABLE IF NOT EXISTS staff (
@@ -1182,9 +1585,23 @@ class DatabaseHelper {
     ''');
 
     // Add missing utensils columns
-    try { await db.execute("ALTER TABLE utensils ADD COLUMN totalStock INTEGER DEFAULT 0;"); } catch (_) {}
-    try { await db.execute("ALTER TABLE utensils ADD COLUMN availableStock INTEGER DEFAULT 0;"); } catch (_) {}
-    try { await db.execute("ALTER TABLE utensils ADD COLUMN updatedAt TEXT;"); } catch (_) {}
+    try {
+      await db.execute(
+          "ALTER TABLE utensils ADD COLUMN totalStock INTEGER DEFAULT 0;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+    try {
+      await db.execute(
+          "ALTER TABLE utensils ADD COLUMN availableStock INTEGER DEFAULT 0;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+    try {
+      await db.execute("ALTER TABLE utensils ADD COLUMN updatedAt TEXT;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
 
     // Suppliers table
     await db.execute('''
@@ -1206,11 +1623,23 @@ class DatabaseHelper {
         updatedAt TEXT
       );
     ''');
-    
+
     // Add bank columns if missing (for existing DBs)
-    try { await db.execute("ALTER TABLE suppliers ADD COLUMN bankAccountNo TEXT;"); } catch (_) {}
-    try { await db.execute("ALTER TABLE suppliers ADD COLUMN bankIfsc TEXT;"); } catch (_) {}
-    try { await db.execute("ALTER TABLE suppliers ADD COLUMN bankName TEXT;"); } catch (_) {}
+    try {
+      await db.execute("ALTER TABLE suppliers ADD COLUMN bankAccountNo TEXT;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+    try {
+      await db.execute("ALTER TABLE suppliers ADD COLUMN bankIfsc TEXT;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+    try {
+      await db.execute("ALTER TABLE suppliers ADD COLUMN bankName TEXT;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
 
     // Subcontractors table
     await db.execute('''
@@ -1230,9 +1659,14 @@ class DatabaseHelper {
         updatedAt TEXT
       );
     ''');
-    
+
     // Add ratePerPax column if missing (for existing DBs)
-    try { await db.execute("ALTER TABLE subcontractors ADD COLUMN ratePerPax REAL DEFAULT 0;"); } catch (_) {}
+    try {
+      await db.execute(
+          "ALTER TABLE subcontractors ADD COLUMN ratePerPax REAL DEFAULT 0;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
 
     // Purchase Orders table
     await db.execute('''
@@ -1317,7 +1751,7 @@ class DatabaseHelper {
         completedAt TEXT
       );
     ''');
-    
+
     await db.execute('''
       CREATE TABLE IF NOT EXISTS mrp_run_orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1329,7 +1763,7 @@ class DatabaseHelper {
         UNIQUE(mrpRunId, orderId)
       );
     ''');
-    
+
     await db.execute('''
       CREATE TABLE IF NOT EXISTS mrp_output (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1345,10 +1779,24 @@ class DatabaseHelper {
     ''');
 
     // Add missing columns to orders table for reports
-    try { await db.execute("ALTER TABLE orders ADD COLUMN isCancelled INTEGER DEFAULT 0;"); } catch (_) {}
-    try { await db.execute("ALTER TABLE orders ADD COLUMN status TEXT DEFAULT 'Confirmed';"); } catch (_) {}
-    try { await db.execute("ALTER TABLE orders ADD COLUMN venue TEXT;"); } catch (_) {}
-    
+    try {
+      await db.execute(
+          "ALTER TABLE orders ADD COLUMN isCancelled INTEGER DEFAULT 0;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+    try {
+      await db.execute(
+          "ALTER TABLE orders ADD COLUMN status TEXT DEFAULT 'Confirmed';");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+    try {
+      await db.execute("ALTER TABLE orders ADD COLUMN venue TEXT;");
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+
     // === DEFENSIVE: Ensure default vehicles exist (User Request) ===
     // These are SEED vehicles available to all firms for basic dispatch without full vehicle setup
     // FIX: First remove duplicates if they exist, then insert only if not present
@@ -1361,9 +1809,10 @@ class DatabaseHelper {
           SELECT MIN(id) FROM vehicles GROUP BY vehicleNumber
         )
       ''');
-      
+
       // Insert only if not exists (check by vehicleNumber)
-      final existingCustomerVehicle = await db.query('vehicles', where: "vehicleNumber = 'Customer Vehicle'", limit: 1);
+      final existingCustomerVehicle = await db.query('vehicles',
+          where: "vehicleNumber = 'Customer Vehicle'", limit: 1);
       if (existingCustomerVehicle.isEmpty) {
         await db.insert('vehicles', {
           'firmId': 'SEED',
@@ -1375,8 +1824,9 @@ class DatabaseHelper {
           'updatedAt': now,
         });
       }
-      
-      final existingOwnVehicle = await db.query('vehicles', where: "vehicleNumber = 'Own Vehicle'", limit: 1);
+
+      final existingOwnVehicle = await db.query('vehicles',
+          where: "vehicleNumber = 'Own Vehicle'", limit: 1);
       if (existingOwnVehicle.isEmpty) {
         await db.insert('vehicles', {
           'firmId': 'SEED',
@@ -1388,35 +1838,84 @@ class DatabaseHelper {
           'updatedAt': now,
         });
       }
-    } catch (_) {}
-    
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+
     // v38: AWS-First Sync Architecture - Add sync_status and synced_at columns
     if (oldVersion < 38) {
-      AppLogger.info('📦 [DB] Migrating to v38: AWS-first sync architecture...');
-      
+      AppLogger.info(
+          '📦 [DB] Migrating to v38: AWS-first sync architecture...');
+
       // List of all tables that need sync_status/synced_at columns
       final syncTables = [
-        'firms', 'users', 'authorized_mobiles', 'staff', 'attendance',
-        'customers', 'orders', 'dishes', 'finance', 'utensils',
-        'dispatch', 'vehicles', 'ingredients_master', 'dish_master', 'recipe_detail',
-        'mrp_runs', 'mrp_run_orders', 'mrp_output', 'suppliers', 'subcontractors',
-        'purchase_orders', 'po_items', 'dispatches', 'invoices', 'invoice_items',
-        'salary_disbursements', 'service_rates', 'dispatch_items',
+        'firms',
+        'users',
+        'authorized_mobiles',
+        'staff',
+        'attendance',
+        'customers',
+        'orders',
+        'dishes',
+        'finance',
+        'utensils',
+        'dispatch',
+        'vehicles',
+        'ingredients_master',
+        'dish_master',
+        'recipe_detail',
+        'mrp_runs',
+        'mrp_run_orders',
+        'mrp_output',
+        'suppliers',
+        'subcontractors',
+        'purchase_orders',
+        'po_items',
+        'dispatches',
+        'invoices',
+        'invoice_items',
+        'salary_disbursements',
+        'service_rates',
+        'dispatch_items',
       ];
-      
+
       for (final table in syncTables) {
-        try { await db.execute("ALTER TABLE $table ADD COLUMN sync_status TEXT DEFAULT 'SYNCED';"); } catch (_) {}
-        try { await db.execute("ALTER TABLE $table ADD COLUMN synced_at TEXT;"); } catch (_) {}
+        try {
+          await db.execute(
+              "ALTER TABLE $table ADD COLUMN sync_status TEXT DEFAULT 'SYNCED';");
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
+        try {
+          await db.execute("ALTER TABLE $table ADD COLUMN synced_at TEXT;");
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
       }
-      
+
       // Enhance pending_sync table with record_id, retry_count, last_error
-      try { await db.execute("ALTER TABLE pending_sync ADD COLUMN record_id INTEGER;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE pending_sync ADD COLUMN retry_count INTEGER DEFAULT 0;"); } catch (_) {}
-      try { await db.execute("ALTER TABLE pending_sync ADD COLUMN last_error TEXT;"); } catch (_) {}
-      
+      try {
+        await db
+            .execute("ALTER TABLE pending_sync ADD COLUMN record_id INTEGER;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE pending_sync ADD COLUMN retry_count INTEGER DEFAULT 0;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+      try {
+        await db
+            .execute("ALTER TABLE pending_sync ADD COLUMN last_error TEXT;");
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
+
       AppLogger.success('✅ [DB] v38 migration complete');
     }
-    
+
     await SchemaManager.syncSchema(db);
   }
 
@@ -1427,53 +1926,64 @@ class DatabaseHelper {
       final batch = db.batch(); // Use batch for performance
 
       // Load Ingredients (firmId='SEED' marks base seed data)
-      final ingJson = await rootBundle.loadString('assets/seeds/ingredients_seed.json');
+      final ingJson =
+          await rootBundle.loadString('assets/seeds/ingredients_seed.json');
       final List<dynamic> ingredients = json.decode(ingJson);
       for (var item in ingredients) {
-        batch.insert('ingredients_master', {
-          'firmId': 'SEED', // Base seed data marker
-          'baseId': item['ing_id'], // Original ID for reference
-          'name': item['name'],
-          'sku_name': item['sku_name'],
-          'unit_of_measure': item['unit_of_measure'],
-          'cost_per_unit': item['cost_per_unit'],
-          'category': item['category'],
-          'isModified': 0,
-          'createdAt': DateTime.now().toIso8601String(),
-          'updatedAt': DateTime.now().toIso8601String(),
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+            'ingredients_master',
+            {
+              'firmId': 'SEED', // Base seed data marker
+              'baseId': item['ing_id'], // Original ID for reference
+              'name': item['name'],
+              'sku_name': item['sku_name'],
+              'unit_of_measure': item['unit_of_measure'],
+              'cost_per_unit': item['cost_per_unit'],
+              'category': item['category'],
+              'isModified': 0,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       // Load Dishes
-      final dishJson = await rootBundle.loadString('assets/seeds/dishes_seed.json');
+      final dishJson =
+          await rootBundle.loadString('assets/seeds/dishes_seed.json');
       final List<dynamic> dishes = json.decode(dishJson);
       for (var item in dishes) {
-        batch.insert('dish_master', {
-          'firmId': 'SEED',
-          'baseId': item['dish_id'],
-          'name': item['dish_name'],
-          'region': item['region'],
-          'category': item['category'],
-          'base_pax': item['base_pax'] ?? 1,
-          'isModified': 0,
-          'createdAt': DateTime.now().toIso8601String(),
-          'updatedAt': DateTime.now().toIso8601String(),
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+            'dish_master',
+            {
+              'firmId': 'SEED',
+              'baseId': item['dish_id'],
+              'name': item['dish_name'],
+              'region': item['region'],
+              'category': item['category'],
+              'base_pax': item['base_pax'] ?? 1,
+              'isModified': 0,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       // Load BOM
       final bomJson = await rootBundle.loadString('assets/seeds/bom_seed.json');
       final List<dynamic> bom = json.decode(bomJson);
       for (var item in bom) {
-        batch.insert('recipe_detail', {
-          'firmId': 'SEED',
-          'baseId': item['rd_id'],
-          'dish_id': item['dish_id'],
-          'ing_id': item['ing_id'],
-          'quantity_per_base_pax': item['quantity_per_base_pax'],
-          'unit_override': item['unit_override'],
-          'isModified': 0,
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
+        batch.insert(
+            'recipe_detail',
+            {
+              'firmId': 'SEED',
+              'baseId': item['rd_id'],
+              'dish_id': item['dish_id'],
+              'ing_id': item['ing_id'],
+              'quantity_per_base_pax': item['quantity_per_base_pax'],
+              'unit_override': item['unit_override'],
+              'isModified': 0,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       // NOTE: Default vehicles ("Customer Vehicle" and "Own Vehicle") are now managed
@@ -1509,10 +2019,7 @@ class DatabaseHelper {
     ));
   }
 
-
-
   // ---------- ORDERS CRUD moved to OrderRepository ----------
-
 
   // ---------- DISH Master and SECONDARY Order methods moved to OrderRepository ----------
 
@@ -1532,14 +2039,15 @@ class DatabaseHelper {
     final db = await database;
     user['uuid'] = user['uuid'] ?? _generateUuid();
     // Use replace to avoid unique constraint crashes during registration/sync
-    final id = await db.insert('users', user, conflictAlgorithm: ConflictAlgorithm.replace);
-    
+    final id = await db.insert('users', user,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+
     // AUTO-AUTHORIZE: Add mobile to authorized_mobiles so user can login
     final mobile = user['mobile']?.toString();
     final firmId = user['firmId']?.toString();
     final role = user['role']?.toString() ?? 'Staff';
     final username = user['username']?.toString() ?? 'User';
-    
+
     if (mobile != null && firmId != null && mobile.isNotEmpty) {
       try {
         final authData = {
@@ -1551,46 +2059,44 @@ class DatabaseHelper {
           'addedBy': 'SYSTEM',
           'addedAt': DateTime.now().toIso8601String(),
         };
-        
-        final authId = await db.insert('authorized_mobiles', authData, 
-          conflictAlgorithm: ConflictAlgorithm.replace);
-        
+
+        final authId = await db.insert('authorized_mobiles', authData,
+            conflictAlgorithm: ConflictAlgorithm.replace);
+
         // SYNC: Push to cloud
         if (authId > 0) {
           await _syncOrQueue(
-            table: 'authorized_mobiles',
-            data: {...authData, 'id': authId},
-            action: 'INSERT'
-          );
+              table: 'authorized_mobiles',
+              data: {...authData, 'id': authId},
+              action: 'INSERT');
         }
-        AppLogger.success('✅ [DB] User $username ($mobile) auto-authorized for login');
+        AppLogger.success(
+            '✅ [DB] User $username ($mobile) auto-authorized for login');
       } catch (e) {
         AppLogger.warning('⚠️ [DB] Failed to auto-authorize mobile: $e');
       }
     }
-    
+
     // SYNC: Push new user to cloud
     await _syncOrQueue(
-      table: 'users',
-      data: {...user, 'id': id},
-      action: 'INSERT'
-    );
-    
+        table: 'users', data: {...user, 'id': id}, action: 'INSERT');
+
     return id;
   }
 
   Future<List<Map<String, dynamic>>> getUsersByFirm(String firmId) async {
     final db = await database;
-    return await db.query('users', where: 'LOWER(firmId) = LOWER(?)', whereArgs: [firmId]);
+    return await db
+        .query('users', where: 'LOWER(firmId) = LOWER(?)', whereArgs: [firmId]);
   }
 
-  Future<Map<String, dynamic>?> getUserByMobile(String firmId, String mobile) async {
+  Future<Map<String, dynamic>?> getUserByMobile(
+      String firmId, String mobile) async {
     final db = await database;
-    final res = await db.query('users', 
-      where: 'LOWER(firmId) = LOWER(?) AND mobile = ?', 
-      whereArgs: [firmId, mobile], 
-      limit: 1
-    );
+    final res = await db.query('users',
+        where: 'LOWER(firmId) = LOWER(?) AND mobile = ?',
+        whereArgs: [firmId, mobile],
+        limit: 1);
     return res.isNotEmpty ? res.first : null;
   }
 
@@ -1711,14 +2217,16 @@ class DatabaseHelper {
 
   Future<Map<String, dynamic>?> getFirm(String firmId) async {
     final db = await database;
-    final results = await db.query('firms', where: 'firmId = ?', whereArgs: [firmId], limit: 1);
+    final results = await db.query('firms',
+        where: 'firmId = ?', whereArgs: [firmId], limit: 1);
     if (results.isNotEmpty) return results.first;
     return null;
   }
 
   Future<List<Map<String, dynamic>>> getFirmByFirmId(String firmId) async {
     final db = await database;
-    return db.query('firms', where: 'firmId = ?', whereArgs: [firmId], limit: 1);
+    return db.query('firms',
+        where: 'firmId = ?', whereArgs: [firmId], limit: 1);
   }
 
   Future<void> upsertFirmSubscription({
@@ -1738,12 +2246,14 @@ class DatabaseHelper {
     };
 
     // Try update first
-    final count = await db.update('firms', data, where: 'firmId = ?', whereArgs: [firmId]);
+    final count = await db
+        .update('firms', data, where: 'firmId = ?', whereArgs: [firmId]);
     if (count == 0) {
       // Insert minimal row if it doesn't exist
       data['firmName'] = data['firmName'] ?? 'Unknown';
       data['createdAt'] = now;
-      await db.insert('firms', data, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('firms', data,
+          conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
 
@@ -1755,7 +2265,9 @@ class DatabaseHelper {
     bool online = true;
     try {
       online = await ConnectivityService().isOnline();
-    } catch (_) {}
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
     if (!online) return;
 
     final db = await database;
@@ -1820,6 +2332,7 @@ class DatabaseHelper {
         }
       } catch (e) {
         // Network/API failure — keep in queue silently
+        AppLogger.error('Caught error: $e');
       }
     }
 
@@ -1861,25 +2374,27 @@ class DatabaseHelper {
       if (txnId != null) 'lastRenewalTxnId': txnId,
       'updatedAt': DateTime.now().toIso8601String(),
     };
-    
+
     await db.update(
       'firms',
       data,
       where: 'firmId = ?',
       whereArgs: [firmId],
     );
-    
+
     // Auto Sync
     await _syncOrQueue(
-      table: 'firms',
-      data: {...data, 'firmId': firmId}, // Ensure Primary Key helps identification
-      action: 'UPDATE', 
-      filters: {'firmId': firmId}
-    );
+        table: 'firms',
+        data: {
+          ...data,
+          'firmId': firmId
+        }, // Ensure Primary Key helps identification
+        action: 'UPDATE',
+        filters: {'firmId': firmId});
   }
 
   // ========== NEW MODULE METHODS ==========
-  
+
   // Finance Module
   Future<int> insertTransaction(Map<String, dynamic> data) async {
     final db = await database;
@@ -1887,56 +2402,52 @@ class DatabaseHelper {
     data['createdAt'] = DateTime.now().toIso8601String();
     data['updatedAt'] = DateTime.now().toIso8601String();
     final id = await db.insert('transactions', data);
-    
+
     // Auto Sync
     await _syncOrQueue(
-      table: 'transactions',
-      data: {...data, 'id': id},
-      action: 'INSERT'
-    );
+        table: 'transactions', data: {...data, 'id': id}, action: 'INSERT');
     return id;
   }
-  
+
   Future<int> updateTransaction(int id, Map<String, dynamic> data) async {
     final db = await database;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final rows = await db.update('transactions', data, where: 'id = ?', whereArgs: [id]);
-    
+    final rows =
+        await db.update('transactions', data, where: 'id = ?', whereArgs: [id]);
+
     // Auto Sync
     await _syncOrQueue(
-      table: 'transactions',
-      data: {...data, 'id': id},
-      action: 'UPDATE',
-      filters: {'id': id}
-    );
-    return rows;
-  }
-  
-  Future<int> deleteTransaction(int id) async {
-    final db = await database;
-    final rows = await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
-    
-    // Auto Sync
-    await _syncOrQueue(
-      table: 'transactions',
-      data: {'id': id},
-      action: 'DELETE',
-      filters: {'id': id}
-    );
+        table: 'transactions',
+        data: {...data, 'id': id},
+        action: 'UPDATE',
+        filters: {'id': id});
     return rows;
   }
 
-  Future<List<Map<String, dynamic>>> getTransactions({
-    String? firmId,
-    String? startDate,
-    String? endDate,
-    String? type,
-    String? category,
-    String? relatedEntityType,
-    int? relatedEntityId,
-    String? searchText,
-    int? limit
-  }) async {
+  Future<int> deleteTransaction(int id) async {
+    final db = await database;
+    final rows =
+        await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+
+    // Auto Sync
+    await _syncOrQueue(
+        table: 'transactions',
+        data: {'id': id},
+        action: 'DELETE',
+        filters: {'id': id});
+    return rows;
+  }
+
+  Future<List<Map<String, dynamic>>> getTransactions(
+      {String? firmId,
+      String? startDate,
+      String? endDate,
+      String? type,
+      String? category,
+      String? relatedEntityType,
+      int? relatedEntityId,
+      String? searchText,
+      int? limit}) async {
     final db = await database;
     String where = '1=1';
     List<dynamic> args = [];
@@ -1999,8 +2510,9 @@ class DatabaseHelper {
       FROM transactions
       WHERE relatedEntityType = ? AND relatedEntityId = ? AND date < ?
       ${firmId != null ? 'AND firmId = ?' : ''}
-    ''', [relatedEntityType, relatedEntityId, date, if (firmId != null) firmId]);
-    
+    ''',
+        [relatedEntityType, relatedEntityId, date, if (firmId != null) firmId]);
+
     return (res.first['balance'] as num?)?.toDouble() ?? 0.0;
   }
 
@@ -2016,42 +2528,46 @@ class DatabaseHelper {
       FROM transactions
       WHERE relatedEntityType = ? AND relatedEntityId = ? AND date <= ?
       ${firmId != null ? 'AND firmId = ?' : ''}
-    ''', [relatedEntityType, relatedEntityId, date, if (firmId != null) firmId]);
-    
+    ''',
+        [relatedEntityType, relatedEntityId, date, if (firmId != null) firmId]);
+
     return (res.first['balance'] as num?)?.toDouble() ?? 0.0;
   }
-  
-  Future<Map<String, double>> getFinanceSummary(String firmId, String startDate, String endDate, {String? relatedEntityType}) async {
+
+  Future<Map<String, double>> getFinanceSummary(
+      String firmId, String startDate, String endDate,
+      {String? relatedEntityType}) async {
     final db = await database;
-    
+
     String entityClause = "";
     if (relatedEntityType != null) {
       entityClause = "AND relatedEntityType = '$relatedEntityType'";
     }
-    
+
     // Income
     final incomeRes = await db.rawQuery('''
       SELECT SUM(amount) as total FROM transactions 
       WHERE firmId = ? AND type = 'INCOME' AND date BETWEEN ? AND ? $entityClause
     ''', [firmId, startDate, endDate]);
-    
+
     // Expense
     final expenseRes = await db.rawQuery('''
       SELECT SUM(amount) as total FROM transactions 
       WHERE firmId = ? AND type = 'EXPENSE' AND date BETWEEN ? AND ? $entityClause
     ''', [firmId, startDate, endDate]);
-    
+
     return {
       'income': (incomeRes.first['total'] as num?)?.toDouble() ?? 0.0,
       'expense': (expenseRes.first['total'] as num?)?.toDouble() ?? 0.0,
     };
   }
-  
-  Future<List<Map<String, dynamic>>> getSummaryByPeriod(String firmId, String startDate, String endDate, String groupBy) async {
+
+  Future<List<Map<String, dynamic>>> getSummaryByPeriod(
+      String firmId, String startDate, String endDate, String groupBy) async {
     // groupBy: 'day', 'month'
     final db = await database;
     final dateFormat = groupBy == 'month' ? '%Y-%m' : '%Y-%m-%d';
-    
+
     return await db.rawQuery('''
       SELECT 
         strftime(?, date) as period,
@@ -2063,31 +2579,34 @@ class DatabaseHelper {
       ORDER BY period ASC
     ''', [dateFormat, firmId, startDate, endDate]);
   }
-  
+
   // NOTE: Inventory Module methods moved to end of file (v18 section)
-  
+
   Future<List<Map<String, dynamic>>> getSupplierOrders() async {
     final db = await database;
     return await db.query('supplier_orders', orderBy: 'date DESC');
   }
-  
-  Future<int> insertSupplierOrder(Map<String, dynamic> data, [List<Map<String, dynamic>>? items]) async {
+
+  Future<int> insertSupplierOrder(Map<String, dynamic> data,
+      [List<Map<String, dynamic>>? items]) async {
     final cloudSync = CloudSyncService();
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    final orderId = await cloudSync.awsFirstWrite(table: 'supplier_orders', data: data);
-    AppLogger.success('✅ [SupplierOrders] Created supplier order #$orderId (AWS-first)');
+    final orderId =
+        await cloudSync.awsFirstWrite(table: 'supplier_orders', data: data);
+    AppLogger.success(
+        '✅ [SupplierOrders] Created supplier order #$orderId (AWS-first)');
 
     if (items != null && items.isNotEmpty) {
       for (var item in items) {
         item['orderId'] = orderId;
         item['uuid'] = item['uuid'] ?? _generateUuid();
-        await cloudSync.awsFirstWrite(table: 'supplier_order_items', data: item);
+        await cloudSync.awsFirstWrite(
+            table: 'supplier_order_items', data: item);
       }
     }
-    
+
     return orderId ?? 0;
   }
-  
 
   // ---------- OPERATIONS moved to OperationRepository ----------
 
@@ -2103,10 +2622,12 @@ class DatabaseHelper {
   }
 
   // --- PURCHASE ORDERS update (AWS-first) ---
-  Future<bool> updatePurchaseOrderFields(int id, Map<String, dynamic> updates) async {
+  Future<bool> updatePurchaseOrderFields(
+      int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(table: 'purchase_orders', recordId: id, data: updates);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'purchase_orders', recordId: id, data: updates);
     AppLogger.success('✅ [PurchaseOrders] Updated PO #$id (AWS-first)');
     return success;
   }
@@ -2114,7 +2635,8 @@ class DatabaseHelper {
   // --- SUPPLIERS delete (AWS-first) ---
   Future<bool> deleteSupplier(int id) async {
     final cloudSync = CloudSyncService();
-    final success = await cloudSync.awsFirstDelete(table: 'suppliers', recordId: id);
+    final success =
+        await cloudSync.awsFirstDelete(table: 'suppliers', recordId: id);
     AppLogger.success('✅ [Suppliers] Deleted supplier #$id (AWS-first)');
     return success;
   }
@@ -2122,8 +2644,10 @@ class DatabaseHelper {
   // --- SUBCONTRACTORS delete (AWS-first) ---
   Future<bool> deleteSubcontractor(int id) async {
     final cloudSync = CloudSyncService();
-    final success = await cloudSync.awsFirstDelete(table: 'subcontractors', recordId: id);
-    AppLogger.success('✅ [Subcontractors] Deleted subcontractor #$id (AWS-first)');
+    final success =
+        await cloudSync.awsFirstDelete(table: 'subcontractors', recordId: id);
+    AppLogger.success(
+        '✅ [Subcontractors] Deleted subcontractor #$id (AWS-first)');
     return success;
   }
 
@@ -2135,14 +2659,16 @@ class DatabaseHelper {
 
   Future<Map<String, dynamic>?> getUser(int id) async {
     final db = await database;
-    final res = await db.query('users', where: 'id = ?', whereArgs: [id], limit: 1);
+    final res =
+        await db.query('users', where: 'id = ?', whereArgs: [id], limit: 1);
     return res.isNotEmpty ? res.first : null;
   }
 
   Future<bool> updateUser(Map<String, dynamic> user) async {
     final cloudSync = CloudSyncService();
     final id = user['id'] as int;
-    final success = await cloudSync.awsFirstUpdate(table: 'users', recordId: id, data: user);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'users', recordId: id, data: user);
     AppLogger.success('✅ [User] Updated user #$id (AWS-first)');
     return success;
   }
@@ -2150,15 +2676,18 @@ class DatabaseHelper {
   Future<bool> updateDish(int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(table: 'dishes', recordId: id, data: updates);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'dishes', recordId: id, data: updates);
     AppLogger.success('✅ [Dishes] Updated dish #$id (AWS-first)');
     return success;
   }
 
-  Future<bool> updateUtensilDispatch(int id, Map<String, dynamic> updates) async {
+  Future<bool> updateUtensilDispatch(
+      int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(table: 'dispatch', recordId: id, data: updates);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'dispatch', recordId: id, data: updates);
     AppLogger.success('✅ [Dispatch] Updated dispatch #$id (AWS-first)');
     return success;
   }
@@ -2166,7 +2695,8 @@ class DatabaseHelper {
   Future<bool> updateDispatch(int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(table: 'dispatches', recordId: id, data: updates);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'dispatches', recordId: id, data: updates);
     AppLogger.success('✅ [Dispatches] Updated dispatch #$id (AWS-first)');
 
     // ERP Integration: Auto-record earnings if completed
@@ -2179,47 +2709,52 @@ class DatabaseHelper {
 
   Future<void> _recordDriverEarning(int dispatchId) async {
     final db = await database;
-    final dispatchRes = await db.query('dispatches', where: 'id = ?', whereArgs: [dispatchId]);
+    final dispatchRes =
+        await db.query('dispatches', where: 'id = ?', whereArgs: [dispatchId]);
     if (dispatchRes.isEmpty) return;
-    
+
     final dispatch = dispatchRes.first;
     final driverId = dispatch['driverId'] as int?;
     final driverShare = (dispatch['driverShare'] as num?)?.toDouble() ?? 0;
     final firmId = (dispatch['firmId']?.toString()) ?? 'DEFAULT';
-    
+
     if (driverId == null || driverShare <= 0) return;
-    
+
     // Check if transaction already exists for this dispatch
     final existing = await getTransactions(
       relatedEntityType: 'DRIVER',
       relatedEntityId: driverId,
       searchText: 'Dispatch #$dispatchId',
     );
-    
+
     if (existing.isNotEmpty) {
-      AppLogger.info('ℹ️ [Finance] Earning for Dispatch #$dispatchId already recorded. Skipping.');
+      AppLogger.info(
+          'ℹ️ [Finance] Earning for Dispatch #$dispatchId already recorded. Skipping.');
       return;
     }
-    
+
     // Record earning as INCOME (Credit) for the driver's ledger
     await insertTransaction({
       'firmId': firmId,
       'date': DateTime.now().toIso8601String().split('T')[0],
-      'type': 'INCOME', // Using INCOME as Credit (standard in this app's ledger logic)
+      'type':
+          'INCOME', // Using INCOME as Credit (standard in this app's ledger logic)
       'category': 'Driver Earning',
       'amount': driverShare,
       'description': 'Earnings for Dispatch #$dispatchId',
       'relatedEntityType': 'DRIVER',
       'relatedEntityId': driverId,
-      'mode': 'Accrued',
+      'paymentMode': 'Accrued',
     });
-    AppLogger.success('✅ [Finance] Automatically recorded ₹$driverShare as earnings for Driver #$driverId (Dispatch #$dispatchId)');
+    AppLogger.success(
+        '✅ [Finance] Automatically recorded ₹$driverShare as earnings for Driver #$driverId (Dispatch #$dispatchId)');
   }
 
   Future<bool> updateOrderFields(int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(table: 'orders', recordId: id, data: updates);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'orders', recordId: id, data: updates);
     AppLogger.success('✅ [Orders] Updated order #$id (AWS-first)');
     return success;
   }
@@ -2227,60 +2762,63 @@ class DatabaseHelper {
   Future<bool> updateDispatchItem(int id, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(table: 'dispatch_items', recordId: id, data: updates);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'dispatch_items', recordId: id, data: updates);
     AppLogger.success('✅ [DispatchItems] Updated item #$id (AWS-first)');
     return success;
   }
 
-  Future<bool> updateUtensilByName(String name, Map<String, dynamic> updates) async {
+  Future<bool> updateUtensilByName(
+      String name, Map<String, dynamic> updates) async {
     final cloudSync = CloudSyncService();
     final db = await database;
-    final rows = await db.update('utensils', updates, where: 'name = ?', whereArgs: [name]);
+    final rows = await db
+        .update('utensils', updates, where: 'name = ?', whereArgs: [name]);
     // Fetch ID and sync via AWS-first
-    final records = await db.query('utensils', where: 'name = ?', whereArgs: [name]);
+    final records =
+        await db.query('utensils', where: 'name = ?', whereArgs: [name]);
     if (records.isNotEmpty) {
       final id = records.first['id'] as int;
       updates['id'] = id;
-      await cloudSync.awsFirstUpdate(table: 'utensils', recordId: id, data: updates);
+      await cloudSync.awsFirstUpdate(
+          table: 'utensils', recordId: id, data: updates);
       AppLogger.success('✅ [Utensils] Updated utensil "$name" (AWS-first)');
     }
     return rows > 0;
   }
-  
+
   Future<bool> deleteUser(int id) async {
     final cloudSync = CloudSyncService();
-    final success = await cloudSync.awsFirstDelete(table: 'users', recordId: id);
+    final success =
+        await cloudSync.awsFirstDelete(table: 'users', recordId: id);
     AppLogger.success('✅ [User] Deleted user #$id (AWS-first)');
     return success;
   }
-  
+
   // Audit
-  Future<List<Map<String, dynamic>>> getAuditLogs({String? firmId, String? tableName, String? userId}) async {
+  Future<List<Map<String, dynamic>>> getAuditLogs(
+      {String? firmId, String? tableName, String? userId}) async {
     final db = await database;
     if (userId != null && firmId != null && tableName != null) {
       return await db.query('audit_log',
-        where: 'firm_id = ? AND table_name = ? AND user_id = ?',
-        whereArgs: [firmId, tableName, userId],
-        orderBy: 'timestamp DESC'
-      );
+          where: 'firm_id = ? AND table_name = ? AND user_id = ?',
+          whereArgs: [firmId, tableName, userId],
+          orderBy: 'timestamp DESC');
     } else if (firmId != null && tableName != null) {
-      return await db.query('audit_log', 
-        where: 'firm_id = ? AND table_name = ?', 
-        whereArgs: [firmId, tableName],
-        orderBy: 'timestamp DESC'
-      );
+      return await db.query('audit_log',
+          where: 'firm_id = ? AND table_name = ?',
+          whereArgs: [firmId, tableName],
+          orderBy: 'timestamp DESC');
     } else if (firmId != null) {
-      return await db.query('audit_log', 
-        where: 'firm_id = ?', 
-        whereArgs: [firmId],
-        orderBy: 'timestamp DESC'
-      );
+      return await db.query('audit_log',
+          where: 'firm_id = ?', whereArgs: [firmId], orderBy: 'timestamp DESC');
     }
     return await db.query('audit_log', orderBy: 'timestamp DESC');
   }
-  
+
   // Reports
-  Future<List<Map<String, dynamic>>> getSalesReport(String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getSalesReport(
+      String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT date, SUM(finalAmount) as revenue, SUM(totalPax) as pax, COUNT(*) as orders
@@ -2290,8 +2828,9 @@ class DatabaseHelper {
       ORDER BY date
     ''', [startDate, endDate]);
   }
-  
-  Future<List<Map<String, dynamic>>> getVendorPurchaseReport(String startDate, String endDate) async {
+
+  Future<List<Map<String, dynamic>>> getVendorPurchaseReport(
+      String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT s.name as supplier, SUM(so.totalAmount) as total
@@ -2302,8 +2841,9 @@ class DatabaseHelper {
       ORDER BY total DESC
     ''', [startDate, endDate]);
   }
-  
-  Future<List<Map<String, dynamic>>> getStaffAttendanceReport(String startDate, String endDate) async {
+
+  Future<List<Map<String, dynamic>>> getStaffAttendanceReport(
+      String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT s.name, COUNT(*) as days_present
@@ -2314,17 +2854,14 @@ class DatabaseHelper {
       ORDER BY s.name
     ''', [startDate, endDate]);
   }
-  
+
   // ============== PAYROLL & HR REPORTS ==============
-  
-  
+
   // ============== (Migrated to OperationRepository) ==============
-  
 
-
-  
   /// Get HR attendance report with hours and OT
-  Future<List<Map<String, dynamic>>> getHRAttendanceReport(String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getHRAttendanceReport(
+      String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT 
@@ -2345,9 +2882,10 @@ class DatabaseHelper {
       ORDER BY daysPresent DESC, s.name
     ''', [startDate, endDate]);
   }
-  
+
   /// Get overtime summary report
-  Future<List<Map<String, dynamic>>> getHROvertimeReport(String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getHROvertimeReport(
+      String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT 
@@ -2368,7 +2906,8 @@ class DatabaseHelper {
   }
 
   /// Get attendance records for a specific staff member
-  Future<List<Map<String, dynamic>>> getAttendanceForStaff(int staffId, String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getAttendanceForStaff(
+      int staffId, String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT 
@@ -2384,18 +2923,16 @@ class DatabaseHelper {
       ORDER BY date DESC
     ''', [staffId, startDate, endDate]);
   }
-  
 
   // ---------- STAFF ASSIGNMENTS moved to OperationRepository ----------
 
-  
   // ============== COMPREHENSIVE REPORTS ==============
-  
 
   // ---------- ORDER & KITCHEN REPORTS moved to OrderRepository ----------
-  
+
   /// Daily Capacity Report
-  Future<List<Map<String, dynamic>>> getDailyCapacityReport(String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getDailyCapacityReport(
+      String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT 
@@ -2420,24 +2957,38 @@ class DatabaseHelper {
   Future<String> backupToLocalFile() async {
     final db = await database;
     final data = <String, dynamic>{};
-    
+
     // Dump core tables
-    final tables = ['firms', 'orders', 'dishes', 'service_rates', 'users', 'authorized_mobiles', 'transactions', 'inventory', 'staff', 'suppliers'];
+    final tables = [
+      'firms',
+      'orders',
+      'dishes',
+      'service_rates',
+      'users',
+      'authorized_mobiles',
+      'transactions',
+      'inventory',
+      'staff',
+      'suppliers'
+    ];
     for (final t in tables) {
       try {
         data[t] = await db.query(t);
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
-    
+
     final jsonStr = jsonEncode(data);
     final dir = await getApplicationDocumentsDirectory();
-    final file = File(join(dir.path, 'ruchiserv_backup_${DateTime.now().millisecondsSinceEpoch}.json'));
+    final file = File(join(dir.path,
+        'ruchiserv_backup_${DateTime.now().millisecondsSinceEpoch}.json'));
     await file.writeAsString(jsonStr);
     return file.path;
   }
-  
+
   // ========== MOBILE AUTHORIZATION METHODS ==========
-  
+
   /// Check if mobile is authorized for a firm
   Future<bool> isMobileAuthorized(String firmId, String mobile) async {
     final db = await database;
@@ -2448,9 +2999,10 @@ class DatabaseHelper {
     );
     return result.isNotEmpty;
   }
-  
+
   /// Get all authorized mobiles for a firm
-  Future<List<Map<String, dynamic>>> getAuthorizedMobiles(String firmId, {String? type}) async {
+  Future<List<Map<String, dynamic>>> getAuthorizedMobiles(String firmId,
+      {String? type}) async {
     final db = await database;
     if (type != null) {
       return await db.query(
@@ -2463,12 +3015,13 @@ class DatabaseHelper {
     return await db.query(
       'authorized_mobiles',
       where: 'firmId = ?',
-whereArgs: [firmId],
+      whereArgs: [firmId],
       orderBy: 'name ASC',
     );
   }
 
-  Future<Map<String, dynamic>?> getAuthorizedMobileByPhone(String firmId, String mobile) async {
+  Future<Map<String, dynamic>?> getAuthorizedMobileByPhone(
+      String firmId, String mobile) async {
     final db = await database;
     final results = await db.query(
       'authorized_mobiles',
@@ -2478,7 +3031,7 @@ whereArgs: [firmId],
     );
     return results.isNotEmpty ? results.first : null;
   }
-  
+
   /// Add authorized mobile
   Future<int> addAuthorizedMobile({
     required String firmId,
@@ -2498,7 +3051,7 @@ whereArgs: [firmId],
       'addedAt': DateTime.now().toIso8601String(),
     });
   }
-  
+
   /// Toggle mobile authorization status
   Future<int> toggleAuthorizedMobile(int id, bool isActive) async {
     final db = await database;
@@ -2509,7 +3062,7 @@ whereArgs: [firmId],
       whereArgs: [id],
     );
   }
-  
+
   /// Delete authorized mobile (hard delete)
   Future<int> deleteAuthorizedMobile(int id) async {
     final db = await database;
@@ -2519,6 +3072,7 @@ whereArgs: [firmId],
       whereArgs: [id],
     );
   }
+
   // Service Rate Methods
   Future<double> getLastServiceRate(String firmId, String rateType) async {
     final db = await database;
@@ -2533,7 +3087,7 @@ whereArgs: [firmId],
     if (res.isNotEmpty) {
       return (res.first['rate'] as num).toDouble();
     }
-    
+
     // 2. Fallback to last successful order (for immediate utility)
     try {
       final column = (rateType == 'STAFF') ? 'staffRate' : 'counterSetupRate';
@@ -2550,12 +3104,14 @@ whereArgs: [firmId],
       }
     } catch (_) {
       // Column might not exist if v6 upgrade failed partially
+      AppLogger.error('Caught error: $_');
     }
 
     return 0.0;
   }
 
-  Future<void> upsertServiceRate(String firmId, String rateType, double rate) async {
+  Future<void> upsertServiceRate(
+      String firmId, String rateType, double rate) async {
     final db = await database;
     await db.insert(
       'service_rates',
@@ -2582,10 +3138,11 @@ whereArgs: [firmId],
     return null;
   }
 
-  Future<int> updateFirmDetails(String firmId, Map<String, dynamic> data) async {
+  Future<int> updateFirmDetails(
+      String firmId, Map<String, dynamic> data) async {
     final db = await database;
     final exists = await getFirmDetails(firmId);
-    
+
     // Ensure data doesn't contain ID (primary key)
     final updateData = Map<String, dynamic>.from(data);
     updateData.remove('id');
@@ -2604,7 +3161,7 @@ whereArgs: [firmId],
         whereArgs: [firmId],
       );
     }
-    
+
     // v38: Trigger cloud sync for cross-device firm profile sync
     await _syncOrQueue(
       table: 'firms',
@@ -2612,16 +3169,16 @@ whereArgs: [firmId],
       action: exists == null ? 'INSERT' : 'UPDATE',
       filters: {'firmId': firmId},
     );
-    
+
     return result;
   }
 
   // ========== DISH METHODS FOR INVENTORY ==========
-  
+
   /// Gets all dishes from Master Table (for BOM management)
   Future<List<Map<String, dynamic>>> getAllDishes(String firmId) async {
     final db = await database;
-    
+
     // 1. Get Firm Specific Data
     final firmData = await db.query(
       'dish_master',
@@ -2633,50 +3190,56 @@ whereArgs: [firmId],
     // 2. Get Seed Data (excluding overridden)
     bool showUniversal = await getFirmUniversalDataVisibility(firmId);
     if (!showUniversal) {
-       return firmData;
+      return firmData;
     }
 
     // Collect both baseIds and names from firm data to properly exclude duplicates
-    final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
-    final firmDishNames = firmData.map((r) => (r['name'] as String?)?.toLowerCase()).where((n) => n != null).toSet();
-    
+    final customizedBaseIds =
+        firmData.map((r) => r['baseId']).where((id) => id != null).toList();
+    final firmDishNames = firmData
+        .map((r) => (r['name'] as String?)?.toLowerCase())
+        .where((n) => n != null)
+        .toSet();
+
     String seedWhere = "firmId = 'SEED'";
     if (customizedBaseIds.isNotEmpty) {
       seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
     }
-    
+
     final seedData = await db.rawQuery(
       'SELECT * FROM dish_master WHERE $seedWhere ORDER BY category, name',
     );
-    
+
     // Also filter out SEED dishes whose names match firm dishes (case-insensitive)
     final filteredSeedData = seedData.where((sd) {
       final seedName = (sd['name'] as String?)?.toLowerCase();
       return seedName == null || !firmDishNames.contains(seedName);
     }).toList();
-    
+
     final combined = [...firmData, ...filteredSeedData];
-    combined.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
-    
+    combined
+        .sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+
     return combined;
   }
 
 // === VISIBILITY SETTINGS ===
-Future<bool> getFirmUniversalDataVisibility(String firmId) async {
-  final db = await database;
-  final res = await db.query(
-    'firms',
-    columns: ['showUniversalData'],
-    where: 'firmId = ?',
-    whereArgs: [firmId],
-  );
-  if (res.isNotEmpty) {
-    return (res.first['showUniversalData'] as int? ?? 1) == 1;
+  Future<bool> getFirmUniversalDataVisibility(String firmId) async {
+    final db = await database;
+    final res = await db.query(
+      'firms',
+      columns: ['showUniversalData'],
+      where: 'firmId = ?',
+      whereArgs: [firmId],
+    );
+    if (res.isNotEmpty) {
+      return (res.first['showUniversalData'] as int? ?? 1) == 1;
+    }
+    return true; // Default to true
   }
-  return true; // Default to true
-}
 
-Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async {
+  Future<void> setFirmUniversalDataVisibility(
+      String firmId, bool isVisible) async {
     final db = await database;
     await db.update(
       'firms',
@@ -2686,12 +3249,11 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     );
     // Auto Sync
     await _syncOrQueue(
-      table: 'firms',
-      data: {'firmId': firmId, 'showUniversalData': isVisible ? 1 : 0},
-      action: 'UPDATE',
-      filters: {'firmId': firmId}
-    );
-}
+        table: 'firms',
+        data: {'firmId': firmId, 'showUniversalData': isVisible ? 1 : 0},
+        action: 'UPDATE',
+        filters: {'firmId': firmId});
+  }
   // ========== INVENTORY MODULE HELPERS ==========
 
   // --- INGREDIENTS ---
@@ -2701,7 +3263,8 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
 // --- SUPPLIERS ---
   Future<List<Map<String, dynamic>>> getAllSuppliers(String firmId) async {
     final db = await database;
-    return await db.query('suppliers',
+    return await db.query(
+      'suppliers',
       where: 'firmId = ? AND isActive = 1',
       whereArgs: [firmId],
       orderBy: 'name',
@@ -2721,17 +3284,18 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     final cloudSync = CloudSyncService();
     data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final success = await cloudSync.awsFirstUpdate(table: 'suppliers', recordId: id, data: data);
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'suppliers', recordId: id, data: data);
     AppLogger.success('✅ [Suppliers] Updated supplier #$id (AWS-first)');
     return success;
   }
-
 
   // --- PURCHASE ORDERS ---
   // --- CUSTOMERS ---
   Future<List<Map<String, dynamic>>> getAllCustomers(String firmId) async {
     final db = await database;
-    return await db.query('customers',
+    return await db.query(
+      'customers',
       where: 'firmId = ?',
       whereArgs: [firmId],
       orderBy: 'name',
@@ -2750,7 +3314,8 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   // --- SUBCONTRACTORS ---
   Future<List<Map<String, dynamic>>> getAllSubcontractors(String firmId) async {
     final db = await database;
-    return await db.query('subcontractors',
+    return await db.query(
+      'subcontractors',
       where: 'firmId = ? AND isActive = 1',
       whereArgs: [firmId],
       orderBy: 'name',
@@ -2762,8 +3327,10 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     data['createdAt'] = DateTime.now().toIso8601String();
     data['isActive'] = 1; // Ensure new subcontractors are active by default
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    final id = await cloudSync.awsFirstWrite(table: 'subcontractors', data: data);
-    AppLogger.success('✅ [Subcontractors] Created subcontractor #$id (AWS-first)');
+    final id =
+        await cloudSync.awsFirstWrite(table: 'subcontractors', data: data);
+    AppLogger.success(
+        '✅ [Subcontractors] Created subcontractor #$id (AWS-first)');
     return id;
   }
 
@@ -2771,8 +3338,10 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     final cloudSync = CloudSyncService();
     data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final success = await cloudSync.awsFirstUpdate(table: 'subcontractors', recordId: id, data: data);
-    AppLogger.success('✅ [Subcontractors] Updated subcontractor #$id (AWS-first)');
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'subcontractors', recordId: id, data: data);
+    AppLogger.success(
+        '✅ [Subcontractors] Updated subcontractor #$id (AWS-first)');
     return success;
   }
 
@@ -2784,14 +3353,16 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     final cloudSync = CloudSyncService();
     final now = DateTime.now();
     data['createdAt'] = now.toIso8601String();
-    
+
     // Get firmId from data
     final firmId = data['firmId'] as String?;
-    
+
     // Calculate the run number for this month
-    final monthStart = DateTime(now.year, now.month, 1).toIso8601String().substring(0, 10);
-    final monthEnd = DateTime(now.year, now.month + 1, 0).toIso8601String().substring(0, 10);
-    
+    final monthStart =
+        DateTime(now.year, now.month, 1).toIso8601String().substring(0, 10);
+    final monthEnd =
+        DateTime(now.year, now.month + 1, 0).toIso8601String().substring(0, 10);
+
     final existingRuns = await db.rawQuery('''
       SELECT MAX(runNumber) as maxNum 
       FROM mrp_runs 
@@ -2799,20 +3370,33 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
         AND date(runDate) >= date(?)
         AND date(runDate) <= date(?)
     ''', [firmId, monthStart, monthEnd]);
-    
+
     int runNumber = 1;
     if (existingRuns.isNotEmpty && existingRuns.first['maxNum'] != null) {
       runNumber = (existingRuns.first['maxNum'] as int) + 1;
     }
-    
+
     // Generate month abbreviation
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     final runName = '${monthNames[now.month - 1]}-$runNumber';
-    
+
     data['runNumber'] = runNumber;
     data['runName'] = runName;
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    
+
     final id = await cloudSync.awsFirstWrite(table: 'mrp_runs', data: data);
     AppLogger.success('✅ [MRP] Created MRP run #$id "$runName" (AWS-first)');
     return id;
@@ -2820,30 +3404,36 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
 
   Future<List<Map<String, dynamic>>> getMrpRuns(String firmId) async {
     final db = await database;
-    return await db.query('mrp_runs',
+    return await db.query(
+      'mrp_runs',
       where: 'firmId = ?',
       whereArgs: [firmId],
       orderBy: 'createdAt DESC',
     );
   }
 
-  Future<void> addOrdersToMrpRun(int mrpRunId, List<Map<String, dynamic>> orders) async {
+  Future<void> addOrdersToMrpRun(
+      int mrpRunId, List<Map<String, dynamic>> orders) async {
     final db = await database;
     final batch = db.batch();
     for (var order in orders) {
-      batch.insert('mrp_run_orders', {
-        'mrpRunId': mrpRunId,
-        'orderId': order['orderId'],
-        'pax': order['pax'],
-        'isSubcontracted': order['isSubcontracted'] ?? 0,
-        'subcontractorId': order['subcontractorId'],
-        'uuid': order['uuid'] ?? _generateUuid(),
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(
+          'mrp_run_orders',
+          {
+            'mrpRunId': mrpRunId,
+            'orderId': order['orderId'],
+            'pax': order['pax'],
+            'isSubcontracted': order['isSubcontracted'] ?? 0,
+            'subcontractorId': order['subcontractorId'],
+            'uuid': order['uuid'] ?? _generateUuid(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
   }
 
-  Future<void> saveMrpOutput(int mrpRunId, List<Map<String, dynamic>> output) async {
+  Future<void> saveMrpOutput(
+      int mrpRunId, List<Map<String, dynamic>> output) async {
     final db = await database;
     await db.delete('mrp_output', where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
     final batch = db.batch();
@@ -2873,7 +3463,8 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   /// Get MRP output for allotment screen - only shows PENDING and ALLOCATED items (not already PO'd)
-  Future<List<Map<String, dynamic>>> getMrpOutputForAllotment(int mrpRunId) async {
+  Future<List<Map<String, dynamic>>> getMrpOutputForAllotment(
+      int mrpRunId) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT mo.*, 
@@ -2891,74 +3482,97 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   /// Update allocation for a single ingredient in MRP output
-  Future<void> updateMrpOutputAllocation(int mrpOutputId, int? supplierId) async {
+  Future<void> updateMrpOutputAllocation(
+      int mrpOutputId, int? supplierId) async {
     final db = await database;
-    await db.update('mrp_output', {
-      'supplierId': supplierId,
-      'allocationStatus': supplierId != null ? 'ALLOCATED' : 'PENDING',
-      'allocatedQty': supplierId != null 
-          ? (await db.query('mrp_output', where: 'id = ?', whereArgs: [mrpOutputId])).first['requiredQty']
-          : 0,
-    }, where: 'id = ?', whereArgs: [mrpOutputId]);
+    await db.update(
+        'mrp_output',
+        {
+          'supplierId': supplierId,
+          'allocationStatus': supplierId != null ? 'ALLOCATED' : 'PENDING',
+          'allocatedQty': supplierId != null
+              ? (await db.query('mrp_output',
+                      where: 'id = ?', whereArgs: [mrpOutputId]))
+                  .first['requiredQty']
+              : 0,
+        },
+        where: 'id = ?',
+        whereArgs: [mrpOutputId]);
   }
 
   /// Bulk update allocations - called when user toggles suppliers in allotment screen
-  Future<void> updateMrpOutputAllocations(int mrpRunId, Map<int, int?> allocations) async {
+  Future<void> updateMrpOutputAllocations(
+      int mrpRunId, Map<int, int?> allocations) async {
     final db = await database;
     final batch = db.batch();
-    
+
     for (var entry in allocations.entries) {
       final ingredientId = entry.key;
       final supplierId = entry.value;
-      
+
       // Find the mrp_output record for this ingredient in this run
-      final outputs = await db.query('mrp_output', 
-        where: 'mrpRunId = ? AND ingredientId = ?', 
+      final outputs = await db.query(
+        'mrp_output',
+        where: 'mrpRunId = ? AND ingredientId = ?',
         whereArgs: [mrpRunId, ingredientId],
       );
-      
+
       if (outputs.isNotEmpty) {
         final outputId = outputs.first['id'] as int;
         final requiredQty = outputs.first['requiredQty'];
-        
-        batch.update('mrp_output', {
-          'supplierId': supplierId,
-          'allocationStatus': supplierId != null ? 'ALLOCATED' : 'PENDING',
-          'allocatedQty': supplierId != null ? requiredQty : 0,
-        }, where: 'id = ?', whereArgs: [outputId]);
+
+        batch.update(
+            'mrp_output',
+            {
+              'supplierId': supplierId,
+              'allocationStatus': supplierId != null ? 'ALLOCATED' : 'PENDING',
+              'allocatedQty': supplierId != null ? requiredQty : 0,
+            },
+            where: 'id = ?',
+            whereArgs: [outputId]);
       }
     }
-    
+
     await batch.commit(noResult: true);
   }
 
   /// Mark MRP output items as PO_SENT after PO generation - links to the PO and prevents re-processing
-  Future<void> markMrpOutputAsPOSent(int mrpRunId, int poId, List<int> ingredientIds) async {
+  Future<void> markMrpOutputAsPOSent(
+      int mrpRunId, int poId, List<int> ingredientIds) async {
     final db = await database;
     for (var ingredientId in ingredientIds) {
-      await db.update('mrp_output', {
-        'allocationStatus': 'PO_SENT',
-        'poId': poId,
-        'purchaseQty': (await db.query('mrp_output', 
-          columns: ['requiredQty'],
-          where: 'mrpRunId = ? AND ingredientId = ?', 
-          whereArgs: [mrpRunId, ingredientId],
-        )).firstOrNull?['requiredQty'] ?? 0,
-      }, where: 'mrpRunId = ? AND ingredientId = ?', whereArgs: [mrpRunId, ingredientId]);
+      await db.update(
+          'mrp_output',
+          {
+            'allocationStatus': 'PO_SENT',
+            'poId': poId,
+            'purchaseQty': (await db.query(
+                  'mrp_output',
+                  columns: ['requiredQty'],
+                  where: 'mrpRunId = ? AND ingredientId = ?',
+                  whereArgs: [mrpRunId, ingredientId],
+                ))
+                    .firstOrNull?['requiredQty'] ??
+                0,
+          },
+          where: 'mrpRunId = ? AND ingredientId = ?',
+          whereArgs: [mrpRunId, ingredientId]);
     }
   }
 
   /// Get existing allocations for an MRP run (for restoring state in AllotmentScreen)
   Future<Map<int, int?>> getExistingAllocations(int mrpRunId) async {
     final db = await database;
-    final results = await db.query('mrp_output',
+    final results = await db.query(
+      'mrp_output',
       columns: ['ingredientId', 'supplierId'],
       where: 'mrpRunId = ? AND supplierId IS NOT NULL',
       whereArgs: [mrpRunId],
     );
-    
+
     return Map.fromEntries(
-      results.map((r) => MapEntry(r['ingredientId'] as int, r['supplierId'] as int?)),
+      results.map(
+          (r) => MapEntry(r['ingredientId'] as int, r['supplierId'] as int?)),
     );
   }
 
@@ -2969,32 +3583,43 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     final now = DateTime.now().toIso8601String();
     for (var orderId in orderIds) {
       // Check if order already has an mrpRunId
-      final existing = await db.query('orders', 
+      final existing = await db.query(
+        'orders',
         columns: ['mrpRunId', 'mrpStatus'],
-        where: 'id = ?', 
+        where: 'id = ?',
         whereArgs: [orderId],
       );
-      
+
       if (existing.isNotEmpty) {
         final currentMrpRunId = existing.first['mrpRunId'];
         final currentStatus = existing.first['mrpStatus'];
-        
+
         // Only update if order doesn't already have an MRP run assigned
         // OR if it's still in PENDING status
-        if (currentMrpRunId == null || currentStatus == 'PENDING' || currentStatus == null) {
-          await db.update('orders', {
-            'mrpRunId': mrpRunId,
-            'mrpStatus': 'MRP_DONE',
-            'isLocked': 1,
-            'lockedAt': now,
-          }, where: 'id = ?', whereArgs: [orderId]);
+        if (currentMrpRunId == null ||
+            currentStatus == 'PENDING' ||
+            currentStatus == null) {
+          await db.update(
+              'orders',
+              {
+                'mrpRunId': mrpRunId,
+                'mrpStatus': 'MRP_DONE',
+                'isLocked': 1,
+                'lockedAt': now,
+              },
+              where: 'id = ?',
+              whereArgs: [orderId]);
         }
         // If already has mrpRunId, don't overwrite - just ensure it's locked
         else {
-          await db.update('orders', {
-            'isLocked': 1,
-            'lockedAt': now,
-          }, where: 'id = ?', whereArgs: [orderId]);
+          await db.update(
+              'orders',
+              {
+                'isLocked': 1,
+                'lockedAt': now,
+              },
+              where: 'id = ?',
+              whereArgs: [orderId]);
         }
       }
     }
@@ -3003,34 +3628,45 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   /// Update order status to PO_SENT only when ALL ingredients for that order's MRP run have been PO'd
   Future<void> updateOrderStatusIfAllItemsPOd(int mrpRunId) async {
     final db = await database;
-    
+
     // Check if there are any items still not PO_SENT for this run
-    final pendingItems = await db.query('mrp_output',
-      where: "mrpRunId = ? AND (allocationStatus IS NULL OR allocationStatus != 'PO_SENT')",
+    final pendingItems = await db.query(
+      'mrp_output',
+      where:
+          "mrpRunId = ? AND (allocationStatus IS NULL OR allocationStatus != 'PO_SENT')",
       whereArgs: [mrpRunId],
     );
-    
+
     // If all items are PO_SENT, update orders and MRP run status
     if (pendingItems.isEmpty) {
       // Get all orders linked to this MRP run
-      final runOrders = await db.query('mrp_run_orders', 
+      final runOrders = await db.query(
+        'mrp_run_orders',
         columns: ['orderId'],
-        where: 'mrpRunId = ?', 
+        where: 'mrpRunId = ?',
         whereArgs: [mrpRunId],
       );
-      
+
       // Update each order to PO_SENT
       for (var ro in runOrders) {
-        await db.update('orders', {
-          'mrpStatus': 'PO_SENT',
-        }, where: 'id = ?', whereArgs: [ro['orderId']]);
+        await db.update(
+            'orders',
+            {
+              'mrpStatus': 'PO_SENT',
+            },
+            where: 'id = ?',
+            whereArgs: [ro['orderId']]);
       }
-      
+
       // Update MRP run status
-      await db.update('mrp_runs', {
-        'status': 'PO_SENT',
-        'completedAt': DateTime.now().toIso8601String(),
-      }, where: 'id = ?', whereArgs: [mrpRunId]);
+      await db.update(
+          'mrp_runs',
+          {
+            'status': 'PO_SENT',
+            'completedAt': DateTime.now().toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [mrpRunId]);
     }
   }
 
@@ -3039,18 +3675,34 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   // =====================================================
 
   /// Valid status constants for validation
-  static const validOrderMrpStatuses = ['PENDING', 'MRP_DONE', 'PO_SENT', 'CANCELLED'];
-  static const validMrpRunStatuses = ['DRAFT', 'MRP_DONE', 'PO_SENT', 'FAILED', 'CANCELLED'];
-  static const validMrpOutputStatuses = ['PENDING', 'ALLOCATED', 'PO_SENT', 'CANCELLED'];
+  static const validOrderMrpStatuses = [
+    'PENDING',
+    'MRP_DONE',
+    'PO_SENT',
+    'CANCELLED'
+  ];
+  static const validMrpRunStatuses = [
+    'DRAFT',
+    'MRP_DONE',
+    'PO_SENT',
+    'FAILED',
+    'CANCELLED'
+  ];
+  static const validMrpOutputStatuses = [
+    'PENDING',
+    'ALLOCATED',
+    'PO_SENT',
+    'CANCELLED'
+  ];
 
   /// Unit normalization - converts to canonical unit
   /// Canonical units: KG for weight, LITRE for volume, NOS for count
   double normalizeToCanonicalUnit(double qty, String fromUnit, String toUnit) {
     if (fromUnit.toLowerCase() == toUnit.toLowerCase()) return qty;
-    
+
     final from = fromUnit.toLowerCase();
     final to = toUnit.toLowerCase();
-    
+
     // Weight conversions (canonical: KG)
     const weightToKg = {
       'g': 0.001,
@@ -3059,7 +3711,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       'kg': 1.0,
       'kgs': 1.0,
     };
-    
+
     // Volume conversions (canonical: LITRE)
     const volumeToLitre = {
       'ml': 0.001,
@@ -3067,17 +3719,17 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       'litre': 1.0,
       'liter': 1.0,
     };
-    
+
     // Weight normalization
     if (weightToKg.containsKey(from) && weightToKg.containsKey(to)) {
       return qty * weightToKg[from]! / weightToKg[to]!;
     }
-    
+
     // Volume normalization
     if (volumeToLitre.containsKey(from) && volumeToLitre.containsKey(to)) {
       return qty * volumeToLitre[from]! / volumeToLitre[to]!;
     }
-    
+
     // No conversion possible - return as-is
     return qty;
   }
@@ -3106,25 +3758,28 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   /// Get recipe by dish master ID (preferred over name-based lookup)
-  Future<List<Map<String, dynamic>>> getRecipeForDishById(int dishMasterId, int paxQty) async {
+  Future<List<Map<String, dynamic>>> getRecipeForDishById(
+      int dishMasterId, int paxQty) async {
     final db = await database;
-    
-    final dish = await db.query('dish_master',
+
+    final dish = await db.query(
+      'dish_master',
       columns: ['id', 'base_pax', 'firmId'],
       where: 'id = ?',
       whereArgs: [dishMasterId],
       limit: 1,
     );
-    
+
     if (dish.isEmpty) {
       AppLogger.error('❌ [BOM] Dish ID $dishMasterId not found');
       return [];
     }
-    
+
     final basePax = (dish.first['base_pax'] as int?) ?? 1;
-    
-    AppLogger.info('🔍 [BOM-ID] Looking up recipe for dish ID: $dishMasterId (pax: $paxQty, basePax: $basePax)');
-    
+
+    AppLogger.info(
+        '🔍 [BOM-ID] Looking up recipe for dish ID: $dishMasterId (pax: $paxQty, basePax: $basePax)');
+
     return db.rawQuery('''
       SELECT rd.*, 
              i.name as ingredientName,
@@ -3145,52 +3800,62 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   /// Returns false if reset is blocked due to active POs
   Future<bool> safeResetOrderForMRP(int orderId) async {
     final db = await database;
-    
+
     // 1. Get order's MRP run ID
-    final order = await db.query('orders',
+    final order = await db.query(
+      'orders',
       columns: ['mrpRunId', 'mrpStatus'],
       where: 'id = ?',
       whereArgs: [orderId],
     );
-    
+
     if (order.isEmpty) {
       AppLogger.error('❌ [MRP Reset] Order $orderId not found');
       return false;
     }
-    
+
     final mrpRunId = order.first['mrpRunId'];
-    
+
     if (mrpRunId != null) {
       // 2. Check for active POs (not cancelled)
-      final activePOs = await db.query('purchase_orders',
+      final activePOs = await db.query(
+        'purchase_orders',
         where: "mrpRunId = ? AND status != 'CANCELLED'",
         whereArgs: [mrpRunId],
       );
-      
+
       if (activePOs.isNotEmpty) {
-        AppLogger.error('❌ [MRP Reset] Cannot reset order $orderId - ${activePOs.length} active POs exist');
+        AppLogger.error(
+            '❌ [MRP Reset] Cannot reset order $orderId - ${activePOs.length} active POs exist');
         return false; // Block reset
       }
-      
+
       // 3. Mark MRP output as CANCELLED (preserve for audit, don't delete)
-      await db.update('mrp_output', {
-        'allocationStatus': 'CANCELLED',
-      }, where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
-      
+      await db.update(
+          'mrp_output',
+          {
+            'allocationStatus': 'CANCELLED',
+          },
+          where: 'mrpRunId = ?',
+          whereArgs: [mrpRunId]);
+
       // 4. Remove link from mrp_run_orders
-      await db.delete('mrp_run_orders', 
-        where: 'orderId = ?', 
-        whereArgs: [orderId]);
+      await db
+          .delete('mrp_run_orders', where: 'orderId = ?', whereArgs: [orderId]);
     }
-    
+
     // 5. Reset order status
-    await db.update('orders', {
-      'mrpStatus': 'PENDING',
-      'mrpRunId': null,
-      'isLocked': 0,
-      'lockedAt': null,
-    }, where: 'id = ?', whereArgs: [orderId]);
-    
+    await db.update(
+        'orders',
+        {
+          'mrpStatus': 'PENDING',
+          'mrpRunId': null,
+          'isLocked': 0,
+          'lockedAt': null,
+        },
+        where: 'id = ?',
+        whereArgs: [orderId]);
+
     AppLogger.success('✅ [MRP Reset] Order $orderId safely reset for re-run');
     return true;
   }
@@ -3198,13 +3863,17 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   /// Cancel order after MRP - marks as CANCELLED with reason
   Future<void> cancelOrderAfterMRP(int orderId, String reason) async {
     final db = await database;
-    
-    await db.update('orders', {
-      'mrpStatus': 'CANCELLED',
-      'cancelReason': reason,
-      'cancelledAt': DateTime.now().toIso8601String(),
-    }, where: 'id = ?', whereArgs: [orderId]);
-    
+
+    await db.update(
+        'orders',
+        {
+          'mrpStatus': 'CANCELLED',
+          'cancelReason': reason,
+          'cancelledAt': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [orderId]);
+
     AppLogger.info('📦 [DB] Cancelled order $orderId after MRP: $reason');
   }
 
@@ -3214,52 +3883,71 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     required String firmId,
     required String targetDate,
     required List<int> orderIds,
-    required Future<Map<int, Map<String, dynamic>>> Function(List<int> orderIds) calculateOutput,
+    required Future<Map<int, Map<String, dynamic>>> Function(List<int> orderIds)
+        calculateOutput,
   }) async {
     final db = await database;
-    
+
     try {
       final result = await db.transaction((txn) async {
         final now = DateTime.now();
-        
+
         // 1. ATOMIC CHECK: Re-verify all orders are still PENDING
         for (var orderId in orderIds) {
-          final check = await txn.query('orders',
+          final check = await txn.query(
+            'orders',
             columns: ['mrpStatus', 'mrpRunId'],
             where: 'id = ?',
             whereArgs: [orderId],
           );
-          
+
           if (check.isEmpty) {
             throw Exception('Order $orderId not found');
           }
-          
+
           final status = check.first['mrpStatus'];
           final existingRunId = check.first['mrpRunId'];
-          
+
           if (status != null && status != 'PENDING' && existingRunId != null) {
-            throw Exception('Order $orderId already processed in run #$existingRunId');
+            throw Exception(
+                'Order $orderId already processed in run #$existingRunId');
           }
         }
-        
+
         // 2. Create MRP Run
-        final monthStart = DateTime(now.year, now.month, 1).toIso8601String().substring(0, 10);
-        final monthEnd = DateTime(now.year, now.month + 1, 0).toIso8601String().substring(0, 10);
-        
+        final monthStart =
+            DateTime(now.year, now.month, 1).toIso8601String().substring(0, 10);
+        final monthEnd = DateTime(now.year, now.month + 1, 0)
+            .toIso8601String()
+            .substring(0, 10);
+
         final existingRuns = await txn.rawQuery('''
           SELECT MAX(runNumber) as maxNum 
           FROM mrp_runs 
           WHERE firmId = ? AND date(runDate) >= date(?) AND date(runDate) <= date(?)
         ''', [firmId, monthStart, monthEnd]);
-        
+
         int runNumber = 1;
         if (existingRuns.isNotEmpty && existingRuns.first['maxNum'] != null) {
           runNumber = (existingRuns.first['maxNum'] as int) + 1;
         }
-        
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        const monthNames = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec'
+        ];
         final runName = '${monthNames[now.month - 1]}-$runNumber';
-        
+
         final mrpRunId = await txn.insert('mrp_runs', {
           'firmId': firmId,
           'runDate': now.toIso8601String(),
@@ -3270,18 +3958,21 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
           'totalOrders': orderIds.length,
           'createdAt': now.toIso8601String(),
         });
-        
+
         // 3. Link orders to run (with unique constraint protection)
         for (var orderId in orderIds) {
-          await txn.insert('mrp_run_orders', {
-            'mrpRunId': mrpRunId,
-            'orderId': orderId,
-          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+          await txn.insert(
+              'mrp_run_orders',
+              {
+                'mrpRunId': mrpRunId,
+                'orderId': orderId,
+              },
+              conflictAlgorithm: ConflictAlgorithm.ignore);
         }
-        
+
         // 4. Calculate output (callback provided by caller)
         final output = await calculateOutput(orderIds);
-        
+
         // 5. Apply rounding and save output
         final batch = txn.batch();
         for (var entry in output.entries) {
@@ -3289,65 +3980,73 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
           final category = item['category'] as String?;
           final qty = (item['requiredQty'] as num?)?.toDouble() ?? 0;
           item['requiredQty'] = roundByCategory(qty, category);
-          
+
           batch.insert('mrp_output', {
             'mrpRunId': mrpRunId,
             ...item,
           });
         }
         await batch.commit(noResult: true);
-        
+
         // 6. Lock orders
         final lockNow = now.toIso8601String();
         for (var orderId in orderIds) {
-          await txn.update('orders', {
-            'mrpRunId': mrpRunId,
-            'mrpStatus': 'MRP_DONE',
-            'isLocked': 1,
-            'lockedAt': lockNow,
-          }, where: 'id = ?', whereArgs: [orderId]);
+          await txn.update(
+              'orders',
+              {
+                'mrpRunId': mrpRunId,
+                'mrpStatus': 'MRP_DONE',
+                'isLocked': 1,
+                'lockedAt': lockNow,
+              },
+              where: 'id = ?',
+              whereArgs: [orderId]);
         }
-        
-        AppLogger.success('✅ [MRP Transaction] Run #$mrpRunId completed for ${orderIds.length} orders');
+
+        AppLogger.success(
+            '✅ [MRP Transaction] Run #$mrpRunId completed for ${orderIds.length} orders');
         return mrpRunId;
       });
-      
+
       // SYNC: Post-transaction sync (outside txn to avoid locking)
       final mrpRunId = result;
-        
-        // 1. Sync MRP Run
-        final runData = await db.query('mrp_runs', where: 'id = ?', whereArgs: [mrpRunId], limit: 1);
-        if (runData.isNotEmpty) {
-           await _syncOrQueue(table: 'mrp_runs', data: runData.first, action: 'INSERT');
-        }
-        
-        // 2. Sync MRP Run Orders
-        final runOrders = await db.query('mrp_run_orders', where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
-        for (var ro in runOrders) {
-          await _syncOrQueue(table: 'mrp_run_orders', data: ro, action: 'INSERT');
-        }
-        
-        // 3. Sync MRP Output
-        final runOutput = await db.query('mrp_output', where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
-        for (var out in runOutput) {
-          await _syncOrQueue(table: 'mrp_output', data: out, action: 'INSERT');
-        }
-        
-        // 4. Sync Updated Orders status
-        for (var orderId in orderIds) {
-          await _syncOrQueue(
-            table: 'orders', 
+
+      // 1. Sync MRP Run
+      final runData = await db.query('mrp_runs',
+          where: 'id = ?', whereArgs: [mrpRunId], limit: 1);
+      if (runData.isNotEmpty) {
+        await _syncOrQueue(
+            table: 'mrp_runs', data: runData.first, action: 'INSERT');
+      }
+
+      // 2. Sync MRP Run Orders
+      final runOrders = await db.query('mrp_run_orders',
+          where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
+      for (var ro in runOrders) {
+        await _syncOrQueue(table: 'mrp_run_orders', data: ro, action: 'INSERT');
+      }
+
+      // 3. Sync MRP Output
+      final runOutput = await db
+          .query('mrp_output', where: 'mrpRunId = ?', whereArgs: [mrpRunId]);
+      for (var out in runOutput) {
+        await _syncOrQueue(table: 'mrp_output', data: out, action: 'INSERT');
+      }
+
+      // 4. Sync Updated Orders status
+      for (var orderId in orderIds) {
+        await _syncOrQueue(
+            table: 'orders',
             data: {
               'id': orderId,
               'mrpRunId': mrpRunId,
               'mrpStatus': 'MRP_DONE',
               'isLocked': 1,
               'lockedAt': DateTime.now().toIso8601String(), // approx
-            }, 
+            },
             action: 'UPDATE',
-            filters: {'id': orderId}
-          );
-        }
+            filters: {'id': orderId});
+      }
       return result;
     } catch (e) {
       AppLogger.error('❌ [MRP Transaction] Failed: $e');
@@ -3360,7 +4059,8 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     data['createdAt'] = DateTime.now().toIso8601String();
     data['sentAt'] = DateTime.now().toIso8601String();
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    final id = await cloudSync.awsFirstWrite(table: 'purchase_orders', data: data);
+    final id =
+        await cloudSync.awsFirstWrite(table: 'purchase_orders', data: data);
     AppLogger.success('✅ [PO] Created purchase order #$id (AWS-first)');
     return id;
   }
@@ -3377,7 +4077,8 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     await batch.commit(noResult: true);
   }
 
-  Future<List<Map<String, dynamic>>> getPurchaseOrders(String firmId, {String? status}) async {
+  Future<List<Map<String, dynamic>>> getPurchaseOrders(String firmId,
+      {String? status}) async {
     final db = await database;
     String where = 'firmId = ?';
     List<dynamic> args = [firmId];
@@ -3385,7 +4086,8 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       where += ' AND status = ?';
       args.add(status);
     }
-    return await db.query('purchase_orders',
+    return await db.query(
+      'purchase_orders',
       where: where,
       whereArgs: args,
       orderBy: 'createdAt DESC',
@@ -3407,9 +4109,11 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   /// Get purchase orders for a specific MRP run (for Allotment Screen Summary)
-  Future<List<Map<String, dynamic>>> getPurchaseOrdersByMrpRun(int mrpRunId) async {
+  Future<List<Map<String, dynamic>>> getPurchaseOrdersByMrpRun(
+      int mrpRunId) async {
     final db = await database;
-    return await db.query('purchase_orders',
+    return await db.query(
+      'purchase_orders',
       where: 'mrpRunId = ?',
       whereArgs: [mrpRunId],
       orderBy: 'createdAt DESC',
@@ -3427,18 +4131,19 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     if (statusTimeField.containsKey(status)) {
       updateData[statusTimeField[status]!] = DateTime.now().toIso8601String();
     }
-    return await db.update('purchase_orders', updateData, where: 'id = ?', whereArgs: [poId]);
+    return await db.update('purchase_orders', updateData,
+        where: 'id = ?', whereArgs: [poId]);
   }
 
   // --- INVOICES (v35: Full Invoice Management) ---
-  
+
   /// Generate invoice number in format: inv-YYYY-MM-NNN
   Future<String> generateInvoiceNumber(String firmId) async {
     final db = await database;
     final now = DateTime.now();
     final yearMonth = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     final prefix = 'inv-$yearMonth-';
-    
+
     final countResult = await db.rawQuery(
       "SELECT COUNT(*) as cnt FROM invoices WHERE firmId = ? AND invoiceNumber LIKE ?",
       [firmId, '$prefix%'],
@@ -3448,46 +4153,52 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   /// Create invoice with items (returns invoice ID)
-  Future<int?> insertInvoice(Map<String, dynamic> data, {List<Map<String, dynamic>>? items}) async {
+  Future<int?> insertInvoice(Map<String, dynamic> data,
+      {List<Map<String, dynamic>>? items}) async {
     final cloudSync = CloudSyncService();
     final now = DateTime.now().toIso8601String();
     data['createdAt'] = now;
     data['updatedAt'] = now;
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    
+
     // Auto-generate invoice number if not provided
     if (data['invoiceNumber'] == null) {
       data['invoiceNumber'] = await generateInvoiceNumber(data['firmId']);
     }
-    
+
     // Calculate due date (invoice date + 7 days)
     if (data['dueDate'] == null && data['invoiceDate'] != null) {
       final invoiceDate = DateTime.parse(data['invoiceDate']);
-      data['dueDate'] = invoiceDate.add(const Duration(days: 7)).toIso8601String().substring(0, 10);
+      data['dueDate'] = invoiceDate
+          .add(const Duration(days: 7))
+          .toIso8601String()
+          .substring(0, 10);
     }
-    
+
     // Calculate balance due
     data['balanceDue'] = (data['totalAmount'] ?? 0) - (data['amountPaid'] ?? 0);
-    
+
     // AWS-First: Write invoice to cloud first
-    final invoiceId = await cloudSync.awsFirstWrite(table: 'invoices', data: data);
-    
+    final invoiceId =
+        await cloudSync.awsFirstWrite(table: 'invoices', data: data);
+
     if (invoiceId == null) {
       AppLogger.error('❌ [Invoice] Failed to create invoice');
       return null;
     }
-    
+
     // Insert items if provided
     if (items != null && items.isNotEmpty) {
       await insertInvoiceItems(invoiceId, items);
     }
-    
+
     AppLogger.success('✅ [Invoice] Created invoice #$invoiceId (AWS-first)');
     return invoiceId;
   }
 
   /// Insert invoice line items
-  Future<void> insertInvoiceItems(int invoiceId, List<Map<String, dynamic>> items) async {
+  Future<void> insertInvoiceItems(
+      int invoiceId, List<Map<String, dynamic>> items) async {
     final db = await database;
     final batch = db.batch();
     for (var item in items) {
@@ -3498,7 +4209,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       final amount = qty * rate;
       final gstRate = (item['gstRate'] ?? 18) as num;
       final gstAmount = amount * gstRate / 100;
-      
+
       // For now, assume intra-state (CGST+SGST). TODO: Add state logic for IGST
       item['amount'] = amount;
       item['cgst'] = gstAmount / 2;
@@ -3506,14 +4217,15 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       item['igst'] = 0;
       item['totalAmount'] = amount + gstAmount;
       item['uuid'] = item['uuid'] ?? _generateUuid();
-      
+
       batch.insert('invoice_items', item);
     }
     await batch.commit(noResult: true);
   }
 
   /// Get all invoices with optional filters
-  Future<List<Map<String, dynamic>>> getInvoices(String firmId, {
+  Future<List<Map<String, dynamic>>> getInvoices(
+    String firmId, {
     String? status,
     String? startDate,
     String? endDate,
@@ -3522,7 +4234,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     final db = await database;
     String where = 'firmId = ?';
     List<dynamic> args = [firmId];
-    
+
     if (status != null) {
       where += ' AND status = ?';
       args.add(status);
@@ -3535,8 +4247,9 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       where += ' AND customerId = ?';
       args.add(customerId);
     }
-    
-    return await db.query('invoices',
+
+    return await db.query(
+      'invoices',
       where: where,
       whereArgs: args,
       orderBy: 'invoiceDate DESC, id DESC',
@@ -3546,10 +4259,12 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   /// Get invoice with items
   Future<Map<String, dynamic>?> getInvoiceWithItems(int invoiceId) async {
     final db = await database;
-    final invoices = await db.query('invoices', where: 'id = ?', whereArgs: [invoiceId]);
+    final invoices =
+        await db.query('invoices', where: 'id = ?', whereArgs: [invoiceId]);
     if (invoices.isEmpty) return null;
-    
-    final items = await db.query('invoice_items', where: 'invoiceId = ?', whereArgs: [invoiceId]);
+
+    final items = await db
+        .query('invoice_items', where: 'invoiceId = ?', whereArgs: [invoiceId]);
     return {
       ...invoices.first,
       'items': items,
@@ -3562,15 +4277,16 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     final cloudSync = CloudSyncService();
     data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    
+
     // Recalculate balance due if payment updated
     if (data.containsKey('amountPaid')) {
-      final invoice = await db.query('invoices', where: 'id = ?', whereArgs: [id]);
+      final invoice =
+          await db.query('invoices', where: 'id = ?', whereArgs: [id]);
       if (invoice.isNotEmpty) {
         final totalAmount = (invoice.first['totalAmount'] as num?) ?? 0;
         final amountPaid = (data['amountPaid'] as num?) ?? 0;
         data['balanceDue'] = totalAmount - amountPaid;
-        
+
         // Auto-update status based on payment
         if (amountPaid >= totalAmount) {
           data['status'] = 'PAID';
@@ -3579,28 +4295,32 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
         }
       }
     }
-    
-    final success = await cloudSync.awsFirstUpdate(table: 'invoices', recordId: id, data: data);
+
+    final success = await cloudSync.awsFirstUpdate(
+        table: 'invoices', recordId: id, data: data);
     AppLogger.success('✅ [Invoice] Updated invoice #$id (AWS-first)');
     return success;
   }
 
   /// Record payment against invoice and create transaction
-  Future<void> recordInvoicePayment(int invoiceId, double amount, String paymentMode, {String? notes}) async {
+  Future<void> recordInvoicePayment(
+      int invoiceId, double amount, String paymentMode,
+      {String? notes}) async {
     final db = await database;
-    final invoice = await db.query('invoices', where: 'id = ?', whereArgs: [invoiceId]);
+    final invoice =
+        await db.query('invoices', where: 'id = ?', whereArgs: [invoiceId]);
     if (invoice.isEmpty) return;
-    
+
     final inv = invoice.first;
     final currentPaid = (inv['amountPaid'] as num?) ?? 0;
     final newPaid = currentPaid + amount;
-    
+
     // Update invoice
     await updateInvoice(invoiceId, {
       'amountPaid': newPaid,
       'paymentMode': paymentMode,
     });
-    
+
     // Create income transaction
     await insertTransaction({
       'firmId': inv['firmId'],
@@ -3608,8 +4328,9 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       'type': 'INCOME',
       'amount': amount,
       'category': 'Invoice Payment',
-      'description': 'Payment for ${inv['invoiceNumber']}${notes != null ? ' - $notes' : ''}',
-      'mode': paymentMode,
+      'description':
+          'Payment for ${inv['invoiceNumber']}${notes != null ? ' - $notes' : ''}',
+      'paymentMode': paymentMode,
       'relatedEntityType': 'INVOICE',
       'relatedEntityId': invoiceId,
       'partyName': inv['customerName'],
@@ -3620,33 +4341,36 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   /// Returns invoice ID
   Future<int?> createInvoiceFromOrder(int orderId, String firmId) async {
     final db = await database;
-    
+
     // Get order details
-    final orders = await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
+    final orders =
+        await db.query('orders', where: 'id = ?', whereArgs: [orderId]);
     if (orders.isEmpty) throw Exception('Order not found');
     final order = orders.first;
-    
+
     // Get order dishes
-    final dishes = await db.query('dishes', where: 'orderId = ?', whereArgs: [orderId]);
-    
+    final dishes =
+        await db.query('dishes', where: 'orderId = ?', whereArgs: [orderId]);
+
     // Get customer details
     final customerId = order['customerId'] as int? ?? 0;
     Map<String, dynamic>? customer;
     if (customerId > 0) {
-      final customers = await db.query('customers', where: 'id = ?', whereArgs: [customerId]);
+      final customers =
+          await db.query('customers', where: 'id = ?', whereArgs: [customerId]);
       if (customers.isNotEmpty) customer = customers.first;
     }
-    
+
     // Calculate totals
     double subtotal = 0;
     List<Map<String, dynamic>> items = [];
-    
+
     for (var dish in dishes) {
       final pax = (dish['pax'] as int?) ?? 1;
       final rate = (dish['pricePerPlate'] as num?) ?? 0;
       final amount = pax * rate;
       subtotal += amount;
-      
+
       items.add({
         'description': dish['dishName'] ?? 'Item',
         'quantity': pax,
@@ -3656,12 +4380,12 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
         'hsnCode': '996331', // Catering services HSN code
       });
     }
-    
+
     // Calculate GST (assuming intra-state for now)
     final gstRate = 0.05; // 5% for catering
     final gstAmount = subtotal * gstRate;
     final totalAmount = subtotal + gstAmount;
-    
+
     // Create invoice - logic handled inside insertInvoice (including AWS sync first)
     final invoiceId = await insertInvoice({
       'firmId': firmId,
@@ -3686,7 +4410,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   // --- ACCOUNTS RECEIVABLE (AR) ---
-  
+
   /// Get customer outstanding balance
   Future<double> getCustomerOutstanding(int customerId) async {
     final db = await database;
@@ -3714,9 +4438,15 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     final db = await database;
     final now = DateTime.now();
     final today = now.toIso8601String().substring(0, 10);
-    final days30 = now.subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
-    final days60 = now.subtract(const Duration(days: 60)).toIso8601String().substring(0, 10);
-    
+    final days30 = now
+        .subtract(const Duration(days: 30))
+        .toIso8601String()
+        .substring(0, 10);
+    final days60 = now
+        .subtract(const Duration(days: 60))
+        .toIso8601String()
+        .substring(0, 10);
+
     final result = await db.rawQuery('''
       SELECT 
         COALESCE(SUM(CASE WHEN dueDate >= ? THEN balanceDue ELSE 0 END), 0) as current,
@@ -3726,7 +4456,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       FROM invoices
       WHERE firmId = ? AND status != 'PAID' AND status != 'CANCELLED'
     ''', [today, today, days30, days30, days60, days60, firmId]);
-    
+
     // Get customer-wise breakdown
     final customers = await db.rawQuery('''
       SELECT customerId, customerName, 
@@ -3737,7 +4467,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY customerId
       ORDER BY outstanding DESC
     ''', [firmId]);
-    
+
     return {
       'summary': result.isNotEmpty ? result.first : {},
       'customers': customers,
@@ -3745,28 +4475,28 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   // --- ACCOUNTS PAYABLE (AP) ---
-  
+
   /// Get supplier outstanding (PO total - payments made)
   Future<double> getSupplierOutstanding(int supplierId, String firmId) async {
     final db = await database;
-    
+
     // Total PO value
     final poTotal = await db.rawQuery('''
       SELECT COALESCE(SUM(totalAmount), 0) as total
       FROM purchase_orders
       WHERE vendorId = ? AND firmId = ? AND status != 'CANCELLED'
     ''', [supplierId, firmId]);
-    
+
     // Total payments made (from transactions)
     final payments = await db.rawQuery('''
       SELECT COALESCE(SUM(amount), 0) as total
       FROM transactions
       WHERE relatedEntityType = 'SUPPLIER' AND relatedEntityId = ? AND type = 'EXPENSE'
     ''', [supplierId]);
-    
+
     final po = (poTotal.first['total'] as num?)?.toDouble() ?? 0;
     final paid = (payments.first['total'] as num?)?.toDouble() ?? 0;
-    
+
     return po - paid;
   }
 
@@ -3774,7 +4504,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   Future<double> getTotalAP(String firmId) async {
     final suppliers = await getAllSuppliers(firmId);
     double totalAP = 0;
-    
+
     for (var supplier in suppliers) {
       totalAP += await getSupplierOutstanding(supplier['id'] as int, firmId);
     }
@@ -3782,11 +4512,12 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   // --- PROFIT & LOSS ---
-  
+
   /// Get P&L summary with expense grouping
-  Future<Map<String, dynamic>> getProfitLossSummary(String firmId, String startDate, String endDate) async {
+  Future<Map<String, dynamic>> getProfitLossSummary(
+      String firmId, String startDate, String endDate) async {
     final db = await database;
-    
+
     // Income by category
     final income = await db.rawQuery('''
       SELECT category, COALESCE(SUM(amount), 0) as total
@@ -3795,7 +4526,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY category
       ORDER BY total DESC
     ''', [firmId, startDate, endDate]);
-    
+
     // Expenses by standard P&L categories
     final expenses = await db.rawQuery('''
       SELECT 
@@ -3814,38 +4545,41 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY expenseGroup
       ORDER BY total DESC
     ''', [firmId, startDate, endDate]);
-    
+
     // Calculate totals
     double totalIncome = 0;
     for (var i in income) {
       totalIncome += (i['total'] as num?)?.toDouble() ?? 0;
     }
-    
+
     double totalExpense = 0;
     for (var e in expenses) {
       totalExpense += (e['total'] as num?)?.toDouble() ?? 0;
     }
-    
+
     return {
       'income': income,
       'expenses': expenses,
       'totalIncome': totalIncome,
       'totalExpense': totalExpense,
       'netProfit': totalIncome - totalExpense,
-      'profitMargin': totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100) : 0,
+      'profitMargin': totalIncome > 0
+          ? ((totalIncome - totalExpense) / totalIncome * 100)
+          : 0,
     };
   }
 
   // --- BALANCE SHEET (Simplified) ---
-  
+
   /// Get simplified Balance Sheet data as of a specific date
   /// Assets: Cash, AR, Inventory
   /// Liabilities: AP, GST Payable
-  Future<Map<String, dynamic>> getBalanceSheetData(String firmId, String asOfDate) async {
+  Future<Map<String, dynamic>> getBalanceSheetData(
+      String firmId, String asOfDate) async {
     final db = await database;
-    
+
     // ASSETS
-    
+
     // 1. Cash: Net of all income - expenses up to asOfDate
     final cashResult = await db.rawQuery('''
       SELECT 
@@ -3855,25 +4589,26 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       WHERE firmId = ? AND date <= ?
     ''', [firmId, asOfDate]);
     final cash = (cashResult.first['cash'] as num?)?.toDouble() ?? 0;
-    
+
     // 2. Accounts Receivable: Unpaid invoices
     final ar = await getTotalAR(firmId);
-    
+
     // 3. Inventory: Sum of (stock * rate) from ingredients
     final inventoryResult = await db.rawQuery('''
       SELECT COALESCE(SUM(stock * rate), 0) as inventory
       FROM ingredients
       WHERE firmId = ?
     ''', [firmId]);
-    final inventory = (inventoryResult.first['inventory'] as num?)?.toDouble() ?? 0;
-    
+    final inventory =
+        (inventoryResult.first['inventory'] as num?)?.toDouble() ?? 0;
+
     final totalAssets = cash + ar + inventory;
-    
+
     // LIABILITIES
-    
+
     // 1. Accounts Payable: Outstanding supplier balances
     final ap = await getTotalAP(firmId);
-    
+
     // 2. GST Payable: GST from unpaid invoices
     final gstResult = await db.rawQuery('''
       SELECT COALESCE(SUM(cgst + sgst + igst), 0) as gstPayable
@@ -3881,12 +4616,12 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       WHERE firmId = ? AND status != 'PAID' AND status != 'CANCELLED'
     ''', [firmId]);
     final gstPayable = (gstResult.first['gstPayable'] as num?)?.toDouble() ?? 0;
-    
+
     final totalLiabilities = ap + gstPayable;
-    
+
     // NET WORTH
     final netWorth = totalAssets - totalLiabilities;
-    
+
     return {
       'asOfDate': asOfDate,
       'assets': {
@@ -3905,15 +4640,17 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   // --- CASH FLOW STATEMENT (Operating Only) ---
-  
+
   /// Get operating cash flow for a period
-  Future<Map<String, dynamic>> getCashFlowData(String firmId, String startDate, String endDate) async {
+  Future<Map<String, dynamic>> getCashFlowData(
+      String firmId, String startDate, String endDate) async {
     final db = await database;
-    
+
     // Opening Balance: Cash as of day before startDate
-    final openingDate = DateTime.parse(startDate).subtract(const Duration(days: 1));
+    final openingDate =
+        DateTime.parse(startDate).subtract(const Duration(days: 1));
     final openingDateStr = openingDate.toIso8601String().substring(0, 10);
-    
+
     final openingResult = await db.rawQuery('''
       SELECT 
         COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) -
@@ -3921,8 +4658,9 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       FROM transactions
       WHERE firmId = ? AND date <= ?
     ''', [firmId, openingDateStr]);
-    final openingBalance = (openingResult.first['balance'] as num?)?.toDouble() ?? 0;
-    
+    final openingBalance =
+        (openingResult.first['balance'] as num?)?.toDouble() ?? 0;
+
     // Cash Inflows (by category)
     final inflows = await db.rawQuery('''
       SELECT category, COALESCE(SUM(amount), 0) as total
@@ -3931,12 +4669,12 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY category
       ORDER BY total DESC
     ''', [firmId, startDate, endDate]);
-    
+
     double totalInflow = 0;
     for (var i in inflows) {
       totalInflow += (i['total'] as num?)?.toDouble() ?? 0;
     }
-    
+
     // Cash Outflows (grouped by P&L categories)
     final outflows = await db.rawQuery('''
       SELECT 
@@ -3953,18 +4691,18 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY expenseGroup
       ORDER BY total DESC
     ''', [firmId, startDate, endDate]);
-    
+
     double totalOutflow = 0;
     for (var o in outflows) {
       totalOutflow += (o['total'] as num?)?.toDouble() ?? 0;
     }
-    
+
     // Net Cash Flow
     final netCashFlow = totalInflow - totalOutflow;
-    
+
     // Closing Balance
     final closingBalance = openingBalance + netCashFlow;
-    
+
     return {
       'period': {'start': startDate, 'end': endDate},
       'openingBalance': openingBalance,
@@ -3978,11 +4716,12 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
   }
 
   // --- KPI DASHBOARD DATA ---
-  
+
   /// Get KPI data for dashboard (Revenue, Margin, Order Count, Avg Order Value)
-  Future<Map<String, dynamic>> getKPIData(String firmId, String startDate, String endDate) async {
+  Future<Map<String, dynamic>> getKPIData(
+      String firmId, String startDate, String endDate) async {
     final db = await database;
-    
+
     // Revenue (total income)
     final revenueResult = await db.rawQuery('''
       SELECT COALESCE(SUM(amount), 0) as revenue
@@ -3990,7 +4729,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       WHERE firmId = ? AND type = 'INCOME' AND date BETWEEN ? AND ?
     ''', [firmId, startDate, endDate]);
     final revenue = (revenueResult.first['revenue'] as num?)?.toDouble() ?? 0;
-    
+
     // COGS (Raw Materials expenses)
     final cogsResult = await db.rawQuery('''
       SELECT COALESCE(SUM(amount), 0) as cogs
@@ -3999,11 +4738,11 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
         AND category IN ('Raw Materials', 'Ingredients', 'Groceries', 'Supplies', 'Purchase')
     ''', [firmId, startDate, endDate]);
     final cogs = (cogsResult.first['cogs'] as num?)?.toDouble() ?? 0;
-    
+
     // Gross Margin
     final grossProfit = revenue - cogs;
     final grossMargin = revenue > 0 ? (grossProfit / revenue * 100) : 0;
-    
+
     // Order Count
     final orderResult = await db.rawQuery('''
       SELECT COUNT(*) as orderCount, COALESCE(SUM(totalPax), 0) as totalPax
@@ -4012,10 +4751,10 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
     ''', [firmId, startDate, endDate]);
     final orderCount = (orderResult.first['orderCount'] as num?)?.toInt() ?? 0;
     final totalPax = (orderResult.first['totalPax'] as num?)?.toInt() ?? 0;
-    
+
     // Average Order Value
     final avgOrderValue = orderCount > 0 ? revenue / orderCount : 0;
-    
+
     return {
       'period': {'start': startDate, 'end': endDate},
       'revenue': revenue,
@@ -4027,46 +4766,53 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       'avgOrderValue': avgOrderValue,
     };
   }
-  
+
   /// Get KPI comparison data (current vs previous period)
-  Future<Map<String, dynamic>> getKPIComparison(String firmId, String startDate, String endDate) async {
+  Future<Map<String, dynamic>> getKPIComparison(
+      String firmId, String startDate, String endDate) async {
     final current = await getKPIData(firmId, startDate, endDate);
-    
+
     // Calculate previous period (same duration before startDate)
     final start = DateTime.parse(startDate);
     final end = DateTime.parse(endDate);
     final duration = end.difference(start);
-    final prevStart = start.subtract(duration).subtract(const Duration(days: 1));
+    final prevStart =
+        start.subtract(duration).subtract(const Duration(days: 1));
     final prevEnd = start.subtract(const Duration(days: 1));
-    
+
     final previous = await getKPIData(
-      firmId, 
+      firmId,
       prevStart.toIso8601String().substring(0, 10),
       prevEnd.toIso8601String().substring(0, 10),
     );
-    
+
     // Calculate change percentages
     double calcChange(double current, double previous) {
       if (previous == 0) return current > 0 ? 100 : 0;
       return ((current - previous) / previous * 100);
     }
-    
+
     return {
       'current': current,
       'previous': previous,
       'changes': {
-        'revenue': calcChange(current['revenue'] as double, previous['revenue'] as double),
-        'grossMargin': (current['grossMargin'] as double) - (previous['grossMargin'] as double),
-        'orderCount': calcChange((current['orderCount'] as int).toDouble(), (previous['orderCount'] as int).toDouble()),
-        'avgOrderValue': calcChange(current['avgOrderValue'] as double, previous['avgOrderValue'] as double),
+        'revenue': calcChange(
+            current['revenue'] as double, previous['revenue'] as double),
+        'grossMargin': (current['grossMargin'] as double) -
+            (previous['grossMargin'] as double),
+        'orderCount': calcChange((current['orderCount'] as int).toDouble(),
+            (previous['orderCount'] as int).toDouble()),
+        'avgOrderValue': calcChange(current['avgOrderValue'] as double,
+            previous['avgOrderValue'] as double),
       },
     };
   }
 
   /// Get daily profitability trend (Revenue, Cost, Expense)
-  Future<List<Map<String, dynamic>>> getProfitabilityTrend(String firmId, String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getProfitabilityTrend(
+      String firmId, String startDate, String endDate) async {
     final db = await database;
-    
+
     // Get daily income
     final incomeTrend = await db.rawQuery('''
       SELECT date, COALESCE(SUM(amount), 0) as income
@@ -4075,7 +4821,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY date
       ORDER BY date
     ''', [firmId, startDate, endDate]);
-    
+
     // Get daily material costs (COGS categories)
     final cogsTrend = await db.rawQuery('''
       SELECT date, COALESCE(SUM(amount), 0) as cost
@@ -4085,7 +4831,7 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY date
       ORDER BY date
     ''', [firmId, startDate, endDate]);
-    
+
     // Get daily other expenses
     final expenseTrend = await db.rawQuery('''
       SELECT date, COALESCE(SUM(amount), 0) as expense
@@ -4095,40 +4841,44 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
       GROUP BY date
       ORDER BY date
     ''', [firmId, startDate, endDate]);
-    
+
     // Merge into a single timeline
     final Map<String, Map<String, double>> timeline = {};
-    
+
     for (var row in incomeTrend) {
       final date = row['date'] as String;
       timeline[date] = timeline[date] ?? {'income': 0, 'cost': 0, 'expense': 0};
       timeline[date]!['income'] = (row['income'] as num).toDouble();
     }
-    
+
     for (var row in cogsTrend) {
       final date = row['date'] as String;
       timeline[date] = timeline[date] ?? {'income': 0, 'cost': 0, 'expense': 0};
       timeline[date]!['cost'] = (row['cost'] as num).toDouble();
     }
-    
+
     for (var row in expenseTrend) {
       final date = row['date'] as String;
       timeline[date] = timeline[date] ?? {'income': 0, 'cost': 0, 'expense': 0};
       timeline[date]!['expense'] = (row['expense'] as num).toDouble();
     }
-    
+
     final sortedDates = timeline.keys.toList()..sort();
-    return sortedDates.map((date) => {
-      'date': date,
-      'income': timeline[date]!['income'],
-      'cost': timeline[date]!['cost'],
-      'expense': timeline[date]!['expense'],
-      'profit': timeline[date]!['income']! - (timeline[date]!['cost']! + timeline[date]!['expense']!),
-    }).toList();
+    return sortedDates
+        .map((date) => {
+              'date': date,
+              'income': timeline[date]!['income'],
+              'cost': timeline[date]!['cost'],
+              'expense': timeline[date]!['expense'],
+              'profit': timeline[date]!['income']! -
+                  (timeline[date]!['cost']! + timeline[date]!['expense']!),
+            })
+        .toList();
   }
 
   /// Get expense breakdown by category group
-  Future<List<Map<String, dynamic>>> getExpenseBreakdown(String firmId, String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getExpenseBreakdown(
+      String firmId, String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT 
@@ -4149,71 +4899,77 @@ Future<void> setFirmUniversalDataVisibility(String firmId, bool isVisible) async
 
   /// Get event/order profitability
 
-
-
   // ============== (Migrated to FinanceRepository) ==============
-  
-
 
   // --- MRP RE-RUN SUPPORT ---
-  
-  /// Cancel all POs for a specific order (soft-delete with status = 'CANCELLED')
-/// Returns list of cancelled PO IDs for notification purposes
-Future<List<Map<String, dynamic>>> cancelPOsForOrder(int orderId) async {
-  final db = await database;
-  final cloudSync = CloudSyncService();
-  
-  // Find all POs that include this order
-  final allPOs = await db.query('purchase_orders');
-  final cancelledPOs = <Map<String, dynamic>>[];
-  
-  for (final po in allPOs) {
-    final orderIds = po['orderIds']?.toString() ?? '';
-    if (orderIds.split(',').map((s) => s.trim()).contains(orderId.toString())) {
-      // Skip already cancelled POs
-      if (po['status'] == 'CANCELLED') continue;
-      
-      final poId = po['id'] as int;
-      final updates = {
-        'id': poId,
-        'status': 'CANCELLED',
-        'cancelledAt': DateTime.now().toIso8601String(),
-        'cancelReason': 'Order updated - MRP re-run required',
-      };
-      await cloudSync.awsFirstUpdate(table: 'purchase_orders', recordId: poId, data: updates);
-      
-      cancelledPOs.add(po);
-    }
-  }
-  
-  AppLogger.info('📦 [DB] Cancelled ${cancelledPOs.length} POs for order $orderId (AWS-first)');
-  return cancelledPOs;
-}
 
-/// Reset order MRP status to allow re-running MRP
-Future<void> resetOrderForMRP(int orderId) async {
-  final cloudSync = CloudSyncService();
-  
-  final updates = {
-    'id': orderId,
-    'mrpStatus': 'PENDING',
-    'mrpRunId': null,
-    'isLocked': 0,
-    'lockedAt': null,
-  };
-  await cloudSync.awsFirstUpdate(table: 'orders', recordId: orderId, data: updates);
-  
-  AppLogger.info('📦 [DB] Reset order $orderId for MRP re-run (AWS-first)');
-}
+  /// Cancel all POs for a specific order (soft-delete with status = 'CANCELLED')
+  /// Returns list of cancelled PO IDs for notification purposes
+  Future<List<Map<String, dynamic>>> cancelPOsForOrder(int orderId) async {
+    final db = await database;
+    final cloudSync = CloudSyncService();
+
+    // Find all POs that include this order
+    final allPOs = await db.query('purchase_orders');
+    final cancelledPOs = <Map<String, dynamic>>[];
+
+    for (final po in allPOs) {
+      final orderIds = po['orderIds']?.toString() ?? '';
+      if (orderIds
+          .split(',')
+          .map((s) => s.trim())
+          .contains(orderId.toString())) {
+        // Skip already cancelled POs
+        if (po['status'] == 'CANCELLED') continue;
+
+        final poId = po['id'] as int;
+        final updates = {
+          'id': poId,
+          'status': 'CANCELLED',
+          'cancelledAt': DateTime.now().toIso8601String(),
+          'cancelReason': 'Order updated - MRP re-run required',
+        };
+        await cloudSync.awsFirstUpdate(
+            table: 'purchase_orders', recordId: poId, data: updates);
+
+        cancelledPOs.add(po);
+      }
+    }
+
+    AppLogger.info(
+        '📦 [DB] Cancelled ${cancelledPOs.length} POs for order $orderId (AWS-first)');
+    return cancelledPOs;
+  }
+
+  /// Reset order MRP status to allow re-running MRP
+  Future<void> resetOrderForMRP(int orderId) async {
+    final cloudSync = CloudSyncService();
+
+    final updates = {
+      'id': orderId,
+      'mrpStatus': 'PENDING',
+      'mrpRunId': null,
+      'isLocked': 0,
+      'lockedAt': null,
+    };
+    await cloudSync.awsFirstUpdate(
+        table: 'orders', recordId: orderId, data: updates);
+
+    AppLogger.info('📦 [DB] Reset order $orderId for MRP re-run (AWS-first)');
+  }
 
   /// Get all POs for an order (both active and cancelled) for history view
-  Future<List<Map<String, dynamic>>> getPurchaseOrdersForOrder(int orderId) async {
+  Future<List<Map<String, dynamic>>> getPurchaseOrdersForOrder(
+      int orderId) async {
     final db = await database;
     final allPOs = await db.query('purchase_orders', orderBy: 'createdAt DESC');
-    
+
     return allPOs.where((po) {
       final orderIds = po['orderIds']?.toString() ?? '';
-      return orderIds.split(',').map((s) => s.trim()).contains(orderId.toString());
+      return orderIds
+          .split(',')
+          .map((s) => s.trim())
+          .contains(orderId.toString());
     }).toList();
   }
 
@@ -4222,7 +4978,8 @@ Future<void> resetOrderForMRP(int orderId) async {
   // =====================================================
 
   /// Get pending dispatch assignments for a driver
-  Future<List<Map<String, dynamic>>> getDriverPendingAssignments(int driverId) async {
+  Future<List<Map<String, dynamic>>> getDriverPendingAssignments(
+      int driverId) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
@@ -4252,11 +5009,15 @@ Future<void> resetOrderForMRP(int orderId) async {
   }
 
   /// Update dispatch assignment status (accept/reject)
-  Future<void> updateDispatchAssignment(int dispatchId, String status, {String? rejectionReason}) async {
+  Future<void> updateDispatchAssignment(int dispatchId, String status,
+      {String? rejectionReason}) async {
     final cloudSync = CloudSyncService();
     final now = DateTime.now().toIso8601String();
-    
-    Map<String, dynamic> updates = {'id': dispatchId, 'assignmentStatus': status};
+
+    Map<String, dynamic> updates = {
+      'id': dispatchId,
+      'assignmentStatus': status
+    };
     if (status == 'ACCEPTED') {
       updates['acceptedAt'] = now;
     } else if (status == 'REJECTED') {
@@ -4264,31 +5025,40 @@ Future<void> resetOrderForMRP(int orderId) async {
       updates['rejectionReason'] = rejectionReason;
       updates['driverId'] = null; // Unassign so admin can reassign
     }
-    
-    await cloudSync.awsFirstUpdate(table: 'dispatches', recordId: dispatchId, data: updates);
-    AppLogger.success('✅ [Dispatch] Updated assignment #$dispatchId to $status (AWS-first)');
+
+    await cloudSync.awsFirstUpdate(
+        table: 'dispatches', recordId: dispatchId, data: updates);
+    AppLogger.success(
+        '✅ [Dispatch] Updated assignment #$dispatchId to $status (AWS-first)');
   }
 
   /// Update dispatch km tracking and earnings
-  Future<void> updateDispatchKmAndEarnings(int dispatchId, {
+  Future<void> updateDispatchKmAndEarnings(
+    int dispatchId, {
     double? kmForward,
     double? kmReturn,
     double? driverShare,
   }) async {
     final cloudSync = CloudSyncService();
-    Map<String, dynamic> updates = {'id': dispatchId, 'updatedAt': DateTime.now().toIso8601String()};
+    Map<String, dynamic> updates = {
+      'id': dispatchId,
+      'updatedAt': DateTime.now().toIso8601String()
+    };
     if (kmForward != null) updates['kmForward'] = kmForward;
     if (kmReturn != null) updates['kmReturn'] = kmReturn;
     if (driverShare != null) updates['driverShare'] = driverShare;
-    
-    await cloudSync.awsFirstUpdate(table: 'dispatches', recordId: dispatchId, data: updates);
-    AppLogger.success('✅ [Dispatch] Updated km/earnings for #$dispatchId (AWS-first)');
+
+    await cloudSync.awsFirstUpdate(
+        table: 'dispatches', recordId: dispatchId, data: updates);
+    AppLogger.success(
+        '✅ [Dispatch] Updated km/earnings for #$dispatchId (AWS-first)');
   }
 
   /// Get driver earnings report for date range
-  Future<Map<String, dynamic>> getDriverEarningsReport(int driverId, String startDate, String endDate) async {
+  Future<Map<String, dynamic>> getDriverEarningsReport(
+      int driverId, String startDate, String endDate) async {
     final db = await database;
-    
+
     final summary = await db.rawQuery('''
       SELECT 
         COUNT(*) as tripCount,
@@ -4301,7 +5071,7 @@ Future<void> resetOrderForMRP(int orderId) async {
       WHERE driverId = ? AND DATE(dispatchTime) BETWEEN ? AND ?
         AND dispatchStatus IN ('DELIVERED', 'COMPLETED', 'RETURNING')
     ''', [driverId, startDate, endDate]);
-    
+
     final trips = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time
       FROM dispatches d
@@ -4310,7 +5080,7 @@ Future<void> resetOrderForMRP(int orderId) async {
         AND d.dispatchStatus IN ('DELIVERED', 'COMPLETED', 'RETURNING')
       ORDER BY d.dispatchTime DESC
     ''', [driverId, startDate, endDate]);
-    
+
     return {
       'summary': summary.isNotEmpty ? summary.first : {},
       'trips': trips,
@@ -4322,7 +5092,8 @@ Future<void> resetOrderForMRP(int orderId) async {
   // =====================================================
 
   /// Get orders assigned to subcontractor for a date
-  Future<List<Map<String, dynamic>>> getSubcontractorOrders(int subcontractorId, String date) async {
+  Future<List<Map<String, dynamic>>> getSubcontractorOrders(
+      int subcontractorId, String date) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT DISTINCT o.*, 
@@ -4336,16 +5107,19 @@ Future<void> resetOrderForMRP(int orderId) async {
   }
 
   /// Get dishes assigned to subcontractor for an order
-  Future<List<Map<String, dynamic>>> getSubcontractorDishes(int subcontractorId, int orderId) async {
+  Future<List<Map<String, dynamic>>> getSubcontractorDishes(
+      int subcontractorId, int orderId) async {
     final db = await database;
-    return await db.query('dishes',
+    return await db.query(
+      'dishes',
       where: 'orderId = ? AND isSubcontracted = 1 AND subcontractorId = ?',
       whereArgs: [orderId, subcontractorId],
     );
   }
 
   /// Get subcontractor ledger transactions
-  Future<List<Map<String, dynamic>>> getSubcontractorLedger(String subcontractorName, String startDate, String endDate) async {
+  Future<List<Map<String, dynamic>>> getSubcontractorLedger(
+      String subcontractorName, String startDate, String endDate) async {
     final db = await database;
     return await db.rawQuery('''
       SELECT * FROM finance
@@ -4359,16 +5133,19 @@ Future<void> resetOrderForMRP(int orderId) async {
   // =====================================================
 
   /// Get purchase orders for supplier by status
-  Future<List<Map<String, dynamic>>> getSupplierPOs(int supplierId, {String? status}) async {
+  Future<List<Map<String, dynamic>>> getSupplierPOs(int supplierId,
+      {String? status}) async {
     final db = await database;
     if (status != null) {
-      return await db.query('purchase_orders',
+      return await db.query(
+        'purchase_orders',
         where: 'vendorId = ? AND status = ?',
         whereArgs: [supplierId, status],
         orderBy: 'createdAt DESC',
       );
     }
-    return await db.query('purchase_orders',
+    return await db.query(
+      'purchase_orders',
       where: 'vendorId = ?',
       whereArgs: [supplierId],
       orderBy: 'createdAt DESC',
@@ -4379,7 +5156,7 @@ Future<void> resetOrderForMRP(int orderId) async {
   Future<void> updateSupplierPOStatus(int poId, String status) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
-    
+
     Map<String, dynamic> updates = {'status': status};
     if (status == 'ACCEPTED') {
       updates['acceptedAt'] = now;
@@ -4388,46 +5165,54 @@ Future<void> resetOrderForMRP(int orderId) async {
     } else if (status == 'DELIVERED') {
       updates['deliveredAt'] = now;
     }
-    
-    await db.update('purchase_orders', updates, where: 'id = ?', whereArgs: [poId]);
+
+    await db
+        .update('purchase_orders', updates, where: 'id = ?', whereArgs: [poId]);
   }
 
   /// Get supplier ledger (payments and PO values)
-  Future<Map<String, dynamic>> getSupplierLedger(int supplierId, String supplierName, String startDate, String endDate) async {
+  Future<Map<String, dynamic>> getSupplierLedger(int supplierId,
+      String supplierName, String startDate, String endDate) async {
     final db = await database;
-    
+
     final transactions = await db.rawQuery('''
       SELECT * FROM finance
       WHERE partyName LIKE ? AND date BETWEEN ? AND ?
       ORDER BY date DESC
     ''', ['%$supplierName%', startDate, endDate]);
-    
+
     final poSummary = await db.rawQuery('''
       SELECT SUM(totalAmount) as totalInvoiced
       FROM purchase_orders 
       WHERE vendorId = ? AND DATE(createdAt) BETWEEN ? AND ?
     ''', [supplierId, startDate, endDate]);
-    
+
     return {
       'transactions': transactions,
-      'totalInvoiced': poSummary.isNotEmpty ? poSummary.first['totalInvoiced'] ?? 0 : 0,
+      'totalInvoiced':
+          poSummary.isNotEmpty ? poSummary.first['totalInvoiced'] ?? 0 : 0,
     };
   }
 
   /// Assign driver to dispatch and send notification
   Future<void> assignDriverToDispatch(int dispatchId, int driverId) async {
     final db = await database;
-    await db.update('dispatches', {
-      'driverId': driverId,
-      'assignmentStatus': 'PENDING',
-      'assignedAt': DateTime.now().toIso8601String(),
-    }, where: 'id = ?', whereArgs: [dispatchId]);
+    await db.update(
+        'dispatches',
+        {
+          'driverId': driverId,
+          'assignmentStatus': 'PENDING',
+          'assignedAt': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [dispatchId]);
   }
-  
+
   // Get orders in an MRP run that require service or counter setup
-  Future<List<Map<String, dynamic>>> getServiceRequirementsForMrpRun(int mrpRunId) async {
+  Future<List<Map<String, dynamic>>> getServiceRequirementsForMrpRun(
+      int mrpRunId) async {
     final db = await database;
-    
+
     // Join mrp_run_orders with orders to get service requirements
     // Returns orders where serviceRequired=1 OR counterSetupRequired=1
     return await db.rawQuery('''
@@ -4454,17 +5239,21 @@ Future<void> resetOrderForMRP(int orderId) async {
   }
 
   // Update order service assignments
-  Future<void> updateOrderServiceAssignment(int orderId, {int? serviceSubId, int? counterSubId}) async {
+  Future<void> updateOrderServiceAssignment(int orderId,
+      {int? serviceSubId, int? counterSubId}) async {
     final cloudSync = CloudSyncService();
     final updates = <String, dynamic>{'id': orderId};
-    if (serviceSubId != -1) updates['serviceSubcontractorId'] = serviceSubId; // -1 means no change check passed
+    if (serviceSubId != -1)
+      updates['serviceSubcontractorId'] =
+          serviceSubId; // -1 means no change check passed
     if (counterSubId != -1) updates['counterSubcontractorId'] = counterSubId;
-    
-    if (updates.length > 1) { // More than just 'id'
-      await cloudSync.awsFirstUpdate(table: 'orders', recordId: orderId, data: updates);
-      AppLogger.success('✅ [Orders] Updated service assignments for order #$orderId (AWS-first)');
+
+    if (updates.length > 1) {
+      // More than just 'id'
+      await cloudSync.awsFirstUpdate(
+          table: 'orders', recordId: orderId, data: updates);
+      AppLogger.success(
+          '✅ [Orders] Updated service assignments for order #$orderId (AWS-first)');
     }
   }
-
-
 }

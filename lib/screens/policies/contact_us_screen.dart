@@ -12,7 +12,8 @@ class ContactUsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Contact Us', style: Theme.of(context).textTheme.headlineMedium),
+            Text('Contact Us',
+                style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 16),
             const Text(
               'ELKERON TECHNOLOGIES PRIVATE LIMITED\n\n'

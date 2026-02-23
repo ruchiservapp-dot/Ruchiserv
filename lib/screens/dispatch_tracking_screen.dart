@@ -6,8 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/location_service.dart';
-import '../db/database_helper.dart';
-import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class DispatchTrackingScreen extends StatefulWidget {
   final Map<String, dynamic> dispatch;
@@ -28,7 +26,8 @@ class _DispatchTrackingScreenState extends State<DispatchTrackingScreen> {
     super.initState();
     _loadLocation();
     // Auto-refresh every 30 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadLocation());
+    _refreshTimer =
+        Timer.periodic(const Duration(seconds: 30), (_) => _loadLocation());
   }
 
   @override
@@ -40,10 +39,10 @@ class _DispatchTrackingScreenState extends State<DispatchTrackingScreen> {
   Future<void> _loadLocation() async {
     try {
       final dispatchId = widget.dispatch['id'] as int;
-      
+
       // Try to get location from local DB first
       final localLocation = await LocationService.getLastLocation(dispatchId);
-      
+
       if (localLocation != null && localLocation['driverLat'] != null) {
         setState(() {
           _locationData = localLocation;
@@ -62,7 +61,8 @@ class _DispatchTrackingScreenState extends State<DispatchTrackingScreen> {
         } else {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'Location not available yet. Driver may not have started tracking.';
+            _errorMessage =
+                'Location not available yet. Driver may not have started tracking.';
           });
         }
       }
@@ -82,10 +82,12 @@ class _DispatchTrackingScreenState extends State<DispatchTrackingScreen> {
   Future<void> _openGoogleMaps() async {
     final lat = _locationData?['driverLat'] ?? _locationData?['lat'];
     final lng = _locationData?['driverLng'] ?? _locationData?['lng'];
-    
+
     if (lat == null || lng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location not available'), backgroundColor: Colors.orange),
+        const SnackBar(
+            content: Text('Location not available'),
+            backgroundColor: Colors.orange),
       );
       return;
     }
@@ -93,13 +95,15 @@ class _DispatchTrackingScreenState extends State<DispatchTrackingScreen> {
     // Universal Google Maps URL - works on app or web browser
     final mapUrl = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
     final uri = Uri.parse(mapUrl);
-    
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open maps'), backgroundColor: Colors.red),
+          const SnackBar(
+              content: Text('Could not open maps'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -121,7 +125,9 @@ Powered by RuchiServ''';
     final driverMobile = widget.dispatch['driverMobile']?.toString();
     if (driverMobile == null || driverMobile.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Driver mobile not available'), backgroundColor: Colors.orange),
+        const SnackBar(
+            content: Text('Driver mobile not available'),
+            backgroundColor: Colors.orange),
       );
       return;
     }
@@ -165,7 +171,7 @@ Powered by RuchiServ''';
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isDelivered 
+                    colors: isDelivered
                         ? [Colors.green.shade400, Colors.green.shade600]
                         : [Colors.blue.shade400, Colors.blue.shade600],
                   ),
@@ -192,7 +198,7 @@ Powered by RuchiServ''';
                             ),
                           ),
                           Text(
-                            isDelivered 
+                            isDelivered
                                 ? 'Order has been delivered successfully'
                                 : 'Order is being delivered',
                             style: const TextStyle(color: Colors.white70),
@@ -227,8 +233,10 @@ Powered by RuchiServ''';
                 icon: Icons.person,
                 children: [
                   _buildInfoRow('Driver', dispatch['driverName'] ?? 'N/A'),
-                  _buildInfoRow('Vehicle', '${dispatch['vehicleNumber'] ?? 'N/A'} ${dispatch['vehicleType'] != null ? '[${dispatch['vehicleType']}]' : ''}'),
-                  _buildInfoRow('Mobile', dispatch['driverMobile'] ?? 'N/A', isPhone: true),
+                  _buildInfoRow('Vehicle',
+                      '${dispatch['vehicleNumber'] ?? 'N/A'} ${dispatch['vehicleType'] != null ? '[${dispatch['vehicleType']}]' : ''}'),
+                  _buildInfoRow('Mobile', dispatch['driverMobile'] ?? 'N/A',
+                      isPhone: true),
                 ],
               ),
 
@@ -252,7 +260,8 @@ Powered by RuchiServ''';
                           const Icon(Icons.info_outline, color: Colors.orange),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(_errorMessage!, style: const TextStyle(color: Colors.orange)),
+                            child: Text(_errorMessage!,
+                                style: const TextStyle(color: Colors.orange)),
                           ),
                         ],
                       ),
@@ -262,10 +271,12 @@ Powered by RuchiServ''';
                       'Coordinates',
                       '${_locationData?['driverLat'] ?? _locationData?['lat']}, ${_locationData?['driverLng'] ?? _locationData?['lng']}',
                     ),
-                    if (_locationData?['lastLocationUpdate'] != null || _locationData?['timestamp'] != null)
+                    if (_locationData?['lastLocationUpdate'] != null ||
+                        _locationData?['timestamp'] != null)
                       _buildInfoRow(
                         'Last Updated',
-                        _formatTimestamp(_locationData?['lastLocationUpdate'] ?? _locationData?['timestamp']),
+                        _formatTimestamp(_locationData?['lastLocationUpdate'] ??
+                            _locationData?['timestamp']),
                       ),
                   ],
                 ],
@@ -376,7 +387,8 @@ Powered by RuchiServ''';
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
               children: [
@@ -384,7 +396,8 @@ Powered by RuchiServ''';
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ],
             ),
@@ -422,7 +435,8 @@ Powered by RuchiServ''';
                       ),
                     ),
                   )
-                : Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+                : Text(value,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
           ),
         ],
       ),

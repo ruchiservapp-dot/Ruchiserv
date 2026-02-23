@@ -83,7 +83,8 @@ class LanguageService {
   Future<void> seedTranslations(String languageCode) async {
     try {
       final db = await DatabaseHelper().database;
-      final jsonString = await rootBundle.loadString('assets/seeds/translations_$languageCode.json');
+      final jsonString = await rootBundle
+          .loadString('assets/seeds/translations_$languageCode.json');
       final List<dynamic> jsonList = json.decode(jsonString);
 
       final batch = db.batch();

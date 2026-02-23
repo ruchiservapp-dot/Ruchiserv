@@ -110,7 +110,7 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
     try {
       if (_logs.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.noLogsExport)),
+          SnackBar(content: Text(AppLocalizations.of(context).noLogsExport)),
         );
         return;
       }
@@ -151,8 +151,10 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
       await Share.shareXFiles([XFile(path)], text: 'Audit Report');
       
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.exportFailed(e)), backgroundColor: Colors.red),
+
+        SnackBar(content: Text(AppLocalizations.of(context).exportFailed(e)), backgroundColor: Colors.red),
       );
     }
   }
@@ -167,7 +169,7 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
-            tooltip: AppLocalizations.of(context)!.export,
+            tooltip: AppLocalizations.of(context).export,
             onPressed: _exportCsv,
           ),
         ],
@@ -188,7 +190,7 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
                           onPressed: () => _pickDate(true),
                           icon: const Icon(Icons.calendar_today, size: 16),
                           label: Text(_startDate == null 
-                            ? AppLocalizations.of(context)!.startDate 
+                            ? AppLocalizations.of(context).startDate 
                             : DateFormat('yyyy-MM-dd').format(_startDate!)),
                         ),
                       ),
@@ -198,7 +200,7 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
                           onPressed: () => _pickDate(false),
                           icon: const Icon(Icons.calendar_today, size: 16),
                           label: Text(_endDate == null 
-                            ? AppLocalizations.of(context)!.endDate 
+                            ? AppLocalizations.of(context).endDate 
                             : DateFormat('yyyy-MM-dd').format(_endDate!)),
                         ),
                       ),
@@ -211,7 +213,7 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
                         child: TextField(
                           controller: _userIdController,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.userIdLabel,
+                            labelText: AppLocalizations.of(context).userIdLabel,
                             isDense: true,
                             border: const OutlineInputBorder(),
                           ),
@@ -221,9 +223,9 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _selectedTable,
+                          initialValue: _selectedTable,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.tableLabel,
+                            labelText: AppLocalizations.of(context).tableLabel,
                             isDense: true,
                             border: const OutlineInputBorder(),
                           ),
@@ -257,7 +259,7 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
             child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _logs.isEmpty
-                ? Center(child: Text(AppLocalizations.of(context)!.noAuditLogs))
+                ? Center(child: Text(AppLocalizations.of(context).noAuditLogs))
                 : ListView.builder(
                     itemCount: _logs.length,
                     itemBuilder: (context, index) {
@@ -287,12 +289,12 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   if (log['changed_fields'] != null && log['changed_fields'].toString().isNotEmpty)
-                                    Text(AppLocalizations.of(context)!.changedFields(log['changed_fields'].toString()), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text(AppLocalizations.of(context).changedFields(log['changed_fields'].toString()), style: const TextStyle(fontWeight: FontWeight.bold)),
                                   const SizedBox(height: 8),
                                   if (log['before_value'] != null)
-                                    Text(AppLocalizations.of(context)!.beforeVal(log['before_value'].toString()), style: const TextStyle(fontFamily: 'Courier', fontSize: 10)),
+                                    Text(AppLocalizations.of(context).beforeVal(log['before_value'].toString()), style: const TextStyle(fontFamily: 'Courier', fontSize: 10)),
                                   if (log['after_value'] != null)
-                                    Text(AppLocalizations.of(context)!.afterVal(log['after_value'].toString()), style: const TextStyle(fontFamily: 'Courier', fontSize: 10)),
+                                    Text(AppLocalizations.of(context).afterVal(log['after_value'].toString()), style: const TextStyle(fontFamily: 'Courier', fontSize: 10)),
                                 ],
                               ),
                             ),

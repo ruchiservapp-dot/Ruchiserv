@@ -8,13 +8,14 @@ import 'database_helper.dart';
 class LedgerSeeder {
   static Future<void> seedData() async {
     final db = DatabaseHelper();
-    const String firmId = 'DEFAULT'; 
+    const String firmId = 'DEFAULT';
 
     AppLogger.info("🌱 Seeding Ledger Data...");
 
     // 1. Seed Customers
     final orderRepo = OrderRepository();
-    List<Map<String, dynamic>> customers = await orderRepo.getAllCustomers(firmId);
+    List<Map<String, dynamic>> customers =
+        await orderRepo.getAllCustomers(firmId);
     if (customers.isEmpty) {
       await orderRepo.insertCustomer({
         'firmId': firmId,
@@ -35,7 +36,8 @@ class LedgerSeeder {
 
     // 2. Seed Suppliers
     final financeRepo = FinanceRepository();
-    List<Map<String, dynamic>> suppliers = await financeRepo.getAllSuppliers(firmId);
+    List<Map<String, dynamic>> suppliers =
+        await financeRepo.getAllSuppliers(firmId);
     if (suppliers.isEmpty) {
       await financeRepo.insertSupplier({
         'firmId': firmId,
@@ -57,39 +59,49 @@ class LedgerSeeder {
     }
 
     // 3. Seed Staff (if empty, though likely populated by other seeds)
-    List<Map<String, dynamic>> staff = await OperationRepository().getAllStaff(onlyActive: false);
+    List<Map<String, dynamic>> staff =
+        await OperationRepository().getAllStaff(onlyActive: false);
     if (staff.isEmpty) {
-    final opRepo = OperationRepository();
-    await opRepo.insertStaff({
-      'name': 'Gopi S',
-         'role': 'Chef',
-         'mobile': '9999999999',
-         'salary': 25000,
-         'isActive': 1,
-       });
-       staff = await OperationRepository().getAllStaff();
+      final opRepo = OperationRepository();
+      await opRepo.insertStaff({
+        'name': 'Gopi S',
+        'role': 'Chef',
+        'mobile': '9999999999',
+        'salary': 25000,
+        'isActive': 1,
+      });
+      staff = await OperationRepository().getAllStaff();
     }
 
     // 4. Seed Transactions
     final r = Random();
-    final categories = ['Salary', 'Advance', 'Purchase', 'Sales', 'Event Booking', 'Maintenance'];
-    
+    final categories = [
+      'Salary',
+      'Advance',
+      'Purchase',
+      'Sales',
+      'Event Booking',
+      'Maintenance'
+    ];
+
     for (var s in suppliers) {
-      await _ensureTransactions(financeRepo, 'SUPPLIER', s['id'], s['name'], 'EXPENSE', 'Purchase');
+      await _ensureTransactions(
+          financeRepo, 'SUPPLIER', s['id'], s['name'], 'EXPENSE', 'Purchase');
     }
     for (var c in customers) {
-      await _ensureTransactions(financeRepo, 'CUSTOMER', c['id'], c['name'], 'INCOME', 'Event Booking');
+      await _ensureTransactions(financeRepo, 'CUSTOMER', c['id'], c['name'],
+          'INCOME', 'Event Booking');
     }
     for (var st in staff) {
-      await _ensureTransactions(financeRepo, 'STAFF', st['id'], st['name'], 'EXPENSE', 'Salary');
+      await _ensureTransactions(
+          financeRepo, 'STAFF', st['id'], st['name'], 'EXPENSE', 'Salary');
     }
 
     AppLogger.info("✅ Seeding Complete!");
   }
 
-  static Future<void> _ensureTransactions(
-      FinanceRepository financeRepo, String type, int id, String name, String txnType, String category) async {
-    
+  static Future<void> _ensureTransactions(FinanceRepository financeRepo,
+      String type, int id, String name, String txnType, String category) async {
     final existing = await financeRepo.getTransactions(
       relatedEntityType: type,
       relatedEntityId: id,
@@ -103,12 +115,16 @@ class LedgerSeeder {
       for (int i = 0; i < count; i++) {
         await financeRepo.insertTransaction({
           'firmId': 'DEFAULT',
-          'date': DateTime.now().subtract(Duration(days: r.nextInt(30))).toIso8601String().substring(0, 10),
+          'date': DateTime.now()
+              .subtract(Duration(days: r.nextInt(30)))
+              .toIso8601String()
+              .substring(0, 10),
           'type': txnType,
-          'amount': (r.nextInt(50) + 1) * 100.0 + (txnType == 'INCOME' ? 5000 : 0),
+          'amount':
+              (r.nextInt(50) + 1) * 100.0 + (txnType == 'INCOME' ? 5000 : 0),
           'category': category,
           'description': 'Auto-generated seed transaction',
-          'mode': r.nextBool() ? 'Cash' : 'UPI',
+          'paymentMode': r.nextBool() ? 'Cash' : 'UPI',
           'relatedEntityType': type,
           'relatedEntityId': id,
           'partyName': name, // Redundant but good for quick display

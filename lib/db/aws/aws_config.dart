@@ -5,7 +5,8 @@ import 'dart:core';
 /// We keep it flexible so you can change stage or paths later without touching call sites.
 class AwsConfig {
   /// Your API Gateway base URL (no trailing slash)
-  static const String baseUrl = 'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com/prod';
+  static const String baseUrl =
+      'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com/prod';
 
   /// API Gateway stage. If you don’t use stages, set this to '' (empty).
   static const String stage = 'prod';
@@ -25,7 +26,8 @@ class AwsConfig {
   static Uri buildUri(String path, {Map<String, dynamic>? query}) {
     final String stagePart = (stage.isEmpty) ? '' : '/$stage';
     final String full = '$baseUrl$stagePart$path';
-    return Uri.parse(full).replace(queryParameters: query?.map((k, v) => MapEntry(k, '$v')));
+    return Uri.parse(full)
+        .replace(queryParameters: query?.map((k, v) => MapEntry(k, '$v')));
   }
 
   /// Convenience getters

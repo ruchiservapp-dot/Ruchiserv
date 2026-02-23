@@ -21,10 +21,11 @@ class LocaleProvider extends ChangeNotifier {
   }
 
   Future<void> setLocale(Locale loc) async {
-    if (!['en', 'ml', 'ta', 'kn', 'hi', 'te'].contains(loc.languageCode)) return;
+    if (!['en', 'ml', 'ta', 'kn', 'hi', 'te'].contains(loc.languageCode))
+      return;
 
     _locale = loc;
-    
+
     // Sync with LanguageService
     final langService = LanguageService();
     langService.setLanguage(loc.languageCode);

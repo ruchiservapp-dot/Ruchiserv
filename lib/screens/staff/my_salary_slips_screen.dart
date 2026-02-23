@@ -33,38 +33,39 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final sp = await SharedPreferences.getInstance();
     final userMobile = sp.getString('last_mobile');
     final firmId = sp.getString('last_firm');
-    
+
     if (userMobile == null || firmId == null) {
       setState(() => _isLoading = false);
       return;
     }
-    
+
     // Find staff record by mobile
-    _staffRecord = await _operationRepo.getStaffByMobile(userMobile, firmId: firmId);
-    
+    _staffRecord =
+        await _operationRepo.getStaffByMobile(userMobile, firmId: firmId);
+
     if (_staffRecord == null) {
       setState(() => _isLoading = false);
       return;
     }
-    
+
     final staffId = _staffRecord!['id'] as int;
-    
+
     // Get OT multiplier
     final firm = await _operationRepo.getFirmDetails(firmId);
     if (firm != null && firm['otMultiplier'] != null) {
       _otMultiplier = (firm['otMultiplier'] as num).toDouble();
     }
-    
+
     // Get salary slip data for selected month
     _salaryData = await _operationRepo.getSalarySlipData(staffId, _monthYear);
-    
+
     // Get history
     _history = await _operationRepo.getStaffSalaryHistory(staffId, limit: 12);
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -72,17 +73,20 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
     if (_staffRecord == null || _salaryData == null) {
       return {'basePay': 0, 'otPay': 0, 'deductions': 0, 'netPay': 0};
     }
-    
+
     final staffType = _staffRecord!['staffType'] as String? ?? 'PERMANENT';
     final salary = (_staffRecord!['salary'] as num?)?.toDouble() ?? 0;
-    final dailyWageRate = (_staffRecord!['dailyWageRate'] as num?)?.toDouble() ?? 0;
+    final dailyWageRate =
+        (_staffRecord!['dailyWageRate'] as num?)?.toDouble() ?? 0;
     final hourlyRate = (_staffRecord!['hourlyRate'] as num?)?.toDouble() ?? 0;
-    
+
     final attendance = _salaryData!['attendance'] as Map<String, dynamic>;
     final daysPresent = (attendance['daysPresent'] as num?)?.toInt() ?? 0;
-    final totalOvertime = (attendance['totalOvertime'] as num?)?.toDouble() ?? 0;
-    final pendingAdvances = (_salaryData!['pendingAdvances'] as num?)?.toDouble() ?? 0;
-    
+    final totalOvertime =
+        (attendance['totalOvertime'] as num?)?.toDouble() ?? 0;
+    final pendingAdvances =
+        (_salaryData!['pendingAdvances'] as num?)?.toDouble() ?? 0;
+
     double basePay = 0;
     switch (staffType) {
       case 'PERMANENT':
@@ -95,10 +99,10 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
         basePay = salary;
         break;
     }
-    
+
     final otPay = totalOvertime * hourlyRate * _otMultiplier;
     final netPay = basePay + otPay - pendingAdvances;
-    
+
     return {
       'basePay': basePay,
       'otPay': otPay,
@@ -116,10 +120,11 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
 
   void _nextMonth() {
     final now = DateTime.now();
-    if (_selectedMonth.year < now.year || 
+    if (_selectedMonth.year < now.year ||
         (_selectedMonth.year == now.year && _selectedMonth.month < now.month)) {
       setState(() {
-        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+        _selectedMonth =
+            DateTime(_selectedMonth.year, _selectedMonth.month + 1);
       });
       _loadData();
     }
@@ -127,46 +132,58 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
 
   Future<void> _downloadPDF() async {
     if (_staffRecord == null || _salaryData == null) return;
-    
+
     final payroll = _calculatePayroll();
     final firm = _salaryData!['firm'] as Map<String, dynamic>?;
     final attendance = _salaryData!['attendance'] as Map<String, dynamic>;
     final disbursement = _salaryData!['disbursement'] as Map<String, dynamic>?;
-    
+
     final staffName = _staffRecord!['name'] as String;
     final staffRole = _staffRecord!['role'] as String? ?? '';
-    
+
     final headers = ['Description', 'Amount'];
     final rows = <List<dynamic>>[
       ['--- EARNINGS ---', ''],
-      ['Base Pay (${attendance['daysPresent']} days)', '₹${payroll['basePay']!.toStringAsFixed(0)}'],
-      ['OT Pay (${(attendance['totalOvertime'] as num).toStringAsFixed(1)}h @ ${_otMultiplier}x)', '₹${payroll['otPay']!.toStringAsFixed(0)}'],
+      [
+        'Base Pay (${attendance['daysPresent']} days)',
+        '₹${payroll['basePay']!.toStringAsFixed(0)}'
+      ],
+      [
+        'OT Pay (${(attendance['totalOvertime'] as num).toStringAsFixed(1)}h @ ${_otMultiplier}x)',
+        '₹${payroll['otPay']!.toStringAsFixed(0)}'
+      ],
       ['', ''],
       ['--- DEDUCTIONS ---', ''],
       ['Advance Deduction', '₹${payroll['deductions']!.toStringAsFixed(0)}'],
       ['', ''],
       ['NET PAYABLE', '₹${payroll['netPay']!.toStringAsFixed(0)}'],
     ];
-    
+
     if (disbursement != null && disbursement['status'] == 'PAID') {
       rows.add(['', '']);
       rows.add(['Payment Status', 'PAID']);
       rows.add(['Payment Mode', disbursement['paymentMode'] ?? '-']);
-      rows.add(['Payment Date', disbursement['paidAt']?.toString().substring(0, 10) ?? '-']);
+      rows.add([
+        'Payment Date',
+        disbursement['paidAt']?.toString().substring(0, 10) ?? '-'
+      ]);
     }
-    
+
     try {
       await ReportExportService().exportToPdf(
         title: 'Salary Slip - $_monthDisplay',
-        subtitle: '$staffName${staffRole.isNotEmpty ? ' ($staffRole)' : ''}\n${firm?['name'] ?? 'Company'}',
+        subtitle:
+            '$staffName${staffRole.isNotEmpty ? ' ($staffRole)' : ''}\n${firm?['name'] ?? 'Company'}',
         headers: headers,
         rows: rows,
         filename: 'salary_slip_${_monthYear}_$staffName.pdf',
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Salary slip saved!'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Salary slip saved!'),
+              backgroundColor: Colors.green),
         );
       }
     } catch (e) {
@@ -181,10 +198,11 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
   @override
   Widget build(BuildContext context) {
     final payroll = _calculatePayroll();
-    final attendance = (_salaryData?['attendance'] as Map<String, dynamic>?) ?? {};
+    final attendance =
+        (_salaryData?['attendance'] as Map<String, dynamic>?) ?? {};
     final disbursement = _salaryData?['disbursement'] as Map<String, dynamic>?;
     final isPaid = disbursement?['status'] == 'PAID';
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Salary Slips'),
@@ -202,7 +220,8 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                       // Month Selector
                       Card(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 16),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -212,14 +231,17 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                               ),
                               Text(
                                 _monthDisplay,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                               IconButton(
                                 icon: Icon(
                                   Icons.chevron_right,
-                                  color: _selectedMonth.month == DateTime.now().month && 
-                                         _selectedMonth.year == DateTime.now().year
-                                      ? Colors.grey 
+                                  color: _selectedMonth.month ==
+                                              DateTime.now().month &&
+                                          _selectedMonth.year ==
+                                              DateTime.now().year
+                                      ? Colors.grey
                                       : null,
                                 ),
                                 onPressed: _nextMonth,
@@ -229,7 +251,7 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Payment Status Banner
                       if (isPaid)
                         Container(
@@ -242,16 +264,22 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.check_circle, color: Colors.green.shade700),
+                              Icon(Icons.check_circle,
+                                  color: Colors.green.shade700),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('PAID', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade700)),
+                                    Text('PAID',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green.shade700)),
                                     Text(
                                       '${disbursement!['paymentMode'] ?? ''} • ${disbursement['paidAt']?.toString().substring(0, 10) ?? ''}',
-                                      style: TextStyle(fontSize: 12, color: Colors.green.shade600),
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.green.shade600),
                                     ),
                                   ],
                                 ),
@@ -259,7 +287,7 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                             ],
                           ),
                         ),
-                      
+
                       if (!isPaid && (attendance['daysPresent'] ?? 0) > 0)
                         Container(
                           width: double.infinity,
@@ -271,14 +299,18 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.hourglass_empty, color: Colors.orange.shade700),
+                              Icon(Icons.hourglass_empty,
+                                  color: Colors.orange.shade700),
                               const SizedBox(width: 8),
-                              Text('Payment Pending', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
+                              Text('Payment Pending',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange.shade700)),
                             ],
                           ),
                         ),
                       const SizedBox(height: 16),
-                      
+
                       // Net Pay Hero
                       Card(
                         color: Colors.teal.shade50,
@@ -286,18 +318,23 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                           padding: const EdgeInsets.all(20),
                           child: Column(
                             children: [
-                              const Text('Net Payable', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                              const Text('Net Payable',
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey)),
                               const SizedBox(height: 8),
                               Text(
                                 '₹${payroll['netPay']!.toStringAsFixed(0)}',
-                                style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.teal.shade700),
+                                style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.teal.shade700),
                               ),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Earnings Section
                       Card(
                         child: Padding(
@@ -307,22 +344,36 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.add_circle, color: Colors.green.shade600, size: 20),
+                                  Icon(Icons.add_circle,
+                                      color: Colors.green.shade600, size: 20),
                                   const SizedBox(width: 8),
-                                  const Text('Earnings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  const Text('Earnings',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16)),
                                 ],
                               ),
                               const Divider(),
-                              _buildRow('Base Pay (${attendance['daysPresent'] ?? 0} days)', payroll['basePay']!, Colors.green),
-                              _buildRow('OT Pay (${(attendance['totalOvertime'] as num? ?? 0).toStringAsFixed(1)}h)', payroll['otPay']!, Colors.orange),
+                              _buildRow(
+                                  'Base Pay (${attendance['daysPresent'] ?? 0} days)',
+                                  payroll['basePay']!,
+                                  Colors.green),
+                              _buildRow(
+                                  'OT Pay (${(attendance['totalOvertime'] as num? ?? 0).toStringAsFixed(1)}h)',
+                                  payroll['otPay']!,
+                                  Colors.orange),
                               const Divider(),
-                              _buildRow('Total Earnings', payroll['basePay']! + payroll['otPay']!, Colors.green, bold: true),
+                              _buildRow(
+                                  'Total Earnings',
+                                  payroll['basePay']! + payroll['otPay']!,
+                                  Colors.green,
+                                  bold: true),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      
+
                       // Deductions Section
                       if (payroll['deductions']! > 0)
                         Card(
@@ -333,19 +384,24 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.remove_circle, color: Colors.red.shade600, size: 20),
+                                    Icon(Icons.remove_circle,
+                                        color: Colors.red.shade600, size: 20),
                                     const SizedBox(width: 8),
-                                    const Text('Deductions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    const Text('Deductions',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16)),
                                   ],
                                 ),
                                 const Divider(),
-                                _buildRow('Advance Deduction', payroll['deductions']!, Colors.red),
+                                _buildRow('Advance Deduction',
+                                    payroll['deductions']!, Colors.red),
                               ],
                             ),
                           ),
                         ),
                       const SizedBox(height: 24),
-                      
+
                       // Download Button
                       SizedBox(
                         width: double.infinity,
@@ -361,12 +417,14 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // History Section
                       if (_history.isNotEmpty) ...[
                         const Align(
                           alignment: Alignment.centerLeft,
-                          child: Text('Payment History', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          child: Text('Payment History',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
                         ),
                         const SizedBox(height: 8),
                         ListView.builder(
@@ -376,27 +434,38 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
                           itemBuilder: (context, index) {
                             final item = _history[index];
                             final monthYear = item['monthYear'] as String;
-                            final netPay = (item['netPay'] as num?)?.toDouble() ?? 0;
-                            final status = item['status'] as String? ?? 'PENDING';
+                            final netPay =
+                                (item['netPay'] as num?)?.toDouble() ?? 0;
+                            final status =
+                                item['status'] as String? ?? 'PENDING';
                             final paidAt = item['paidAt'] as String?;
-                            
+
                             return Card(
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: status == 'PAID' ? Colors.green.shade100 : Colors.orange.shade100,
+                                  backgroundColor: status == 'PAID'
+                                      ? Colors.green.shade100
+                                      : Colors.orange.shade100,
                                   child: Icon(
-                                    status == 'PAID' ? Icons.check : Icons.hourglass_empty,
-                                    color: status == 'PAID' ? Colors.green : Colors.orange,
+                                    status == 'PAID'
+                                        ? Icons.check
+                                        : Icons.hourglass_empty,
+                                    color: status == 'PAID'
+                                        ? Colors.green
+                                        : Colors.orange,
                                     size: 20,
                                   ),
                                 ),
                                 title: Text(_formatMonthYear(monthYear)),
-                                subtitle: Text(status == 'PAID' && paidAt != null 
-                                    ? 'Paid on ${paidAt.substring(0, 10)}' 
-                                    : status),
+                                subtitle: Text(
+                                    status == 'PAID' && paidAt != null
+                                        ? 'Paid on ${paidAt.substring(0, 10)}'
+                                        : status),
                                 trailing: Text(
                                   '₹${netPay.toStringAsFixed(0)}',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal.shade700),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.teal.shade700),
                                 ),
                                 onTap: () {
                                   setState(() {
@@ -434,24 +503,32 @@ class _MySalarySlipsScreenState extends State<MySalarySlipsScreen> {
         children: [
           Icon(Icons.person_off, size: 80, color: Colors.grey.shade400),
           const SizedBox(height: 16),
-          const Text('No Staff Record Found', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text('No Staff Record Found',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text('Your mobile is not linked to a staff record.', style: TextStyle(color: Colors.grey.shade600)),
+          Text('Your mobile is not linked to a staff record.',
+              style: TextStyle(color: Colors.grey.shade600)),
         ],
       ),
     );
   }
 
-  Widget _buildRow(String label, double amount, Color color, {bool bold = false}) {
+  Widget _buildRow(String label, double amount, Color color,
+      {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          Text(label,
+              style: TextStyle(
+                  fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
           Text(
             '₹${amount.toStringAsFixed(0)}',
-            style: TextStyle(color: color, fontWeight: bold ? FontWeight.bold : FontWeight.normal, fontSize: bold ? 16 : 14),
+            style: TextStyle(
+                color: color,
+                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                fontSize: bold ? 16 : 14),
           ),
         ],
       ),

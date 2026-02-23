@@ -4,7 +4,6 @@ import 'package:ruchiserv/repositories/order_repository.dart';
 // Last Updated: 2025-12-17 | Features: Invoice list, status filter, auto-generate from orders, PDF export
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../db/database_helper.dart';
 import '../services/invoice_pdf_service.dart';
 
 class InvoicesScreen extends StatefulWidget {
@@ -28,15 +27,15 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final prefs = await SharedPreferences.getInstance();
     _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
-    
+
     final invoices = await FinanceRepository().getInvoices(
       _firmId,
       status: _filterStatus == 'All' ? null : _filterStatus,
     );
-    
+
     setState(() {
       _invoices = invoices;
       _isLoading = false;
@@ -95,9 +94,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       DateTime.now().toIso8601String().substring(0, 10),
       _firmId,
     );
-    
+
     if (!mounted) return;
-    
+
     if (orders.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No orders available for invoicing')),
@@ -118,7 +117,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               final order = orders[index];
               return ListTile(
                 title: Text(order['customerName'] ?? 'Customer'),
-                subtitle: Text('Pax: ${order['totalPax']} | ₹${order['grandTotal'] ?? order['totalAmount'] ?? 0}'),
+                subtitle: Text(
+                    'Pax: ${order['totalPax']} | ₹${order['grandTotal'] ?? order['totalAmount'] ?? 0}'),
                 trailing: Text('#${order['id']}'),
                 onTap: () => Navigator.pop(context, order),
               );
@@ -138,8 +138,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
     // Check if invoice already exists for this order
     final existingInvoices = await FinanceRepository().getInvoices(_firmId);
-    final hasInvoice = existingInvoices.any((inv) => inv['orderId'] == selectedOrder['id']);
-    
+    final hasInvoice =
+        existingInvoices.any((inv) => inv['orderId'] == selectedOrder['id']);
+
     if (hasInvoice) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -150,7 +151,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
     // Create invoice
     try {
-      await FinanceRepository().createInvoiceFromOrder(selectedOrder['id'], _firmId);
+      await FinanceRepository()
+          .createInvoiceFromOrder(selectedOrder['id'], _firmId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invoice created successfully!')),
@@ -197,11 +199,13 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.receipt_long, size: 64, color: Colors.grey.shade400),
+                      Icon(Icons.receipt_long,
+                          size: 64, color: Colors.grey.shade400),
                       const SizedBox(height: 16),
                       Text(
                         'No invoices found',
-                        style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+                        style: TextStyle(
+                            fontSize: 18, color: Colors.grey.shade600),
                       ),
                       const SizedBox(height: 8),
                       TextButton.icon(
@@ -221,12 +225,16 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                     itemBuilder: (context, index) {
                       final invoice = _invoices[index];
                       final status = invoice['status'] ?? 'UNPAID';
-                      final totalAmount = (invoice['totalAmount'] as num?)?.toDouble() ?? 0;
-                      final balanceDue = (invoice['balanceDue'] as num?)?.toDouble() ?? totalAmount;
-                      
+                      final totalAmount =
+                          (invoice['totalAmount'] as num?)?.toDouble() ?? 0;
+                      final balanceDue =
+                          (invoice['balanceDue'] as num?)?.toDouble() ??
+                              totalAmount;
+
                       return Card(
                         elevation: 2,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         child: InkWell(
                           onTap: () => _viewInvoice(invoice),
                           borderRadius: BorderRadius.circular(12),
@@ -248,15 +256,19 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(status).withValues(alpha: 0.1),
+                                        color: _getStatusColor(status)
+                                            .withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(_getStatusIcon(status), size: 14, color: _getStatusColor(status)),
+                                          Icon(_getStatusIcon(status),
+                                              size: 14,
+                                              color: _getStatusColor(status)),
                                           const SizedBox(width: 4),
                                           Text(
                                             status,
@@ -272,56 +284,74 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                
+
                                 // Customer
                                 Text(
                                   invoice['customerName'] ?? 'Customer',
                                   style: TextStyle(color: Colors.grey.shade700),
                                 ),
                                 const SizedBox(height: 4),
-                                
+
                                 // Date and Due
                                 Row(
                                   children: [
-                                    Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade500),
+                                    Icon(Icons.calendar_today,
+                                        size: 14, color: Colors.grey.shade500),
                                     const SizedBox(width: 4),
                                     Text(
                                       invoice['invoiceDate'] ?? '',
-                                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600),
                                     ),
                                     const SizedBox(width: 16),
                                     if (invoice['dueDate'] != null) ...[
-                                      Icon(Icons.schedule, size: 14, color: Colors.grey.shade500),
+                                      Icon(Icons.schedule,
+                                          size: 14,
+                                          color: Colors.grey.shade500),
                                       const SizedBox(width: 4),
                                       Text(
                                         'Due: ${invoice['dueDate']}',
-                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600),
                                       ),
                                     ],
                                   ],
                                 ),
-                                
+
                                 const Divider(height: 24),
-                                
+
                                 // Amounts
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text('Total', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                                        Text('Total',
+                                            style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 12)),
                                         Text(
                                           '₹${totalAmount.toStringAsFixed(2)}',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16),
                                         ),
                                       ],
                                     ),
                                     if (balanceDue > 0)
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: [
-                                          Text('Balance Due', style: TextStyle(color: Colors.red.shade400, fontSize: 12)),
+                                          Text('Balance Due',
+                                              style: TextStyle(
+                                                  color: Colors.red.shade400,
+                                                  fontSize: 12)),
                                           Text(
                                             '₹${balanceDue.toStringAsFixed(2)}',
                                             style: TextStyle(
@@ -351,7 +381,8 @@ class _InvoiceDetailSheet extends StatefulWidget {
   final Map<String, dynamic> invoice;
   final VoidCallback onPaymentRecorded;
 
-  const _InvoiceDetailSheet({required this.invoice, required this.onPaymentRecorded});
+  const _InvoiceDetailSheet(
+      {required this.invoice, required this.onPaymentRecorded});
 
   @override
   State<_InvoiceDetailSheet> createState() => _InvoiceDetailSheetState();
@@ -368,7 +399,8 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
   }
 
   Future<void> _loadInvoiceDetails() async {
-    final invoice = await FinanceRepository().getInvoiceWithItems(widget.invoice['id']);
+    final invoice =
+        await FinanceRepository().getInvoiceWithItems(widget.invoice['id']);
     setState(() {
       _fullInvoice = invoice;
       _isLoading = false;
@@ -379,7 +411,8 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
     final balanceDue = (_fullInvoice?['balanceDue'] as num?)?.toDouble() ?? 0;
     if (balanceDue <= 0) return;
 
-    final amountController = TextEditingController(text: balanceDue.toStringAsFixed(2));
+    final amountController =
+        TextEditingController(text: balanceDue.toStringAsFixed(2));
     String paymentMode = 'UPI';
 
     final result = await showDialog<bool>(
@@ -399,7 +432,7 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: paymentMode,
+              initialValue: paymentMode,
               decoration: const InputDecoration(labelText: 'Payment Mode'),
               items: ['Cash', 'UPI', 'Bank Transfer', 'Cheque']
                   .map((m) => DropdownMenuItem(value: m, child: Text(m)))
@@ -446,7 +479,8 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+      return const SizedBox(
+          height: 200, child: Center(child: CircularProgressIndicator()));
     }
 
     final inv = _fullInvoice ?? widget.invoice;
@@ -473,7 +507,7 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Header
             Row(
               children: [
@@ -483,19 +517,22 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
                     children: [
                       Text(
                         inv['invoiceNumber'] ?? 'Invoice',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       Text(inv['customerName'] ?? 'Customer'),
                     ],
                   ),
                 ),
-              Chip(
+                Chip(
                   label: Text(status),
-                  backgroundColor: status == 'PAID' ? Colors.green.shade100 : Colors.orange.shade100,
+                  backgroundColor: status == 'PAID'
+                      ? Colors.green.shade100
+                      : Colors.orange.shade100,
                 ),
               ],
             ),
-            
+
             // PDF/Share Actions
             const SizedBox(height: 12),
             Row(
@@ -503,10 +540,12 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      final success = await InvoicePdfService.previewInvoice(widget.invoice['id']);
+                      final success = await InvoicePdfService.previewInvoice(
+                          widget.invoice['id']);
                       if (!success && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to generate PDF')),
+                          const SnackBar(
+                              content: Text('Failed to generate PDF')),
                         );
                       }
                     },
@@ -518,10 +557,12 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      final file = await InvoicePdfService.shareInvoice(widget.invoice['id']);
+                      final file = await InvoicePdfService.shareInvoice(
+                          widget.invoice['id']);
                       if (file == null && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to share invoice')),
+                          const SnackBar(
+                              content: Text('Failed to share invoice')),
                         );
                       }
                     },
@@ -531,9 +572,9 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
                 ),
               ],
             ),
-            
+
             const Divider(height: 32),
-            
+
             // Invoice Items
             Expanded(
               child: ListView(
@@ -550,31 +591,37 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
                           _buildRow('SGST', inv['sgst']),
                           const Divider(),
                           _buildRow('Total', inv['totalAmount'], isBold: true),
-                          _buildRow('Paid', inv['amountPaid'], color: Colors.green),
-                          _buildRow('Balance', inv['balanceDue'], color: Colors.red, isBold: true),
+                          _buildRow('Paid', inv['amountPaid'],
+                              color: Colors.green),
+                          _buildRow('Balance', inv['balanceDue'],
+                              color: Colors.red, isBold: true),
                         ],
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Line Items
                   if (items.isNotEmpty) ...[
-                    const Text('Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text('Items',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 8),
                     ...items.map((item) => Card(
-                      child: ListTile(
-                        title: Text(item['description'] ?? 'Item'),
-                        subtitle: Text('${item['quantity']} x ₹${item['rate']}'),
-                        trailing: Text('₹${item['totalAmount']?.toStringAsFixed(2) ?? '0.00'}'),
-                      ),
-                    )),
+                          child: ListTile(
+                            title: Text(item['description'] ?? 'Item'),
+                            subtitle:
+                                Text('${item['quantity']} x ₹${item['rate']}'),
+                            trailing: Text(
+                                '₹${item['totalAmount']?.toStringAsFixed(2) ?? '0.00'}'),
+                          ),
+                        )),
                   ],
                 ],
               ),
             ),
-            
+
             // Actions
             if (balanceDue > 0)
               SafeArea(
@@ -584,7 +631,8 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
                       child: ElevatedButton.icon(
                         onPressed: _recordPayment,
                         icon: const Icon(Icons.payment),
-                        label: Text('Record Payment (₹${balanceDue.toStringAsFixed(0)})'),
+                        label: Text(
+                            'Record Payment (₹${balanceDue.toStringAsFixed(0)})'),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
@@ -599,14 +647,17 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
     );
   }
 
-  Widget _buildRow(String label, dynamic value, {bool isBold = false, Color? color}) {
+  Widget _buildRow(String label, dynamic value,
+      {bool isBold = false, Color? color}) {
     final amount = (value as num?)?.toDouble() ?? 0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(label,
+              style: TextStyle(
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
           Text(
             '₹${amount.toStringAsFixed(2)}',
             style: TextStyle(

@@ -2,16 +2,18 @@ import 'dart:io';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 class OCRService {
-  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final TextRecognizer _textRecognizer =
+      TextRecognizer(script: TextRecognitionScript.latin);
 
   Future<Map<String, dynamic>> extractInvoiceData(File imageFile) async {
     final InputImage inputImage = InputImage.fromFile(imageFile);
-    final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
+    final RecognizedText recognizedText =
+        await _textRecognizer.processImage(inputImage);
 
     String rawText = recognizedText.text;
     double? amount = _extractAmount(rawText);
     String? date = _extractDate(rawText);
-    
+
     return {
       'amount': amount,
       'date': date,

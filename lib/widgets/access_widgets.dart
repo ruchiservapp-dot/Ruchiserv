@@ -44,13 +44,13 @@ class _RateProtectedState extends State<RateProtected> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
-    
+
     if (_canView) return widget.child;
-    
+
     if (widget.hideCompletely) return const SizedBox.shrink();
-    
-    return widget.placeholder ?? 
-      const Text('****', style: TextStyle(color: Colors.grey));
+
+    return widget.placeholder ??
+        const Text('****', style: TextStyle(color: Colors.grey));
   }
 }
 
@@ -96,11 +96,11 @@ class _PermissionGateState extends State<PermissionGate> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const SizedBox.shrink();
-    
+
     if (_hasAccess) return widget.child;
-    
+
     if (widget.deniedWidget != null) return widget.deniedWidget!;
-    
+
     return _buildAccessDenied();
   }
 
@@ -108,14 +108,15 @@ class _PermissionGateState extends State<PermissionGate> {
     return Card(
       color: Colors.grey.shade100,
       child: InkWell(
-        onTap: widget.onDenied ?? () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Access denied. Contact your administrator.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        },
+        onTap: widget.onDenied ??
+            () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Access denied. Contact your administrator.'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -165,7 +166,8 @@ class _FeatureBadgeState extends State<FeatureBadge> {
   }
 
   Future<void> _checkFeature() async {
-    final isEnabled = await FeatureGateService.instance.isFeatureEnabled(widget.feature);
+    final isEnabled =
+        await FeatureGateService.instance.isFeatureEnabled(widget.feature);
     final requiredTier = FeatureGateService.getRequiredTier(widget.feature);
     if (mounted) {
       setState(() {
@@ -179,9 +181,9 @@ class _FeatureBadgeState extends State<FeatureBadge> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return widget.child;
-    
+
     if (_isEnabled) return widget.child;
-    
+
     return Stack(
       children: [
         widget.child,
@@ -190,7 +192,8 @@ class _FeatureBadgeState extends State<FeatureBadge> {
             child: Container(
               color: Colors.black.withValues(alpha: 0.3),
               child: Center(
-                child: Icon(Icons.lock, color: Colors.white.withValues(alpha: 0.7), size: 32),
+                child: Icon(Icons.lock,
+                    color: Colors.white.withValues(alpha: 0.7), size: 32),
               ),
             ),
           ),
@@ -206,7 +209,7 @@ class _FeatureBadgeState extends State<FeatureBadge> {
   Widget _buildBadge() {
     final color = _requiredTier == 'ENTERPRISE' ? Colors.purple : Colors.orange;
     final label = _requiredTier == 'ENTERPRISE' ? 'ENT' : 'PRO';
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -239,7 +242,7 @@ class UpgradePrompt extends StatelessWidget {
   static Future<void> show(BuildContext context, String feature) async {
     final requiredTier = FeatureGateService.getRequiredTier(feature);
     final featureName = FeatureGateService.featureNames[feature] ?? feature;
-    
+
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

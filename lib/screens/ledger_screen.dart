@@ -4,7 +4,6 @@ import 'package:ruchiserv/repositories/order_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../db/database_helper.dart';
 import '../db/seed_ledger_data.dart';
 import 'ledger_detail_screen.dart';
 
@@ -15,7 +14,8 @@ class LedgerScreen extends StatefulWidget {
   State<LedgerScreen> createState() => _LedgerScreenState();
 }
 
-class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderStateMixin {
+class _LedgerScreenState extends State<LedgerScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _firmId = 'DEFAULT';
   bool _isLoadingFirm = true;
@@ -47,21 +47,24 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     if (_isLoadingFirm) {
-       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.ledgers),
+        title: Text(AppLocalizations.of(context).ledgers),
         actions: [
           IconButton(
             icon: const Icon(Icons.bug_report),
             tooltip: 'Seed Test Data',
             onPressed: () async {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Seeding data...")));
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Seeding data...")));
               await LedgerSeeder.seedData();
               setState(() {}); // Trigger rebuild to refresh lists
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Data seeded!")));
+              if (!mounted) return;
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text("Data seeded!")));
             },
           ),
         ],
@@ -70,7 +73,8 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
@@ -99,10 +103,10 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
                 unselectedLabelColor: Colors.white70,
                 indicatorColor: Colors.white,
                 tabs: [
-                  Tab(text: AppLocalizations.of(context)!.suppliers),
-                  Tab(text: AppLocalizations.of(context)!.subcontractors),
-                  Tab(text: AppLocalizations.of(context)!.staff),
-                  Tab(text: AppLocalizations.of(context)!.customers),
+                  Tab(text: AppLocalizations.of(context).suppliers),
+                  Tab(text: AppLocalizations.of(context).subcontractors),
+                  Tab(text: AppLocalizations.of(context).staff),
+                  Tab(text: AppLocalizations.of(context).customers),
                   const Tab(text: 'Drivers'),
                 ],
               ),
@@ -133,21 +137,24 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
         if (snapshot.hasError) {
           return Center(child: Text("Error: ${snapshot.error}"));
         }
-        
+
         var list = snapshot.data ?? [];
-        
+
         // Apply Search Filtering
         if (_searchQuery.isNotEmpty) {
           list = list.where((item) {
             final name = (item['name'] ?? '').toString().toLowerCase();
             final mobile = (item['mobile'] ?? '').toString().toLowerCase();
-            return name.contains(_searchQuery.toLowerCase()) || 
-                   mobile.contains(_searchQuery.toLowerCase());
+            return name.contains(_searchQuery.toLowerCase()) ||
+                mobile.contains(_searchQuery.toLowerCase());
           }).toList();
         }
 
         if (list.isEmpty) {
-          return Center(child: Text(_searchQuery.isEmpty ? "No ${type}s found" : "No matches found"));
+          return Center(
+              child: Text(_searchQuery.isEmpty
+                  ? "No ${type}s found"
+                  : "No matches found"));
         }
 
         return Column(
@@ -161,8 +168,14 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
                 children: [
                   Column(
                     children: [
-                      Text('Total Balance', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
-                      Text('Calculated in details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.indigo.shade800)),
+                      Text('Total Balance',
+                          style: TextStyle(
+                              fontSize: 10, color: Colors.grey.shade600)),
+                      Text('Calculated in details',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo.shade800)),
                     ],
                   ),
                   // We could potentially sum up balances here if we added a balance column to the query
@@ -176,21 +189,25 @@ class _LedgerScreenState extends State<LedgerScreen> with SingleTickerProviderSt
                 itemBuilder: (context, index) {
                   final item = list[index];
                   final name = item['name'] ?? 'Unknown';
-                  final contact = item['mobile'] ?? item['phone'] ?? item['email'] ?? '';
+                  final contact =
+                      item['mobile'] ?? item['phone'] ?? item['email'] ?? '';
                   final id = item['id'];
 
                   return ListTile(
-                    leading: CircleAvatar(child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?')),
+                    leading: CircleAvatar(
+                        child: Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : '?')),
                     title: Text(name),
                     subtitle: contact.isNotEmpty ? Text(contact) : null,
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
-                       await Navigator.push(
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => LedgerDetailScreen(
                             entityName: name,
-                            entityType: type.toUpperCase(), // Ensure uppercase for DB matching
+                            entityType: type
+                                .toUpperCase(), // Ensure uppercase for DB matching
                             entityId: id,
                           ),
                         ),

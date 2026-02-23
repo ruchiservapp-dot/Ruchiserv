@@ -36,18 +36,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm');
     final role = await PermissionService.instance.getUserRole();
-    
+
     _firmId = firmId;
     _userRole = role;
-    
+
     // Load subscription details from database
     if (firmId != null) {
       final firmData = await DatabaseHelper().getFirmDetails(firmId);
       if (firmData != null) {
-        final planName = firmData['subscription_plan']?.toString() ?? 'Free Trial';
+        final planName =
+            firmData['subscription_plan']?.toString() ?? 'Free Trial';
         final endDateStr = firmData['subscription_end_date']?.toString();
         _clientUpiId = firmData['client_upi_id']?.toString();
-        
+
         setState(() {
           _currentPlan = planName;
           if (endDateStr != null && endDateStr.isNotEmpty) {
@@ -63,7 +64,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         return;
       }
     }
-    
+
     // Fallback to SharedPreferences (legacy)
     final expiryStr = sp.getString('subscription_expiry');
     setState(() {
@@ -151,7 +152,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   // Current Plan Card
                   Card(
                     elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       width: double.infinity,
@@ -168,12 +170,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         children: [
                           const Text(
                             "Current Plan",
-                            style: TextStyle(color: Colors.white70, fontSize: 14),
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 14),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             _currentPlan,
-                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           Row(
@@ -182,19 +188,31 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text("Expires On", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                                  Text(_expiryDate, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                  const Text("Expires On",
+                                      style: TextStyle(
+                                          color: Colors.white70, fontSize: 12)),
+                                  Text(_expiryDate,
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold)),
                                 ],
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: _daysRemaining <= 5 ? Colors.red.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.2),
+                                  color: _daysRemaining <= 5
+                                      ? Colors.red.withValues(alpha: 0.3)
+                                      : Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  _daysRemaining > 0 ? "$_daysRemaining Days Left" : "Expired",
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  _daysRemaining > 0
+                                      ? "$_daysRemaining Days Left"
+                                      : "Expired",
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ],
@@ -203,24 +221,30 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       ),
                     ),
                   ),
-                  
+
                   // Billing Cycle Toggle
                   const SizedBox(height: 24),
                   Card(
                     elevation: 2,
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Column( // Changed from Row to Column for mobile
+                      child: Column(
+                        // Changed from Row to Column for mobile
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("Billing Cycle", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          const Text("Billing Cycle",
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
                             child: SegmentedButton<String>(
                               segments: const [
-                                ButtonSegment(value: 'MONTHLY', label: Text('Monthly')),
-                                ButtonSegment(value: 'YEARLY', label: Text('Annual')), // Shorter label
+                                ButtonSegment(
+                                    value: 'MONTHLY', label: Text('Monthly')),
+                                ButtonSegment(
+                                    value: 'YEARLY',
+                                    label: Text('Annual')), // Shorter label
                               ],
                               selected: {_billingCycle},
                               onSelectionChanged: (Set<String> selected) {
@@ -232,7 +256,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       ),
                     ),
                   ),
-                  
+
                   // Admin-only notice
                   if (!_isAdmin) ...[
                     const SizedBox(height: 16),
@@ -257,16 +281,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       ),
                     ),
                   ],
-                  
+
                   const SizedBox(height: 32),
-                  const Text("Available Plans", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text("Available Plans",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
-                  
+
                   _buildPlanCard(
                     title: "Basic",
                     price: "₹999 / month",
                     amount: 999.0,
-                    features: ["Up to 5 Users", "Basic Reports", "Inventory Management"],
+                    features: [
+                      "Up to 5 Users",
+                      "Basic Reports",
+                      "Inventory Management"
+                    ],
                     isCurrent: _currentPlan.toLowerCase() == 'basic',
                     color: Colors.orange,
                   ),
@@ -274,7 +304,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     title: "Pro",
                     price: "₹2499 / month",
                     amount: 2499.0,
-                    features: ["Unlimited Users", "Advanced Analytics", "Priority Support", "Multi-branch"],
+                    features: [
+                      "Unlimited Users",
+                      "Advanced Analytics",
+                      "Priority Support",
+                      "Multi-branch"
+                    ],
                     isCurrent: _currentPlan.toLowerCase() == 'pro',
                     color: Colors.purple,
                   ),
@@ -282,7 +317,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     title: "Enterprise",
                     price: "₹4999 / month",
                     amount: 4999.0,
-                    features: ["Dedicated Server", "Custom Integrations", "24/7 Support"],
+                    features: [
+                      "Dedicated Server",
+                      "Custom Integrations",
+                      "24/7 Support"
+                    ],
                     isCurrent: _currentPlan.toLowerCase() == 'enterprise',
                     color: Colors.black87,
                   ),
@@ -314,46 +353,64 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               children: [
                 Row(
                   children: [
-                    Text(title, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+                    Text(title,
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: color)),
                     if (isCurrent) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.green,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text('ACTIVE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        child: const Text('ACTIVE',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ],
                 ),
-                Text(_billingCycle == 'YEARLY' ? '₹${(amount * 10).toStringAsFixed(0)} / year' : price, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                Text(
+                    _billingCycle == 'YEARLY'
+                        ? '₹${(amount * 10).toStringAsFixed(0)} / year'
+                        : price,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w600)),
               ],
             ),
             const Divider(height: 24),
             ...features.map((f) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 18),
-                  const SizedBox(width: 8),
-                  Text(f),
-                ],
-              ),
-            )),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle,
+                          color: Colors.green, size: 18),
+                      const SizedBox(width: 8),
+                      Text(f),
+                    ],
+                  ),
+                )),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isAdmin ? () => _handleUpgrade(title, amount) : null,
+                onPressed:
+                    _isAdmin ? () => _handleUpgrade(title, amount) : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: Colors.grey.shade300,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: Text(_isAdmin ? (isCurrent ? "Renew Plan" : "Upgrade Now") : "Admin Only"),
+                child: Text(_isAdmin
+                    ? (isCurrent ? "Renew Plan" : "Upgrade Now")
+                    : "Admin Only"),
               ),
             ),
           ],
@@ -375,7 +432,7 @@ class _UPIPaymentDialog extends StatefulWidget {
     required this.planName,
     required this.amount,
     required this.clientUpiId,
-   required this.firmId,
+    required this.firmId,
     required this.billingCycle,
   });
 
@@ -413,23 +470,25 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
     });
 
     try {
-      final result = await SubscriptionService().validatePromoCode(code, widget.planName.toUpperCase());
-      
+      final result = await SubscriptionService()
+          .validatePromoCode(code, widget.planName.toUpperCase());
+
       if (mounted) {
         if (result['valid'] == true) {
           final discountType = result['discountType'];
           final discountValue = result['discountValue'];
-          
+
           double discount = 0;
           if (discountType == 'PERCENT') {
             discount = (widget.amount * (discountValue as num)) / 100;
           } else if (discountType == 'FLAT') {
             discount = (discountValue as num).toDouble();
           }
-          
+
           setState(() {
             _discountAmount = discount;
-            _promoValidationMessage = '✓ Promo applied! Discount: ₹${discount.toStringAsFixed(0)}';
+            _promoValidationMessage =
+                '✓ Promo applied! Discount: ₹${discount.toStringAsFixed(0)}';
             _isValidatingPromo = false;
           });
         } else {
@@ -452,17 +511,18 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
 
   Future<void> _launchUpiPayment() async {
     setState(() => _isProcessing = true);
-    
+
     _transactionRef = UPIService.generateTransactionRef(widget.firmId);
     _upiUrl = UPIService.getUpiUrl(
       amount: _finalAmount,
       transactionNote: 'RuchiServ ${widget.planName} Plan',
       transactionRef: _transactionRef!,
     );
-    
+
     // Check Platform
-    final isMobile = defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;
-    
+    final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+
     if (isMobile && !kIsWeb) {
       // Auto-launch on Mobile
       final launched = await UPIService.launchUpiPayment(
@@ -470,18 +530,19 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
         transactionNote: 'RuchiServ ${widget.planName} Plan',
         transactionRef: _transactionRef!,
       );
-      
+
       setState(() => _isProcessing = false);
-      
+
       if (launched) {
         // Move to UTR entry step
         setState(() => _step = 2);
       } else {
         // Fallback to QR code if launch fails
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No UPI app found. You can scan the QR code instead.'),
+              content:
+                  Text('No UPI app found. You can scan the QR code instead.'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -500,23 +561,25 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
     final utr = _utrController.text.trim();
     if (utr.isEmpty || utr.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid UTR number'), backgroundColor: Colors.orange),
+        const SnackBar(
+            content: Text('Please enter a valid UTR number'),
+            backgroundColor: Colors.orange),
       );
       return;
     }
-    
+
     setState(() => _isProcessing = true);
-    
+
     try {
       // Calculate new end date
       final newEndDate = UPIService.calculateNewEndDate(null, widget.planName);
-      
+
       // Update local database
       await DatabaseHelper().updateFirmDetails(widget.firmId, {
         'subscription_plan': widget.planName,
         'subscription_end_date': newEndDate.toIso8601String(),
       });
-      
+
       // TODO: Send payment details to AWS for verification
       // await SubscriptionService().submitPaymentDetails(
       //   firmId: widget.firmId,
@@ -525,7 +588,7 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
       //   planName: widget.planName,
       //   transactionRef: _transactionRef,
       // );
-      
+
       setState(() {
         _step = 3; // Success
         _isProcessing = false;
@@ -543,7 +606,9 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(_step == 3 ? '✅ Payment Successful' : 'Subscribe to ${widget.planName}'),
+      title: Text(_step == 3
+          ? '✅ Payment Successful'
+          : 'Subscribe to ${widget.planName}'),
       content: SizedBox(
         width: 300,
         child: _buildContent(),
@@ -559,9 +624,12 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Amount: ₹${widget.amount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text('Amount: ₹${widget.amount.toStringAsFixed(0)}',
+              style:
+                  const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          const Text('You will be redirected to your UPI app to complete the payment.'),
+          const Text(
+              'You will be redirected to your UPI app to complete the payment.'),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -577,8 +645,10 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Your UPI ID', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      Text(widget.clientUpiId, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Your UPI ID',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(widget.clientUpiId,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -605,8 +675,11 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _isValidatingPromo ? null : _validatePromoCode,
-                child: _isValidatingPromo 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                child: _isValidatingPromo
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('Apply'),
               ),
             ],
@@ -633,17 +706,24 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Final Amount:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('Final Amount:',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
                         '₹${widget.amount.toStringAsFixed(0)}',
-                        style: const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey),
+                        style: const TextStyle(
+                            decoration: TextDecoration.lineThrough,
+                            color: Colors.grey),
                       ),
                       Text(
                         '₹${_finalAmount.toStringAsFixed(0)}',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green),
                       ),
                     ],
                   ),
@@ -655,10 +735,10 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
       );
     } else if (_step == 2) {
       // QR + UTR entry step
-      final isDesktop = defaultTargetPlatform == TargetPlatform.macOS || 
-                        defaultTargetPlatform == TargetPlatform.windows || 
-                        defaultTargetPlatform == TargetPlatform.linux ||
-                        kIsWeb;
+      final isDesktop = defaultTargetPlatform == TargetPlatform.macOS ||
+          defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux ||
+          kIsWeb;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -691,7 +771,8 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
             const Divider(),
             const SizedBox(height: 16),
           ],
-          const Text('Once payment is completed, enter the UTR/Reference number:'),
+          const Text(
+              'Once payment is completed, enter the UTR/Reference number:'),
           const SizedBox(height: 12),
           TextField(
             controller: _utrController,
@@ -717,7 +798,8 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
         children: [
           const Icon(Icons.check_circle, color: Colors.green, size: 64),
           const SizedBox(height: 16),
-          Text('Your ${widget.planName} plan is now active!', textAlign: TextAlign.center),
+          Text('Your ${widget.planName} plan is now active!',
+              textAlign: TextAlign.center),
           const SizedBox(height: 8),
           Text(
             'Payment will be verified within 24 hours.',
@@ -738,8 +820,11 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
         ),
         ElevatedButton(
           onPressed: _isProcessing ? null : _launchUpiPayment,
-          child: _isProcessing 
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          child: _isProcessing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('Pay Now'),
         ),
       ];
@@ -751,8 +836,11 @@ class _UPIPaymentDialogState extends State<_UPIPaymentDialog> {
         ),
         ElevatedButton(
           onPressed: _isProcessing ? null : _submitPayment,
-          child: _isProcessing 
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          child: _isProcessing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('Submit'),
         ),
       ];

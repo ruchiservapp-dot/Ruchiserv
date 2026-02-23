@@ -18,15 +18,17 @@ Future<void> main() async {
         continue;
       }
 
-      final awsUrl = Uri.parse('https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com/prod${olderReq.uri.path}');
-      
+      final awsUrl = Uri.parse(
+          'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com/prod${olderReq.uri.path}');
+
       // Forward Request
       final client = http.Client();
       final bodyBytes = await olderReq.toList();
       final body = bodyBytes.isNotEmpty ? bodyBytes.first : <int>[];
 
       final proxyReq = http.Request(olderReq.method, awsUrl);
-      proxyReq.headers['Content-Type'] = 'application/json'; // AWS requires this
+      proxyReq.headers['Content-Type'] =
+          'application/json'; // AWS requires this
       if (body.isNotEmpty) {
         proxyReq.bodyBytes = body;
       }
@@ -39,8 +41,9 @@ Future<void> main() async {
       olderReq.response.statusCode = proxyResp.statusCode;
       olderReq.response.write(respBody);
       await olderReq.response.close();
-      
-      AppLogger.success('✅ [${olderReq.method}] ${olderReq.uri.path} -> ${proxyResp.statusCode}');
+
+      AppLogger.success(
+          '✅ [${olderReq.method}] ${olderReq.uri.path} -> ${proxyResp.statusCode}');
     } catch (e) {
       AppLogger.info('🔴 Proxy Error: $e');
       olderReq.response.statusCode = 500;
@@ -52,6 +55,8 @@ Future<void> main() async {
 
 void _addCorsHeaders(HttpResponse response) {
   response.headers.add('Access-Control-Allow-Origin', '*');
-  response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-  response.headers.add('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  response.headers
+      .add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  response.headers.add('Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept');
 }

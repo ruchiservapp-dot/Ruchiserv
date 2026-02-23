@@ -21,7 +21,8 @@ class AppUpdateService {
       ));
       await _remoteConfig.setDefaults({
         'min_app_version': '1.0.0',
-        'update_url_android': 'https://play.google.com/store/apps/details?id=com.ruchiserv.app',
+        'update_url_android':
+            'https://play.google.com/store/apps/details?id=com.ruchiserv.app',
         'update_url_ios': 'https://apps.apple.com/app/ruchiserv/id6470000000',
       });
       await _remoteConfig.fetchAndActivate();
@@ -32,7 +33,7 @@ class AppUpdateService {
 
   Future<void> checkForUpdate(BuildContext context) async {
     if (_isUpdateDialogShowing) return;
-    
+
     final packageInfo = await PackageInfo.fromPlatform();
     final currentVersion = packageInfo.version;
     final minVersion = _remoteConfig.getString('min_app_version');
@@ -71,7 +72,7 @@ class AppUpdateService {
           actions: [
             ElevatedButton(
               onPressed: () async {
-                final urlString = Platform.isAndroid 
+                final urlString = Platform.isAndroid
                     ? _remoteConfig.getString('update_url_android')
                     : _remoteConfig.getString('update_url_ios');
                 final url = Uri.parse(urlString);

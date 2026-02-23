@@ -5,7 +5,8 @@ import '../db/database_helper.dart';
 
 class FeatureGateService {
   static FeatureGateService? _instance;
-  static FeatureGateService get instance => _instance ??= FeatureGateService._();
+  static FeatureGateService get instance =>
+      _instance ??= FeatureGateService._();
   FeatureGateService._();
 
   // Cached tier
@@ -84,20 +85,21 @@ class FeatureGateService {
   Future<void> initialize() async {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm');
-    
+
     if (firmId == null) return;
-    
+
     final db = await DatabaseHelper().database;
-    final firms = await db.query('firms', 
-      where: 'firmId = ?', 
+    final firms = await db.query(
+      'firms',
+      where: 'firmId = ?',
       whereArgs: [firmId],
       limit: 1,
     );
-    
+
     if (firms.isNotEmpty) {
       final firm = firms.first;
       _cachedTier = firm['subscriptionTier'] as String? ?? 'BASIC';
-      
+
       // Get custom enabled features or use tier defaults
       final customFeatures = firm['enabledFeatures'] as String?;
       if (customFeatures != null && customFeatures.isNotEmpty) {
@@ -105,7 +107,7 @@ class FeatureGateService {
       } else {
         _cachedFeatures = tierFeatures[_cachedTier] ?? tierFeatures['BASIC']!;
       }
-      
+
       // Cache in SharedPreferences
       await sp.setString('subscription_tier', _cachedTier!);
       await sp.setStringList('enabled_features', _cachedFeatures!);
@@ -116,7 +118,7 @@ class FeatureGateService {
   Future<void> clear() async {
     _cachedTier = null;
     _cachedFeatures = null;
-    
+
     final sp = await SharedPreferences.getInstance();
     await sp.remove('subscription_tier');
     await sp.remove('enabled_features');
@@ -132,16 +134,16 @@ class FeatureGateService {
   /// Check if a feature is enabled for current tier
   Future<bool> isFeatureEnabled(String feature) async {
     final tier = await getCurrentTier();
-    
+
     // Enterprise has access to everything
     if (tier == 'ENTERPRISE') return true;
-    
+
     // Check cached features
     if (_cachedFeatures != null) {
       if (_cachedFeatures!.contains('ALL')) return true;
       return _cachedFeatures!.contains(feature);
     }
-    
+
     // Check from SharedPreferences
     final sp = await SharedPreferences.getInstance();
     final features = sp.getStringList('enabled_features') ?? [];
@@ -152,7 +154,7 @@ class FeatureGateService {
   /// Get all enabled features
   Future<List<String>> getEnabledFeatures() async {
     if (_cachedFeatures != null) return _cachedFeatures!;
-    
+
     final sp = await SharedPreferences.getInstance();
     return sp.getStringList('enabled_features') ?? [];
   }
@@ -172,10 +174,14 @@ class FeatureGateService {
   /// Get tier display name
   static String getTierDisplayName(String tier) {
     switch (tier) {
-      case 'BASIC': return 'Basic - ₹1,499/month';
-      case 'PRO': return 'Pro - ₹2,499/month';
-      case 'ENTERPRISE': return 'Enterprise - Custom Pricing';
-      default: return tier;
+      case 'BASIC':
+        return 'Basic - ₹1,499/month';
+      case 'PRO':
+        return 'Pro - ₹2,499/month';
+      case 'ENTERPRISE':
+        return 'Enterprise - Custom Pricing';
+      default:
+        return tier;
     }
   }
 
@@ -189,9 +195,12 @@ class FeatureGateService {
   Future<String?> getNextTier() async {
     final tier = await getCurrentTier();
     switch (tier) {
-      case 'BASIC': return 'PRO';
-      case 'PRO': return 'ENTERPRISE';
-      default: return null;
+      case 'BASIC':
+        return 'PRO';
+      case 'PRO':
+        return 'ENTERPRISE';
+      default:
+        return null;
     }
   }
 }

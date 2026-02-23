@@ -9,15 +9,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
-import '../db/aws/aws_api.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
-import '../services/connectivity_service.dart';
-import '../services/notification_service.dart';
 import '../services/location_service.dart';
 import '../services/feature_gate_service.dart';
 import '../services/whatsapp_service.dart';
 import '../utils/time_utils.dart';
-import '../widgets/access_widgets.dart';
 import 'return_tracking_screen.dart';
 import 'unload_verify_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -126,7 +122,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.dispatchTitle),
+        title: Text(AppLocalizations.of(context).dispatchTitle),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadAllData),
         ],
@@ -136,10 +132,10 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
           unselectedLabelColor: Colors.white60,
           indicatorColor: Colors.white,
           tabs: [
-            Tab(icon: const Icon(Icons.list_alt), text: '${AppLocalizations.of(context)!.tabList} (${_pendingOrders.length})'),
-            Tab(icon: const Icon(Icons.local_shipping), text: '${AppLocalizations.of(context)!.tabActive} (${_activeDispatches.length})'),
-            Tab(icon: const Icon(Icons.assignment_return), text: '${AppLocalizations.of(context)!.tabReturns} (${_returns.length})'),
-            Tab(icon: const Icon(Icons.inventory_2), text: '${AppLocalizations.of(context)!.tabUnload} (${_unloads.length})'),
+            Tab(icon: const Icon(Icons.list_alt), text: '${AppLocalizations.of(context).tabList} (${_pendingOrders.length})'),
+            Tab(icon: const Icon(Icons.local_shipping), text: '${AppLocalizations.of(context).tabActive} (${_activeDispatches.length})'),
+            Tab(icon: const Icon(Icons.assignment_return), text: '${AppLocalizations.of(context).tabReturns} (${_returns.length})'),
+            Tab(icon: const Icon(Icons.inventory_2), text: '${AppLocalizations.of(context).tabUnload} (${_unloads.length})'),
           ],
         ),
       ),
@@ -208,7 +204,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   // Tab 1: Pending Orders
   Widget _buildPendingTab() {
     if (_pendingOrders.isEmpty) {
-      return Center(child: Text(AppLocalizations.of(context)!.noPendingOrdersDate(DateFormat('MMM dd').format(_selectedDate))));
+      return Center(child: Text(AppLocalizations.of(context).noPendingOrdersDate(DateFormat('MMM dd').format(_selectedDate))));
     }
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -250,7 +246,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
             title: Text(order['customerName'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('${TimeUtils.formatTo12Hour(order['time'])} • ${order['location'] ?? 'N/A'}'),
             trailing: Chip(
-              label: Text(allReady ? AppLocalizations.of(context)!.ready : '$internalReady/$internalCount'),
+              label: Text(allReady ? AppLocalizations.of(context).ready : '$internalReady/$internalCount'),
               backgroundColor: allReady ? Colors.green.shade100 : Colors.orange.shade100,
             ),
           ),
@@ -278,7 +274,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
               child: ElevatedButton.icon(
                 onPressed: allReady ? () => _startDispatch(order) : null,
                 icon: const Icon(Icons.local_shipping),
-                label: Text(allReady ? AppLocalizations.of(context)!.startDispatch : AppLocalizations.of(context)!.waitingForKitchen),
+                label: Text(allReady ? AppLocalizations.of(context).startDispatch : AppLocalizations.of(context).waitingForKitchen),
                 style: ElevatedButton.styleFrom(backgroundColor: allReady ? Colors.green : Colors.grey),
               ),
             ),
@@ -291,7 +287,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   // Tab 2: Active Dispatches
   Widget _buildActiveTab() {
     if (_activeDispatches.isEmpty) {
-      return Center(child: Text(AppLocalizations.of(context)!.noActiveDispatches));
+      return Center(child: Text(AppLocalizations.of(context).noActiveDispatches));
     }
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -408,7 +404,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
     if (!isEnterprise) {
          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppLocalizations.of(context)!.upgradeToEnterprise)),
+              SnackBar(content: Text(AppLocalizations.of(context).upgradeToEnterprise)),
             );
          }
        return;
@@ -436,7 +432,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   // Tab 3: Returns
   Widget _buildReturnsTab() {
     if (_returns.isEmpty) {
-      return Center(child: Text(AppLocalizations.of(context)!.noReturnTracking));
+      return Center(child: Text(AppLocalizations.of(context).noReturnTracking));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(12),
@@ -451,7 +447,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
             subtitle: Text('${d['date']} | ${d['dispatchStatus']}'),
             trailing: ElevatedButton(
               onPressed: () => _trackReturn(d),
-              child: Text(AppLocalizations.of(context)!.track),
+              child: Text(AppLocalizations.of(context).track),
             ),
           ),
         );
@@ -462,7 +458,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   // Tab 4: Unload
   Widget _buildUnloadTab() {
     if (_unloads.isEmpty) {
-      return Center(child: Text(AppLocalizations.of(context)!.noUnloadItems));
+      return Center(child: Text(AppLocalizations.of(context).noUnloadItems));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(12),
@@ -477,7 +473,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
             subtitle: Text('${d['date']} | Returned'),
             trailing: ElevatedButton(
               onPressed: () => _verifyUnload(d),
-              child: Text(AppLocalizations.of(context)!.verify),
+              child: Text(AppLocalizations.of(context).verify),
             ),
           ),
         );
@@ -499,7 +495,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
 
   void _showLocation(Map<String, dynamic> dispatch) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.locationValues(dispatch['driverLat'], dispatch['driverLng']))),
+      SnackBar(content: Text(AppLocalizations.of(context).locationValues(dispatch['driverLat'], dispatch['driverLng']))),
     );
   }
 
@@ -508,6 +504,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
     final items = await OperationRepository().getDispatchItems(dispatch['id'] as int);
     
     showModalBottomSheet(
+
       context: context,
       isScrollControlled: true,
       builder: (ctx) => DraggableScrollableSheet(
@@ -540,11 +537,11 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                 ],
               ),
               const Divider(height: 24),
-              Text(AppLocalizations.of(context)!.loadedItems, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(AppLocalizations.of(context).loadedItems, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 8),
               Expanded(
                 child: items.isEmpty
-                    ? Center(child: Text(AppLocalizations.of(context)!.noItemsRecorded))
+                    ? Center(child: Text(AppLocalizations.of(context).noItemsRecorded))
                     : ListView.builder(
                         controller: scrollController,
                         itemCount: items.length,
@@ -556,7 +553,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                             leading: Icon(type == 'DISH' ? Icons.restaurant : Icons.inventory, color: type == 'DISH' ? Colors.green : Colors.blue),
                             title: Text(item['itemName'].toString()),
                             subtitle: Text(type.toString()),
-                            trailing: Text('${AppLocalizations.of(context)!.loadedQty((item['loadedQty'] as int?) ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            trailing: Text(AppLocalizations.of(context).loadedQty((item['loadedQty'] as int?) ?? 0), style: const TextStyle(fontWeight: FontWeight.bold)),
                           );
                         },
                       ),
@@ -583,7 +580,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
                         _trackReturn(dispatch);
                       },
                       icon: const Icon(Icons.assignment_return),
-                      label: Text(AppLocalizations.of(context)!.trackReturn),
+                      label: Text(AppLocalizations.of(context).trackReturn),
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                     ),
                   ),
@@ -631,12 +628,12 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _items = [];
   List<Map<String, dynamic>> _consumables = []; // Paper Roll, Plates, Glass
-  List<Map<String, dynamic>> _customUtensils = []; // User-added utensils
+  final List<Map<String, dynamic>> _customUtensils = []; // User-added utensils
   List<String> _utensilSuggestions = []; // From DB for autocomplete
   int? _selectedVehicleId;
   bool _isCustomerCollection = false; // Added
   bool _isLoading = true;
-  List<Map<String, dynamic>> _customConsumables = []; // Added for dynamic consumables
+  final List<Map<String, dynamic>> _customConsumables = []; // Added for dynamic consumables
 
   @override
   void initState() {
@@ -730,7 +727,7 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
 
   Future<void> _completeDispatch() async {
     if (!_isCustomerCollection && _selectedVehicleId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectVehicle)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).pleaseSelectVehicle)));
       return;
     }
 
@@ -839,13 +836,13 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.dispatchedMsg), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).dispatchedMsg), backgroundColor: Colors.green));
         Navigator.pop(context, true);
       }
     } catch (e) {
       AppLogger.info('Dispatch error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.dispatchError(e)), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).dispatchError(e)), backgroundColor: Colors.red));
       }
     }
   }
@@ -897,7 +894,7 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
                 width: 70,
                 child: TextField(
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.qtyLabel, isDense: true, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).qtyLabel, isDense: true, border: const OutlineInputBorder()),
                   controller: TextEditingController(text: '${item['qty']}'),
                   onChanged: (v) {
                     _items[index]['qty'] = int.tryParse(v) ?? 0;
@@ -934,8 +931,8 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
               padding: const EdgeInsets.all(16),
               children: [
                 DropdownButtonFormField<int>(
-                  value: _selectedVehicleId,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.selectVehicle, border: const OutlineInputBorder()),
+                  initialValue: _selectedVehicleId,
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).selectVehicle, border: const OutlineInputBorder()),
                   items: _vehicles.map((v) {
                     // Format: VehicleNo [Type] - DriverName
                     final vehicleNo = v['vehicleNumber'] ?? v['vehicleNo'] ?? '';
@@ -962,24 +959,24 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
                 
                 // === KITCHEN ITEMS (INTERNAL) ===
                 _buildItemSection(
-                  title: AppLocalizations.of(context)!.kitchenItems,
-                  subtitle: AppLocalizations.of(context)!.kitchenItemsSubtitle,
+                  title: AppLocalizations.of(context).kitchenItems,
+                  subtitle: AppLocalizations.of(context).kitchenItemsSubtitle,
                   color: Colors.green,
                   items: _items.where((i) => i['prodType'] == 'INTERNAL').toList(),
                 ),
                 
                 // === SUBCONTRACT ITEMS ===
                 _buildItemSection(
-                  title: AppLocalizations.of(context)!.subcontractItems,
-                  subtitle: AppLocalizations.of(context)!.subcontractItemsSubtitle,
+                  title: AppLocalizations.of(context).subcontractItems,
+                  subtitle: AppLocalizations.of(context).subcontractItemsSubtitle,
                   color: Colors.purple,
                   items: _items.where((i) => i['prodType'] == 'SUBCONTRACT').toList(),
                 ),
                 
                 // === LIVE ITEMS ===
                 _buildItemSection(
-                  title: AppLocalizations.of(context)!.liveCookingItems,
-                  subtitle: AppLocalizations.of(context)!.liveCookingItemsSubtitle,
+                  title: AppLocalizations.of(context).liveCookingItems,
+                  subtitle: AppLocalizations.of(context).liveCookingItemsSubtitle,
                   color: Colors.orange,
                   items: _items.where((i) => i['prodType'] == 'LIVE').toList(),
                 ),
@@ -1147,7 +1144,7 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
                   ),
                 
                 const SizedBox(height: 24),
-                ElevatedButton(onPressed: _completeDispatch, child: const Text('Complete Dispatch'), style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size.fromHeight(48))),
+                ElevatedButton(onPressed: _completeDispatch, style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size.fromHeight(48)), child: const Text('Complete Dispatch')),
               ],
             ),
     );

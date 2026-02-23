@@ -1,8 +1,6 @@
 // MODULE: SUPPLIER PO SCREEN (v34)
 // Features: View POs, accept/reject, mark as dispatched, filter by status
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../db/database_helper.dart';
 import '../repositories/finance_repository.dart';
 
 class SupplierPoScreen extends StatefulWidget {
@@ -77,6 +75,7 @@ class _SupplierPoScreenState extends State<SupplierPoScreen> with SingleTickerPr
     if (confirmed == true) {
       await FinanceRepository().updateSupplierPOStatus(po['id'] as int, 'ACCEPTED');
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('PO Accepted!'), backgroundColor: Colors.green),
       );
@@ -104,6 +103,7 @@ class _SupplierPoScreenState extends State<SupplierPoScreen> with SingleTickerPr
     if (confirmed == true) {
       await FinanceRepository().updateSupplierPOStatus(po['id'] as int, 'DISPATCHED');
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Marked as Dispatched'), backgroundColor: Colors.blue),
       );
@@ -115,6 +115,7 @@ class _SupplierPoScreenState extends State<SupplierPoScreen> with SingleTickerPr
     final items = await FinanceRepository().getPoItems(po['id'] as int);
     
     showModalBottomSheet(
+
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
@@ -247,8 +248,9 @@ class _SupplierPoScreenState extends State<SupplierPoScreen> with SingleTickerPr
   Widget _buildPoCard(Map<String, dynamic> po, {bool isNew = false, bool isAccepted = false}) {
     final status = po['status'] ?? 'SENT';
     Color statusColor = Colors.orange;
-    if (status == 'ACCEPTED') statusColor = Colors.blue;
-    else if (status == 'DISPATCHED') statusColor = Colors.purple;
+    if (status == 'ACCEPTED') {
+      statusColor = Colors.blue;
+    } else if (status == 'DISPATCHED') statusColor = Colors.purple;
     else if (status == 'DELIVERED') statusColor = Colors.green;
     
     return Card(

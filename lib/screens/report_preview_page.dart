@@ -40,6 +40,7 @@ class ReportPreviewPage extends StatelessWidget {
                 headers: headers,
                 rows: rows,
               );
+              if (!context.mounted) return;
               Navigator.pop(context); // Close loading dialog
               if (file != null && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -70,6 +71,7 @@ class ReportPreviewPage extends StatelessWidget {
                 rows: rows,
                 subtitle: subtitle,
               );
+              if (!context.mounted) return;
               Navigator.pop(context); // Close loading dialog
               if (!success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -93,6 +95,7 @@ class ReportPreviewPage extends StatelessWidget {
                 rows: rows,
                 subtitle: subtitle,
               );
+              if (!context.mounted) return;
               Navigator.pop(context); // Close loading dialog
             },
           ),
@@ -130,7 +133,8 @@ class ReportPreviewPage extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
@@ -146,7 +150,8 @@ class ReportPreviewPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(16),
@@ -165,7 +170,7 @@ class ReportPreviewPage extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Export Options Row
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -182,9 +187,9 @@ class ReportPreviewPage extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // Data Table
           Expanded(
             child: rows.isEmpty
@@ -192,7 +197,8 @@ class ReportPreviewPage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.table_rows_outlined, size: 64, color: Colors.grey.shade400),
+                        Icon(Icons.table_rows_outlined,
+                            size: 64, color: Colors.grey.shade400),
                         const SizedBox(height: 16),
                         Text(
                           'No data to preview',
@@ -269,11 +275,13 @@ class ReportPreviewPage extends StatelessWidget {
                     headers: headers,
                     rows: rows,
                   );
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                   if (file != null && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Excel saved: ${file.path.split('/').last}'),
+                        content:
+                            Text('Excel saved: ${file.path.split('/').last}'),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -299,6 +307,7 @@ class ReportPreviewPage extends StatelessWidget {
                     rows: rows,
                     subtitle: subtitle,
                   );
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                   if (!success && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -329,6 +338,7 @@ class ReportPreviewPage extends StatelessWidget {
                     rows: rows,
                     subtitle: subtitle,
                   );
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                 },
               ),

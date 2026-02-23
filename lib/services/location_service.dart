@@ -11,9 +11,9 @@ import 'connectivity_service.dart';
 class LocationService {
   static LocationService? _instance;
   static LocationService get instance => _instance ??= LocationService._();
-  
+
   LocationService._();
-  
+
   Timer? _locationTimer;
   int? _activeDispatchId;
   bool _isTracking = false;
@@ -133,9 +133,10 @@ class LocationService {
   /// Get last known location for a dispatch
   static Future<Map<String, dynamic>?> getLastLocation(int dispatchId) async {
     final db = await DatabaseHelper().database;
-    final result = await db.query('dispatches', 
+    final result = await db.query(
+      'dispatches',
       columns: ['driverLat', 'driverLng', 'lastLocationUpdate'],
-      where: 'id = ?', 
+      where: 'id = ?',
       whereArgs: [dispatchId],
     );
     if (result.isEmpty) return null;

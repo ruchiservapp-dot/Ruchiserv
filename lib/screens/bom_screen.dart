@@ -57,6 +57,7 @@ class _BomScreenState extends State<BomScreen> {
       'ingredientId': b['ing_id'],
     }).toList();
 
+    if (!mounted) return;
     await Navigator.push(context, MaterialPageRoute(
       builder: (_) => BomEditScreen(
         dishId: dishId,
@@ -82,7 +83,7 @@ class _BomScreenState extends State<BomScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.addDish),
+          title: Text(AppLocalizations.of(context).addDish),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -90,7 +91,7 @@ class _BomScreenState extends State<BomScreen> {
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: '${AppLocalizations.of(context)!.dishName} *',
+                    labelText: '${AppLocalizations.of(context).dishName} *',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.restaurant),
                   ),
@@ -100,7 +101,7 @@ class _BomScreenState extends State<BomScreen> {
                 TextField(
                   controller: categoryController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.category,
+                    labelText: AppLocalizations.of(context).category,
                     hintText: 'e.g., Main Course, Starter, Dessert',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.category),
@@ -110,7 +111,7 @@ class _BomScreenState extends State<BomScreen> {
                 TextField(
                   controller: regionController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.region,
+                    labelText: AppLocalizations.of(context).region,
                     hintText: 'e.g., Kerala, North Indian, Chinese',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.location_on),
@@ -130,7 +131,7 @@ class _BomScreenState extends State<BomScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Text('${AppLocalizations.of(context)!.foodType}: '),
+                    Text('${AppLocalizations.of(context).foodType}: '),
                     const SizedBox(width: 8),
                     ChoiceChip(
                       label: const Text('Veg'),
@@ -153,14 +154,14 @@ class _BomScreenState extends State<BomScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(AppLocalizations.of(context)!.cancel),
+              child: Text(AppLocalizations.of(context).cancel),
             ),
             ElevatedButton.icon(
               icon: const Icon(Icons.add),
               onPressed: () async {
                 if (nameController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.enterDishName), backgroundColor: Colors.red),
+                    SnackBar(content: Text(AppLocalizations.of(context).enterDishName), backgroundColor: Colors.red),
                   );
                   return;
                 }
@@ -171,9 +172,10 @@ class _BomScreenState extends State<BomScreen> {
                   rate: 0, // BomScreen doesn't specify rate here, using 0 as default
                   foodType: foodType,
                 );
+                if (!mounted) return;
                 Navigator.pop(context, true);
               },
-              label: Text(AppLocalizations.of(context)!.add),
+              label: Text(AppLocalizations.of(context).add),
             ),
           ],
         ),
@@ -181,8 +183,10 @@ class _BomScreenState extends State<BomScreen> {
     );
 
     if (result == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.dishAdded), backgroundColor: Colors.green),
+
+        SnackBar(content: Text(AppLocalizations.of(context).dishAdded), backgroundColor: Colors.green),
       );
       _loadData();
     }
@@ -197,7 +201,7 @@ class _BomScreenState extends State<BomScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.bomManagement),
+        title: Text(AppLocalizations.of(context).bomManagement),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
@@ -205,7 +209,7 @@ class _BomScreenState extends State<BomScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addDish,
         icon: const Icon(Icons.add),
-        label: Text(AppLocalizations.of(context)!.addDish),
+        label: Text(AppLocalizations.of(context).addDish),
       ),
       body: Column(
         children: [
@@ -219,7 +223,7 @@ class _BomScreenState extends State<BomScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    AppLocalizations.of(context)!.bomInfo,
+                    AppLocalizations.of(context).bomInfo,
                     style: TextStyle(color: Colors.blue.shade700, fontSize: 13),
                   ),
                 ),
@@ -233,7 +237,7 @@ class _BomScreenState extends State<BomScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: AppLocalizations.of(context)!.searchDishes,
+                hintText: AppLocalizations.of(context).searchDishes,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: true,
@@ -254,15 +258,15 @@ class _BomScreenState extends State<BomScreen> {
                           children: [
                             Icon(Icons.receipt_long, size: 64, color: Colors.grey.shade400),
                             const SizedBox(height: 16),
-                            Text(AppLocalizations.of(context)!.noDishesFound),
+                            Text(AppLocalizations.of(context).noDishesFound),
                             const SizedBox(height: 8),
-                            Text(AppLocalizations.of(context)!.addDishesHint,
+                            Text(AppLocalizations.of(context).addDishesHint,
                               style: const TextStyle(color: Colors.grey)),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
                               onPressed: _addDish,
                               icon: const Icon(Icons.add),
-                              label: Text(AppLocalizations.of(context)!.addDish),
+                              label: Text(AppLocalizations.of(context).addDish),
                             ),
                           ],
                         ),
@@ -278,9 +282,9 @@ class _BomScreenState extends State<BomScreen> {
                                 backgroundColor: Colors.blue.shade100,
                                 child: const Icon(Icons.restaurant, color: Colors.blue),
                               ),
-                              title: Text(dish['name'] ?? AppLocalizations.of(context)!.unknown, 
+                              title: Text(dish['name'] ?? AppLocalizations.of(context).unknown, 
                                 style: const TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: Text('${AppLocalizations.of(context)!.category}: ${dish['category'] ?? AppLocalizations.of(context)!.na}'),
+                              subtitle: Text('${AppLocalizations.of(context).category}: ${dish['category'] ?? AppLocalizations.of(context).na}'),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -295,7 +299,7 @@ class _BomScreenState extends State<BomScreen> {
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Text(
-                                          AppLocalizations.of(context)!.itemsCount(count),
+                                          AppLocalizations.of(context).itemsCount(count),
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: count > 0 ? Colors.green.shade800 : Colors.orange.shade800,
@@ -358,7 +362,7 @@ class _BomEditScreenState extends State<BomEditScreen> {
     
     if (available.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.allIngredientsAdded), backgroundColor: Colors.orange),
+        SnackBar(content: Text(AppLocalizations.of(context).allIngredientsAdded), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -386,7 +390,7 @@ class _BomEditScreenState extends State<BomEditScreen> {
               : null;
           
           return AlertDialog(
-            title: Text(AppLocalizations.of(context)!.addIngredient),
+            title: Text(AppLocalizations.of(context).addIngredient),
             content: SizedBox(
               width: double.maxFinite,
               height: 400,
@@ -397,7 +401,7 @@ class _BomEditScreenState extends State<BomEditScreen> {
                   TextField(
                     controller: searchController,
                     decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.searchPlaceholder,
+                      hintText: AppLocalizations.of(context).searchPlaceholder,
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       filled: true,
@@ -443,7 +447,7 @@ class _BomEditScreenState extends State<BomEditScreen> {
                     child: filteredIngredients.isEmpty
                         ? Center(
                             child: Text(
-                              AppLocalizations.of(context)!.noResultsFound,
+                              AppLocalizations.of(context).noResultsFound,
                               style: TextStyle(color: Colors.grey.shade600),
                             ),
                           )
@@ -489,7 +493,7 @@ class _BomEditScreenState extends State<BomEditScreen> {
                   TextField(
                     controller: qtyController,
                     decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.quantity100Pax,
+                      labelText: AppLocalizations.of(context).quantity100Pax,
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.scale),
                     ),
@@ -501,14 +505,14 @@ class _BomEditScreenState extends State<BomEditScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false), 
-                child: Text(AppLocalizations.of(context)!.cancel),
+                child: Text(AppLocalizations.of(context).cancel),
               ),
               ElevatedButton.icon(
                 icon: const Icon(Icons.add),
                 onPressed: () async {
                   if (selectedId == null || qtyController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalizations.of(context)!.selectIngredientHint), backgroundColor: Colors.red),
+                      SnackBar(content: Text(AppLocalizations.of(context).selectIngredientHint), backgroundColor: Colors.red),
                     );
                     return;
                   }
@@ -521,9 +525,10 @@ class _BomEditScreenState extends State<BomEditScreen> {
                     'quantityPer100Pax': double.parse(qtyController.text),
                     'unit': ing['unit_of_measure'],
                   });
+                  if (!mounted) return;
                   Navigator.pop(context, true);
                 },
-                label: Text(AppLocalizations.of(context)!.add),
+                label: Text(AppLocalizations.of(context).add),
               ),
             ],
           );
@@ -546,19 +551,19 @@ class _BomEditScreenState extends State<BomEditScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${AppLocalizations.of(context)!.editIngredient}: ${item['ingredientName'] ?? AppLocalizations.of(context)!.unknown}'),
+        title: Text('${AppLocalizations.of(context).editIngredient}: ${item['ingredientName'] ?? AppLocalizations.of(context).unknown}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${AppLocalizations.of(context)!.unit}: ${item['unit'] ?? 'kg'}',
+              '${AppLocalizations.of(context).unit}: ${item['unit'] ?? 'kg'}',
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: qtyController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.quantity100Pax,
+                labelText: AppLocalizations.of(context).quantity100Pax,
                 border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
@@ -569,13 +574,13 @@ class _BomEditScreenState extends State<BomEditScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               if (qtyController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(AppLocalizations.of(context)!.enterQuantity), backgroundColor: Colors.red),
+                  SnackBar(content: Text(AppLocalizations.of(context).enterQuantity), backgroundColor: Colors.red),
                 );
                 return;
               }
@@ -585,14 +590,17 @@ class _BomEditScreenState extends State<BomEditScreen> {
                 await InventoryRepository().updateBomItem(item['id'] as int, {
                   'quantity_per_base_pax': newQty / 100, // Convert back to per-pax
                 });
+                if (!mounted) return;
                 Navigator.pop(context, true);
               } catch (e) {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(AppLocalizations.of(context)!.error(e.toString())), backgroundColor: Colors.red),
+
+                  SnackBar(content: Text(AppLocalizations.of(context).error(e.toString())), backgroundColor: Colors.red),
                 );
               }
             },
-            child: Text(AppLocalizations.of(context)!.save),
+            child: Text(AppLocalizations.of(context).save),
           ),
         ],
       ),
@@ -602,8 +610,10 @@ class _BomEditScreenState extends State<BomEditScreen> {
       // Reload BOM
       final updated = await InventoryRepository().getBomForDish(widget.firmId, widget.dishId);
       setState(() => _bomItems = updated);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.quantityUpdated), backgroundColor: Colors.green),
+
+        SnackBar(content: Text(AppLocalizations.of(context).quantityUpdated), backgroundColor: Colors.green),
       );
     }
   }
@@ -612,8 +622,10 @@ class _BomEditScreenState extends State<BomEditScreen> {
     await InventoryRepository().deleteBomItem(id);
     final updated = await InventoryRepository().getBomForDish(widget.firmId, widget.dishId);
     setState(() => _bomItems = updated);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.ingredientRemoved), backgroundColor: Colors.orange),
+
+      SnackBar(content: Text(AppLocalizations.of(context).ingredientRemoved), backgroundColor: Colors.orange),
     );
   }
 
@@ -645,7 +657,7 @@ class _BomEditScreenState extends State<BomEditScreen> {
                     color: Colors.blue,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(AppLocalizations.of(context)!.pax100, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(AppLocalizations.of(context).pax100, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -660,12 +672,12 @@ class _BomEditScreenState extends State<BomEditScreen> {
                       children: [
                         Icon(Icons.list, size: 64, color: Colors.grey.shade400),
                         const SizedBox(height: 16),
-                        Text(AppLocalizations.of(context)!.noIngredientsAdded),
+                        Text(AppLocalizations.of(context).noIngredientsAdded),
                         const SizedBox(height: 8),
                         ElevatedButton.icon(
                           onPressed: _addIngredient,
                           icon: const Icon(Icons.add),
-                          label: Text(AppLocalizations.of(context)!.addIngredient),
+                          label: Text(AppLocalizations.of(context).addIngredient),
                         ),
                       ],
                     ),
@@ -679,8 +691,8 @@ class _BomEditScreenState extends State<BomEditScreen> {
                           backgroundColor: Colors.green.shade100,
                           child: Text('${index + 1}'),
                         ),
-                        title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
-                        subtitle: Text('${AppLocalizations.of(context)!.category}: ${item['category'] ?? AppLocalizations.of(context)!.na}'),
+                        title: Text(item['ingredientName'] ?? AppLocalizations.of(context).unknown),
+                        subtitle: Text('${AppLocalizations.of(context).category}: ${item['category'] ?? AppLocalizations.of(context).na}'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

@@ -1,6 +1,5 @@
 import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:math';
-import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
 
@@ -9,46 +8,56 @@ Future<void> seedNovember2025Data() async {
   final db = DatabaseHelper();
   final database = await db.database;
   final firmId = 'RCHSRV';
-  
+
   // 0. Ensure Vehicles exist (User Request: "Customer Vehicle" option)
   // Always try to insert these defaults, ignoring if they exist (UNIQUE constraint on vehicleNumber)
-  await database.insert('vehicles', {
-    'firmId': firmId,
-    'vehicleNumber': 'Customer Vehicle',
-    'vehicleType': 'OTHER',
-    'status': 'AVAILABLE',
-    'driverName': 'Customer',
-  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await database.insert(
+      'vehicles',
+      {
+        'firmId': firmId,
+        'vehicleNumber': 'Customer Vehicle',
+        'vehicleType': 'OTHER',
+        'status': 'AVAILABLE',
+        'driverName': 'Customer',
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore);
 
-  await database.insert('vehicles', {
-    'firmId': firmId,
-    'vehicleNumber': 'Rent Vehicle',
-    'vehicleType': 'OTHER',
-    'status': 'AVAILABLE',
-    'driverName': 'Rental',
-  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await database.insert(
+      'vehicles',
+      {
+        'firmId': firmId,
+        'vehicleNumber': 'Rent Vehicle',
+        'vehicleType': 'OTHER',
+        'status': 'AVAILABLE',
+        'driverName': 'Rental',
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore);
 
   // Only add company van if completely empty (optional)
-  final vehicleCount = Sqflite.firstIntValue(await database.rawQuery('SELECT COUNT(*) FROM vehicles'));
+  final vehicleCount = Sqflite.firstIntValue(
+      await database.rawQuery('SELECT COUNT(*) FROM vehicles'));
   if ((vehicleCount ?? 0) < 3) {
-      await database.insert('vehicles', {
-      'firmId': firmId,
-      'vehicleNumber': 'KA-01-AB-1234',
-      'vehicleType': 'VAN',
-      'status': 'AVAILABLE',
-      'driverName': 'Raju',
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await database.insert(
+        'vehicles',
+        {
+          'firmId': firmId,
+          'vehicleNumber': 'KA-01-AB-1234',
+          'vehicleType': 'VAN',
+          'status': 'AVAILABLE',
+          'driverName': 'Raju',
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   // 1. Check if we already have November 2025 data
   // We check for orders in that month
   final existingCheck = await database.rawQuery(
-    "SELECT COUNT(*) as count FROM orders WHERE firmId = ? AND eventDate LIKE '2025-11%'",
-    [firmId]
-  );
-  
+      "SELECT COUNT(*) as count FROM orders WHERE firmId = ? AND eventDate LIKE '2025-11%'",
+      [firmId]);
+
   if ((existingCheck.first['count'] as int) > 5) {
-    AppLogger.warning('⚠️ November 2025 data seems to already exist. Skipping seed.');
+    AppLogger.warning(
+        '⚠️ November 2025 data seems to already exist. Skipping seed.');
     return;
   }
 
@@ -58,7 +67,8 @@ Future<void> seedNovember2025Data() async {
   // === 1. STAFF (Ensure we have some staff) ===
   final staffIds = <int>[];
   // Get existing staff or create dummies
-  final existingStaff = await database.query('staff', where: 'firmId = ?', whereArgs: [firmId]);
+  final existingStaff =
+      await database.query('staff', where: 'firmId = ?', whereArgs: [firmId]);
   if (existingStaff.isEmpty) {
     // Create 5 dummy staff
     for (int i = 1; i <= 5; i++) {
@@ -81,23 +91,29 @@ Future<void> seedNovember2025Data() async {
 
   // === 2. ORDERS & INCOME ===
   // Generate ~15 orders for Nov 2025
-  final eventTypes = ['Wedding', 'Corporate', 'Birthday', 'Engagement', 'House Warming'];
+  final eventTypes = [
+    'Wedding',
+    'Corporate',
+    'Birthday',
+    'Engagement',
+    'House Warming'
+  ];
   int totalOrders = 0;
-  
+
   for (int day = 1; day <= 30; day++) {
     // 50% chance of an order on any given day
-    if (rng.nextBool()) continue; 
-    
+    if (rng.nextBool()) continue;
+
     final dateStr = '2025-11-${day.toString().padLeft(2, '0')}';
     final eventType = eventTypes[rng.nextInt(eventTypes.length)];
     final pax = 50 + rng.nextInt(450); // 50-500 pax
     final ratePerPlate = 300 + rng.nextInt(500); // 300-800 per plate
     final amount = pax * ratePerPlate;
-    
+
     // Create Customer
     final custName = 'Customer Nov $day';
     final custMobile = '99887766${day.toString().padLeft(2, '0')}';
-    
+
     final customerId = await database.insert('customers', {
       'firmId': firmId,
       'name': custName,
@@ -111,8 +127,9 @@ Future<void> seedNovember2025Data() async {
       'firmId': firmId,
       'customerId': customerId,
       'customerName': custName, // Legacy column
-      'mobile': custMobile,     // Legacy column
-      'notes': '$eventType (${day % 2 == 0 ? "Evening" : "Lunch"})', // Store event type in notes
+      'mobile': custMobile, // Legacy column
+      'notes':
+          '$eventType (${day % 2 == 0 ? "Evening" : "Lunch"})', // Store event type in notes
       'eventDate': dateStr,
       'date': dateStr, // Legacy column required by DB constraint
       'eventTime': '12:00',
@@ -125,7 +142,7 @@ Future<void> seedNovember2025Data() async {
       'updatedAt': '${dateStr}T22:00:00',
       'dispatchStatus': 'UNLOADED', // Fully processed
     });
-    
+
     totalOrders++;
 
     // Add Income Transaction
@@ -141,7 +158,7 @@ Future<void> seedNovember2025Data() async {
       'relatedEntityType': 'ORDER',
       'createdAt': '${dateStr}T12:00:00',
     });
-    
+
     // Add Dispatch & Return (Mocking Utensil movement)
     // 1. Dispatch
     final dispatchId = await database.insert('dispatches', {
@@ -152,7 +169,7 @@ Future<void> seedNovember2025Data() async {
       'returnTime': '${dateStr}T20:00:00',
       'createdAt': '${dateStr}T09:00:00',
     });
-    
+
     // Add some random utensils
     final utensils = ['Spoon', 'Plate', 'Glass', 'Bowl'];
     for (var uName in utensils) {
@@ -175,10 +192,10 @@ Future<void> seedNovember2025Data() async {
   // A. Daily/Weekly Procurement expenses
   for (int day = 1; day <= 30; day++) {
     if (day % 3 != 0) continue; // Every 3 days
-    
+
     final dateStr = '2025-11-${day.toString().padLeft(2, '0')}';
     final expenseAmt = 5000 + rng.nextInt(15000);
-    
+
     await database.insert('transactions', {
       'firmId': firmId,
       'date': dateStr,
@@ -198,7 +215,7 @@ Future<void> seedNovember2025Data() async {
     'Fuel': 8000,
     'Maintenance': 2000,
   };
-  
+
   fixedExpenses.forEach((cat, amt) async {
     await database.insert('transactions', {
       'firmId': firmId,
@@ -215,13 +232,16 @@ Future<void> seedNovember2025Data() async {
   // C. Payroll (End of Month)
   for (final staffId in staffIds) {
     // Get staff details for salary
-    final staff = (await database.query('staff', where: 'id = ?', whereArgs: [staffId])).first;
+    final staff =
+        (await database.query('staff', where: 'id = ?', whereArgs: [staffId]))
+            .first;
     final salary = staff['salary'] as num;
-    
+
     await database.insert('transactions', {
       'firmId': firmId,
       'date': '2025-11-30',
-      'type': 'EXPENSE', // Or 'PAYROLL' if you have that type? Standard is EXPENSE usually for finance
+      'type':
+          'EXPENSE', // Or 'PAYROLL' if you have that type? Standard is EXPENSE usually for finance
       'amount': salary,
       'category': 'Salary',
       'description': 'Salary for ${staff['name']}',
@@ -238,40 +258,41 @@ Future<void> seedNovember2025Data() async {
   for (int day = 1; day <= 30; day++) {
     final dateStr = '2025-11-${day.toString().padLeft(2, '0')}';
     final isSunday = DateTime(2025, 11, day).weekday == 7;
-    
+
     if (isSunday) continue; // Skip Sundays usually? Or keep some.
-    
+
     for (final staffId in staffIds) {
       // 90% attendance rate
       if (rng.nextDouble() > 0.9) {
-         // Absent
-         await database.insert('attendance', {
+        // Absent
+        await database.insert('attendance', {
           'staffId': staffId,
           'date': dateStr,
           'status': 'Absent',
           'hoursWorked': 0,
           'createdAt': '${dateStr}T09:00:00',
-         });
-         continue;
+        });
+        continue;
       }
-      
+
       // Present
       final inHour = 8 + rng.nextInt(2); // 8-10 AM
       final outHour = 17 + rng.nextInt(4); // 5-9 PM
       final hours = outHour - inHour;
-      
+
       await database.insert('attendance', {
         'staffId': staffId,
         'date': dateStr,
-        'punchInTime': '${dateStr}T${inHour.toString().padLeft(2,'0')}:00:00',
-        'punchOutTime': '${dateStr}T${outHour.toString().padLeft(2,'0')}:00:00',
+        'punchInTime': '${dateStr}T${inHour.toString().padLeft(2, '0')}:00:00',
+        'punchOutTime':
+            '${dateStr}T${outHour.toString().padLeft(2, '0')}:00:00',
         'status': 'Present',
         'hoursWorked': hours,
-        'createdAt': '${dateStr}T${inHour.toString().padLeft(2,'0')}:00:00',
+        'createdAt': '${dateStr}T${inHour.toString().padLeft(2, '0')}:00:00',
       });
     }
   }
   AppLogger.success('✅ Created attendance records.');
-  
+
   AppLogger.info('🎉 November 2025 Seeding Complete!');
 }

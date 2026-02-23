@@ -5,24 +5,27 @@ import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
 import 'report_preview_page.dart';
 import '../widgets/invoice_scanner_widget.dart';
-import '../utils/file_storage_helper.dart';
 import '../widgets/s3_image_viewer.dart';
 
 class SubcontractorLedgerScreen extends StatefulWidget {
   final int subcontractorId;
   final String subcontractorName;
-  
-  const SubcontractorLedgerScreen({super.key, required this.subcontractorId, required this.subcontractorName});
+
+  const SubcontractorLedgerScreen(
+      {super.key,
+      required this.subcontractorId,
+      required this.subcontractorName});
 
   @override
-  State<SubcontractorLedgerScreen> createState() => _SubcontractorLedgerScreenState();
+  State<SubcontractorLedgerScreen> createState() =>
+      _SubcontractorLedgerScreenState();
 }
 
 class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
   bool _isLoading = true;
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _endDate = DateTime.now();
-  
+
   List<Map<String, dynamic>> _transactions = [];
   double _totalEarned = 0;
   double _totalPaid = 0;
@@ -36,21 +39,21 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final db = await DatabaseHelper().database;
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
-    
+
     // Get transactions for this subcontractor
     final transactions = await db.rawQuery('''
       SELECT * FROM finance
       WHERE partyName LIKE ? AND date BETWEEN ? AND ?
       ORDER BY date DESC
     ''', ['%${widget.subcontractorName}%', startStr, endStr]);
-    
+
     double earned = 0;
     double paid = 0;
-    
+
     for (var t in transactions) {
       final amount = (t['amount'] as num?)?.toDouble() ?? 0;
       if (t['type'] == 'EXPENSE') {
@@ -59,7 +62,7 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
         earned += amount;
       }
     }
-    
+
     setState(() {
       _transactions = List<Map<String, dynamic>>.from(transactions);
       _totalEarned = earned;
@@ -87,23 +90,28 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
 
   void _exportReport() {
     final headers = ['Date', 'Description', 'Category', 'Type', 'Amount'];
-    final rows = _transactions.map((t) => [
-      t['date'] ?? '',
-      t['description'] ?? '',
-      t['category'] ?? '',
-      t['type'] ?? '',
-      '₹${(t['amount'] as num?)?.toStringAsFixed(0) ?? '0'}',
-    ]).toList();
-    
-    Navigator.push(context, MaterialPageRoute(
-      builder: (_) => ReportPreviewPage(
-        title: 'Subcontractor Ledger',
-        subtitle: '${widget.subcontractorName} - ${DateFormat('MMM d').format(_startDate)} to ${DateFormat('MMM d').format(_endDate)}',
-        headers: headers,
-        rows: rows,
-        accentColor: Colors.purple,
-      ),
-    ));
+    final rows = _transactions
+        .map((t) => [
+              t['date'] ?? '',
+              t['description'] ?? '',
+              t['category'] ?? '',
+              t['type'] ?? '',
+              '₹${(t['amount'] as num?)?.toStringAsFixed(0) ?? '0'}',
+            ])
+        .toList();
+
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ReportPreviewPage(
+            title: 'Subcontractor Ledger',
+            subtitle:
+                '${widget.subcontractorName} - ${DateFormat('MMM d').format(_startDate)} to ${DateFormat('MMM d').format(_endDate)}',
+            headers: headers,
+            rows: rows,
+            accentColor: Colors.purple,
+          ),
+        ));
   }
 
   @override
@@ -112,7 +120,10 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
       appBar: AppBar(
         title: const Text('My Ledger'),
         actions: [
-          IconButton(icon: const Icon(Icons.file_download), onPressed: _exportReport, tooltip: 'Export'),
+          IconButton(
+              icon: const Icon(Icons.file_download),
+              onPressed: _exportReport,
+              tooltip: 'Export'),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
       ),
@@ -123,47 +134,54 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
             isScrollControlled: true,
             builder: (context) => Container(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                top: 20, left: 16, right: 16
-              ),
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  top: 20,
+                  left: 16,
+                  right: 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Submit New Bill', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Submit New Bill',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
                   InvoiceScannerWidget(
                     onScanComplete: (result) async {
                       Navigator.pop(context); // Close bottom sheet
-                      
+
                       try {
                         final db = DatabaseHelper();
                         final Map<String, dynamic> txn = {
-                          'firmId': 'DEFAULT', 
-                          'date': result['date'] ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                          'firmId': 'DEFAULT',
+                          'date': result['date'] ??
+                              DateFormat('yyyy-MM-dd').format(DateTime.now()),
                           'type': 'EXPENSE',
                           'amount': result['amount'] ?? 0.0,
                           'category': 'CONTRACTOR_PAYOUT',
-                          'description': 'Scanned Bill from Subcontractor Portal',
+                          'description':
+                              'Scanned Bill from Subcontractor Portal',
                           'mode': 'Pending',
                           'partyName': widget.subcontractorName,
-                          'referenceId': 'SUBCONTRACTOR:${widget.subcontractorId}',
+                          'referenceId':
+                              'SUBCONTRACTOR:${widget.subcontractorId}',
                           'imageUrl': result['imageUrl'],
                           'createdAt': DateTime.now().toIso8601String(),
                         };
-                        
+
                         await db.insertTransaction(txn);
                         _loadData(); // Refresh list
-                        
+
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Bill Submitted!'), backgroundColor: Colors.green)
-                          );
+                              const SnackBar(
+                                  content: Text('Bill Submitted!'),
+                                  backgroundColor: Colors.green));
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red)
-                          );
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.red));
                         }
                       }
                     },
@@ -191,18 +209,22 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.calendar_today, size: 18, color: Colors.purple.shade700),
+                        Icon(Icons.calendar_today,
+                            size: 18, color: Colors.purple.shade700),
                         const SizedBox(width: 8),
                         Text(
                           '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d, yyyy').format(_endDate)}',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple.shade700),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple.shade700),
                         ),
-                        Icon(Icons.arrow_drop_down, color: Colors.purple.shade700),
+                        Icon(Icons.arrow_drop_down,
+                            color: Colors.purple.shade700),
                       ],
                     ),
                   ),
                 ),
-                
+
                 // Summary Card
                 Padding(
                   padding: const EdgeInsets.all(12),
@@ -213,16 +235,23 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _summaryItem('Earned', _totalEarned, Colors.green),
-                          Container(width: 1, height: 40, color: Colors.grey.shade300),
+                          Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.grey.shade300),
                           _summaryItem('Paid', _totalPaid, Colors.blue),
-                          Container(width: 1, height: 40, color: Colors.grey.shade300),
-                          _summaryItem('Balance', _balance, _balance >= 0 ? Colors.orange : Colors.red),
+                          Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.grey.shade300),
+                          _summaryItem('Balance', _balance,
+                              _balance >= 0 ? Colors.orange : Colors.red),
                         ],
                       ),
                     ),
                   ),
                 ),
-                
+
                 // Transactions list
                 Expanded(
                   child: _transactions.isEmpty
@@ -230,7 +259,8 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.receipt_long, size: 48, color: Colors.grey.shade400),
+                              Icon(Icons.receipt_long,
+                                  size: 48, color: Colors.grey.shade400),
                               const SizedBox(height: 8),
                               const Text('No transactions in this period'),
                             ],
@@ -239,7 +269,8 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           itemCount: _transactions.length,
-                          itemBuilder: (ctx, i) => _buildTransactionTile(_transactions[i]),
+                          itemBuilder: (ctx, i) =>
+                              _buildTransactionTile(_transactions[i]),
                         ),
                 ),
               ],
@@ -250,11 +281,13 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
   Widget _summaryItem(String label, double amount, Color color) {
     return Column(
       children: [
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+        Text(label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
         const SizedBox(height: 4),
         Text(
           '₹${amount.toStringAsFixed(0)}',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 16, color: color),
         ),
       ],
     );
@@ -263,12 +296,13 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
   Widget _buildTransactionTile(Map<String, dynamic> txn) {
     final isExpense = txn['type'] == 'EXPENSE';
     final amount = (txn['amount'] as num?)?.toDouble() ?? 0;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isExpense ? Colors.blue.shade100 : Colors.green.shade100,
+          backgroundColor:
+              isExpense ? Colors.blue.shade100 : Colors.green.shade100,
           child: Icon(
             isExpense ? Icons.arrow_upward : Icons.arrow_downward,
             color: isExpense ? Colors.blue : Colors.green,
@@ -276,13 +310,16 @@ class _SubcontractorLedgerScreenState extends State<SubcontractorLedgerScreen> {
           ),
         ),
         title: Text(txn['description'] ?? txn['category'] ?? 'Transaction'),
-        subtitle: Text(txn['date'] ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+        subtitle: Text(txn['date'] ?? '',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (txn['imageUrl'] != null && txn['imageUrl'].toString().isNotEmpty)
+            if (txn['imageUrl'] != null &&
+                txn['imageUrl'].toString().isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.attach_file, size: 18, color: Colors.blue),
+                icon:
+                    const Icon(Icons.attach_file, size: 18, color: Colors.blue),
                 onPressed: () => _viewInvoice(txn['imageUrl']),
                 tooltip: 'View Bill',
               ),

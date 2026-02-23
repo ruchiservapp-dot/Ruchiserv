@@ -1,8 +1,6 @@
 import 'package:ruchiserv/repositories/finance_repository.dart';
-import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../db/database_helper.dart';
 
 class TransactionListScreen extends StatefulWidget {
   const TransactionListScreen({super.key});
@@ -24,11 +22,8 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
 
   Future<void> _loadTransactions() async {
     setState(() => _isLoading = true);
-    final data = await FinanceRepository().getTransactions(
-      firmId: 'DEFAULT', 
-      type: _filterType,
-      limit: 100
-    );
+    final data = await FinanceRepository()
+        .getTransactions(firmId: 'DEFAULT', type: _filterType, limit: 100);
     setState(() {
       _transactions = data;
       _isLoading = false;
@@ -72,7 +67,8 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                           color: isIncome ? Colors.green : Colors.red,
                         ),
                         title: Text(t['category'] ?? 'Uncategorized'),
-                        subtitle: Text("${DateFormat('MMM d').format(DateTime.parse(t['date']))} • ${t['mode'] ?? ''}"),
+                        subtitle: Text(
+                            "${DateFormat('MMM d').format(DateTime.parse(t['date']))} • ${t['mode'] ?? ''}"),
                         trailing: Text(
                           "${isIncome ? '+' : '-'} ₹${t['amount']}",
                           style: TextStyle(
@@ -96,7 +92,9 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
         title: const Text("Delete Transaction?"),
         content: const Text("This cannot be undone."),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
           TextButton(
             onPressed: () async {
               await FinanceRepository().deleteTransaction(id);

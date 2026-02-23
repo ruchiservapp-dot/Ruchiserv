@@ -5,8 +5,10 @@ class ConnectivityService {
   // Cache the mapped stream as a broadcast stream and provide it as a static instance.
   // This prevents StreamBuilder from receiving a new stream instance on every rebuild,
   // which causes an infinite unsubscribe/subscribe -> initial event -> rebuild loop.
-  static final Stream<ConnectivityResult> _connectivityStream =
-      Connectivity().onConnectivityChanged.map((event) => event.first).asBroadcastStream();
+  static final Stream<ConnectivityResult> _connectivityStream = Connectivity()
+      .onConnectivityChanged
+      .map((event) => event.first)
+      .asBroadcastStream();
 
   Stream<ConnectivityResult> get onConnectivityChanged => _connectivityStream;
 
@@ -16,7 +18,7 @@ class ConnectivityService {
   /// Checks current status once
   Future<bool> isOnline() async {
     if (testOnlineStatus != null) return testOnlineStatus!;
-    
+
     try {
       final result = await Connectivity().checkConnectivity();
       return result.contains(ConnectivityResult.mobile) ||

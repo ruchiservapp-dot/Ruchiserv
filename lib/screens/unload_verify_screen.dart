@@ -13,7 +13,8 @@ class UnloadVerifyScreen extends StatefulWidget {
 
 class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
   List<Map<String, dynamic>> _items = [];
-  final Map<int, int> _verifiedValues = {};  // Track values directly, not via controllers
+  final Map<int, int> _verifiedValues =
+      {}; // Track values directly, not via controllers
   final Map<int, int> _maxValues = {};
   bool _isLoading = true;
 
@@ -37,17 +38,18 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
       final loaded = (item['loadedQty'] as int?) ?? 0;
       // Use returnedQty from Return screen as the default value for unload verification
       final returnedQty = (item['returnedQty'] as int?) ?? loaded;
-      
+
       // Only use saved unloadedQty if the item has already been verified (status = UNLOADED)
       // Otherwise, use returnedQty from the Return screen
       final status = item['status'] as String?;
-      final savedUnloadedQty = (status == 'UNLOADED') 
+      final savedUnloadedQty = (status == 'UNLOADED')
           ? ((item['unloadedQty'] as int?) ?? returnedQty)
           : returnedQty;
-      
+
       // Debug logging
-      AppLogger.info('📦 Unload Load: Item $id, loaded=$loaded, returnedQty=$returnedQty, status=$status, using=$savedUnloadedQty');
-      
+      AppLogger.info(
+          '📦 Unload Load: Item $id, loaded=$loaded, returnedQty=$returnedQty, status=$status, using=$savedUnloadedQty');
+
       _verifiedValues[id] = savedUnloadedQty;
       _maxValues[id] = loaded;
     }
@@ -88,15 +90,16 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
       final id = item['id'] as int;
       final verifiedQty = _verifiedValues[id] ?? 0;
       final itemName = item['itemName']?.toString() ?? '';
-      
+
       // Debug logging
-      AppLogger.info('💾 Saving Unload: Item $id, verifiedQty=$verifiedQty, name=$itemName');
-      
+      AppLogger.info(
+          '💾 Saving Unload: Item $id, verifiedQty=$verifiedQty, name=$itemName');
+
       await dbHelper.updateDispatchItem(id, {
         'unloadedQty': verifiedQty,
         'status': 'UNLOADED',
       });
-      
+
       // Restore verified utensil stock back to inventory (local computed field)
       if (itemName.isNotEmpty && verifiedQty > 0) {
         await db.rawUpdate('''
@@ -162,7 +165,7 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
                     final max = _maxValues[id] ?? 0;
                     final current = _verifiedValues[id] ?? 0;
                     final variance = _calculateVariance(id);
-                    
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: Padding(
@@ -174,15 +177,20 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        item['itemName']?.toString() ?? 'Unknown',
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        item['itemName']?.toString() ??
+                                            'Unknown',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
                                       ),
                                       Text(
                                         'Sent: $max',
-                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                        style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12),
                                       ),
                                     ],
                                   ),
@@ -193,21 +201,25 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
                                   children: [
                                     // Minus button
                                     IconButton(
-                                      icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                      icon: const Icon(Icons.remove_circle,
+                                          color: Colors.red),
                                       iconSize: 32,
-                                      onPressed: current > 0 
-                                          ? () => _updateValue(id, -1) 
+                                      onPressed: current > 0
+                                          ? () => _updateValue(id, -1)
                                           : null,
                                     ),
                                     // Tappable value display
                                     GestureDetector(
-                                      onTap: () => _showValueEditor(id, current, max),
+                                      onTap: () =>
+                                          _showValueEditor(id, current, max),
                                       child: Container(
                                         width: 50,
                                         height: 40,
                                         decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.grey.shade400),
-                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.grey.shade400),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
                                         child: Center(
                                           child: Text(
@@ -222,10 +234,11 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
                                     ),
                                     // Plus button
                                     IconButton(
-                                      icon: const Icon(Icons.add_circle, color: Colors.green),
+                                      icon: const Icon(Icons.add_circle,
+                                          color: Colors.green),
                                       iconSize: 32,
-                                      onPressed: current < max 
-                                          ? () => _updateValue(id, 1) 
+                                      onPressed: current < max
+                                          ? () => _updateValue(id, 1)
                                           : null,
                                     ),
                                   ],
@@ -235,14 +248,17 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
                             if (variance != 0)
                               Container(
                                 margin: const EdgeInsets.only(top: 8),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade50,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   'Variance: $variance',
-                                  style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                      color: Colors.red.shade700,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                           ],
@@ -262,7 +278,8 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
                     backgroundColor: Colors.purple,
                   ),
                   child: const Text('Complete & Close',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -271,11 +288,11 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
       ),
     );
   }
-  
+
   /// Show a dialog to manually enter value
   void _showValueEditor(int id, int currentValue, int maxValue) {
     final controller = TextEditingController(text: currentValue.toString());
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -283,7 +300,8 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Max: $maxValue', style: TextStyle(color: Colors.grey.shade600)),
+            Text('Max: $maxValue',
+                style: TextStyle(color: Colors.grey.shade600)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
@@ -292,7 +310,8 @@ class _UnloadVerifyScreenState extends State<UnloadVerifyScreen> {
               autofocus: true,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),

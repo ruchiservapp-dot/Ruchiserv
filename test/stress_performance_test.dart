@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:ruchiserv/db/database_helper.dart';
 
 void main() {
@@ -359,7 +358,7 @@ void main() {
 
       // After all stress data, DB should still be < 50MB
       expect(totalMB, lessThan(50));
-      print('✅ T-PERF-09: DB size after stress: ${totalMB.toStringAsFixed(2)}MB (${pages} pages × ${size}B)');
+      print('✅ T-PERF-09: DB size after stress: ${totalMB.toStringAsFixed(2)}MB ($pages pages × ${size}B)');
     });
   });
 }

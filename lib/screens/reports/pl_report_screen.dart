@@ -28,15 +28,16 @@ class _PLReportScreenState extends State<PLReportScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final prefs = await SharedPreferences.getInstance();
     _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
-    
+
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
-    
-    final plData = await DatabaseHelper().getProfitLossSummary(_firmId, startStr, endStr);
-    
+
+    final plData =
+        await DatabaseHelper().getProfitLossSummary(_firmId, startStr, endStr);
+
     setState(() {
       _plData = plData;
       _isLoading = false;
@@ -50,7 +51,7 @@ class _PLReportScreenState extends State<PLReportScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
-    
+
     if (picked != null) {
       setState(() {
         if (isStart) {
@@ -67,35 +68,38 @@ class _PLReportScreenState extends State<PLReportScreen> {
 
   void _exportReport() {
     if (_plData == null) return;
-    
+
     final income = (_plData!['income'] as List?) ?? [];
     final expenses = (_plData!['expenses'] as List?) ?? [];
-    
+
     final headers = ['Category', 'Amount (₹)'];
     final rows = <List<dynamic>>[];
-    
+
     // Add income header
     rows.add(['--- INCOME ---', '']);
     for (var i in income) {
       rows.add([i['category'] ?? 'Other', i['total'] ?? 0]);
     }
     rows.add(['Total Income', _plData!['totalIncome'] ?? 0]);
-    
+
     // Add expense header
     rows.add(['--- EXPENSES ---', '']);
     for (var e in expenses) {
       rows.add([e['expenseGroup'] ?? 'Other', e['total'] ?? 0]);
     }
     rows.add(['Total Expenses', _plData!['totalExpense'] ?? 0]);
-    
+
     // Add profit
     rows.add(['', '']);
     rows.add(['NET PROFIT', _plData!['netProfit'] ?? 0]);
-    rows.add(['Profit Margin %', '${(_plData!['profitMargin'] as num?)?.toStringAsFixed(1) ?? 0}%']);
-    
+    rows.add([
+      'Profit Margin %',
+      '${(_plData!['profitMargin'] as num?)?.toStringAsFixed(1) ?? 0}%'
+    ]);
+
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -116,9 +120,11 @@ class _PLReportScreenState extends State<PLReportScreen> {
     final totalExpense = (_plData?['totalExpense'] as num?)?.toDouble() ?? 0;
     final netProfit = (_plData?['netProfit'] as num?)?.toDouble() ?? 0;
     final profitMargin = (_plData?['profitMargin'] as num?)?.toDouble() ?? 0;
-    final income = (_plData?['income'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final expenses = (_plData?['expenses'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    
+    final income =
+        (_plData?['income'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final expenses =
+        (_plData?['expenses'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profit & Loss'),
@@ -152,30 +158,44 @@ class _PLReportScreenState extends State<PLReportScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('From', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                                    Text('From',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12)),
                                     const SizedBox(height: 4),
                                     Text(
-                                      DateFormat('MMM d, yyyy').format(_startDate),
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      DateFormat('MMM d, yyyy')
+                                          .format(_startDate),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            Container(width: 1, height: 40, color: Colors.grey.shade300),
+                            Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.grey.shade300),
                             Expanded(
                               child: InkWell(
                                 onTap: () => _pickDate(false),
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 16),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text('To', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                                      Text('To',
+                                          style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 12)),
                                       const SizedBox(height: 4),
                                       Text(
-                                        DateFormat('MMM d, yyyy').format(_endDate),
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        DateFormat('MMM d, yyyy')
+                                            .format(_endDate),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
@@ -187,17 +207,20 @@ class _PLReportScreenState extends State<PLReportScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Net Profit Card (Hero)
                     Card(
-                      color: netProfit >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                      color: netProfit >= 0
+                          ? Colors.green.shade50
+                          : Colors.red.shade50,
                       child: Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
                             Text(
                               'Net Profit',
-                              style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.grey.shade700),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -205,20 +228,27 @@ class _PLReportScreenState extends State<PLReportScreen> {
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: netProfit >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                                color: netProfit >= 0
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
                               decoration: BoxDecoration(
-                                color: netProfit >= 0 ? Colors.green.shade100 : Colors.red.shade100,
+                                color: netProfit >= 0
+                                    ? Colors.green.shade100
+                                    : Colors.red.shade100,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '${profitMargin.toStringAsFixed(1)}% margin',
                                 style: TextStyle(
-                                  color: netProfit >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                                  color: netProfit >= 0
+                                      ? Colors.green.shade700
+                                      : Colors.red.shade700,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -228,27 +258,31 @@ class _PLReportScreenState extends State<PLReportScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Income/Expense Summary Row
                     Row(
                       children: [
                         Expanded(
-                          child: _buildSummaryCard('Income', totalIncome, Colors.green),
+                          child: _buildSummaryCard(
+                              'Income', totalIncome, Colors.green),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _buildSummaryCard('Expenses', totalExpense, Colors.red),
+                          child: _buildSummaryCard(
+                              'Expenses', totalExpense, Colors.red),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Income Breakdown
-                    _buildSection('Income Breakdown', income, 'category', Colors.green),
+                    _buildSection(
+                        'Income Breakdown', income, 'category', Colors.green),
                     const SizedBox(height: 24),
-                    
+
                     // Expense Breakdown
-                    _buildSection('Expense Breakdown', expenses, 'expenseGroup', Colors.red),
+                    _buildSection('Expense Breakdown', expenses, 'expenseGroup',
+                        Colors.red),
                   ],
                 ),
               ),
@@ -263,11 +297,13 @@ class _PLReportScreenState extends State<PLReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+            Text(title,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
             const SizedBox(height: 8),
             Text(
               '₹${amount.toStringAsFixed(0)}',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.bold, color: color),
             ),
           ],
         ),
@@ -275,17 +311,22 @@ class _PLReportScreenState extends State<PLReportScreen> {
     );
   }
 
-  Widget _buildSection(String title, List<Map<String, dynamic>> items, String labelKey, Color color) {
+  Widget _buildSection(String title, List<Map<String, dynamic>> items,
+      String labelKey, Color color) {
     if (items.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Center(child: Text('No data', style: TextStyle(color: Colors.grey.shade500))),
+              child: Center(
+                  child: Text('No data',
+                      style: TextStyle(color: Colors.grey.shade500))),
             ),
           ),
         ],
@@ -301,7 +342,8 @@ class _PLReportScreenState extends State<PLReportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Card(
           child: Column(
@@ -309,7 +351,7 @@ class _PLReportScreenState extends State<PLReportScreen> {
               final label = item[labelKey]?.toString() ?? 'Other';
               final amount = (item['total'] as num?)?.toDouble() ?? 0;
               final percentage = total > 0 ? (amount / total * 100) : 0;
-              
+
               return ListTile(
                 title: Text(label),
                 trailing: Row(
@@ -317,14 +359,16 @@ class _PLReportScreenState extends State<PLReportScreen> {
                   children: [
                     Text(
                       '₹${amount.toStringAsFixed(0)}',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, color: color),
                     ),
                     const SizedBox(width: 8),
                     SizedBox(
                       width: 50,
                       child: Text(
                         '${percentage.toStringAsFixed(0)}%',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12),
                         textAlign: TextAlign.right,
                       ),
                     ),

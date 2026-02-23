@@ -12,7 +12,8 @@ class RefundCancellationScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Refund & Cancellation Policy', style: Theme.of(context).textTheme.headlineMedium),
+            Text('Refund & Cancellation Policy',
+                style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 16),
             const Text(
               'ELKERON TECHNOLOGIES PRIVATE LIMITED adheres to a strict yet fair cancellation and refund policy for the RuchiServ SaaS platform.\n\n'

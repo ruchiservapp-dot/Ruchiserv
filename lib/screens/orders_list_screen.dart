@@ -1,3 +1,4 @@
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:ruchiserv/repositories/order_repository.dart';
 // MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 import 'package:flutter/material.dart';
@@ -36,7 +37,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         _errorMessage = null;
       });
       final dateStr = widget.date.toIso8601String().split('T')[0];
-      
+
       final sp = await SharedPreferences.getInstance();
       final firmId = sp.getString('last_firm') ?? 'DEFAULT';
 
@@ -45,8 +46,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         await CloudSyncService().syncTableFromCloud('orders', firmId);
       } catch (_) {
         // Silently fail - sync is enhancement
+        AppLogger.error('Caught error: $_');
       }
-      
+
       final data = await OrderRepository().getOrdersByDate(dateStr, firmId);
       setState(() {
         _orders = List<Map<String, dynamic>>.from(data);
@@ -54,17 +56,22 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = AppLocalizations.of(context)!.failedLoadOrders(e.toString());
+        _errorMessage =
+            AppLocalizations.of(context).failedLoadOrders(e.toString());
         _isLoading = false;
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorLoadingOrders(e.toString())), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context).errorLoadingOrders(e.toString())),
+            backgroundColor: Colors.red),
       );
     }
   }
 
-  Map<String, List<Map<String, dynamic>>> _groupByMealType(List<Map<String, dynamic>> orders) {
+  Map<String, List<Map<String, dynamic>>> _groupByMealType(
+      List<Map<String, dynamic>> orders) {
     final grouped = {
       'Breakfast': <Map<String, dynamic>>[],
       'Lunch': <Map<String, dynamic>>[],
@@ -96,7 +103,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   bool get _isPastDate {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final pageDate = DateTime(widget.date.year, widget.date.month, widget.date.day);
+    final pageDate =
+        DateTime(widget.date.year, widget.date.month, widget.date.day);
     return pageDate.isBefore(today);
   }
 
@@ -108,9 +116,10 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     return isLocked || (mrpStatus.isNotEmpty && mrpStatus != 'PENDING');
   }
 
-  Future<void> _viewOrEditOrder(Map<String, dynamic> order, bool viewOnly) async {
+  Future<void> _viewOrEditOrder(
+      Map<String, dynamic> order, bool viewOnly) async {
     final isLocked = _isOrderLocked(order);
-    
+
     // For MRP-locked orders, open full-screen view with admin edit capability
     if (isLocked) {
       final result = await Navigator.push<bool>(
@@ -125,13 +134,13 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       if (result == true) await _loadOrders();
       return;
     }
-    
+
     // For non-locked orders, use the regular add/edit screen
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => AddOrderScreen(
-          date: widget.date, 
+          date: widget.date,
           existingOrder: order,
           viewOnly: viewOnly,
         ),
@@ -143,33 +152,38 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   Future<void> _deleteOrder(Map<String, dynamic> order) async {
     final orderId = order['id'] as int?;
     if (orderId == null) return;
-    
+
     if (_isPastDate) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.cannotDeletePastOrders)),
+        SnackBar(
+            content: Text(AppLocalizations.of(context).cannotDeletePastOrders)),
       );
       return;
     }
-    
+
     // Check if order is locked (MRP processed)
     if (_isOrderLocked(order)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.orderLockedCannotModify),
+          content: Text(AppLocalizations.of(context).orderLockedCannotModify),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteOrderTitle),
-        content: Text(AppLocalizations.of(context)!.deleteOrderConfirm),
+        title: Text(AppLocalizations.of(context).deleteOrderTitle),
+        content: Text(AppLocalizations.of(context).deleteOrderConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(AppLocalizations.of(context)!.delete)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(AppLocalizations.of(context).cancel)),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(AppLocalizations.of(context).delete)),
         ],
       ),
     );
@@ -185,12 +199,15 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       await _loadOrders();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.orderDeleted)),
+        SnackBar(content: Text(AppLocalizations.of(context).orderDeleted)),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorDeletingOrder(e.toString())), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context).errorDeletingOrder(e.toString())),
+            backgroundColor: Colors.red),
       );
     }
   }
@@ -206,8 +223,13 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(mealType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blueAccent)),
-              Text(AppLocalizations.of(context)!.ordersCount(orders.length), style: const TextStyle(fontSize: 13, color: Colors.blueGrey)),
+              Text(mealType,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.blueAccent)),
+              Text(AppLocalizations.of(context).ordersCount(orders.length),
+                  style: const TextStyle(fontSize: 13, color: Colors.blueGrey)),
             ],
           ),
         ),
@@ -217,44 +239,56 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
           final amount = order['finalAmount'] ?? 0;
           final isLocked = _isOrderLocked(order);
           final mrpStatus = order['mrpStatus']?.toString() ?? '';
-          
+
           return Card(
             elevation: 1.5,
             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: isVeg ? Colors.green.shade600 : Colors.red.shade600,
-                child: Icon(isVeg ? Icons.eco : Icons.restaurant, color: Colors.white),
+                backgroundColor:
+                    isVeg ? Colors.green.shade600 : Colors.red.shade600,
+                child: Icon(isVeg ? Icons.eco : Icons.restaurant,
+                    color: Colors.white),
               ),
               title: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      order['customerName']?.toString() ?? AppLocalizations.of(context)!.unnamed, 
+                      order['customerName']?.toString() ??
+                          AppLocalizations.of(context).unnamed,
                       style: const TextStyle(fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   // Client Status Circle (v37)
-                  _buildClientStatusCircle(order['clientStatus']?.toString() ?? 'PENDING'),
+                  _buildClientStatusCircle(
+                      order['clientStatus']?.toString() ?? 'PENDING'),
                   const SizedBox(width: 8),
                   // MRP Status Badge
                   if (isLocked)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       margin: const EdgeInsets.only(left: 6),
                       decoration: BoxDecoration(
-                        color: mrpStatus == 'PO_SENT' ? Colors.green.shade100 : Colors.blue.shade100,
+                        color: mrpStatus == 'PO_SENT'
+                            ? Colors.green.shade100
+                            : Colors.blue.shade100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            mrpStatus == 'PO_SENT' ? Icons.check_circle : Icons.lock,
+                            mrpStatus == 'PO_SENT'
+                                ? Icons.check_circle
+                                : Icons.lock,
                             size: 12,
-                            color: mrpStatus == 'PO_SENT' ? Colors.green.shade700 : Colors.blue.shade700,
+                            color: mrpStatus == 'PO_SENT'
+                                ? Colors.green.shade700
+                                : Colors.blue.shade700,
                           ),
                           const SizedBox(width: 3),
                           Text(
@@ -262,7 +296,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: mrpStatus == 'PO_SENT' ? Colors.green.shade700 : Colors.blue.shade700,
+                              color: mrpStatus == 'PO_SENT'
+                                  ? Colors.green.shade700
+                                  : Colors.blue.shade700,
                             ),
                           ),
                         ],
@@ -274,28 +310,36 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${order['location'] ?? AppLocalizations.of(context)!.noLocation} • ${order['mobile'] ?? ''}',
+                    '${order['location'] ?? AppLocalizations.of(context).noLocation} • ${order['mobile'] ?? ''}',
                     style: const TextStyle(fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text('Pax: $pax | ${order['mealType'] ?? ''} | ${order['foodType'] ?? ''} | ${TimeUtils.formatTo12Hour(order['time'])}',
-                      style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                  Text(
+                      'Pax: $pax | ${order['mealType'] ?? ''} | ${order['foodType'] ?? ''} | ${TimeUtils.formatTo12Hour(order['time'])}',
+                      style:
+                          const TextStyle(fontSize: 12, color: Colors.black54)),
                 ],
               ),
               trailing: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('₹$amount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('₹$amount',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14)),
                   if ((order['discountPercent'] ?? 0) > 0)
                     Text('-${order['discountPercent']}%',
-                        style: const TextStyle(fontSize: 11, color: Colors.redAccent)),
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.redAccent)),
                 ],
               ),
               onTap: () => _viewOrEditOrder(order, isLocked || _isPastDate),
-              onLongPress: (_isPastDate || isLocked) ? null : () => _deleteOrder(order),
-              tileColor: (_isPastDate || isLocked) ? Colors.grey.shade50 : null, // Visual cue for read-only
+              onLongPress:
+                  (_isPastDate || isLocked) ? null : () => _deleteOrder(order),
+              tileColor: (_isPastDate || isLocked)
+                  ? Colors.grey.shade50
+                  : null, // Visual cue for read-only
             ),
           );
         }),
@@ -305,7 +349,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = '${widget.date.day}/${widget.date.month}/${widget.date.year}';
+    final formattedDate =
+        '${widget.date.day}/${widget.date.month}/${widget.date.year}';
     final grouped = _groupByMealType(_orders);
     final totals = _calculateTotals();
 
@@ -316,14 +361,18 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.ordersDateTitle(formattedDate)),
+          title:
+              Text(AppLocalizations.of(context).ordersDateTitle(formattedDate)),
           centerTitle: true,
           actions: [
             IconButton(
               icon: const Icon(Icons.summarize),
-              tooltip: AppLocalizations.of(context)!.dishSummary,
+              tooltip: AppLocalizations.of(context).dishSummary,
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => SummaryScreen(date: widget.date)));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => SummaryScreen(date: widget.date)));
               },
             ),
           ],
@@ -335,14 +384,15 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                        Icon(Icons.error_outline,
+                            size: 64, color: Colors.red.shade300),
                         const SizedBox(height: 16),
                         Text(_errorMessage!),
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: _loadOrders,
                           icon: const Icon(Icons.refresh),
-                          label: Text(AppLocalizations.of(context)!.retry),
+                          label: Text(AppLocalizations.of(context).retry),
                         ),
                       ],
                     ),
@@ -352,9 +402,11 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
+                            Icon(Icons.inbox_outlined,
+                                size: 64, color: Colors.grey.shade400),
                             const SizedBox(height: 16),
-                            Text(AppLocalizations.of(context)!.noOrdersFound, style: const TextStyle(color: Colors.grey)),
+                            Text(AppLocalizations.of(context).noOrdersFound,
+                                style: const TextStyle(color: Colors.grey)),
                           ],
                         ),
                       )
@@ -362,24 +414,34 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                         onRefresh: _loadOrders,
                         child: ListView(
                           children: [
-                            _buildMealSection('Breakfast', grouped['Breakfast']!),
+                            _buildMealSection(
+                                'Breakfast', grouped['Breakfast']!),
                             _buildMealSection('Lunch', grouped['Lunch']!),
                             _buildMealSection('Dinner', grouped['Dinner']!),
-                            _buildMealSection('Snacks/Others', grouped['Snacks/Others']!),
+                            _buildMealSection(
+                                'Snacks/Others', grouped['Snacks/Others']!),
                             const SizedBox(height: 80),
                           ],
                         ),
                       ),
         bottomNavigationBar: _orders.isNotEmpty
             ? Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 color: Colors.blue.shade50,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(AppLocalizations.of(context)!.vegCount(totals['veg']!), style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text(AppLocalizations.of(context)!.nonVegCount(totals['nonVeg']!), style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text(AppLocalizations.of(context)!.totalCount(totals['total']!), style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(AppLocalizations.of(context).vegCount(totals['veg']!),
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                        AppLocalizations.of(context)
+                            .nonVegCount(totals['nonVeg']!),
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(
+                        AppLocalizations.of(context)
+                            .totalCount(totals['total']!),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
               )
@@ -388,11 +450,12 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
             ? null // Hide add button for past dates
             : FloatingActionButton.extended(
                 icon: const Icon(Icons.add),
-                label: Text(AppLocalizations.of(context)!.addOrder),
+                label: Text(AppLocalizations.of(context).addOrder),
                 onPressed: () async {
                   final result = await Navigator.push<bool>(
                     context,
-                    MaterialPageRoute(builder: (_) => AddOrderScreen(date: widget.date)),
+                    MaterialPageRoute(
+                        builder: (_) => AddOrderScreen(date: widget.date)),
                   );
                   if (result == true) await _loadOrders();
                 },
@@ -405,7 +468,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     Color color;
     IconData? icon;
     String label;
-    
+
     switch (status) {
       case 'ACCEPTED':
         color = Colors.green.shade700;
@@ -424,8 +487,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     }
 
     if (label.isEmpty) {
-        // Simple dot for pending
-        return Icon(Icons.circle, size: 12, color: color);
+      // Simple dot for pending
+      return Icon(Icons.circle, size: 12, color: color);
     }
 
     return Container(
@@ -442,7 +505,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+                fontSize: 10, fontWeight: FontWeight.bold, color: color),
           ),
         ],
       ),

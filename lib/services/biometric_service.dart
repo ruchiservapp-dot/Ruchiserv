@@ -8,7 +8,8 @@ class BiometricService {
     try {
       final canCheck = await _auth.canCheckBiometrics;
       final isSupported = await _auth.isDeviceSupported();
-      AppLogger.info('BioService: canCheck=$canCheck, isSupported=$isSupported');
+      AppLogger.info(
+          'BioService: canCheck=$canCheck, isSupported=$isSupported');
       return canCheck || isSupported;
     } catch (e) {
       AppLogger.info('BioService: canCheckBiometrics Error: $e');

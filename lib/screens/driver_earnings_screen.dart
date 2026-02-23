@@ -1,14 +1,14 @@
 // MODULE: DRIVER EARNINGS SCREEN (v34)
 // Features: Trip history, km tracking, earnings summary, date filters, export
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
-import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'report_preview_page.dart';
 
 class DriverEarningsScreen extends StatefulWidget {
   final int driverId;
-  
+
   const DriverEarningsScreen({super.key, required this.driverId});
 
   @override
@@ -19,7 +19,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
   bool _isLoading = true;
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _endDate = DateTime.now();
-  
+
   List<Map<String, dynamic>> _trips = [];
   Map<String, dynamic> _summary = {};
 
@@ -31,11 +31,11 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final db = await DatabaseHelper().database;
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
-    
+
     // Get completed trips with earnings
     final trips = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax
@@ -46,7 +46,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
         AND d.dispatchStatus IN ('DELIVERED', 'COMPLETED', 'RETURNING')
       ORDER BY d.dispatchTime DESC
     ''', [widget.driverId, startStr, endStr]);
-    
+
     // Get summary
     final summary = await db.rawQuery('''
       SELECT 
@@ -61,10 +61,11 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
         AND DATE(dispatchTime) BETWEEN ? AND ?
         AND dispatchStatus IN ('DELIVERED', 'COMPLETED', 'RETURNING')
     ''', [widget.driverId, startStr, endStr]);
-    
+
     setState(() {
       _trips = List<Map<String, dynamic>>.from(trips);
-      _summary = summary.isNotEmpty ? Map<String, dynamic>.from(summary.first) : {};
+      _summary =
+          summary.isNotEmpty ? Map<String, dynamic>.from(summary.first) : {};
       _isLoading = false;
     });
   }
@@ -86,32 +87,45 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
   }
 
   void _exportReport() {
-    final headers = ['Date', 'Customer', 'Location', 'Forward KM', 'Return KM', 'Earnings', 'Paid'];
-    final rows = _trips.map((t) => [
-      t['date'] ?? '',
-      t['customerName'] ?? '',
-      t['location'] ?? '',
-      (t['kmForward'] as num?)?.toStringAsFixed(1) ?? '0',
-      (t['kmReturn'] as num?)?.toStringAsFixed(1) ?? '0',
-      '₹${(t['driverShare'] as num?)?.toStringAsFixed(0) ?? '0'}',
-      t['isPaid'] == 1 ? 'Yes' : 'No',
-    ]).toList();
-    
-    Navigator.push(context, MaterialPageRoute(
-      builder: (_) => ReportPreviewPage(
-        title: 'Driver Earnings Report',
-        subtitle: '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d').format(_endDate)}',
-        headers: headers,
-        rows: rows,
-        accentColor: Colors.green,
-      ),
-    ));
+    final headers = [
+      'Date',
+      'Customer',
+      'Location',
+      'Forward KM',
+      'Return KM',
+      'Earnings',
+      'Paid'
+    ];
+    final rows = _trips
+        .map((t) => [
+              t['date'] ?? '',
+              t['customerName'] ?? '',
+              t['location'] ?? '',
+              (t['kmForward'] as num?)?.toStringAsFixed(1) ?? '0',
+              (t['kmReturn'] as num?)?.toStringAsFixed(1) ?? '0',
+              '₹${(t['driverShare'] as num?)?.toStringAsFixed(0) ?? '0'}',
+              t['isPaid'] == 1 ? 'Yes' : 'No',
+            ])
+        .toList();
+
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ReportPreviewPage(
+            title: 'Driver Earnings Report',
+            subtitle:
+                '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d').format(_endDate)}',
+            headers: headers,
+            rows: rows,
+            accentColor: Colors.green,
+          ),
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalKm = ((_summary['totalKmForward'] as num?)?.toDouble() ?? 0) + 
-                    ((_summary['totalKmReturn'] as num?)?.toDouble() ?? 0);
+    final totalKm = ((_summary['totalKmForward'] as num?)?.toDouble() ?? 0) +
+        ((_summary['totalKmReturn'] as num?)?.toDouble() ?? 0);
     final totalEarnings = (_summary['totalEarnings'] as num?)?.toDouble() ?? 0;
     final paidAmount = (_summary['paidAmount'] as num?)?.toDouble() ?? 0;
     final pendingAmount = (_summary['pendingAmount'] as num?)?.toDouble() ?? 0;
@@ -121,7 +135,10 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
       appBar: AppBar(
         title: const Text('My Earnings'),
         actions: [
-          IconButton(icon: const Icon(Icons.file_download), onPressed: _exportReport, tooltip: 'Export'),
+          IconButton(
+              icon: const Icon(Icons.file_download),
+              onPressed: _exportReport,
+              tooltip: 'Export'),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
       ),
@@ -138,11 +155,13 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.calendar_today, size: 18, color: Colors.green),
+                        const Icon(Icons.calendar_today,
+                            size: 18, color: Colors.green),
                         const SizedBox(width: 8),
                         Text(
                           '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d, yyyy').format(_endDate)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.green),
                         ),
                         const SizedBox(width: 4),
                         const Icon(Icons.arrow_drop_down, color: Colors.green),
@@ -150,32 +169,49 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                     ),
                   ),
                 ),
-                
+
                 // Summary Cards
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      Expanded(child: _buildSummaryCard('Total Earnings', '₹${totalEarnings.toStringAsFixed(0)}', Colors.green, Icons.currency_rupee)),
+                      Expanded(
+                          child: _buildSummaryCard(
+                              'Total Earnings',
+                              '₹${totalEarnings.toStringAsFixed(0)}',
+                              Colors.green,
+                              Icons.currency_rupee)),
                       const SizedBox(width: 8),
-                      Expanded(child: _buildSummaryCard('Total KM', '${totalKm.toStringAsFixed(1)} km', Colors.blue, Icons.route)),
+                      Expanded(
+                          child: _buildSummaryCard(
+                              'Total KM',
+                              '${totalKm.toStringAsFixed(1)} km',
+                              Colors.blue,
+                              Icons.route)),
                     ],
                   ),
                 ),
-                
+
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Row(
                     children: [
-                      Expanded(child: _buildSummaryCard('Trips', '$tripCount', Colors.purple, Icons.local_shipping)),
+                      Expanded(
+                          child: _buildSummaryCard('Trips', '$tripCount',
+                              Colors.purple, Icons.local_shipping)),
                       const SizedBox(width: 8),
-                      Expanded(child: _buildSummaryCard('Pending', '₹${pendingAmount.toStringAsFixed(0)}', Colors.orange, Icons.pending)),
+                      Expanded(
+                          child: _buildSummaryCard(
+                              'Pending',
+                              '₹${pendingAmount.toStringAsFixed(0)}',
+                              Colors.orange,
+                              Icons.pending)),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Trip History
                 Expanded(
                   child: _trips.isEmpty
@@ -183,9 +219,11 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.receipt_long, size: 48, color: Colors.grey.shade400),
+                              Icon(Icons.receipt_long,
+                                  size: 48, color: Colors.grey.shade400),
                               const SizedBox(height: 8),
-                              const Text('No trips in this period', style: TextStyle(color: Colors.grey)),
+                              const Text('No trips in this period',
+                                  style: TextStyle(color: Colors.grey)),
                             ],
                           ),
                         )
@@ -200,7 +238,8 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String label, String value, Color color, IconData icon) {
+  Widget _buildSummaryCard(
+      String label, String value, Color color, IconData icon) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -219,8 +258,14 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
-                  Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color)),
+                  Text(label,
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+                  Text(value,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: color)),
                 ],
               ),
             ),
@@ -238,13 +283,15 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
     final kmReturn = (trip['kmReturn'] as num?)?.toDouble() ?? 0;
     final earnings = (trip['driverShare'] as num?)?.toDouble() ?? 0;
     final isPaid = trip['isPaid'] == 1;
-    
+
     String dateLabel = date;
     try {
       final dt = DateTime.parse(date);
       dateLabel = DateFormat('MMM d').format(dt);
-    } catch (_) {}
-    
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
@@ -259,26 +306,40 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.indigo.shade100,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Text(dateLabel, style: TextStyle(color: Colors.indigo.shade800, fontSize: 11, fontWeight: FontWeight.bold)),
+                    child: Text(dateLabel,
+                        style: TextStyle(
+                            color: Colors.indigo.shade800,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold)),
                   ),
                   const Spacer(),
-                  Text('₹${earnings.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+                  Text('₹${earnings.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.green)),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isPaid ? Colors.green.shade100 : Colors.orange.shade100,
+                      color: isPaid
+                          ? Colors.green.shade100
+                          : Colors.orange.shade100,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       isPaid ? 'PAID' : 'PENDING',
                       style: TextStyle(
-                        color: isPaid ? Colors.green.shade800 : Colors.orange.shade800,
+                        color: isPaid
+                            ? Colors.green.shade800
+                            : Colors.orange.shade800,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
@@ -287,13 +348,19 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(customer, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(customer,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 12, color: Colors.grey.shade500),
+                  Icon(Icons.location_on,
+                      size: 12, color: Colors.grey.shade500),
                   const SizedBox(width: 4),
                   Expanded(
-                    child: Text(location, style: TextStyle(color: Colors.grey.shade600, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    child: Text(location,
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                   ),
                 ],
               ),
@@ -326,7 +393,8 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
         children: [
           Icon(icon, size: 12, color: Colors.grey.shade600),
           const SizedBox(width: 4),
-          Text('${km.toStringAsFixed(1)} km', style: TextStyle(color: Colors.grey.shade700, fontSize: 11)),
+          Text('${km.toStringAsFixed(1)} km',
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 11)),
         ],
       ),
     );

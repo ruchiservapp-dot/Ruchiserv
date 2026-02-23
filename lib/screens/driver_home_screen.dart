@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
-import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'driver_assignment_screen.dart';
 import 'driver_dispatch_detail_screen.dart';
 import 'driver_active_dispatch_screen.dart';
@@ -24,7 +23,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   bool _isLoading = true;
   String _driverId = ''; // Fixed: Changed from int to String
   String _driverName = '';
-  
+
   // Data
   List<Map<String, dynamic>> _pendingAssignments = [];
   Map<String, dynamic>? _activeDispatch;
@@ -47,33 +46,33 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     final granted = await LocationService.instance.requestPermission();
     AppLogger.info("📍 DriverHomeScreen: _checkPermission granted: $granted");
     if (!granted && mounted) {
-        AppLogger.info("📍 DriverHomeScreen: Showing permission dialog");
-        // Show dialog asking them to enable it
-        showDialog(
-            context: context,
-            barrierDismissible: false, // Force them to acknowledge
-            builder: (ctx) => AlertDialog(
-                title: const Text('Location Access Required'),
-                content: const Text(
-                    'To track deliveries and provide route guidance, this app collects location data even when the app is closed or not in use.\n\nPlease enable "Allow all the time" or "When in use" in settings.',
-                ),
-                actions: [
-                    TextButton(
-                        onPressed: () { 
-                            Navigator.pop(ctx);
-                        }, 
-                        child: const Text('I Understand'),
-                    ),
-                    ElevatedButton(
-                        onPressed: () async {
-                            Navigator.pop(ctx);
-                            await LocationService.instance.requestPermission();
-                        },
-                        child: const Text('Open Settings'),
-                    )
-                ],
+      AppLogger.info("📍 DriverHomeScreen: Showing permission dialog");
+      // Show dialog asking them to enable it
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Force them to acknowledge
+        builder: (ctx) => AlertDialog(
+          title: const Text('Location Access Required'),
+          content: const Text(
+            'To track deliveries and provide route guidance, this app collects location data even when the app is closed or not in use.\n\nPlease enable "Allow all the time" or "When in use" in settings.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: const Text('I Understand'),
             ),
-        );
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await LocationService.instance.requestPermission();
+              },
+              child: const Text('Open Settings'),
+            )
+          ],
+        ),
+      );
     }
   }
 
@@ -81,30 +80,32 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     AppLogger.info("📍 DriverHomeScreen: _loadDriverData start");
     if (!mounted) return;
     setState(() => _isLoading = true);
-    
+
     try {
       final SharedPreferences sp = await SharedPreferences.getInstance();
       AppLogger.info("📍 DriverHomeScreen: SP initialized");
       final mobile = sp.getString('last_mobile') ?? '';
       final firmId = sp.getString('last_firm') ?? '';
       _driverName = sp.getString('last_user_name') ?? 'Driver';
-      
+
       final db = await DatabaseHelper().database;
       AppLogger.info("📍 DriverHomeScreen: DB initialized");
-      
+
       // 1. Get Driver Identity (Name) if not in SP
-      final users = await db.query('users', 
-        where: 'mobile = ? AND firmId = ?', 
+      final users = await db.query(
+        'users',
+        where: 'mobile = ? AND firmId = ?',
         whereArgs: [mobile, firmId],
       );
-      
+
       if (users.isNotEmpty) {
         _driverName = users.first['username']?.toString() ?? _driverName;
       }
       AppLogger.info("📍 DriverHomeScreen: Driver identified: $_driverName");
 
       // 2. Find Assigned Vehicle
-      final vehicleRes = await db.query('vehicles',
+      final vehicleRes = await db.query(
+        'vehicles',
         where: 'driverMobile = ? AND firmId = ?',
         whereArgs: [mobile, firmId],
         limit: 1,
@@ -123,9 +124,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           });
         }
       }
-      
+
       if (mounted) setState(() => _isLoading = false);
-      AppLogger.info("📍 DriverHomeScreen: _loadDriverData complete, loading=false");
+      AppLogger.info(
+          "📍 DriverHomeScreen: _loadDriverData complete, loading=false");
     } catch (e, stack) {
       AppLogger.info("📍 DriverHomeScreen error: $e");
       print(stack);
@@ -137,23 +139,22 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     AppLogger.info("📍 DriverHomeScreen: _loadDispatchData start");
     try {
       final db = await DatabaseHelper().database;
-      
+
       // Get pending assignments
-      final pending = await db.query('dispatches', 
-        where: 'assignmentStatus = ?', 
-        whereArgs: ['PENDING']
-      );
+      final pending = await db.query('dispatches',
+          where: 'assignmentStatus = ?', whereArgs: ['PENDING']);
       _pendingAssignments = List<Map<String, dynamic>>.from(pending);
-      AppLogger.info("📍 DriverHomeScreen: Pending load: ${_pendingAssignments.length}");
-      
+      AppLogger.info(
+          "📍 DriverHomeScreen: Pending load: ${_pendingAssignments.length}");
+
       // Get active dispatch
-      final active = await db.query('dispatches', 
-        where: 'dispatchStatus IN (?, ?, ?)', 
-        whereArgs: ['LOADING', 'DISPATCHED', 'DELIVERED']
-      );
+      final active = await db.query('dispatches',
+          where: 'dispatchStatus IN (?, ?, ?)',
+          whereArgs: ['LOADING', 'DISPATCHED', 'DELIVERED']);
       if (active.isNotEmpty) {
         _activeDispatch = Map<String, dynamic>.from(active.first);
-        AppLogger.info("📍 DriverHomeScreen: Active found: ${_activeDispatch!['id']}");
+        AppLogger.info(
+            "📍 DriverHomeScreen: Active found: ${_activeDispatch!['id']}");
       }
       AppLogger.info("📍 DriverHomeScreen: _loadDispatchData complete");
     } catch (e) {
@@ -161,10 +162,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     }
     final db = await DatabaseHelper().database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    
+
     // NOTE: dispatches table uses 'vehicleId', not 'driverId'
     // We reuse _driverId variable to store the vehicleId for convenience here
-    
+
     // 1. Pending Assignments
     final pending = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
@@ -174,7 +175,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       WHERE d.vehicleId = ? AND d.assignmentStatus = 'PENDING'
       ORDER BY o.date ASC, o.time ASC
     ''', [_driverId]);
-    
+
     // 2. Active Dispatch
     final active = await db.rawQuery('''
       SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, o.mobile as customerMobile,
@@ -187,7 +188,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       ORDER BY d.dispatchTime DESC
       LIMIT 1
     ''', [_driverId]);
-    
+
     // 3. Today's Stats
     final todayCompleted = await db.rawQuery('''
       SELECT COUNT(*) as count, 
@@ -197,7 +198,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       WHERE vehicleId = ? AND DATE(dispatchTime) = ?
         AND dispatchStatus IN ('DELIVERED', 'COMPLETED')
     ''', [_driverId, today]);
-    
+
     // 4. Monthly Earnings Summary
     final monthStart = DateFormat('yyyy-MM-01').format(DateTime.now());
     final monthEarnings = await db.rawQuery('''
@@ -209,13 +210,18 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       WHERE vehicleId = ? AND DATE(dispatchTime) >= ?
         AND dispatchStatus IN ('DELIVERED', 'COMPLETED')
     ''', [_driverId, monthStart]);
-    
+
     if (mounted) {
       setState(() {
         _pendingAssignments = List<Map<String, dynamic>>.from(pending);
-        _activeDispatch = active.isNotEmpty ? Map<String, dynamic>.from(active.first) : null;
-        _todayStats = todayCompleted.isNotEmpty ? Map<String, dynamic>.from(todayCompleted.first) : {};
-        _earningsSummary = monthEarnings.isNotEmpty ? Map<String, dynamic>.from(monthEarnings.first) : {};
+        _activeDispatch =
+            active.isNotEmpty ? Map<String, dynamic>.from(active.first) : null;
+        _todayStats = todayCompleted.isNotEmpty
+            ? Map<String, dynamic>.from(todayCompleted.first)
+            : {};
+        _earningsSummary = monthEarnings.isNotEmpty
+            ? Map<String, dynamic>.from(monthEarnings.first)
+            : {};
         _isLoading = false;
       });
     }
@@ -242,21 +248,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               // Welcome Card
               _buildWelcomeCard(),
               const SizedBox(height: 16),
-              
+
               // Active Dispatch (if any)
               if (_activeDispatch != null) ...[
                 _buildActiveDispatchCard(),
                 const SizedBox(height: 16),
               ],
-              
+
               // Today's Stats
               _buildTodayStatsCard(),
               const SizedBox(height: 16),
-              
+
               // Pending Assignments
               _buildPendingAssignmentsSection(),
               const SizedBox(height: 16),
-              
+
               // Monthly Earnings Card
               _buildEarningsCard(),
             ],
@@ -269,9 +275,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   Widget _buildWelcomeCard() {
     final now = DateTime.now();
     String greeting = 'Good Morning';
-    if (now.hour >= 12 && now.hour < 17) greeting = 'Good Afternoon';
-    else if (now.hour >= 17) greeting = 'Good Evening';
-    
+    if (now.hour >= 12 && now.hour < 17) {
+      greeting = 'Good Afternoon';
+    } else if (now.hour >= 17) greeting = 'Good Evening';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -301,10 +308,19 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(greeting, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
-                Text(_driverName, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                Text(DateFormat('EEEE, MMM d').format(DateTime.now()), 
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12)),
+                Text(greeting,
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 14)),
+                Text(_driverName,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)),
+                Text(DateFormat('EEEE, MMM d').format(DateTime.now()),
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12)),
               ],
             ),
           ),
@@ -316,9 +332,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             ),
             child: Column(
               children: [
-                Text('${_pendingAssignments.length}', 
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                const Text('Pending', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                Text('${_pendingAssignments.length}',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)),
+                const Text('Pending',
+                    style: TextStyle(color: Colors.white70, fontSize: 10)),
               ],
             ),
           ),
@@ -330,11 +350,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   Widget _buildActiveDispatchCard() {
     final d = _activeDispatch!;
     final status = d['dispatchStatus'] ?? 'PENDING';
-    
+
     Color statusColor = Colors.orange;
     IconData statusIcon = Icons.hourglass_empty;
     String statusText = 'Loading';
-    
+
     switch (status) {
       case 'DISPATCHED':
         statusColor = Colors.blue;
@@ -352,20 +372,23 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         statusText = 'Returning';
         break;
     }
-    
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => DriverActiveDispatchScreen(dispatch: d)),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => DriverActiveDispatchScreen(dispatch: d)),
         ).then((_) => _loadDispatchData()),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 2),
+            border:
+                Border.all(color: statusColor.withValues(alpha: 0.3), width: 2),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,20 +408,30 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('ACTIVE DISPATCH', 
-                          style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                        Text(d['customerName'] ?? 'Customer', 
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Text('ACTIVE DISPATCH',
+                            style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1)),
+                        Text(d['customerName'] ?? 'Customer',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(statusText, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                    child: Text(statusText,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12)),
                   ),
                 ],
               ),
@@ -406,11 +439,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildDispatchInfo(Icons.location_on, d['location'] ?? 'N/A'),
+                    child: _buildDispatchInfo(
+                        Icons.location_on, d['location'] ?? 'N/A'),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildDispatchInfo(Icons.access_time, TimeUtils.formatTo12Hour(d['time'])),
+                    child: _buildDispatchInfo(
+                        Icons.access_time, TimeUtils.formatTo12Hour(d['time'])),
                   ),
                 ],
               ),
@@ -418,11 +453,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildDispatchInfo(Icons.local_shipping, d['vehicleNumber'] ?? 'N/A'),
+                    child: _buildDispatchInfo(
+                        Icons.local_shipping, d['vehicleNumber'] ?? 'N/A'),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildDispatchInfo(Icons.people, '${d['totalPax'] ?? 0} Pax'),
+                    child: _buildDispatchInfo(
+                        Icons.people, '${d['totalPax'] ?? 0} Pax'),
                   ),
                 ],
               ),
@@ -430,8 +467,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => DriverActiveDispatchScreen(dispatch: d)),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            DriverActiveDispatchScreen(dispatch: d)),
                   ).then((_) => _loadDispatchData()),
                   icon: const Icon(Icons.arrow_forward),
                   label: const Text('View Details'),
@@ -439,7 +479,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     backgroundColor: statusColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ),
@@ -456,7 +497,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         Icon(icon, size: 16, color: Colors.grey.shade600),
         const SizedBox(width: 4),
         Expanded(
-          child: Text(text, style: TextStyle(color: Colors.grey.shade700, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
+          child: Text(text,
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
         ),
       ],
     );
@@ -466,7 +510,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     final completed = (_todayStats['count'] as num?)?.toInt() ?? 0;
     final totalKm = (_todayStats['totalKm'] as num?)?.toDouble() ?? 0;
     final earnings = (_todayStats['earnings'] as num?)?.toDouble() ?? 0;
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -479,16 +523,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               children: [
                 const Icon(Icons.today, color: Colors.indigo, size: 20),
                 const SizedBox(width: 8),
-                const Text("Today's Summary", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text("Today's Summary",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('$completed', 'Trips', Icons.local_shipping, Colors.blue),
-                _buildStatItem('${totalKm.toStringAsFixed(1)} km', 'Distance', Icons.route, Colors.orange),
-                _buildStatItem('₹${earnings.toStringAsFixed(0)}', 'Earned', Icons.currency_rupee, Colors.green),
+                _buildStatItem(
+                    '$completed', 'Trips', Icons.local_shipping, Colors.blue),
+                _buildStatItem('${totalKm.toStringAsFixed(1)} km', 'Distance',
+                    Icons.route, Colors.orange),
+                _buildStatItem('₹${earnings.toStringAsFixed(0)}', 'Earned',
+                    Icons.currency_rupee, Colors.green),
               ],
             ),
           ],
@@ -497,7 +546,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     );
   }
 
-  Widget _buildStatItem(String value, String label, IconData icon, Color color) {
+  Widget _buildStatItem(
+      String value, String label, IconData icon, Color color) {
     return Column(
       children: [
         Container(
@@ -509,8 +559,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(height: 8),
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color)),
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 16, color: color)),
+        Text(label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
       ],
     );
   }
@@ -522,11 +575,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Pending Assignments', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Pending Assignments',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             if (_pendingAssignments.isNotEmpty)
               TextButton(
-                onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const DriverAssignmentScreen()),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const DriverAssignmentScreen()),
                 ).then((_) => _loadDispatchData()),
                 child: const Text('View All'),
               ),
@@ -540,9 +596,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.check_circle, size: 48, color: Colors.green.shade300),
+                    Icon(Icons.check_circle,
+                        size: 48, color: Colors.green.shade300),
                     const SizedBox(height: 8),
-                    const Text('No pending assignments', style: TextStyle(color: Colors.grey)),
+                    const Text('No pending assignments',
+                        style: TextStyle(color: Colors.grey)),
                   ],
                 ),
               ),
@@ -566,28 +624,37 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           backgroundColor: Colors.orange.shade100,
           child: Icon(Icons.delivery_dining, color: Colors.orange.shade700),
         ),
-        title: Text(assignment['customerName'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${assignment['date']} • ${TimeUtils.formatTo12Hour(assignment['time'])} • ${assignment['dishCount'] ?? 0} dishes'),
+        title: Text(assignment['customerName'] ?? 'Customer',
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(
+            '${assignment['date']} • ${TimeUtils.formatTo12Hour(assignment['time'])} • ${assignment['dishCount'] ?? 0} dishes'),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-        onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => DriverDispatchDetailScreen(dispatch: assignment)),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => DriverDispatchDetailScreen(dispatch: assignment)),
         ).then((_) => _loadDispatchData()),
       ),
     );
   }
 
   Widget _buildEarningsCard() {
-    final monthEarnings = (_earningsSummary['monthEarnings'] as num?)?.toDouble() ?? 0;
+    final monthEarnings =
+        (_earningsSummary['monthEarnings'] as num?)?.toDouble() ?? 0;
     final monthKm = (_earningsSummary['monthKm'] as num?)?.toDouble() ?? 0;
     final tripCount = (_earningsSummary['tripCount'] as num?)?.toInt() ?? 0;
-    final pendingAmount = (_earningsSummary['pendingAmount'] as num?)?.toDouble() ?? 0;
-    
+    final pendingAmount =
+        (_earningsSummary['pendingAmount'] as num?)?.toDouble() ?? 0;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => DriverEarningsScreen(driverId: int.tryParse(_driverId) ?? 0)),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) =>
+                  DriverEarningsScreen(driverId: int.tryParse(_driverId) ?? 0)),
         ).then((_) => _loadDispatchData()),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -600,9 +667,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.account_balance_wallet, color: Colors.green, size: 20),
+                      const Icon(Icons.account_balance_wallet,
+                          color: Colors.green, size: 20),
                       const SizedBox(width: 8),
-                      const Text('Monthly Earnings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      const Text('Monthly Earnings',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14)),
                     ],
                   ),
                   const Icon(Icons.chevron_right, color: Colors.grey),
@@ -615,25 +685,35 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('₹${monthEarnings.toStringAsFixed(0)}', 
-                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green)),
-                        Text('$tripCount trips • ${monthKm.toStringAsFixed(0)} km', 
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                        Text('₹${monthEarnings.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green)),
+                        Text(
+                            '$tripCount trips • ${monthKm.toStringAsFixed(0)} km',
+                            style: TextStyle(
+                                color: Colors.grey.shade600, fontSize: 12)),
                       ],
                     ),
                   ),
                   if (pendingAmount > 0)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.orange.shade100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
                         children: [
-                          Text('₹${pendingAmount.toStringAsFixed(0)}', 
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade800)),
-                          Text('Pending', style: TextStyle(fontSize: 10, color: Colors.orange.shade600)),
+                          Text('₹${pendingAmount.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade800)),
+                          Text('Pending',
+                              style: TextStyle(
+                                  fontSize: 10, color: Colors.orange.shade600)),
                         ],
                       ),
                     ),

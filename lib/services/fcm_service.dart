@@ -5,7 +5,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../firebase_options.dart';
-import '../db/aws/aws_api.dart';
 import '../db/database_helper.dart';
 import 'cloud_sync_service.dart';
 
@@ -13,7 +12,8 @@ import 'cloud_sync_service.dart';
 
 class FcmService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
     // 1. Initialize Firebase
@@ -24,7 +24,8 @@ class FcmService {
       );
       AppLogger.info("✅ Firebase initialized successfully");
     } catch (e) {
-      AppLogger.info("⚠️ Firebase initialization failed or already initialized: $e");
+      AppLogger.info(
+          "⚠️ Firebase initialization failed or already initialized: $e");
     }
 
     // 2. Request Permissions
@@ -34,7 +35,8 @@ class FcmService {
         badge: true,
         sound: true,
       );
-      AppLogger.info('User granted notification permission: ${settings.authorizationStatus}');
+      AppLogger.info(
+          'User granted notification permission: ${settings.authorizationStatus}');
     } catch (e) {
       AppLogger.warning('⚠️ Failed to request notification permission: $e');
     }
@@ -59,10 +61,10 @@ class FcmService {
     // 4. Foreground Message Handler - PUSH-PULL SYNC TRIGGER
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       AppLogger.info('📩 Foreground Message: ${message.data}');
-      
+
       // Handle SYNC payload from server
       await _handleSyncMessage(message.data);
-      
+
       // Show local notification if needed (for visible notifications)
       if (message.notification != null) {
         _showLocalNotification(message);
@@ -77,14 +79,14 @@ class FcmService {
   static Future<void> _handleSyncMessage(Map<String, dynamic> data) async {
     final type = data['type'];
     final table = data['table'];
-    
+
     if (type == 'SYNC' && table != null) {
       AppLogger.info('🔄 Push-Pull: Received SYNC signal for table "$table"');
-      
+
       try {
         final prefs = await SharedPreferences.getInstance();
         final firmId = prefs.getString('last_firm');
-        
+
         if (firmId != null) {
           // Trigger immediate sync for the specified table
           await CloudSyncService().syncTableFromCloud(table, firmId);
@@ -102,11 +104,13 @@ class FcmService {
   static Future<void> _showLocalNotification(RemoteMessage message) async {
     // Basic setup for local notifications usually requires more init in main.dart
     // For now, we just print, but this is where you'd show a dialog or snackbar
-    AppLogger.info("🔔 Notification: ${message.notification?.title} - ${message.notification?.body}");
+    AppLogger.info(
+        "🔔 Notification: ${message.notification?.title} - ${message.notification?.body}");
   }
 
   /// Save FCM token to the User table in AWS
-  static Future<void> saveTokenToBackend(String token, {String? firmId, String? mobile}) async {
+  static Future<void> saveTokenToBackend(String token,
+      {String? firmId, String? mobile}) async {
     try {
       if (firmId == null || mobile == null) {
         final sp = await SharedPreferences.getInstance();
@@ -119,22 +123,23 @@ class FcmService {
         return;
       }
 
+      AppLogger.info(
+          "🚀 FCM: Updating local user with new token for $mobile...");
 
-
-      AppLogger.info("🚀 FCM: Updating local user with new token for $mobile...");
-      
       final dbHelper = DatabaseHelper();
       final user = await dbHelper.getUserByMobile(firmId, mobile);
-      
+
       if (user != null) {
         final updatedUser = Map<String, dynamic>.from(user);
         updatedUser['fcmToken'] = token;
         updatedUser['updatedAt'] = DateTime.now().toIso8601String();
-        
+
         await dbHelper.updateUser(updatedUser);
-        AppLogger.info("✅ FCM Token updated locally. Syncing to cloud via queue...");
+        AppLogger.info(
+            "✅ FCM Token updated locally. Syncing to cloud via queue...");
       } else {
-        AppLogger.info("⚠️ FCM: User not found in local DB. Cannot update token.");
+        AppLogger.info(
+            "⚠️ FCM: User not found in local DB. Cannot update token.");
       }
     } catch (e) {
       AppLogger.info("❌ Error saving FCM token to backend: $e");
@@ -149,25 +154,26 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   AppLogger.info("🌙 Background Message: ${message.data}");
-  
+
   // Handle SYNC in background as well
   final type = message.data['type'];
   final table = message.data['table'];
-  
+
   if (type == 'SYNC' && table != null) {
-    AppLogger.info('🔄 Background Push-Pull: Received SYNC signal for table "$table"');
-    
+    AppLogger.info(
+        '🔄 Background Push-Pull: Received SYNC signal for table "$table"');
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final firmId = prefs.getString('last_firm');
-      
+
       if (firmId != null) {
         await CloudSyncService().syncTableFromCloud(table, firmId);
-        AppLogger.success('✅ Background Push-Pull: Synced "$table" successfully');
+        AppLogger.success(
+            '✅ Background Push-Pull: Synced "$table" successfully');
       }
     } catch (e) {
       AppLogger.error('❌ Background Push-Pull: Sync failed: $e');
     }
   }
 }
-

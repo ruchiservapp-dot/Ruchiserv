@@ -15,15 +15,16 @@ class OtpService {
   /// Start OTP session -> returns sessionId (string) or null on failure.
   static Future<String?> sendOtp({
     required String mobile,
-    String? senderId,       // optional, template must be pre-approved on 2Factor
-    String? templateName,   // optional, if you use a custom template name
+    String? senderId, // optional, template must be pre-approved on 2Factor
+    String? templateName, // optional, if you use a custom template name
   }) async {
     final apiKey = AppConfig.twoFactorApiKey;
-    
+
     // MOCK MODE: If API key not configured, return mock session for testing
     // Users can verify with OTP "1234"
     if (apiKey.isEmpty) {
-      debugPrint('🔶 OtpService: 2Factor API key not configured. Using MOCK mode.');
+      debugPrint(
+          '🔶 OtpService: 2Factor API key not configured. Using MOCK mode.');
       debugPrint('🔶 OtpService: Enter OTP "1234" to verify.');
       return 'MOCK_SESSION_${DateTime.now().millisecondsSinceEpoch}';
     }
@@ -45,11 +46,13 @@ class OtpService {
     try {
       final resp = await http.get(Uri.parse(path)); // 2Factor often prefers GET
       AppLogger.info('OtpService: Response ${resp.statusCode}');
-      AppLogger.info('OtpService: Response Body: ${resp.body}'); // DEBUG: Full response
+      AppLogger.info(
+          'OtpService: Response Body: ${resp.body}'); // DEBUG: Full response
 
       if (resp.statusCode == 200) {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;
-        AppLogger.info('OtpService: Status=${json['Status']}, Details=${json['Details']}'); // DEBUG
+        AppLogger.info(
+            'OtpService: Status=${json['Status']}, Details=${json['Details']}'); // DEBUG
         if ((json['Status'] ?? '').toString().toLowerCase() == 'success') {
           await _recordRequest(mobile); // Record successful request
           return json['Details']?.toString(); // <-- sessionId
@@ -68,16 +71,16 @@ class OtpService {
     final prefs = await SharedPreferences.getInstance();
     final key = 'otp_request_history_$mobile';
     final history = prefs.getStringList(key) ?? [];
-    
+
     final now = DateTime.now();
     final tenMinsAgo = now.subtract(const Duration(minutes: 10));
-    
+
     // Filter to keep only requests from the last 10 minutes
     final recent = history
         .map((ts) => DateTime.tryParse(ts))
         .where((dt) => dt != null && dt.isAfter(tenMinsAgo))
         .toList();
-        
+
     return recent.length < 3;
   }
 
@@ -86,15 +89,15 @@ class OtpService {
     final prefs = await SharedPreferences.getInstance();
     final key = 'otp_request_history_$mobile';
     final history = prefs.getStringList(key) ?? [];
-    
+
     final now = DateTime.now();
     history.add(now.toIso8601String());
-    
+
     // Cleanup: keep only last 10 requests total
     if (history.length > 10) {
       history.removeRange(0, history.length - 10);
     }
-    
+
     await prefs.setStringList(key, history);
   }
 
@@ -111,7 +114,8 @@ class OtpService {
 
     final apiKey = AppConfig.twoFactorApiKey;
     if (apiKey.isEmpty) {
-      debugPrint('🔴 OtpService: API key not configured and OTP was not "1234"');
+      debugPrint(
+          '🔴 OtpService: API key not configured and OTP was not "1234"');
       return false;
     }
 

@@ -5,7 +5,7 @@ import 'package:ruchiserv/core/app_logger.dart';
 
 /// Central configuration class for all API keys and environment settings.
 /// Keys are injected at compile time via --dart-define flags.
-/// 
+///
 /// Example build command:
 /// ```bash
 /// flutter build appbundle \
@@ -19,9 +19,9 @@ class AppConfig {
   AppConfig._(); // Private constructor - all members are static
 
   // ========== ENVIRONMENT ==========
-  
+
   /// Whether the app is running in production mode
-  static bool get isProduction => 
+  static bool get isProduction =>
       const bool.fromEnvironment('PRODUCTION', defaultValue: false);
 
   /// Whether debug logging is enabled
@@ -30,7 +30,7 @@ class AppConfig {
   /// SAFETY: Allow sync in dev mode (DANGEROUS: affects prod DB)
   /// Usage: flutter run --dart-define=FORCE_DEV_SYNC=true
   /// CHANGED: Defaults to TRUE for testing phase as per user request
-  static bool get forceDevSync => 
+  static bool get forceDevSync =>
       const bool.fromEnvironment('FORCE_DEV_SYNC', defaultValue: true);
 
   /// Master switch for Cloud Sync
@@ -38,21 +38,21 @@ class AppConfig {
   static bool get enableCloudSync => isProduction || forceDevSync;
 
   // ========== CASHFREE PAYMENT GATEWAY ==========
-  
+
   /// Cashfree App ID (from https://merchant.cashfree.com/)
-  static String get cashfreeAppId => 
+  static String get cashfreeAppId =>
       const String.fromEnvironment('CASHFREE_APP_ID', defaultValue: '');
-  
+
   /// Cashfree Secret Key
-  static String get cashfreeSecretKey => 
+  static String get cashfreeSecretKey =>
       const String.fromEnvironment('CASHFREE_SECRET_KEY', defaultValue: '');
-  
+
   /// Whether to use Cashfree sandbox environment
-  static bool get cashfreeSandbox => 
+  static bool get cashfreeSandbox =>
       const bool.fromEnvironment('CASHFREE_SANDBOX', defaultValue: true);
 
   /// Check if Cashfree is properly configured
-  static bool get isCashfreeConfigured => 
+  static bool get isCashfreeConfigured =>
       cashfreeAppId.isNotEmpty && cashfreeSecretKey.isNotEmpty;
 
   /// 2Factor.in API Key
@@ -63,24 +63,24 @@ class AppConfig {
   static bool get isTwoFactorConfigured => twoFactorApiKey.isNotEmpty;
 
   // ========== SENDGRID (EMAIL) ==========
-  
+
   /// SendGrid API Key (optional - for email notifications)
-  static String get sendgridApiKey => 
+  static String get sendgridApiKey =>
       const String.fromEnvironment('SENDGRID_API_KEY', defaultValue: '');
 
   static bool get isSendgridConfigured => sendgridApiKey.isNotEmpty;
 
   // ========== META WHATSAPP ==========
-  
+
   /// Meta WhatsApp Business API Token
-  static String get metaWhatsAppToken => 
+  static String get metaWhatsAppToken =>
       const String.fromEnvironment('META_WHATSAPP_TOKEN', defaultValue: '');
-  
+
   /// Meta WhatsApp Phone Number ID
-  static String get metaWhatsAppPhoneId => 
+  static String get metaWhatsAppPhoneId =>
       const String.fromEnvironment('META_WHATSAPP_PHONE_ID', defaultValue: '');
 
-  static bool get isWhatsAppConfigured => 
+  static bool get isWhatsAppConfigured =>
       metaWhatsAppToken.isNotEmpty && metaWhatsAppPhoneId.isNotEmpty;
 
   // ========== AWS COGNITO ==========
@@ -97,17 +97,21 @@ class AppConfig {
       cognitoUserPoolId.isNotEmpty && cognitoClientId.isNotEmpty;
 
   // ========== HELPER METHODS ==========
-  
+
   /// Print configuration status (for debugging only)
   static void printConfigStatus() {
     if (!enableDebugLogs) return;
     AppLogger.info('=== AppConfig Status ===');
     AppLogger.info('Production: $isProduction');
-    AppLogger.info('Cashfree: ${isCashfreeConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info(
+        'Cashfree: ${isCashfreeConfigured ? '✅ Configured' : '❌ Missing'}');
     AppLogger.info('Cashfree Sandbox: $cashfreeSandbox');
-    AppLogger.info('2Factor: ${isTwoFactorConfigured ? '✅ Configured' : '❌ Missing'}');
-    AppLogger.info('SendGrid: ${isSendgridConfigured ? '✅ Configured' : '❌ Missing'}');
-    AppLogger.info('WhatsApp: ${isWhatsAppConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info(
+        '2Factor: ${isTwoFactorConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info(
+        'SendGrid: ${isSendgridConfigured ? '✅ Configured' : '❌ Missing'}');
+    AppLogger.info(
+        'WhatsApp: ${isWhatsAppConfigured ? '✅ Configured' : '❌ Missing'}');
     AppLogger.info('========================');
   }
 }

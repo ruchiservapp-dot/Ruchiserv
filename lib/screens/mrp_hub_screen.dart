@@ -1,7 +1,6 @@
 // MODULE: MRP HUB SCREEN
 // 4 Submodules: MRP Run, MRP Output, Allotment, Purchase Orders
 import 'package:flutter/material.dart';
-import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'mrp_run_screen.dart';
 import 'mrp_output_screen.dart';
 import 'allotment_screen.dart';
@@ -211,6 +210,7 @@ class _MrpHubScreenState extends State<MrpHubScreen> {
     );
     
     if (runs.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No MRP runs found. Create one first.'), backgroundColor: Colors.orange),
       );
@@ -218,6 +218,7 @@ class _MrpHubScreenState extends State<MrpHubScreen> {
     }
     
     showModalBottomSheet(
+
       context: context,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
@@ -263,6 +264,7 @@ class _MrpHubScreenState extends State<MrpHubScreen> {
     );
     
     if (runs.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No MRP runs ready for allotment.'), backgroundColor: Colors.orange),
       );
@@ -270,6 +272,7 @@ class _MrpHubScreenState extends State<MrpHubScreen> {
     }
     
     showModalBottomSheet(
+
       context: context,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),

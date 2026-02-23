@@ -6,13 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
-import '../db/database_helper.dart';
 import '../utils/file_storage_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:ruchiserv/repositories/operation_repository.dart';
-import 'package:ruchiserv/core/app_logger.dart';
 
 class StaffDetailScreen extends StatefulWidget {
   final int? staffId;
@@ -155,7 +151,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_isNew ? AppLocalizations.of(context)!.staffAdded : AppLocalizations.of(context)!.staffUpdated), backgroundColor: Colors.green),
+          SnackBar(content: Text(_isNew ? AppLocalizations.of(context).staffAdded : AppLocalizations.of(context).staffUpdated), backgroundColor: Colors.green),
         );
         Navigator.pop(context, true);
       }
@@ -174,14 +170,14 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteStaff),
-        content: Text(AppLocalizations.of(context)!.deleteStaffConfirm),
+        title: Text(AppLocalizations.of(context).deleteStaff),
+        content: Text(AppLocalizations.of(context).deleteStaffConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context).cancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(AppLocalizations.of(context)!.delete),
+            child: Text(AppLocalizations.of(context).delete),
           ),
         ],
       ),
@@ -192,7 +188,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.staffDeleted), backgroundColor: Colors.red),
+          SnackBar(content: Text(AppLocalizations.of(context).staffDeleted), backgroundColor: Colors.red),
         );
         Navigator.pop(context, true);
       }
@@ -203,18 +199,18 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
     final source = await showDialog<ImageSource>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.selectPhoto),
+        title: Text(AppLocalizations.of(context).selectPhoto),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: Text(AppLocalizations.of(context)!.camera),
+              title: Text(AppLocalizations.of(context).camera),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: Text(AppLocalizations.of(context)!.gallery),
+              title: Text(AppLocalizations.of(context).gallery),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
           ],
@@ -233,8 +229,10 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
       // Web: Use network path/blob directly, skip local file saving
       if (kIsWeb) {
         setState(() => _photoUrl = image.path);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.photoSelectedWeb), backgroundColor: Colors.green),
+
+          SnackBar(content: Text(AppLocalizations.of(context).photoSelectedWeb), backgroundColor: Colors.green),
         );
         return;
       }
@@ -249,7 +247,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.photoUpdated), backgroundColor: Colors.green),
+          SnackBar(content: Text(AppLocalizations.of(context).photoUpdated), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
@@ -265,7 +263,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isNew ? AppLocalizations.of(context)!.addStaff : AppLocalizations.of(context)!.staffDetails),
+        title: Text(_isNew ? AppLocalizations.of(context).addStaff : AppLocalizations.of(context).staffDetails),
         actions: [
           if (!_isNew)
             IconButton(
@@ -321,19 +319,19 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
           const SizedBox(height: 8),
           Center(
             child: Text(
-              AppLocalizations.of(context)!.tapToPhoto(_photoUrl != null ? 'change' : 'add'),
+              AppLocalizations.of(context).tapToPhoto(_photoUrl != null ? 'change' : 'add'),
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
           ),
           const SizedBox(height: 24),
           
           // Basic Info Section
-          Text(AppLocalizations.of(context)!.basicInfo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).basicInfo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           TextFormField(
             controller: _nameController,
-            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.fullName, border: const OutlineInputBorder()),
-            validator: (v) => v?.isEmpty == true ? AppLocalizations.of(context)!.requiredField : null,
+            decoration: InputDecoration(labelText: AppLocalizations.of(context).fullName, border: const OutlineInputBorder()),
+            validator: (v) => v?.isEmpty == true ? AppLocalizations.of(context).requiredField : null,
           ),
           const SizedBox(height: 12),
           Row(
@@ -341,18 +339,18 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _roleController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.roleDesignation, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).roleDesignation, border: const OutlineInputBorder()),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _staffType,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.staffType, border: const OutlineInputBorder()),
+                  initialValue: _staffType,
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).staffType, border: const OutlineInputBorder()),
                   items: [
-                    DropdownMenuItem(value: 'PERMANENT', child: Text(AppLocalizations.of(context)!.permanent)),
-                    DropdownMenuItem(value: 'DAILY_WAGE', child: Text(AppLocalizations.of(context)!.dailyWage)),
-                    DropdownMenuItem(value: 'CONTRACTOR', child: Text(AppLocalizations.of(context)!.contractor)),
+                    DropdownMenuItem(value: 'PERMANENT', child: Text(AppLocalizations.of(context).permanent)),
+                    DropdownMenuItem(value: 'DAILY_WAGE', child: Text(AppLocalizations.of(context).dailyWage)),
+                    DropdownMenuItem(value: 'CONTRACTOR', child: Text(AppLocalizations.of(context).contractor)),
                   ],
                   onChanged: (v) => setState(() => _staffType = v ?? 'PERMANENT'),
                 ),
@@ -365,7 +363,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _mobileController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.mobileNumber, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).mobileNumber, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.phone,
                 ),
               ),
@@ -373,7 +371,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _emailController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.email, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).email, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.emailAddress,
                 ),
               ),
@@ -381,22 +379,22 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
           ),
           
           const SizedBox(height: 24),
-          Text(AppLocalizations.of(context)!.salaryRates, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).salaryRates, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: TextFormField(
                   controller: _salaryController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.monthlySalary, border: const OutlineInputBorder(), prefixText: '₹ '),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).monthlySalary, border: const OutlineInputBorder(), prefixText: '₹ '),
                   keyboardType: TextInputType.number,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _payoutFrequency,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.payoutFrequency, border: const OutlineInputBorder()),
+                  initialValue: _payoutFrequency,
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).payoutFrequency, border: const OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(value: 'MONTHLY', child: Text('Monthly')),
                     DropdownMenuItem(value: 'WEEKLY', child: Text('Weekly')),
@@ -413,7 +411,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _dailyWageController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.dailyWageLabel, border: const OutlineInputBorder(), prefixText: '₹ '),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).dailyWageLabel, border: const OutlineInputBorder(), prefixText: '₹ '),
                   keyboardType: TextInputType.number,
                 ),
               ),
@@ -421,7 +419,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _hourlyRateController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.hourlyRate, border: const OutlineInputBorder(), prefixText: '₹ '),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).hourlyRate, border: const OutlineInputBorder(), prefixText: '₹ '),
                   keyboardType: TextInputType.number,
                 ),
               ),
@@ -429,11 +427,11 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
           ),
           
           const SizedBox(height: 24),
-          Text(AppLocalizations.of(context)!.bankIdDetails, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).bankIdDetails, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           TextFormField(
             controller: _bankNameController,
-            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.bankName, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context).bankName, border: const OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
           Row(
@@ -442,7 +440,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                 flex: 2,
                 child: TextFormField(
                   controller: _bankAccountController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.accountNumber, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).accountNumber, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.number,
                 ),
               ),
@@ -450,7 +448,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _bankIfscController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.ifscCode, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).ifscCode, border: const OutlineInputBorder()),
                 ),
               ),
             ],
@@ -458,26 +456,26 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _aadharController,
-            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.aadharNumber, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context).aadharNumber, border: const OutlineInputBorder()),
             keyboardType: TextInputType.number,
           ),
           
           const SizedBox(height: 24),
-          Text(AppLocalizations.of(context)!.emergencyContact, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).emergencyContact, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: TextFormField(
                   controller: _emergencyNameController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.contactName, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).contactName, border: const OutlineInputBorder()),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: TextFormField(
                   controller: _emergencyContactController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.contactNumber, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).contactNumber, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.phone,
                 ),
               ),
@@ -487,7 +485,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _addressController,
-            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.address, border: const OutlineInputBorder()),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context).address, border: const OutlineInputBorder()),
             maxLines: 2,
           ),
           
@@ -498,7 +496,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
               onPressed: _isSaving ? null : _save,
               child: _isSaving
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(_isNew ? AppLocalizations.of(context)!.addStaffBtn : AppLocalizations.of(context)!.saveChanges, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  : Text(_isNew ? AppLocalizations.of(context).addStaffBtn : AppLocalizations.of(context).saveChanges, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],

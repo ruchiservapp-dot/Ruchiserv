@@ -1,8 +1,6 @@
 import 'package:ruchiserv/repositories/finance_repository.dart';
-import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../db/database_helper.dart';
 import 'add_transaction_screen.dart';
 import 'transaction_list_screen.dart';
 import '../../widgets/shimmer_loader.dart';
@@ -35,15 +33,10 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
     final endOfMonth = DateTime(now.year, now.month + 1, 0);
 
     final summary = await FinanceRepository().getFinanceSummary(
-      _firmId, 
-      startOfMonth.toIso8601String(), 
-      endOfMonth.toIso8601String()
-    );
+        _firmId, startOfMonth.toIso8601String(), endOfMonth.toIso8601String());
 
-    final recent = await FinanceRepository().getTransactions(
-      firmId: _firmId, 
-      limit: 5
-    );
+    final recent =
+        await FinanceRepository().getTransactions(firmId: _firmId, limit: 5);
 
     setState(() {
       _totalIncome = summary['income'] ?? 0;
@@ -76,9 +69,10 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
               // Summary Cards
               _buildSummarySection(netProfit),
               const SizedBox(height: 24),
-              
+
               // Quick Actions
-              const Text("Quick Actions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text("Quick Actions",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildQuickActions(),
               const SizedBox(height: 24),
@@ -87,12 +81,15 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Recent Transactions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text("Recent Transactions",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   TextButton(
                     onPressed: () => Navigator.push(
-                      context, 
-                      MaterialPageRoute(builder: (_) => const TransactionListScreen())
-                    ).then((_) => _loadData()),
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const TransactionListScreen()))
+                        .then((_) => _loadData()),
                     child: const Text("View All"),
                   ),
                 ],
@@ -104,10 +101,9 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AddTransactionScreen())
-        ).then((_) => _loadData()),
+        onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const AddTransactionScreen()))
+            .then((_) => _loadData()),
         label: const Text('Add Transaction'),
         icon: const Icon(Icons.add),
         backgroundColor: Colors.black,
@@ -124,16 +120,17 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: netProfit >= 0 
-                ? [Colors.green.shade700, Colors.green.shade500]
-                : [Colors.red.shade700, Colors.red.shade500],
+              colors: netProfit >= 0
+                  ? [Colors.green.shade700, Colors.green.shade500]
+                  : [Colors.red.shade700, Colors.red.shade500],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: (netProfit >= 0 ? Colors.green : Colors.red).withValues(alpha: 0.3),
+                color: (netProfit >= 0 ? Colors.green : Colors.red)
+                    .withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -142,11 +139,15 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Net Profit (This Month)", style: TextStyle(color: Colors.white70, fontSize: 14)),
+              const Text("Net Profit (This Month)",
+                  style: TextStyle(color: Colors.white70, fontSize: 14)),
               const SizedBox(height: 8),
               Text(
                 "Rs. ${netProfit.abs().toStringAsFixed(0)}",
-                style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Container(
@@ -157,7 +158,10 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
                 ),
                 child: Text(
                   netProfit >= 0 ? "PROFITABLE" : "LOSS",
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -167,29 +171,29 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
         Row(
           children: [
             Expanded(
-              child: _buildMiniCard(
-                title: "Income", 
-                amount: _totalIncome, 
-                color: Colors.green, 
-                icon: Icons.arrow_downward
-              )
-            ),
+                child: _buildMiniCard(
+                    title: "Income",
+                    amount: _totalIncome,
+                    color: Colors.green,
+                    icon: Icons.arrow_downward)),
             const SizedBox(width: 16),
             Expanded(
-              child: _buildMiniCard(
-                title: "Expenses", 
-                amount: _totalExpense, 
-                color: Colors.red, 
-                icon: Icons.arrow_upward
-              )
-            ),
+                child: _buildMiniCard(
+                    title: "Expenses",
+                    amount: _totalExpense,
+                    color: Colors.red,
+                    icon: Icons.arrow_upward)),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildMiniCard({required String title, required double amount, required Color color, required IconData icon}) {
+  Widget _buildMiniCard(
+      {required String title,
+      required double amount,
+      required Color color,
+      required IconData icon}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -204,13 +208,15 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
             children: [
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 4),
-              Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+              Text(title,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             "Rs. ${amount.toStringAsFixed(0)}",
-            style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: color, fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -221,29 +227,36 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildActionButton("Add Income", Icons.add_circle_outline, Colors.green, () {
+        _buildActionButton("Add Income", Icons.add_circle_outline, Colors.green,
+            () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen(type: 'INCOME'))
-          ).then((_) => _loadData());
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          const AddTransactionScreen(type: 'INCOME')))
+              .then((_) => _loadData());
         }),
-        _buildActionButton("Add Expense", Icons.remove_circle_outline, Colors.red, () {
+        _buildActionButton(
+            "Add Expense", Icons.remove_circle_outline, Colors.red, () {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen(type: 'EXPENSE'))
-          ).then((_) => _loadData());
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          const AddTransactionScreen(type: 'EXPENSE')))
+              .then((_) => _loadData());
         }),
         _buildActionButton("Reports", Icons.bar_chart, Colors.purple, () {
           // TODO: Navigate to Reports Hub
         }),
         _buildActionButton("Payroll", Icons.people_outline, Colors.blue, () {
-           // TODO: Navigate to Payroll
+          // TODO: Navigate to Payroll
         }),
       ],
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -258,7 +271,9 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(label,
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -270,12 +285,15 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
       return Container(
         padding: const EdgeInsets.all(32),
         width: double.infinity,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(12)),
         child: Column(
           children: [
-            Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey.shade300),
+            Icon(Icons.receipt_long_outlined,
+                size: 48, color: Colors.grey.shade300),
             const SizedBox(height: 8),
-            Text("No transactions yet", style: TextStyle(color: Colors.grey.shade500)),
+            Text("No transactions yet",
+                style: TextStyle(color: Colors.grey.shade500)),
           ],
         ),
       );
@@ -296,14 +314,16 @@ class _FinanceDashboardState extends State<FinanceDashboard> {
           ),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: isIncome ? Colors.green.shade50 : Colors.red.shade50,
+              backgroundColor:
+                  isIncome ? Colors.green.shade50 : Colors.red.shade50,
               child: Icon(
                 isIncome ? Icons.arrow_downward : Icons.arrow_upward,
                 color: isIncome ? Colors.green : Colors.red,
                 size: 20,
               ),
             ),
-            title: Text(t['category'] ?? 'Uncategorized', style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(t['category'] ?? 'Uncategorized',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(DateFormat('MMM d, yyyy').format(date)),
             trailing: Text(
               "${isIncome ? '+' : '-'} ₹${amount.toStringAsFixed(0)}",

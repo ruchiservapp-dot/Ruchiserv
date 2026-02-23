@@ -14,7 +14,6 @@ import '../utils/haptic_helper.dart';
 import '../widgets/shake_animation.dart';
 
 // @locked
-import 'orders_calendar_screen.dart';
 import 'main_menu_screen.dart';
 import 'register_choice.dart';
 import 'forgot_password.dart';
@@ -233,8 +232,8 @@ class _LoginScreenState extends State<LoginScreen> {
             break;
           default:
             errorMessage = online
-                ? AppLocalizations.of(context)!.invalidCredentials
-                : AppLocalizations.of(context)!.offlineLoginNotAllowed;
+                ? AppLocalizations.of(context).invalidCredentials
+                : AppLocalizations.of(context).offlineLoginNotAllowed;
         }
         
         HapticHelper.error();
@@ -309,7 +308,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.loginError(e.toString()))));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).loginError(e.toString()))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -322,14 +321,14 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.enableBiometricLogin),
+        title: Text(AppLocalizations.of(context).enableBiometricLogin),
         content: Text(
-          AppLocalizations.of(context)!.enableBiometricPrompt,
+          AppLocalizations.of(context).enableBiometricPrompt,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.notNow),
+            child: Text(AppLocalizations.of(context).notNow),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -338,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
               await Future.delayed(const Duration(milliseconds: 200));
               await _enableBiometric();
             },
-            child: Text(AppLocalizations.of(context)!.enable),
+            child: Text(AppLocalizations.of(context).enable),
           ),
         ],
       ),
@@ -355,13 +354,13 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         setState(() {}); // Refresh UI to show enabled state
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.biometricEnabled)),
+          SnackBar(content: Text(AppLocalizations.of(context).biometricEnabled)),
         );
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.failedEnableBiometric(e.toString()))),
+        SnackBar(content: Text(AppLocalizations.of(context).failedEnableBiometric(e.toString()))),
       );
     }
   }
@@ -389,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.biometricNotAllowed),
+          content: Text(AppLocalizations.of(context).biometricNotAllowed),
         ));
         return;
       }
@@ -414,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.biometricFailed(e.toString()))));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).biometricFailed(e.toString()))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -423,16 +422,16 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showExpiryDialog({required bool lock}) async {
     final days = await AuthService.daysToExpiry();
     final msg = lock
-        ? AppLocalizations.of(context)!.subscriptionExpired
-        : AppLocalizations.of(context)!.subscriptionExpiresIn(days ?? 0);
+        ? AppLocalizations.of(context).subscriptionExpired
+        : AppLocalizations.of(context).subscriptionExpiresIn(days ?? 0);
     if (!mounted) return;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.subscription),
+        title: Text(AppLocalizations.of(context).subscription),
         content: Text(msg),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.ok)),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context).ok)),
         ],
       ),
     );
@@ -596,7 +595,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      AppLocalizations.of(context)!.signInContinue,
+                      AppLocalizations.of(context).signInContinue,
                       textAlign: TextAlign.center,
                       style: TextStyle(color: textColor.withValues(alpha: 0.7)),
                     ),
@@ -609,7 +608,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textInputAction: TextInputAction.next,
                       style: TextStyle(color: textColor),
                       decoration: InputDecoration(
-                        labelText: AppLocalizations.of(context)!.firmId,
+                        labelText: AppLocalizations.of(context).firmId,
                         labelStyle: TextStyle(color: textColor.withValues(alpha: 0.7)),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.1),
@@ -627,7 +626,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       validator: (v) => (v == null || v.trim().isEmpty)
-                          ? AppLocalizations.of(context)!.enterFirmId
+                          ? AppLocalizations.of(context).enterFirmId
                           : null,
                     ),
                     const SizedBox(height: 12),
@@ -640,7 +639,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textInputAction: TextInputAction.next,
                       style: TextStyle(color: textColor),
                       decoration: InputDecoration(
-                        labelText: AppLocalizations.of(context)!.mobileNumber,
+                        labelText: AppLocalizations.of(context).mobileNumber,
                         labelStyle: TextStyle(color: textColor.withValues(alpha: 0.7)),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.1),
@@ -658,7 +657,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? AppLocalizations.of(context)!.enterMobile : null,
+                          (v == null || v.trim().isEmpty) ? AppLocalizations.of(context).enterMobile : null,
                     ),
                     const SizedBox(height: 12),
 
@@ -669,7 +668,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: true,
                       style: TextStyle(color: textColor),
                       decoration: InputDecoration(
-                        labelText: AppLocalizations.of(context)!.password,
+                        labelText: AppLocalizations.of(context).password,
                         labelStyle: TextStyle(color: textColor.withValues(alpha: 0.7)),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.1),
@@ -687,7 +686,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       validator: (v) =>
-                          (v == null || v.isEmpty) ? AppLocalizations.of(context)!.enterPassword : null,
+                          (v == null || v.isEmpty) ? AppLocalizations.of(context).enterPassword : null,
                     ),
                     const SizedBox(height: 24),
 
@@ -706,7 +705,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: Text(AppLocalizations.of(context)!.loginButton, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              child: Text(AppLocalizations.of(context).loginButton, style: const TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ),
                   
@@ -753,9 +752,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         builder: (context, snapshot) {
                           final enabled = snapshot.data ?? false;
                           return SwitchListTile(
-                            title: Text(AppLocalizations.of(context)!.enableBiometricLogin, style: TextStyle(color: textColor)),
+                            title: Text(AppLocalizations.of(context).enableBiometricLogin, style: TextStyle(color: textColor)),
                             value: enabled,
-                            activeColor: Colors.white,
+                            activeThumbColor: Colors.white,
                             activeTrackColor: Colors.green,
                             inactiveThumbColor: Colors.grey,
                             inactiveTrackColor: Colors.white.withValues(alpha: 0.3),
@@ -779,7 +778,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         TextButton(
                           onPressed: () => _showRegistrationChoiceDialog(),
-                          child: Text(AppLocalizations.of(context)!.register, style: TextStyle(color: textColor)),
+                          child: Text(AppLocalizations.of(context).register, style: TextStyle(color: textColor)),
                         ),
                         TextButton(
                           onPressed: () {
@@ -788,7 +787,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
                             );
                           },
-                          child: Text(AppLocalizations.of(context)!.forgotPassword, style: TextStyle(color: textColor)),
+                          child: Text(AppLocalizations.of(context).forgotPassword, style: TextStyle(color: textColor)),
                         ),
                       ],
                     ),

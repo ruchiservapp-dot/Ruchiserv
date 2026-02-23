@@ -6,7 +6,7 @@ import '../utils/file_storage_helper.dart';
 
 class InvoiceScannerWidget extends StatefulWidget {
   final Function(Map<String, dynamic> result) onScanComplete;
-  
+
   const InvoiceScannerWidget({super.key, required this.onScanComplete});
 
   @override
@@ -20,17 +20,17 @@ class _InvoiceScannerWidgetState extends State<InvoiceScannerWidget> {
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: source);
-    
+
     if (image == null) return;
 
     setState(() => _isProcessing = true);
 
     try {
       final File imageFile = File(image.path);
-      
+
       // 1. Run OCR
       final ocrResult = await _ocrService.extractInvoiceData(imageFile);
-      
+
       if (!mounted) return;
 
       // 2. Show confirmation dialog with the original image (before upload)
@@ -45,11 +45,14 @@ class _InvoiceScannerWidgetState extends State<InvoiceScannerWidget> {
         setState(() => _isProcessing = true);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Uploading invoice to cloud...'), duration: Duration(seconds: 2)),
+            const SnackBar(
+                content: Text('Uploading invoice to cloud...'),
+                duration: Duration(seconds: 2)),
           );
         }
 
-        final savedKey = await FileStorageHelper.saveAndUploadImage(imageFile, fileType: 'invoices');
+        final savedKey = await FileStorageHelper.saveAndUploadImage(imageFile,
+            fileType: 'invoices');
 
         widget.onScanComplete({
           ...finalData,
@@ -59,7 +62,9 @@ class _InvoiceScannerWidgetState extends State<InvoiceScannerWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error processing invoice: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error processing invoice: $e'),
+              backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -72,7 +77,8 @@ class _InvoiceScannerWidgetState extends State<InvoiceScannerWidget> {
     String? date,
     required String imagePath,
   }) async {
-    final amountController = TextEditingController(text: amount?.toStringAsFixed(2) ?? '');
+    final amountController =
+        TextEditingController(text: amount?.toStringAsFixed(2) ?? '');
     final dateController = TextEditingController(text: date ?? '');
 
     return showDialog<Map<String, dynamic>>(

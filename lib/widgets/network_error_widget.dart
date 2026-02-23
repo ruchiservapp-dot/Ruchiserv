@@ -17,7 +17,7 @@ class NetworkErrorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
@@ -28,17 +28,20 @@ class NetworkErrorWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: (isOffline ? Colors.orange : AppColors.primary).withValues(alpha: 0.1),
+                color: (isOffline ? Colors.orange : AppColors.primary)
+                    .withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isOffline ? Icons.signal_wifi_off_rounded : Icons.cloud_off_rounded,
+                isOffline
+                    ? Icons.signal_wifi_off_rounded
+                    : Icons.cloud_off_rounded,
                 size: 64,
                 color: isOffline ? Colors.orange : AppColors.primary,
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Title
             Text(
               isOffline ? 'You are offline' : 'Cloud Connection Failed',
@@ -48,7 +51,7 @@ class NetworkErrorWidget extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 12),
-            
+
             // Message
             Text(
               message,
@@ -59,7 +62,7 @@ class NetworkErrorWidget extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 40),
-            
+
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 250),
               child: SizedBox(
@@ -67,16 +70,18 @@ class NetworkErrorWidget extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                  label: const Text('RETRY CONNECTION', style: TextStyle(color: Colors.white)),
+                  label: const Text('RETRY CONNECTION',
+                      style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
             ),
-            
+
             if (isOffline) ...[
               const SizedBox(height: 16),
               TextButton(

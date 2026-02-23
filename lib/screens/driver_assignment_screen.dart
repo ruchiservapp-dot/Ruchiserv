@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
-import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'driver_dispatch_detail_screen.dart';
 import '../utils/time_utils.dart';
 
@@ -29,9 +28,11 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
     AppLogger.info("📍 DriverAssignmentScreen: initState end");
 
     // Phase 3: Real-time UI updates via Sync Stream
-    _syncSubscription = DatabaseHelper().syncStreamController.stream.listen((event) {
+    _syncSubscription =
+        DatabaseHelper().syncStreamController.stream.listen((event) {
       if (['dispatches', 'orders'].contains(event.table)) {
-        AppLogger.info('⚡ DriverAssignmentScreen: Real-time update detected for ${event.table}. Refreshing...');
+        AppLogger.info(
+            '⚡ DriverAssignmentScreen: Real-time update detected for ${event.table}. Refreshing...');
         _loadAssignments();
       }
     });
@@ -40,32 +41,36 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
   Future<void> _loadAssignments() async {
     AppLogger.info("📍 DriverAssignmentScreen: _loadAssignments start");
     setState(() => _isLoading = true);
-    
+
     try {
       final sp = await SharedPreferences.getInstance();
       AppLogger.info("📍 DriverAssignmentScreen: SP initialized");
       final mobile = sp.getString('last_mobile') ?? '';
       final firmId = sp.getString('last_firm') ?? '';
-      AppLogger.info("📍 DriverAssignmentScreen: Mobile: $mobile, Firm: $firmId");
-      
+      AppLogger.info(
+          "📍 DriverAssignmentScreen: Mobile: $mobile, Firm: $firmId");
+
       final db = await DatabaseHelper().database;
       AppLogger.info("📍 DriverAssignmentScreen: DB initialized");
-      
+
       // Get driver ID
-      final users = await db.query('users', 
-        where: 'mobile = ? AND firmId = ?', 
+      final users = await db.query(
+        'users',
+        where: 'mobile = ? AND firmId = ?',
         whereArgs: [mobile, firmId],
       );
-      
+
       if (users.isNotEmpty) {
         _driverId = users.first['id'] as int? ?? 0;
-        AppLogger.info("📍 DriverAssignmentScreen: Driver ID found: $_driverId");
+        AppLogger.info(
+            "📍 DriverAssignmentScreen: Driver ID found: $_driverId");
       } else {
         AppLogger.info("📍 DriverAssignmentScreen: No driver user found");
       }
-      
+
       if (_driverId > 0) {
-        AppLogger.info("📍 DriverAssignmentScreen: Querying assignments for driver $_driverId");
+        AppLogger.info(
+            "📍 DriverAssignmentScreen: Querying assignments for driver $_driverId");
         final assignments = await db.rawQuery('''
           SELECT d.*, o.customerName, o.location, o.date, o.time, o.totalPax, 
                  o.mobile as customerMobile, o.mealType, o.foodType,
@@ -77,19 +82,21 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
           WHERE d.driverId = ? AND d.assignmentStatus = 'PENDING'
           ORDER BY o.date ASC, o.time ASC
         ''', [_driverId]);
-        
+
         setState(() {
           _assignments = List<Map<String, dynamic>>.from(assignments);
         });
-        AppLogger.info("📍 DriverAssignmentScreen: Load complete - count: ${_assignments.length}");
+        AppLogger.info(
+            "📍 DriverAssignmentScreen: Load complete - count: ${_assignments.length}");
       }
-      
+
       if (mounted) setState(() => _isLoading = false);
-      AppLogger.info("📍 DriverAssignmentScreen: _loadAssignments end, loading=false");
+      AppLogger.info(
+          "📍 DriverAssignmentScreen: _loadAssignments end, loading=false");
     } catch (e, stack) {
-        AppLogger.info("📍 DriverAssignmentScreen error: $e");
-        print(stack);
-        if (mounted) setState(() => _isLoading = false);
+      AppLogger.info("📍 DriverAssignmentScreen error: $e");
+      print(stack);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -98,9 +105,12 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Accept Assignment?'),
-        content: Text('Accept delivery to ${dispatch['customerName']} on ${dispatch['date']} at ${TimeUtils.formatTo12Hour(dispatch['time'])}?'),
+        content: Text(
+            'Accept delivery to ${dispatch['customerName']} on ${dispatch['date']} at ${TimeUtils.formatTo12Hour(dispatch['time'])}?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -109,15 +119,18 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       await DatabaseHelper().updateDispatch(dispatch['id'], {
         'assignmentStatus': 'ACCEPTED',
         'acceptedAt': DateTime.now().toIso8601String(),
       });
-      
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assignment accepted!'), backgroundColor: Colors.green),
+        const SnackBar(
+            content: Text('Assignment accepted!'),
+            backgroundColor: Colors.green),
       );
       _loadAssignments();
     }
@@ -125,7 +138,7 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
 
   Future<void> _rejectAssignment(Map<String, dynamic> dispatch) async {
     final TextEditingController reasonController = TextEditingController();
-    
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -146,7 +159,9 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -155,7 +170,7 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       await DatabaseHelper().updateDispatch(dispatch['id'], {
         'assignmentStatus': 'REJECTED',
@@ -163,9 +178,12 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
         'rejectionReason': reasonController.text,
         'driverId': null, // Unassign driver so admin can reassign
       });
-      
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assignment rejected'), backgroundColor: Colors.orange),
+        const SnackBar(
+            content: Text('Assignment rejected'),
+            backgroundColor: Colors.orange),
       );
       _loadAssignments();
     }
@@ -177,7 +195,8 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
       appBar: AppBar(
         title: const Text('Pending Assignments'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadAssignments),
+          IconButton(
+              icon: const Icon(Icons.refresh), onPressed: _loadAssignments),
         ],
       ),
       body: _isLoading
@@ -187,10 +206,13 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle, size: 64, color: Colors.green.shade300),
+                      Icon(Icons.check_circle,
+                          size: 64, color: Colors.green.shade300),
                       const SizedBox(height: 16),
-                      const Text('No pending assignments', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                      const Text('Check back later for new deliveries', style: TextStyle(color: Colors.grey)),
+                      const Text('No pending assignments',
+                          style: TextStyle(fontSize: 18, color: Colors.grey)),
+                      const Text('Check back later for new deliveries',
+                          style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 )
@@ -199,7 +221,8 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
                   child: ListView.builder(
                     padding: const EdgeInsets.all(12),
                     itemCount: _assignments.length,
-                    itemBuilder: (ctx, i) => _buildAssignmentCard(_assignments[i]),
+                    itemBuilder: (ctx, i) =>
+                        _buildAssignmentCard(_assignments[i]),
                   ),
                 ),
     );
@@ -209,17 +232,23 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
     final date = a['date'] ?? '';
     final time = a['time'] ?? '';
     final isToday = date == DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final isTomorrow = date == DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 1)));
-    
+    final isTomorrow = date ==
+        DateFormat('yyyy-MM-dd')
+            .format(DateTime.now().add(const Duration(days: 1)));
+
     String dateLabel = date;
-    if (isToday) dateLabel = 'Today';
-    else if (isTomorrow) dateLabel = 'Tomorrow';
+    if (isToday) {
+      dateLabel = 'Today';
+    } else if (isTomorrow)
+      dateLabel = 'Tomorrow';
     else {
       try {
         dateLabel = DateFormat('EEE, MMM d').format(DateTime.parse(date));
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -232,20 +261,27 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: isToday ? Colors.orange.shade50 : Colors.grey.shade50,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: isToday ? Colors.orange : Colors.indigo,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(dateLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  child: Text(dateLabel,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12)),
                 ),
                 const SizedBox(width: 8),
-                Text(TimeUtils.formatTo12Hour(time), style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(TimeUtils.formatTo12Hour(time),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 Chip(
                   label: Text('${a['dishCount'] ?? 0} dishes'),
@@ -257,24 +293,33 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
               ],
             ),
           ),
-          
+
           // Main content
           InkWell(
-            onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => DriverDispatchDetailScreen(dispatch: a)),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => DriverDispatchDetailScreen(dispatch: a)),
             ).then((_) => _loadAssignments()),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(a['customerName'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(a['customerName'] ?? 'Customer',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 14, color: Colors.grey.shade600),
+                      Icon(Icons.location_on,
+                          size: 14, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
-                      Expanded(child: Text(a['location'] ?? 'N/A', style: TextStyle(color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Expanded(
+                          child: Text(a['location'] ?? 'N/A',
+                              style: TextStyle(color: Colors.grey.shade600),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -282,12 +327,15 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
                     children: [
                       Icon(Icons.people, size: 14, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
-                      Text('${a['totalPax'] ?? 0} Pax', style: TextStyle(color: Colors.grey.shade600)),
+                      Text('${a['totalPax'] ?? 0} Pax',
+                          style: TextStyle(color: Colors.grey.shade600)),
                       if (a['vehicleNumber'] != null) ...[
                         const SizedBox(width: 16),
-                        Icon(Icons.local_shipping, size: 14, color: Colors.grey.shade600),
+                        Icon(Icons.local_shipping,
+                            size: 14, color: Colors.grey.shade600),
                         const SizedBox(width: 4),
-                        Text(a['vehicleNumber'], style: TextStyle(color: Colors.grey.shade600)),
+                        Text(a['vehicleNumber'],
+                            style: TextStyle(color: Colors.grey.shade600)),
                       ],
                     ],
                   ),
@@ -295,7 +343,7 @@ class _DriverAssignmentScreenState extends State<DriverAssignmentScreen> {
               ),
             ),
           ),
-          
+
           // Action buttons
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),

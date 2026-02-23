@@ -26,7 +26,8 @@ class ReportExportService {
         final result = await Process.run('open', [filePath]);
         return result.exitCode == 0;
       } else if (Platform.isWindows) {
-        final result = await Process.run('start', ['', filePath], runInShell: true);
+        final result =
+            await Process.run('start', ['', filePath], runInShell: true);
         return result.exitCode == 0;
       } else if (Platform.isLinux) {
         final result = await Process.run('xdg-open', [filePath]);
@@ -51,23 +52,23 @@ class ReportExportService {
   }) async {
     try {
       AppLogger.info('📊 Excel: Starting export...');
-      
+
       // Validate data
       if (rows.isEmpty) {
         AppLogger.warning('⚠️ Excel: No data to export');
         return null;
       }
-      
+
       final excel = Excel.createExcel();
       final sheet = excel['Report'];
-      
+
       // Add title row
       sheet.appendRow([TextCellValue(title)]);
       sheet.appendRow([]); // Empty row
-      
+
       // Add headers
       sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
-      
+
       // Add data rows
       for (var row in rows) {
         sheet.appendRow(row.map((cell) {
@@ -76,7 +77,7 @@ class ReportExportService {
           return TextCellValue(cell.toString());
         }).toList());
       }
-      
+
       // Style headers
       final headerRow = sheet.row(2);
       for (var cell in headerRow) {
@@ -86,38 +87,40 @@ class ReportExportService {
           fontColorHex: ExcelColor.fromHexString('#FFFFFF'),
         );
       }
-      
+
       // Auto-fit columns (basic)
       for (int i = 0; i < headers.length; i++) {
         sheet.setColumnWidth(i, 20);
       }
-      
+
       // Save file
       final bytes = excel.encode();
       if (bytes == null) {
         AppLogger.error('❌ Excel: Failed to encode workbook');
         return null;
       }
-      
+
       // Save to temp directory with readable filename
       final dir = await getTemporaryDirectory();
-      final fname = filename ?? 'RuchiServ_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.xlsx';
+      final fname = filename ??
+          'RuchiServ_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.xlsx';
       final file = File('${dir.path}/$fname');
       await file.writeAsBytes(bytes);
-      
+
       AppLogger.success('✅ Excel: File saved to ${file.path}');
       AppLogger.info('📊 Excel: ${rows.length} rows exported');
-      
+
       // Open in default app (Numbers/Excel) so user can view and save
       if (openInApp) {
         AppLogger.info('📂 Excel: Opening in default app...');
         final opened = await _openInDefaultApp(file.path);
         if (!opened) {
-          AppLogger.warning('⚠️ Excel: Failed to open, falling back to share sheet...');
+          AppLogger.warning(
+              '⚠️ Excel: Failed to open, falling back to share sheet...');
           await Share.shareXFiles([XFile(file.path)], subject: title);
         }
       }
-      
+
       return file;
     } catch (e, stack) {
       AppLogger.error('❌ Excel export error: $e');
@@ -129,11 +132,11 @@ class ReportExportService {
   /// Load a Unicode-compatible font with timeout and fallback
   pw.Font? _cachedFont;
   bool _useFallbackFont = false;
-  
+
   Future<pw.Font> _loadFont() async {
     // Return cached font if available
     if (_cachedFont != null) return _cachedFont!;
-    
+
     try {
       // Try loading Google Font with a 3-second timeout (reduced from 5)
       AppLogger.info('📄 PDF: Loading font from Google Fonts...');
@@ -146,13 +149,14 @@ class ReportExportService {
       AppLogger.success('✅ PDF: Font loaded successfully');
       return font;
     } catch (e) {
-      AppLogger.warning('⚠️ PDF: Font load error: $e. Using Helvetica fallback.');
+      AppLogger.warning(
+          '⚠️ PDF: Font load error: $e. Using Helvetica fallback.');
       _useFallbackFont = true;
       _cachedFont = pw.Font.helvetica();
       return _cachedFont!;
     }
   }
-  
+
   /// Sanitize text for Helvetica font (replace unsupported characters)
   String _sanitizeForFallbackFont(String text) {
     if (!_useFallbackFont) return text;
@@ -170,26 +174,30 @@ class ReportExportService {
   }) async {
     try {
       AppLogger.info('📄 PDF: Starting export...');
-      
+
       // Validate data
       if (rows.isEmpty) {
         AppLogger.warning('⚠️ PDF: No data to export');
         return null;
       }
-      
+
       final font = await _loadFont();
       final pdf = pw.Document(
         theme: pw.ThemeData.withFont(base: font),
       );
-      
+
       // Sanitize text if using fallback font
       final sanitizedTitle = _sanitizeForFallbackFont(title);
-      final sanitizedSubtitle = subtitle != null ? _sanitizeForFallbackFont(subtitle) : null;
-      final sanitizedHeaders = headers.map((h) => _sanitizeForFallbackFont(h)).toList();
-      final sanitizedRows = rows.map((r) => 
-        r.map((c) => _sanitizeForFallbackFont(c?.toString() ?? '')).toList()
-      ).toList();
-      
+      final sanitizedSubtitle =
+          subtitle != null ? _sanitizeForFallbackFont(subtitle) : null;
+      final sanitizedHeaders =
+          headers.map((h) => _sanitizeForFallbackFont(h)).toList();
+      final sanitizedRows = rows
+          .map((r) => r
+              .map((c) => _sanitizeForFallbackFont(c?.toString() ?? ''))
+              .toList())
+          .toList();
+
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
@@ -197,9 +205,13 @@ class ReportExportService {
           header: (context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(sanitizedTitle, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+              pw.Text(sanitizedTitle,
+                  style: pw.TextStyle(
+                      fontSize: 20, fontWeight: pw.FontWeight.bold)),
               if (sanitizedSubtitle != null)
-                pw.Text(sanitizedSubtitle, style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                pw.Text(sanitizedSubtitle,
+                    style: const pw.TextStyle(
+                        fontSize: 12, color: PdfColors.grey700)),
               pw.SizedBox(height: 10),
               pw.Divider(),
             ],
@@ -207,17 +219,21 @@ class ReportExportService {
           footer: (context) => pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text('Generated: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-                style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+              pw.Text(
+                  'Generated: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+                  style:
+                      const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
               pw.Text('Page ${context.pageNumber} of ${context.pagesCount}',
-                style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+                  style:
+                      const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
             ],
           ),
           build: (context) => [
             pw.TableHelper.fromTextArray(
               headers: sanitizedHeaders,
               data: sanitizedRows,
-              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+              headerStyle: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold, color: PdfColors.white),
               headerDecoration: const pw.BoxDecoration(color: PdfColors.green),
               cellStyle: const pw.TextStyle(fontSize: 10),
               cellAlignment: pw.Alignment.centerLeft,
@@ -227,13 +243,14 @@ class ReportExportService {
           ],
         ),
       );
-      
+
       final bytes = await pdf.save();
       final dir = await getApplicationDocumentsDirectory();
-      final fname = filename ?? 'report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final fname = filename ??
+          'report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final file = File('${dir.path}/$fname');
       await file.writeAsBytes(bytes);
-      
+
       AppLogger.success('✅ PDF: File saved to ${file.path}');
       return file;
     } catch (e, stack) {
@@ -254,29 +271,33 @@ class ReportExportService {
   }) async {
     try {
       AppLogger.info('📄 PDF Preview: Starting...');
-      
+
       // Validate data
       if (rows.isEmpty) {
         AppLogger.warning('⚠️ PDF Preview: No data to preview');
         return false;
       }
-      
+
       AppLogger.info('📄 PDF Preview: Loading font...');
       final font = await _loadFont();
       AppLogger.info('📄 PDF Preview: Font loaded, creating document...');
-      
+
       final pdf = pw.Document(
         theme: pw.ThemeData.withFont(base: font),
       );
-      
+
       // Sanitize text if using fallback font
       final sanitizedTitle = _sanitizeForFallbackFont(title);
-      final sanitizedSubtitle = subtitle != null ? _sanitizeForFallbackFont(subtitle) : null;
-      final sanitizedHeaders = headers.map((h) => _sanitizeForFallbackFont(h)).toList();
-      final sanitizedRows = rows.map((r) => 
-        r.map((c) => _sanitizeForFallbackFont(c?.toString() ?? '')).toList()
-      ).toList();
-      
+      final sanitizedSubtitle =
+          subtitle != null ? _sanitizeForFallbackFont(subtitle) : null;
+      final sanitizedHeaders =
+          headers.map((h) => _sanitizeForFallbackFont(h)).toList();
+      final sanitizedRows = rows
+          .map((r) => r
+              .map((c) => _sanitizeForFallbackFont(c?.toString() ?? ''))
+              .toList())
+          .toList();
+
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
@@ -284,9 +305,13 @@ class ReportExportService {
           header: (context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(sanitizedTitle, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+              pw.Text(sanitizedTitle,
+                  style: pw.TextStyle(
+                      fontSize: 20, fontWeight: pw.FontWeight.bold)),
               if (sanitizedSubtitle != null)
-                pw.Text(sanitizedSubtitle, style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                pw.Text(sanitizedSubtitle,
+                    style: const pw.TextStyle(
+                        fontSize: 12, color: PdfColors.grey700)),
               pw.SizedBox(height: 10),
               pw.Divider(),
             ],
@@ -294,17 +319,21 @@ class ReportExportService {
           footer: (context) => pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text('Generated: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
-                style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+              pw.Text(
+                  'Generated: ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+                  style:
+                      const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
               pw.Text('Page ${context.pageNumber} of ${context.pagesCount}',
-                style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+                  style:
+                      const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
             ],
           ),
           build: (context) => [
             pw.TableHelper.fromTextArray(
               headers: sanitizedHeaders,
               data: sanitizedRows,
-              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+              headerStyle: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold, color: PdfColors.white),
               headerDecoration: const pw.BoxDecoration(color: PdfColors.green),
               cellStyle: const pw.TextStyle(fontSize: 10),
               cellAlignment: pw.Alignment.centerLeft,
@@ -314,24 +343,26 @@ class ReportExportService {
           ],
         ),
       );
-      
+
       AppLogger.info('📄 PDF Preview: Document built, saving to file...');
       final bytes = await pdf.save();
-      
+
       // Save to temp directory and open in Preview app
       final dir = await getTemporaryDirectory();
-      final fname = 'RuchiServ_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
+      final fname =
+          'RuchiServ_Report_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
       final file = File('${dir.path}/$fname');
       await file.writeAsBytes(bytes);
-      
+
       AppLogger.info('📂 PDF Preview: Opening in Preview app...');
       final opened = await _openInDefaultApp(file.path);
-      
+
       if (!opened) {
-        AppLogger.warning('⚠️ PDF Preview: Failed to open in Preview, falling back to share...');
+        AppLogger.warning(
+            '⚠️ PDF Preview: Failed to open in Preview, falling back to share...');
         await Printing.sharePdf(bytes: bytes, filename: fname);
       }
-      
+
       AppLogger.success('✅ PDF Preview: Complete!');
       return true;
     } catch (e, stack) {

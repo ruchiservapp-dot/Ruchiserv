@@ -1,5 +1,5 @@
 /// Staffing calculation logic for Kerala/South India catering standards.
-/// 
+///
 /// This class provides functions to calculate the number of service servers
 /// needed based on event parameters like pax count, service type, dish count,
 /// and counter count.
@@ -47,10 +47,10 @@ class StaffingLogic {
   static int _calculateBuffetServers(int dishCount, int counterCount) {
     // Base: 1 server per 3 dishes
     final baseServers = (dishCount / 3).ceil();
-    
+
     // Adjust for multiple counters
     final adjustedServers = (baseServers / counterCount).ceil();
-    
+
     // Add supervisor/expeditor per counter
     return adjustedServers + counterCount;
   }
@@ -71,13 +71,14 @@ class StaffingLogic {
 
   /// HYBRID Logic (Assisted Buffet):
   /// - Buffet line servers + Table runners (1:50 ratio - reduced to half)
-  static int _calculateHybridServers(int paxCount, int dishCount, int counterCount) {
+  static int _calculateHybridServers(
+      int paxCount, int dishCount, int counterCount) {
     // Component 1: Full buffet logic
     final buffetServers = _calculateBuffetServers(dishCount, counterCount);
-    
+
     // Component 2: Table runners at 1:50 ratio
     final tableRunners = (paxCount / 50).ceil();
-    
+
     return buffetServers + tableRunners;
   }
 

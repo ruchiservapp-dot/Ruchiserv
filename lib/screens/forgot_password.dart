@@ -21,7 +21,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   String? _otpSessionId;
   int _step = 1; // 1: ask firm+mobile, 2: otp, 3: new password
   bool _busy = false;
-  
+
   // OTP attempt tracking
   int _otpAttempts = 0;
   DateTime? _lockoutUntil;
@@ -46,13 +46,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final prefs = await SharedPreferences.getInstance();
     final mobile = mobileController.text.trim();
     if (mobile.isEmpty) return;
-    
+
     final key = 'otp_attempts_$mobile';
     final lockoutKey = 'otp_lockout_$mobile';
-    
+
     _otpAttempts = prefs.getInt(key) ?? 0;
     final lockoutTimestamp = prefs.getInt(lockoutKey);
-    
+
     if (lockoutTimestamp != null) {
       _lockoutUntil = DateTime.fromMillisecondsSinceEpoch(lockoutTimestamp);
       if (_lockoutUntil!.isAfter(DateTime.now())) {
@@ -69,10 +69,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final mobile = mobileController.text.trim();
     final key = 'otp_attempts_$mobile';
     final lockoutKey = 'otp_lockout_$mobile';
-    
+
     await prefs.remove(key);
     await prefs.remove(lockoutKey);
-    
+
     setState(() {
       _otpAttempts = 0;
       _lockoutUntil = null;
@@ -84,10 +84,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final mobile = mobileController.text.trim();
     final key = 'otp_attempts_$mobile';
     final lockoutKey = 'otp_lockout_$mobile';
-    
+
     _otpAttempts++;
     await prefs.setInt(key, _otpAttempts);
-    
+
     if (_otpAttempts >= 3) {
       // Lock out for 1 hour
       final lockoutTime = DateTime.now().add(const Duration(hours: 1));
@@ -107,7 +107,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (_lockoutUntil == null) return '';
     final remaining = _lockoutUntil!.difference(DateTime.now());
     if (remaining.isNegative) return '';
-    
+
     final minutes = remaining.inMinutes;
     final seconds = remaining.inSeconds % 60;
     return '${minutes}m ${seconds}s';
@@ -133,7 +133,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         firmId: firmId,
         mobile: mobile,
       );
-      
+
       if (validation['valid'] != true) {
         _err(validation['error'] ?? 'Validation failed');
         return;
@@ -160,20 +160,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _verifyOtp() async {
     // Check lockout
     if (_isLockedOut()) {
-      _err('Too many failed attempts. Try again in ${_getRemainingLockoutTime()}');
+      _err(
+          'Too many failed attempts. Try again in ${_getRemainingLockoutTime()}');
       return;
     }
-    
+
     if (_otpSessionId == null) {
       _err('No OTP session. Please resend.');
       return;
     }
-    
+
     final ok = await OtpService.verifyOtp(
       sessionId: _otpSessionId!,
       otp: otpController.text.trim(),
     );
-    
+
     if (!ok) {
       await _incrementOtpAttempts();
       final remaining = 3 - _otpAttempts;
@@ -184,7 +185,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
       return;
     }
-    
+
     // Success - reset attempts
     await _resetOtpAttempts();
     setState(() => _step = 3);
@@ -195,17 +196,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final mobile = mobileController.text.trim();
     final pwd = pwdController.text.trim();
     final confirmPwd = confirmPwdController.text.trim();
-    
+
     if (pwd.length < 4) {
       _err('Password must be at least 4 characters.');
       return;
     }
-    
+
     if (pwd != confirmPwd) {
       _err('Passwords do not match. Please check and try again.');
       return;
     }
-    
+
     setState(() => _busy = true);
     try {
       final ok = await AuthService.resetPassword(
@@ -278,7 +279,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.lock_clock, color: Colors.red.shade700),
+                              Icon(Icons.lock_clock,
+                                  color: Colors.red.shade700),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -300,7 +302,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ? 'Attempts: $_otpAttempts/3'
                               : null,
                           helperStyle: TextStyle(
-                            color: _otpAttempts >= 2 ? Colors.red : Colors.orange,
+                            color:
+                                _otpAttempts >= 2 ? Colors.red : Colors.orange,
                           ),
                         ),
                       ),
@@ -321,7 +324,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         decoration: const InputDecoration(
                           labelText: 'New Password',
                           border: OutlineInputBorder(),
-                          helperText: 'Enter your new password (min 4 characters)',
+                          helperText:
+                              'Enter your new password (min 4 characters)',
                         ),
                       ),
                       const SizedBox(height: 16),

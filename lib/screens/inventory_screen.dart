@@ -13,7 +13,6 @@ import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
-import 'purchase_orders_screen.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -41,24 +40,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
     try {
       final sp = await SharedPreferences.getInstance();
       _firmId = sp.getString('last_firm');
-      
+
       if (_firmId != null) {
         final db = await DatabaseHelper().database;
-        
+
         // Fetch Ingredients Count
-        final ingResult = await db.rawQuery('SELECT COUNT(*) as count FROM ingredients_master WHERE firmId = ? AND isActive = 1', [_firmId]);
+        final ingResult = await db.rawQuery(
+            'SELECT COUNT(*) as count FROM ingredients_master WHERE firmId = ? AND isActive = 1',
+            [_firmId]);
         _activeIngredients = (ingResult.first['count'] as int?) ?? 0;
 
         // Fetch Suppliers Count
-        final supResult = await db.rawQuery('SELECT COUNT(*) as count FROM suppliers WHERE firmId = ? AND isActive = 1', [_firmId]);
+        final supResult = await db.rawQuery(
+            'SELECT COUNT(*) as count FROM suppliers WHERE firmId = ? AND isActive = 1',
+            [_firmId]);
         _activeSuppliers = (supResult.first['count'] as int?) ?? 0;
 
         // Fetch Pending POs
-        final poResult = await db.rawQuery('SELECT COUNT(*) as count FROM purchase_orders WHERE firmId = ? AND status = "SENT"', [_firmId]);
+        final poResult = await db.rawQuery(
+            'SELECT COUNT(*) as count FROM purchase_orders WHERE firmId = ? AND status = "SENT"',
+            [_firmId]);
         _pendingPOs = (poResult.first['count'] as int?) ?? 0;
 
         // Fetch MRP Drafts
-        final mrpResult = await db.rawQuery('SELECT COUNT(*) as count FROM mrp_runs WHERE firmId = ? AND status = "DRAFT"', [_firmId]);
+        final mrpResult = await db.rawQuery(
+            'SELECT COUNT(*) as count FROM mrp_runs WHERE firmId = ? AND status = "DRAFT"',
+            [_firmId]);
         _draftMrpRuns = (mrpResult.first['count'] as int?) ?? 0;
       }
     } catch (e) {
@@ -104,7 +111,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
             ),
           ),
-          
+
           SafeArea(
             child: RefreshIndicator(
               onRefresh: _loadDashboardStats,
@@ -135,9 +142,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+        color: isDark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.black.withOpacity(0.02),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white12 : Colors.black12, width: 1),
+        border: Border.all(
+            color: isDark ? Colors.white12 : Colors.black12, width: 1),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -146,11 +156,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-               _buildHealthMetric('Ingredients', _isLoading ? '-' : '$_activeIngredients', Icons.restaurant_menu, Colors.green),
-               Container(width: 1, height: 40, color: isDark ? Colors.white24 : Colors.black26),
-               _buildHealthMetric('Suppliers', _isLoading ? '-' : '$_activeSuppliers', Icons.local_shipping, Colors.teal),
-               Container(width: 1, height: 40, color: isDark ? Colors.white24 : Colors.black26),
-               _buildHealthMetric('Pending POs', _isLoading ? '-' : '$_pendingPOs', Icons.receipt_long, _pendingPOs > 0 ? Colors.orange : Colors.grey),
+              _buildHealthMetric(
+                  'Ingredients',
+                  _isLoading ? '-' : '$_activeIngredients',
+                  Icons.restaurant_menu,
+                  Colors.green),
+              Container(
+                  width: 1,
+                  height: 40,
+                  color: isDark ? Colors.white24 : Colors.black26),
+              _buildHealthMetric(
+                  'Suppliers',
+                  _isLoading ? '-' : '$_activeSuppliers',
+                  Icons.local_shipping,
+                  Colors.teal),
+              Container(
+                  width: 1,
+                  height: 40,
+                  color: isDark ? Colors.white24 : Colors.black26),
+              _buildHealthMetric(
+                  'Pending POs',
+                  _isLoading ? '-' : '$_pendingPOs',
+                  Icons.receipt_long,
+                  _pendingPOs > 0 ? Colors.orange : Colors.grey),
             ],
           ),
         ),
@@ -158,7 +186,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Widget _buildHealthMetric(String label, String value, IconData icon, Color color) {
+  Widget _buildHealthMetric(
+      String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Row(
@@ -181,7 +210,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+              fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -199,7 +229,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
               _buildBentoCard(
                 context,
                 title: 'MRP & Planning',
-                subtitle: _isLoading ? 'Loading...' : (_draftMrpRuns > 0 ? '$_draftMrpRuns Drafts Pending' : 'All clear. Plan next batch!'),
+                subtitle: _isLoading
+                    ? 'Loading...'
+                    : (_draftMrpRuns > 0
+                        ? '$_draftMrpRuns Drafts Pending'
+                        : 'All clear. Plan next batch!'),
                 icon: Icons.analytics,
                 color: Colors.blueAccent,
                 height: 120, // Slightly shorter for mobile
@@ -212,7 +246,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   Expanded(
                     child: _buildBentoCard(
                       context,
-                      title: AppLocalizations.of(context)!.ingredients,
+                      title: AppLocalizations.of(context).ingredients,
                       subtitle: 'Master List',
                       icon: Icons.grass, // Eco-friendly ingredient feel
                       color: Colors.green,
@@ -224,7 +258,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   Expanded(
                     child: _buildBentoCard(
                       context,
-                      title: AppLocalizations.of(context)!.bom,
+                      title: AppLocalizations.of(context).bom,
                       subtitle: 'Recipe Math',
                       icon: Icons.account_tree,
                       color: Colors.orange,
@@ -287,7 +321,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   child: _buildBentoCard(
                     context,
                     title: 'MRP & Planning',
-                    subtitle: _isLoading ? 'Loading...' : (_draftMrpRuns > 0 ? '$_draftMrpRuns Drafts Pending' : 'All clear. Plan next batch!'),
+                    subtitle: _isLoading
+                        ? 'Loading...'
+                        : (_draftMrpRuns > 0
+                            ? '$_draftMrpRuns Drafts Pending'
+                            : 'All clear. Plan next batch!'),
                     icon: Icons.analytics,
                     color: Colors.blueAccent,
                     height: 140,
@@ -298,14 +336,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Middle Row: Ingredients & BOM
             Row(
               children: [
-                 Expanded(
+                Expanded(
                   child: _buildBentoCard(
                     context,
-                    title: AppLocalizations.of(context)!.ingredients,
+                    title: AppLocalizations.of(context).ingredients,
                     subtitle: 'Master List',
                     icon: Icons.grass,
                     color: Colors.green,
@@ -317,7 +355,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 Expanded(
                   child: _buildBentoCard(
                     context,
-                    title: AppLocalizations.of(context)!.bom,
+                    title: AppLocalizations.of(context).bom,
                     subtitle: 'Recipe Math',
                     icon: Icons.account_tree,
                     color: Colors.orange,
@@ -328,7 +366,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Bottom Row: Suppliers, Subcontractors, Utensils
             Row(
               children: [
@@ -389,19 +427,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      height: height,
+      constraints: BoxConstraints(minHeight: height),
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200, width: 1),
-        boxShadow: isDark ? [] : [
-          BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 15,
-            spreadRadius: 2,
-            offset: const Offset(0, 4),
-          )
-        ],
+        border: Border.all(
+            color: isDark ? Colors.white12 : Colors.grey.shade200, width: 1),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: color.withOpacity(0.08),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                )
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -414,9 +455,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
               borderRadius: BorderRadius.circular(24),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: isLarge 
-                 ? _buildLargeLayout(title, subtitle, icon, color)
-                 : _buildSmallLayout(title, subtitle, icon, color),
+                child: isLarge
+                    ? _buildLargeLayout(title, subtitle, icon, color)
+                    : _buildSmallLayout(title, subtitle, icon, color),
               ),
             ),
           ),
@@ -425,7 +466,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Widget _buildLargeLayout(String title, String subtitle, IconData icon, Color color) {
+  Widget _buildLargeLayout(
+      String title, String subtitle, IconData icon, Color color) {
     return Row(
       children: [
         Expanded(
@@ -441,29 +483,41 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
                 child: Icon(icon, color: color, size: 28),
               ),
-              const Spacer(),
+              const SizedBox(height: 12),
               Text(
                 title,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5),
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
         // Subtle background icon for large cards
-        Icon(Icons.arrow_forward_ios, color: Colors.grey.withOpacity(0.3), size: 20),
+        Icon(Icons.arrow_forward_ios,
+            color: Colors.grey.withOpacity(0.3), size: 20),
       ],
     );
   }
 
-  Widget _buildSmallLayout(String title, String subtitle, IconData icon, Color color) {
+  Widget _buildSmallLayout(
+      String title, String subtitle, IconData icon, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.start, // Changed from spaceBetween
       children: [
         Container(
           padding: const EdgeInsets.all(8),
@@ -473,19 +527,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
           child: Icon(icon, color: color, size: 20),
         ),
+        const SizedBox(height: 8), // Added spacing
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: -0.3),
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.3),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

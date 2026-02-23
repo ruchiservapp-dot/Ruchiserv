@@ -45,7 +45,8 @@ class Responsive {
       );
 
   /// Number of grid columns for card/tile grids.
-  static int columns(BuildContext context, {int phone = 1, int tablet = 2, int desktop = 3}) =>
+  static int columns(BuildContext context,
+          {int phone = 1, int tablet = 2, int desktop = 3}) =>
       value(context, phone: phone, tablet: tablet, desktop: desktop);
 
   /// Max content width for centred layouts (forms, detail pages).
@@ -75,7 +76,8 @@ class ResponsiveCenter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: Responsive.maxContentWidth(context)),
+        constraints:
+            BoxConstraints(maxWidth: Responsive.maxContentWidth(context)),
         child: Padding(
           padding: padding ?? Responsive.padding(context),
           child: child,

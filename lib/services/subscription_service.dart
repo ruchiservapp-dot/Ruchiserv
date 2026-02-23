@@ -14,11 +14,11 @@ class SubscriptionService {
   Future<String> checkSubscriptionStatus(String firmId) async {
     final db = DatabaseHelper();
     final firms = await db.database.then((d) => d.query(
-      'firms',
-      where: 'firmId = ?',
-      whereArgs: [firmId],
-      limit: 1,
-    ));
+          'firms',
+          where: 'firmId = ?',
+          whereArgs: [firmId],
+          limit: 1,
+        ));
 
     if (firms.isEmpty) return 'locked'; // Unknown firm -> Lock
 
@@ -26,11 +26,12 @@ class SubscriptionService {
     final expiryStr = firm['subscriptionExpiry'] as String?;
     final graceEndStr = firm['gracePeriodEnd'] as String?;
 
-    if (expiryStr == null) return 'active'; // No expiry set (e.g. free tier or new)
+    if (expiryStr == null)
+      return 'active'; // No expiry set (e.g. free tier or new)
 
     final now = DateTime.now();
     final expiry = DateTime.parse(expiryStr);
-    
+
     // Active: Not yet expired
     if (now.isBefore(expiry)) {
       return 'active';
@@ -38,7 +39,7 @@ class SubscriptionService {
 
     // Grace Period: Expired but within grace window (default 5 days)
     // If gracePeriodEnd is set in DB, use it. Otherwise calculate 5 days from expiry.
-    final graceEnd = graceEndStr != null 
+    final graceEnd = graceEndStr != null
         ? DateTime.parse(graceEndStr)
         : expiry.add(const Duration(days: 5));
 
@@ -54,11 +55,11 @@ class SubscriptionService {
   Future<int?> getDaysRemaining(String firmId) async {
     final db = DatabaseHelper();
     final firms = await db.database.then((d) => d.query(
-      'firms',
-      where: 'firmId = ?',
-      whereArgs: [firmId],
-      limit: 1,
-    ));
+          'firms',
+          where: 'firmId = ?',
+          whereArgs: [firmId],
+          limit: 1,
+        ));
 
     if (firms.isEmpty) return null;
 
@@ -73,11 +74,11 @@ class SubscriptionService {
   Future<int> getGraceDaysRemaining(String firmId) async {
     final db = DatabaseHelper();
     final firms = await db.database.then((d) => d.query(
-      'firms',
-      where: 'firmId = ?',
-      whereArgs: [firmId],
-      limit: 1,
-    ));
+          'firms',
+          where: 'firmId = ?',
+          whereArgs: [firmId],
+          limit: 1,
+        ));
 
     if (firms.isEmpty) return 0;
 
@@ -88,7 +89,7 @@ class SubscriptionService {
     if (expiryStr == null) return 0;
 
     final expiry = DateTime.parse(expiryStr);
-    final graceEnd = graceEndStr != null 
+    final graceEnd = graceEndStr != null
         ? DateTime.parse(graceEndStr)
         : expiry.add(const Duration(days: 5));
 
@@ -102,7 +103,8 @@ class SubscriptionService {
   }
 
   /// Validate a promo code against backend
-  Future<Map<String, dynamic>> validatePromoCode(String code, String planId) async {
+  Future<Map<String, dynamic>> validatePromoCode(
+      String code, String planId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final currentFirmId = prefs.getString('last_firm') ?? 'UNKNOWN';
@@ -157,20 +159,20 @@ class SubscriptionService {
   /// Extends expiry by 7 days locally and marks status as PENDING_VERIFICATION
   Future<void> grantManualExtension(String firmId) async {
     final db = DatabaseHelper();
-    
+
     // 1. Get current expiry
     final firms = await db.database.then((d) => d.query(
-      'firms',
-      where: 'firmId = ?',
-      whereArgs: [firmId],
-      limit: 1,
-    ));
+          'firms',
+          where: 'firmId = ?',
+          whereArgs: [firmId],
+          limit: 1,
+        ));
 
     if (firms.isEmpty) return;
 
     final currentExpiryStr = firms.first['subscriptionExpiry'] as String?;
     DateTime newExpiry;
-    
+
     if (currentExpiryStr != null) {
       final current = DateTime.parse(currentExpiryStr);
       // If already expired, start 7 days from NOW. If not, add 7 days to current.

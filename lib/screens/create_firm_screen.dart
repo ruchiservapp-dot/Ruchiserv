@@ -79,7 +79,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
   String _generateFirmId() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = Random();
-    final suffix = List.generate(4, (_) => chars[random.nextInt(chars.length)]).join();
+    final suffix =
+        List.generate(4, (_) => chars[random.nextInt(chars.length)]).join();
     return 'RUCH$suffix';
   }
 
@@ -103,7 +104,7 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
 
     // Generate Firm ID
     _generatedFirmId = _generateFirmId();
-    
+
     // Pre-fill admin mobile with firm mobile if same person
     if (_adminMobileCtrl.text.isEmpty) {
       _adminMobileCtrl.text = _firmMobileCtrl.text;
@@ -126,7 +127,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final otpId = await OtpService.sendOtp(mobile: _adminMobileCtrl.text.trim());
+      final otpId =
+          await OtpService.sendOtp(mobile: _adminMobileCtrl.text.trim());
       if (otpId == 'RATE_LIMIT_EXCEEDED') {
         _showError('Too many OTP requests. Please try again after 10 minutes.');
         return;
@@ -194,7 +196,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
     try {
       final db = DatabaseHelper();
       final now = DateTime.now().toIso8601String();
-      final trialEnd = DateTime.now().add(const Duration(days: 7)).toIso8601String();
+      final trialEnd =
+          DateTime.now().add(const Duration(days: 7)).toIso8601String();
 
       // 1. Create Firm - use only columns that exist in schema
       final firmData = {
@@ -212,7 +215,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
 
       AppLogger.info('DEBUG: Inserting firm: $firmData');
       final database = await db.database;
-      await database.insert('firms', firmData, conflictAlgorithm: ConflictAlgorithm.replace);
+      await database.insert('firms', firmData,
+          conflictAlgorithm: ConflictAlgorithm.replace);
       AppLogger.info('DEBUG: Firm inserted successfully');
 
       // 2. Create Admin User
@@ -220,7 +224,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
       final userData = {
         'userId': userId,
         'firmId': _generatedFirmId,
-        'username': _adminNameCtrl.text.trim(), // FIX: DB uses 'username' not 'name'
+        'username':
+            _adminNameCtrl.text.trim(), // FIX: DB uses 'username' not 'name'
         'mobile': _adminMobileCtrl.text.trim(),
         'role': 'Admin',
         'permissions': 'ORDERS,INVENTORY,KITCHEN,FINANCE,REPORTS,SETTINGS',
@@ -231,7 +236,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
       };
 
       AppLogger.info('DEBUG: Inserting user: $userData');
-      await database.insert('users', userData, conflictAlgorithm: ConflictAlgorithm.replace);
+      await database.insert('users', userData,
+          conflictAlgorithm: ConflictAlgorithm.replace);
       AppLogger.info('DEBUG: User inserted successfully');
 
       // 3. Add to authorized_mobiles for this firm
@@ -245,7 +251,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
         'addedAt': now,
       };
       AppLogger.info('DEBUG: Inserting authorized_mobile: $authMobile');
-      await database.insert('authorized_mobiles', authMobile, conflictAlgorithm: ConflictAlgorithm.replace);
+      await database.insert('authorized_mobiles', authMobile,
+          conflictAlgorithm: ConflictAlgorithm.replace);
       AppLogger.info('DEBUG: Authorized mobile inserted successfully');
 
       // 4. Sync to AWS (if online)
@@ -260,9 +267,11 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
           adminData: userData,
         );
         if (awsSyncResult) {
-          AppLogger.success('✅ AWS sync SUCCESSFUL for firm: $_generatedFirmId');
+          AppLogger.success(
+              '✅ AWS sync SUCCESSFUL for firm: $_generatedFirmId');
         } else {
-          AppLogger.warning('⚠️ AWS sync returned false for firm: $_generatedFirmId');
+          AppLogger.warning(
+              '⚠️ AWS sync returned false for firm: $_generatedFirmId');
           syncFailed = true;
           successMsg = 'Firm created LOCALLY. Cloud sync failed/pending.';
         }
@@ -286,12 +295,14 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
           title: Row(
             children: [
               Icon(
-                syncFailed ? Icons.warning_amber_rounded : Icons.check_circle, 
-                color: syncFailed ? Colors.orange : Colors.green, 
-                size: 32
-              ),
+                  syncFailed ? Icons.warning_amber_rounded : Icons.check_circle,
+                  color: syncFailed ? Colors.orange : Colors.green,
+                  size: 32),
               const SizedBox(width: 12),
-              Expanded(child: Text(syncFailed ? 'Registration (Offline)' : 'Registration Complete!')),
+              Expanded(
+                  child: Text(syncFailed
+                      ? 'Registration (Offline)'
+                      : 'Registration Complete!')),
             ],
           ),
           content: SingleChildScrollView(
@@ -332,7 +343,9 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
                       children: [
                         Icon(Icons.cloud_off, color: Colors.red),
                         SizedBox(width: 8),
-                        Expanded(child: Text('Note: Could not sync to Cloud. You can login LOCALLY, but other devices won\'t work until synced.')),
+                        Expanded(
+                            child: Text(
+                                'Note: Could not sync to Cloud. You can login LOCALLY, but other devices won\'t work until synced.')),
                       ],
                     ),
                   ),
@@ -353,7 +366,8 @@ class _CreateFirmScreenState extends State<CreateFirmScreen> {
                       const Divider(),
                       _credentialRow(ctx, 'Password', password),
                       const Divider(),
-                      _infoRow('Trial Ends', '${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().add(const Duration(days: 7)).month}/${DateTime.now().add(const Duration(days: 7)).year}'),
+                      _infoRow('Trial Ends',
+                          '${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().add(const Duration(days: 7)).month}/${DateTime.now().add(const Duration(days: 7)).year}'),
                     ],
                   ),
                 ),
@@ -390,18 +404,22 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
               onPressed: () async {
                 // Save credentials for auto-fill on login screen
                 final prefs = await SharedPreferences.getInstance();
-                await prefs.setString('pending_login_firmId', _generatedFirmId!);
-                await prefs.setString('pending_login_mobile', _adminMobileCtrl.text.trim());
+                await prefs.setString(
+                    'pending_login_firmId', _generatedFirmId!);
+                await prefs.setString(
+                    'pending_login_mobile', _adminMobileCtrl.text.trim());
                 await prefs.setString('pending_login_password', password);
-                
+
                 if (!ctx.mounted) return;
                 Navigator.pop(ctx); // Close dialog
+                if (!mounted) return;
                 Navigator.pop(context, true); // Return to login
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               icon: const Icon(Icons.login),
               label: const Text('Go to Login'),
@@ -409,7 +427,6 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
           ],
         ),
       );
-
     } catch (e) {
       _showError('Error creating firm: $e');
     } finally {
@@ -422,7 +439,8 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        SelectableText(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        SelectableText(value,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -434,8 +452,11 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(label,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(value,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ],
         ),
         IconButton(
@@ -466,7 +487,7 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
         children: [
           // Progress indicator
           _buildProgressBar(),
-          
+
           // Form content
           Expanded(
             child: Form(
@@ -501,7 +522,9 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
                   height: 28,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                    color: isActive
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey.shade300,
                   ),
                   child: Center(
                     child: isComplete
@@ -520,7 +543,9 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
                   Expanded(
                     child: Container(
                       height: 3,
-                      color: isComplete ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                      color: isComplete
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey.shade300,
                     ),
                   ),
               ],
@@ -577,16 +602,18 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
 
         // Business Type
         DropdownButtonFormField<String>(
-          value: _businessType,
+          initialValue: _businessType,
           decoration: const InputDecoration(
             labelText: 'Business Type',
             prefixIcon: Icon(Icons.category),
             border: OutlineInputBorder(),
           ),
-          items: _businessTypes.map((type) => DropdownMenuItem(
-            value: type,
-            child: Text(type),
-          )).toList(),
+          items: _businessTypes
+              .map((type) => DropdownMenuItem(
+                    value: type,
+                    child: Text(type),
+                  ))
+              .toList(),
           onChanged: (v) => setState(() => _businessType = v ?? 'Caterer'),
         ),
         const SizedBox(height: 16),
@@ -603,7 +630,9 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
           ),
           keyboardType: TextInputType.phone,
           maxLength: 10,
-          validator: (v) => (v == null || v.trim().length != 10) ? 'Enter valid 10-digit mobile' : null,
+          validator: (v) => (v == null || v.trim().length != 10)
+              ? 'Enter valid 10-digit mobile'
+              : null,
         ),
         const SizedBox(height: 16),
 
@@ -759,7 +788,8 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.sms),
                 label: Text(_isLoading ? 'Sending...' : 'Send OTP'),
@@ -802,7 +832,8 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
           keyboardType: TextInputType.number,
           maxLength: 6,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
 
@@ -833,7 +864,8 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.verified),
                 label: Text(_isLoading ? 'Verifying...' : 'Verify OTP'),
@@ -874,8 +906,10 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
             prefixIcon: const Icon(Icons.lock),
             border: const OutlineInputBorder(),
             suffixIcon: IconButton(
-              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
         ),
@@ -891,8 +925,11 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
             prefixIcon: const Icon(Icons.lock_outline),
             border: const OutlineInputBorder(),
             suffixIcon: IconButton(
-              icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-              onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+              icon: Icon(_obscureConfirmPassword
+                  ? Icons.visibility_off
+                  : Icons.visibility),
+              onPressed: () => setState(
+                  () => _obscureConfirmPassword = !_obscureConfirmPassword),
             ),
           ),
         ),
@@ -908,10 +945,12 @@ Trial Ends: ${DateTime.now().add(const Duration(days: 7)).day}/${DateTime.now().
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
                   )
                 : const Icon(Icons.rocket_launch),
-            label: Text(_isLoading ? 'Creating...' : 'CREATE FIRM & START TRIAL'),
+            label:
+                Text(_isLoading ? 'Creating...' : 'CREATE FIRM & START TRIAL'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,

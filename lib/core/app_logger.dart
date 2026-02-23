@@ -1,4 +1,3 @@
-import 'package:ruchiserv/core/app_logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
@@ -6,7 +5,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 /// - In DEBUG mode: Prints to console with emojis.
 /// - In RELEASE mode: Sends non-fatal errors to Firebase Crashlytics.
 class AppLogger {
-  
   /// Initialize Crashlytics (only needed if special setup required)
   static Future<void> initialize() async {
     if (!kDebugMode && !kIsWeb) {

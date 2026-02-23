@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ruchiserv/db/aws/aws_api.dart';
-import 'package:ruchiserv/config/app_config.dart';
-import 'dart:convert';
 
 void main() {
   test('Check AWS User Sync', () async {

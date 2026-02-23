@@ -2,7 +2,8 @@
 // @locked
 class TableSchema {
   final String tableName;
-  final Map<String, String> columns; // ColumnName -> Definition (e.g., "TEXT NOT NULL")
+  final Map<String, String>
+      columns; // ColumnName -> Definition (e.g., "TEXT NOT NULL")
   final List<String> constraints; // UNIQUE, FOREIGN KEY, etc.
 
   const TableSchema({
@@ -26,7 +27,7 @@ class AppSchema {
       columns: {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'firmId': 'TEXT NOT NULL UNIQUE',
-        'firmName': 'TEXT NOT NULL DEFAULT \"My Firm\"',
+        'firmName': 'TEXT NOT NULL DEFAULT "My Firm"',
         'mobile': 'TEXT',
         'address': 'TEXT',
         'gstin': 'TEXT',
@@ -39,7 +40,7 @@ class AppSchema {
         'showUniversalData': 'INTEGER DEFAULT 1', // v23
         'subscriptionTier': 'TEXT DEFAULT "BASIC"', // v13/v44
         'enabledFeatures': 'TEXT', // v13/v44
-        
+
         // v37: Firm Profile Extensions
         'contactPerson': 'TEXT',
         'primaryMobile': 'TEXT',
@@ -58,7 +59,7 @@ class AppSchema {
         'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
         'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
         'synced_at': 'TEXT', // v42: Last successful sync timestamp
-        
+
         // v44: Bank Account & Cashfree Configuration
         'bankAccountNo': 'TEXT',
         'bankIfsc': 'TEXT',
@@ -103,7 +104,8 @@ class AppSchema {
         'mobile': 'TEXT NOT NULL',
         'role': 'TEXT',
         'name': 'TEXT',
-        'isActive': 'INTEGER DEFAULT 1', // Required for isMobileAuthorized check
+        'isActive':
+            'INTEGER DEFAULT 1', // Required for isMobileAuthorized check
         'addedBy': 'TEXT',
         'addedAt': 'TEXT',
         'uuid': 'TEXT', // v40: Unique ID for multi-device sync
@@ -114,69 +116,69 @@ class AppSchema {
       },
       constraints: ['UNIQUE(firmId, mobile)'],
     ),
-    
+
     // 4. Staff (HR/Payroll)
-    TableSchema(
-        tableName: 'staff',
-        columns: {
-          'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-          'firmId': 'TEXT NOT NULL',
-          'name': 'TEXT NOT NULL',
-          'role': 'TEXT',
-          'mobile': 'TEXT',
-          'email': 'TEXT',
-          'salary': 'REAL DEFAULT 0',
-          'joinDate': 'TEXT',
-          'isActive': 'INTEGER DEFAULT 1',
-          'staffType': 'TEXT DEFAULT \'PERMANENT\'',
-          'dailyWageRate': 'REAL DEFAULT 0',
-          'hourlyRate': 'REAL DEFAULT 0',
-          'payoutFrequency': 'TEXT DEFAULT \'MONTHLY\'',
-          'bankAccountNo': 'TEXT',
-          'bankIfsc': 'TEXT',
-          'bankName': 'TEXT',
-          'aadharNumber': 'TEXT',
-          'emergencyContact': 'TEXT',
-          'emergencyContactName': 'TEXT',
-          'address': 'TEXT',
-          'photoUrl': 'TEXT',
-          'createdAt': 'TEXT',
-          'updatedAt': 'TEXT',
-          'uuid': 'TEXT', // v40: Unique ID for multi-device sync
-          'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
-          'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
-          'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
-          'synced_at': 'TEXT', // v42: Last successful sync timestamp
-        }
-    ),
+    TableSchema(tableName: 'staff', columns: {
+      'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+      'firmId': 'TEXT NOT NULL',
+      'name': 'TEXT NOT NULL',
+      'role': 'TEXT',
+      'mobile': 'TEXT',
+      'email': 'TEXT',
+      'salary': 'REAL DEFAULT 0',
+      'joinDate': 'TEXT',
+      'isActive': 'INTEGER DEFAULT 1',
+      'staffType': 'TEXT DEFAULT \'PERMANENT\'',
+      'dailyWageRate': 'REAL DEFAULT 0',
+      'hourlyRate': 'REAL DEFAULT 0',
+      'payoutFrequency': 'TEXT DEFAULT \'MONTHLY\'',
+      'bankAccountNo': 'TEXT',
+      'bankIfsc': 'TEXT',
+      'bankName': 'TEXT',
+      'aadharNumber': 'TEXT',
+      'emergencyContact': 'TEXT',
+      'emergencyContactName': 'TEXT',
+      'address': 'TEXT',
+      'photoUrl': 'TEXT',
+      'createdAt': 'TEXT',
+      'updatedAt': 'TEXT',
+      'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+      'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+      'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+      'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+      'synced_at': 'TEXT', // v42: Last successful sync timestamp
+    }),
 
     // 5. Attendance
-    TableSchema(
-        tableName: 'attendance',
-        columns: {
-          'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-          'staffId': 'INTEGER NOT NULL',
-          'date': 'TEXT NOT NULL',
-          'punchInTime': 'TEXT',
-          'punchOutTime': 'TEXT',
-          'punchInLat': 'REAL',
-          'punchInLng': 'REAL',
-          'punchOutLat': 'REAL',
-          'punchOutLng': 'REAL',
-          'status': 'TEXT DEFAULT \'PRESENT\'',
-          'overtimeHours': 'REAL DEFAULT 0',
-          'notes': 'TEXT',
-          'lockedAt': 'TEXT',
-          'mrpRunId': 'INTEGER',
-          'isLocked': 'INTEGER DEFAULT 0',
-          'uuid': 'TEXT', // v40: Unique ID for multi-device sync
-          'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
-          'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
-          'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
-          'synced_at': 'TEXT', // v42: Last successful sync timestamp
-        },
-        constraints: ['UNIQUE(staffId, date)']
-    ),
+    TableSchema(tableName: 'attendance', columns: {
+      'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+      'staffId': 'INTEGER NOT NULL',
+      'date': 'TEXT NOT NULL',
+      'punchInTime': 'TEXT',
+      'punchOutTime': 'TEXT',
+      'punchInLat': 'REAL',
+      'punchInLng': 'REAL',
+      'punchOutLat': 'REAL',
+      'punchOutLng': 'REAL',
+      'status': 'TEXT DEFAULT \'PRESENT\'',
+      'overtimeHours': 'REAL DEFAULT 0',
+      'isWithinGeoFence': 'INTEGER', // 1 = Yes, 0 = No
+      'location': 'TEXT', // GPS coordinates or location notes
+      'notes': 'TEXT',
+      'lockedAt': 'TEXT',
+      'mrpRunId': 'INTEGER',
+      'isLocked': 'INTEGER DEFAULT 0',
+      'firmId': 'TEXT', // v44: Required for cloud sync via awsFirstWrite
+      'createdAt': 'TEXT', // v44: Required for awsFirstWrite
+      'updatedAt': 'TEXT', // v44: Required for awsFirstWrite
+      'uuid': 'TEXT', // v40: Unique ID for multi-device sync
+      'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
+      'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
+      'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
+      'synced_at': 'TEXT', // v42: Last successful sync timestamp
+    }, constraints: [
+      'UNIQUE(staffId, date)'
+    ]),
 
     // 6. Customers (Clients)
     TableSchema(
@@ -224,18 +226,21 @@ class AppSchema {
         'updatedAt': 'TEXT',
         'lockedAt': 'TEXT',
         'mrpRunId': 'INTEGER',
-        'mrpStatus': 'TEXT DEFAULT "PENDING"', // PENDING, MRP_DONE, PO_SENT, CANCELLED
-        'clientStatus': 'TEXT DEFAULT "PENDING"', // v37: PENDING, ACCEPTED, CHANGE_REQ
+        'mrpStatus':
+            'TEXT DEFAULT "PENDING"', // PENDING, MRP_DONE, PO_SENT, CANCELLED
+        'clientStatus':
+            'TEXT DEFAULT "PENDING"', // v37: PENDING, ACCEPTED, CHANGE_REQ
         'sentAt': 'TEXT', // v37: Timestamp of first invoice send
         'confirmedAt': 'TEXT', // v37: Timestamp of customer confirmation
-        'changeRequestedAt': 'TEXT', // v37: Timestamp of customer change request
+        'changeRequestedAt':
+            'TEXT', // v37: Timestamp of customer change request
         'isLocked': 'INTEGER DEFAULT 0',
         'cancelReason': 'TEXT', // v35: For MRP cancel with reason
         'cancelledAt': 'TEXT', // v35: Timestamp of cancellation
-        
+
         // Legacy Columns (Active in Code)
-        'date': 'TEXT', 
-        'customerName': 'TEXT', 
+        'date': 'TEXT',
+        'customerName': 'TEXT',
         'mobile': 'TEXT',
         'email': 'TEXT', // v36: Customer email
         'totalPax': 'INTEGER DEFAULT 0',
@@ -248,7 +253,7 @@ class AppSchema {
         'discountAmount': 'REAL DEFAULT 0', // v36
         'finalAmount': 'REAL DEFAULT 0', // v36
         'grandTotal': 'REAL DEFAULT 0',
-        
+
         // Service & Counter Setup columns (v36)
         'serviceRequired': 'INTEGER DEFAULT 0',
         'serviceType': 'TEXT',
@@ -259,6 +264,10 @@ class AppSchema {
         'counterSetupRate': 'REAL DEFAULT 0',
         'serviceCost': 'REAL DEFAULT 0',
         'counterSetupCost': 'REAL DEFAULT 0',
+        'serviceSubcontractorId':
+            'INTEGER', // v44: FK to subcontractors for service assignment
+        'counterSubcontractorId':
+            'INTEGER', // v44: FK to subcontractors for counter setup
         'uuid': 'TEXT', // v40: Unique ID for multi-device sync
         'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
         'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
@@ -275,7 +284,8 @@ class AppSchema {
         'firmId': 'TEXT', // v43: Required for cloud sync
         'orderId': 'INTEGER NOT NULL',
         'dishId': 'INTEGER', // Optional/Deprecated in favor of name?
-        'dishMasterId': 'INTEGER', // v35: Link to dish_master.id for ID-based BOM lookup
+        'dishMasterId':
+            'INTEGER', // v35: Link to dish_master.id for ID-based BOM lookup
         'dishName': 'TEXT NOT NULL DEFAULT "Dish"',
         'category': 'TEXT',
         'foodType': 'TEXT DEFAULT "Veg"', // v36: Veg/Non-Veg
@@ -283,8 +293,10 @@ class AppSchema {
         'pricePerPlate': 'REAL',
         'isSubcontracted': 'INTEGER DEFAULT 0', // v31
         'subcontractorId': 'INTEGER', // v31
-        'productionType': 'TEXT DEFAULT "INTERNAL"', // v32 - INTERNAL, SUBCONTRACT, LIVE
-        'productionStatus': 'TEXT DEFAULT "PENDING"', // v32 - PENDING, QUEUED, COMPLETED
+        'productionType':
+            'TEXT DEFAULT "INTERNAL"', // v32 - INTERNAL, SUBCONTRACT, LIVE
+        'productionStatus':
+            'TEXT DEFAULT "PENDING"', // v32 - PENDING, QUEUED, COMPLETED
         'notes': 'TEXT',
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
@@ -313,7 +325,11 @@ class AppSchema {
         'referenceId': 'TEXT', // For tying to OrderID/BillID
         'imageUrl': 'TEXT',
         'createdBy': 'TEXT',
+        'relatedEntityType':
+            'TEXT', // v44: SUPPLIER, SUBCONTRACTOR, CUSTOMER, ORDER
+        'relatedEntityId': 'INTEGER', // v44: FK to related entity
         'createdAt': 'TEXT',
+        'updatedAt': 'TEXT', // v44: For awsFirstWrite compatibility
         'uuid': 'TEXT', // v40: Unique ID for multi-device sync
         'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
         'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
@@ -367,7 +383,7 @@ class AppSchema {
         'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
-    
+
     // 12. Vehicles (Logistics)
     TableSchema(
       tableName: 'vehicles',
@@ -405,7 +421,8 @@ class AppSchema {
         'sku_name': 'TEXT', // v36: SKU identifier
         'category': 'TEXT',
         'subcategory': 'TEXT',
-        'unit_of_measure': 'TEXT DEFAULT "kg"', // Corrected from 'unit' to match usage
+        'unit_of_measure':
+            'TEXT DEFAULT "kg"', // Corrected from 'unit' to match usage
         'cost_per_unit': 'REAL DEFAULT 0', // Corrected from 'defaultPrice'
         'supplierId': 'INTEGER',
         'isActive': 'INTEGER DEFAULT 1',
@@ -423,9 +440,10 @@ class AppSchema {
 
     // 14. Dish Master (Menu Items)
     TableSchema(
-      tableName: 'dish_master', // Renamed from 'dishes' to match actual usage if verified
-       // Note: The code often uses 'dish_master'. Checking usage...
-       // Yes, getAllDishes uses 'dish_master'.
+      tableName:
+          'dish_master', // Renamed from 'dishes' to match actual usage if verified
+      // Note: The code often uses 'dish_master'. Checking usage...
+      // Yes, getAllDishes uses 'dish_master'.
       columns: {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'firmId': 'TEXT DEFAULT "SEED"', // v22
@@ -437,7 +455,8 @@ class AppSchema {
         'isModified': 'INTEGER DEFAULT 0', // v22
         'createdAt': 'TEXT',
         'updatedAt': 'TEXT',
-        'readyAt': 'TEXT', // v24 (was added to 'dishes' in migration, assuming dish_master is the target)
+        'readyAt':
+            'TEXT', // v24 (was added to 'dishes' in migration, assuming dish_master is the target)
         'uuid': 'TEXT', // v40: Unique ID for multi-device sync
         'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
         'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
@@ -464,8 +483,8 @@ class AppSchema {
         'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
         'synced_at': 'TEXT', // v42: Last successful sync timestamp
         // 'notes': 'TEXT', // BOM table had notes, checking usage...
-        // 'createdAt': 'TEXT',
-        // 'updatedAt': 'TEXT',
+        'createdAt': 'TEXT',
+        'updatedAt': 'TEXT',
       },
       // constraints: ['UNIQUE(firmId, dish_id, ing_id)'], // Optional, based on logic
     ),
@@ -477,7 +496,8 @@ class AppSchema {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'firmId': 'TEXT NOT NULL',
         'runName': 'TEXT', // v32: User-friendly name like "Dec-1", "Dec-2"
-        'runNumber': 'INTEGER DEFAULT 1', // v32: Sequential within month, resets each month
+        'runNumber':
+            'INTEGER DEFAULT 1', // v32: Sequential within month, resets each month
         'runDate': 'TEXT NOT NULL',
         'targetDate': 'TEXT NOT NULL',
         'status': 'TEXT DEFAULT "DRAFT"',
@@ -486,6 +506,7 @@ class AppSchema {
         'createdBy': 'TEXT',
         'createdAt': 'TEXT',
         'completedAt': 'TEXT',
+        'updatedAt': 'TEXT',
         'uuid': 'TEXT', // v40: Unique ID for multi-device sync
         'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
         'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
@@ -530,7 +551,8 @@ class AppSchema {
         'allocatedQty': 'REAL DEFAULT 0',
         'purchaseQty': 'REAL DEFAULT 0',
         'inStockQty': 'REAL DEFAULT 0', // v19
-        'allocationStatus': 'TEXT DEFAULT "PENDING"', // v27: PENDING, ALLOCATED, PO_SENT
+        'allocationStatus':
+            'TEXT DEFAULT "PENDING"', // v27: PENDING, ALLOCATED, PO_SENT
         'supplierId': 'INTEGER', // v27: Assigned supplier ID
         'poId': 'INTEGER', // v27: Link to purchase_orders.id
         // v35: Audit/debugging columns
@@ -572,7 +594,7 @@ class AppSchema {
         'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
     ),
-    
+
     // 20. Subcontractors
     TableSchema(
       tableName: 'subcontractors',
@@ -585,6 +607,9 @@ class AppSchema {
         'email': 'TEXT',
         'address': 'TEXT',
         'specialty': 'TEXT',
+        'specialization': 'TEXT', // alias used by UI screens
+        'ratePerPax': 'REAL DEFAULT 0',
+        'category': 'TEXT DEFAULT "FOOD"',
         'rating': 'REAL DEFAULT 0',
         'isActive': 'INTEGER DEFAULT 1',
         'createdAt': 'TEXT',
@@ -617,6 +642,7 @@ class AppSchema {
         'deliveredAt': 'TEXT',
         'notes': 'TEXT',
         'createdAt': 'TEXT',
+        'updatedAt': 'TEXT', // v44: Required for awsFirstUpdate
         'uuid': 'TEXT', // v40: Unique ID for multi-device sync
         'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
         'gsi_sort': 'TEXT', // v41: Cloud GSI keys for sync
@@ -648,7 +674,7 @@ class AppSchema {
       },
       constraints: ['FOREIGN KEY(poId) REFERENCES purchase_orders(id)'],
     ),
-    
+
     // 23. Audit Log (v26)
     TableSchema(
       tableName: 'audit_log',
@@ -663,12 +689,13 @@ class AppSchema {
         'timestamp': 'TEXT',
       },
     ),
-    
+
     // 24. Dispatches (v34: Driver Portal Enhancement)
     TableSchema(
       tableName: 'dispatches',
       columns: {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'firmId': 'TEXT', // v44: Required for cloud sync via awsFirstWrite
         'orderId': 'INTEGER NOT NULL',
         'vehicleId': 'INTEGER',
         'dispatchTime': 'TEXT',
@@ -683,7 +710,8 @@ class AppSchema {
         'updatedAt': 'TEXT',
         // Driver Portal columns (v34)
         'driverId': 'INTEGER', // FK to users/staff
-        'assignmentStatus': 'TEXT DEFAULT "PENDING"', // PENDING, ACCEPTED, REJECTED
+        'assignmentStatus':
+            'TEXT DEFAULT "PENDING"', // PENDING, ACCEPTED, REJECTED
         'assignedAt': 'TEXT',
         'acceptedAt': 'TEXT',
         'rejectedAt': 'TEXT',
@@ -714,7 +742,8 @@ class AppSchema {
         'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
         'firmId': 'TEXT NOT NULL',
         'invoiceNumber': 'TEXT NOT NULL', // Format: inv-YYYY-MM-NNN
-        'orderId': 'INTEGER', // Link to orders table (auto-generated from order)
+        'orderId':
+            'INTEGER', // Link to orders table (auto-generated from order)
         'customerId': 'INTEGER NOT NULL',
         'customerName': 'TEXT',
         'customerAddress': 'TEXT',
@@ -729,7 +758,8 @@ class AppSchema {
         'totalAmount': 'REAL DEFAULT 0',
         'amountPaid': 'REAL DEFAULT 0',
         'balanceDue': 'REAL DEFAULT 0',
-        'status': 'TEXT DEFAULT "UNPAID"', // DRAFT, UNPAID, PARTIAL, PAID, CANCELLED
+        'status':
+            'TEXT DEFAULT "UNPAID"', // DRAFT, UNPAID, PARTIAL, PAID, CANCELLED
         'paymentMode': 'TEXT', // Cash, UPI, Bank Transfer, etc.
         'notes': 'TEXT',
         'termsAndConditions': 'TEXT',
@@ -767,7 +797,9 @@ class AppSchema {
         'sync_status': 'TEXT DEFAULT "SYNCED"', // v42: AWS-first sync status
         'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
-      constraints: ['FOREIGN KEY(invoiceId) REFERENCES invoices(id) ON DELETE CASCADE'],
+      constraints: [
+        'FOREIGN KEY(invoiceId) REFERENCES invoices(id) ON DELETE CASCADE'
+      ],
     ),
 
     // 27. Salary Disbursements (Salary Payment Tracking)
@@ -829,7 +861,7 @@ class AppSchema {
         'timestamp': 'TEXT',
         'retry_count': 'INTEGER DEFAULT 0', // v42: Track retry attempts
         'last_error': 'TEXT', // v42: Store last error for debugging
-        },
+      },
     ),
 
     // 30. Dispatch Items (Line items for dispatches)
@@ -844,7 +876,8 @@ class AppSchema {
         'loadedQty': 'INTEGER DEFAULT 0',
         'returnedQty': 'INTEGER DEFAULT 0',
         'unloadedQty': 'INTEGER DEFAULT 0',
-        'status': 'TEXT DEFAULT "PENDING"', // PENDING, LOADED, RETURNED, UNLOADED
+        'status':
+            'TEXT DEFAULT "PENDING"', // PENDING, LOADED, RETURNED, UNLOADED
         'notes': 'TEXT',
         'uuid': 'TEXT', // v40: Unique ID for multi-device sync
         'gsi_partition': 'TEXT', // v41: Cloud GSI keys for sync
@@ -853,6 +886,50 @@ class AppSchema {
         'synced_at': 'TEXT', // v42: Last successful sync timestamp
       },
       constraints: ['FOREIGN KEY(dispatchId) REFERENCES dispatches(id)'],
+    ),
+
+    // 31. Transactions (Ledger entries for suppliers, subcontractors, customers)
+    TableSchema(
+      tableName: 'transactions',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'firmId': 'TEXT NOT NULL',
+        'type': 'TEXT NOT NULL', // INCOME, EXPENSE
+        'category': 'TEXT',
+        'amount': 'REAL NOT NULL',
+        'date': 'TEXT NOT NULL',
+        'description': 'TEXT',
+        'paymentMode': 'TEXT',
+        'partyName': 'TEXT',
+        'referenceId': 'TEXT',
+        'relatedEntityType': 'TEXT', // SUPPLIER, SUBCONTRACTOR, CUSTOMER, ORDER
+        'relatedEntityId': 'INTEGER',
+        'createdAt': 'TEXT',
+        'updatedAt': 'TEXT',
+        'uuid': 'TEXT',
+        'gsi_partition': 'TEXT',
+        'gsi_sort': 'TEXT',
+        'sync_status': 'TEXT DEFAULT "SYNCED"',
+        'synced_at': 'TEXT',
+      },
+    ),
+
+    // 32. Staff Assignments (Staff assigned to orders/events)
+    TableSchema(
+      tableName: 'staff_assignments',
+      columns: {
+        'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'orderId': 'INTEGER NOT NULL',
+        'staffId': 'INTEGER NOT NULL',
+        'role': 'TEXT',
+        'assignedAt': 'TEXT',
+        'status': 'TEXT DEFAULT "ASSIGNED"', // ASSIGNED, COMPLETED, CANCELLED
+        'uuid': 'TEXT',
+        'gsi_partition': 'TEXT',
+        'gsi_sort': 'TEXT',
+        'sync_status': 'TEXT DEFAULT "SYNCED"',
+        'synced_at': 'TEXT',
+      },
     ),
   ];
 }

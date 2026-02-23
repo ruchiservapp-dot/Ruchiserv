@@ -1,4 +1,3 @@
-import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:ruchiserv/core/app_logger.dart';
 // MODULE: ACCESS CONTROL & USER MANAGEMENT HUB
 // Tabs: Users, Suppliers, Subcontractors
@@ -13,23 +12,30 @@ class UserManagementHubScreen extends StatefulWidget {
   const UserManagementHubScreen({super.key});
 
   @override
-  State<UserManagementHubScreen> createState() => _UserManagementHubScreenState();
+  State<UserManagementHubScreen> createState() =>
+      _UserManagementHubScreenState();
 }
 
-class _UserManagementHubScreenState extends State<UserManagementHubScreen> 
+class _UserManagementHubScreenState extends State<UserManagementHubScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _currentFirmId;
   bool _isLoading = true;
-  
+
   // Data lists
   List<Map<String, dynamic>> _users = [];
   List<Map<String, dynamic>> _suppliers = [];
   List<Map<String, dynamic>> _subcontractors = [];
-  
+
   // Roles with expanded options
   final List<String> _roles = [
-    'Admin', 'Manager', 'Staff', 'Accountant', 'Driver', 'Vendor', 'Subcontractor'
+    'Admin',
+    'Manager',
+    'Staff',
+    'Accountant',
+    'Driver',
+    'Vendor',
+    'Subcontractor'
   ];
 
   @override
@@ -49,28 +55,31 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
     setState(() => _isLoading = true);
     final sp = await SharedPreferences.getInstance();
     _currentFirmId = sp.getString('last_firm');
-    
+
     if (_currentFirmId != null) {
       final db = await DatabaseHelper().database;
-      
-      final users = await db.query('users', 
-        where: 'firmId = ?', 
+
+      final users = await db.query(
+        'users',
+        where: 'firmId = ?',
         whereArgs: [_currentFirmId],
         orderBy: 'role, username',
       );
-      
-      final suppliers = await db.query('suppliers',
+
+      final suppliers = await db.query(
+        'suppliers',
         where: 'firmId = ?',
         whereArgs: [_currentFirmId],
         orderBy: 'name',
       );
-      
-      final subcontractors = await db.query('subcontractors',
+
+      final subcontractors = await db.query(
+        'subcontractors',
         where: 'firmId = ?',
         whereArgs: [_currentFirmId],
         orderBy: 'name',
       );
-      
+
       setState(() {
         _users = users;
         _suppliers = suppliers;
@@ -95,9 +104,15 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: [
-            Tab(icon: const Icon(Icons.people), text: 'Users (${_users.length})'),
-            Tab(icon: const Icon(Icons.store), text: 'Suppliers (${_suppliers.length})'),
-            Tab(icon: const Icon(Icons.handshake), text: 'Subcontract (${_subcontractors.length})'),
+            Tab(
+                icon: const Icon(Icons.people),
+                text: 'Users (${_users.length})'),
+            Tab(
+                icon: const Icon(Icons.store),
+                text: 'Suppliers (${_suppliers.length})'),
+            Tab(
+                icon: const Icon(Icons.handshake),
+                text: 'Subcontract (${_subcontractors.length})'),
           ],
         ),
       ),
@@ -121,18 +136,25 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
 
   void _handleAdd() {
     switch (_tabController.index) {
-      case 0: _addUser(); break;
-      case 1: _addSupplier(); break;
-      case 2: _addSubcontractor(); break;
+      case 0:
+        _addUser();
+        break;
+      case 1:
+        _addSupplier();
+        break;
+      case 2:
+        _addSubcontractor();
+        break;
     }
   }
 
   // ========== USERS TAB ==========
   Widget _buildUsersTab() {
     if (_users.isEmpty) {
-      return _buildEmptyState('No users found', Icons.people_outline, 'Add User', _addUser);
+      return _buildEmptyState(
+          'No users found', Icons.people_outline, 'Add User', _addUser);
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(8),
       itemCount: _users.length,
@@ -140,7 +162,7 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
         final user = _users[index];
         final role = user['role'] ?? 'User';
         final showRates = (user['showRates'] ?? 1) == 1;
-        
+
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 4),
           child: ExpansionTile(
@@ -148,45 +170,55 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
               backgroundColor: _getRoleColor(role).withValues(alpha: 0.2),
               child: Icon(Icons.person, color: _getRoleColor(role)),
             ),
-            title: Text(user['username'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(user['username'] ?? 'Unknown',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: _getRoleColor(role).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(role, style: TextStyle(fontSize: 11, color: _getRoleColor(role))),
+                  child: Text(role,
+                      style:
+                          TextStyle(fontSize: 11, color: _getRoleColor(role))),
                 ),
                 const SizedBox(width: 8),
-                Text(user['mobile'] ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                Text(user['mobile'] ?? '',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600])),
               ],
             ),
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Show Rates Toggle
                     SwitchListTile(
                       title: const Text('Can View Rates/Costs'),
-                      subtitle: Text(showRates ? 'User can see prices' : 'Prices are hidden'),
+                      subtitle: Text(showRates
+                          ? 'User can see prices'
+                          : 'Prices are hidden'),
                       value: showRates,
                       onChanged: (val) => _toggleShowRates(user, val),
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                     const Divider(),
                     // Module Access - EDITABLE by Admin
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Module Access:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Text('Module Access:',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         TextButton.icon(
                           onPressed: () => _editModuleAccess(user),
                           icon: const Icon(Icons.edit, size: 16),
-                          label: const Text('Edit', style: TextStyle(fontSize: 12)),
+                          label: const Text('Edit',
+                              style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     ),
@@ -194,12 +226,15 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                     Wrap(
                       spacing: 6,
                       runSpacing: 4,
-                      children: _getUserModules(user).map((m) => Chip(
-                        label: Text(m, style: const TextStyle(fontSize: 11)),
-                        backgroundColor: Colors.blue.shade50,
-                        deleteIcon: const Icon(Icons.close, size: 14),
-                        onDeleted: () => _removeModuleFromUser(user, m),
-                      )).toList(),
+                      children: _getUserModules(user)
+                          .map((m) => Chip(
+                                label: Text(m,
+                                    style: const TextStyle(fontSize: 11)),
+                                backgroundColor: Colors.blue.shade50,
+                                deleteIcon: const Icon(Icons.close, size: 14),
+                                onDeleted: () => _removeModuleFromUser(user, m),
+                              ))
+                          .toList(),
                     ),
                     const SizedBox(height: 12),
                     // Actions
@@ -213,8 +248,10 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                         ),
                         TextButton.icon(
                           onPressed: () => _confirmDeleteUser(user),
-                          icon: const Icon(Icons.delete, size: 18, color: Colors.red),
-                          label: const Text('Delete', style: TextStyle(color: Colors.red)),
+                          icon: const Icon(Icons.delete,
+                              size: 18, color: Colors.red),
+                          label: const Text('Delete',
+                              style: TextStyle(color: Colors.red)),
                         ),
                       ],
                     ),
@@ -233,42 +270,47 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
     if (perms == 'ALL') return PermissionService.allModules;
     return perms.split(',');
   }
-  
+
   /// Get user's actual module access (custom or role-based)
   List<String> _getUserModules(Map<String, dynamic> user) {
     final customAccess = user['moduleAccess']?.toString();
-    if (customAccess != null && customAccess.isNotEmpty && customAccess != 'null') {
+    if (customAccess != null &&
+        customAccess.isNotEmpty &&
+        customAccess != 'null') {
       if (customAccess == 'ALL') return PermissionService.allModules;
       return customAccess.split(',').where((m) => m.isNotEmpty).toList();
     }
     // Fall back to role defaults
     return _getModulesForRole(user['role'] ?? 'Staff');
   }
-  
+
   /// Remove a single module from user access
-  Future<void> _removeModuleFromUser(Map<String, dynamic> user, String module) async {
+  Future<void> _removeModuleFromUser(
+      Map<String, dynamic> user, String module) async {
     final currentModules = _getUserModules(user);
     currentModules.remove(module);
-    
+
     final db = DatabaseHelper();
     await db.updateUser({
       'id': user['id'] as int,
       'moduleAccess': currentModules.join(','),
     });
-    
+
     _loadData();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Removed $module access'), backgroundColor: Colors.orange),
+        SnackBar(
+            content: Text('Removed $module access'),
+            backgroundColor: Colors.orange),
       );
     }
   }
-  
+
   /// Edit module access with checkboxes
   Future<void> _editModuleAccess(Map<String, dynamic> user) async {
     final allModules = PermissionService.allModules;
     final currentModules = Set<String>.from(_getUserModules(user));
-    
+
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -283,17 +325,20 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: () => setDialogState(() => currentModules.addAll(allModules)),
+                      onPressed: () => setDialogState(
+                          () => currentModules.addAll(allModules)),
                       child: const Text('Select All'),
                     ),
                     TextButton(
-                      onPressed: () => setDialogState(() => currentModules.clear()),
+                      onPressed: () =>
+                          setDialogState(() => currentModules.clear()),
                       child: const Text('Clear All'),
                     ),
                     TextButton(
                       onPressed: () => setDialogState(() {
                         currentModules.clear();
-                        currentModules.addAll(_getModulesForRole(user['role'] ?? 'Staff'));
+                        currentModules.addAll(
+                            _getModulesForRole(user['role'] ?? 'Staff'));
                       }),
                       child: const Text('Reset to Role'),
                     ),
@@ -302,34 +347,41 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                 const Divider(),
                 // Module checkboxes
                 ...allModules.map((module) => CheckboxListTile(
-                  title: Text(module),
-                  subtitle: Text(_getModuleDescription(module), style: const TextStyle(fontSize: 11)),
-                  value: currentModules.contains(module),
-                  onChanged: (val) => setDialogState(() {
-                    if (val == true) {
-                      currentModules.add(module);
-                    } else {
-                      currentModules.remove(module);
-                    }
-                  }),
-                )),
+                      title: Text(module),
+                      subtitle: Text(_getModuleDescription(module),
+                          style: const TextStyle(fontSize: 11)),
+                      value: currentModules.contains(module),
+                      onChanged: (val) => setDialogState(() {
+                        if (val == true) {
+                          currentModules.add(module);
+                        } else {
+                          currentModules.remove(module);
+                        }
+                      }),
+                    )),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
                 final dbHelper = DatabaseHelper();
                 await dbHelper.updateUser({
                   'id': user['id'] as int,
-                  'moduleAccess': currentModules.isEmpty ? '' : currentModules.join(','),
+                  'moduleAccess':
+                      currentModules.isEmpty ? '' : currentModules.join(','),
                 });
+                if (!mounted) return;
                 Navigator.pop(ctx);
                 _loadData();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Module access updated'), backgroundColor: Colors.green),
+                    const SnackBar(
+                        content: Text('Module access updated'),
+                        backgroundColor: Colors.green),
                   );
                 }
               },
@@ -340,21 +392,33 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
       ),
     );
   }
-  
+
   String _getModuleDescription(String module) {
     switch (module) {
-      case 'ORDERS': return 'View and create orders';
-      case 'KITCHEN': return 'Kitchen operations & dispatch';
-      case 'INVENTORY': return 'Stock & ingredient management';
-      case 'FINANCE': return 'Payments & ledger';
-      case 'REPORTS': return 'Analytics & reports';
-      case 'SETTINGS': return 'System settings';
-      case 'DISPATCH': return 'Delivery management';
-      case 'STAFF': return 'Staff & attendance admin';
-      case 'ATTENDANCE': return 'Personal attendance & punch';
-      case 'CALENDAR': return 'Calendar view';
-      case 'SUBSCRIPTION': return 'Subscription management';
-      default: return '';
+      case 'ORDERS':
+        return 'View and create orders';
+      case 'KITCHEN':
+        return 'Kitchen operations & dispatch';
+      case 'INVENTORY':
+        return 'Stock & ingredient management';
+      case 'FINANCE':
+        return 'Payments & ledger';
+      case 'REPORTS':
+        return 'Analytics & reports';
+      case 'SETTINGS':
+        return 'System settings';
+      case 'DISPATCH':
+        return 'Delivery management';
+      case 'STAFF':
+        return 'Staff & attendance admin';
+      case 'ATTENDANCE':
+        return 'Personal attendance & punch';
+      case 'CALENDAR':
+        return 'Calendar view';
+      case 'SUBSCRIPTION':
+        return 'Subscription management';
+      default:
+        return '';
     }
   }
 
@@ -364,11 +428,12 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
       'showRates': value ? 1 : 0,
     });
     _loadData();
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(value ? 'Rate visibility enabled' : 'Rates hidden for this user'),
+          content: Text(
+              value ? 'Rate visibility enabled' : 'Rates hidden for this user'),
           backgroundColor: value ? Colors.green : Colors.orange,
         ),
       );
@@ -377,26 +442,31 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
 
   Future<void> _editUserRole(Map<String, dynamic> user) async {
     String selectedRole = user['role'] ?? 'Staff';
-    
+
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Change Role: ${user['username']}'),
         content: DropdownButtonFormField<String>(
-          value: selectedRole,
-          items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+          initialValue: selectedRole,
+          items: _roles
+              .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+              .toList(),
           onChanged: (v) => selectedRole = v!,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               final dbHelper = DatabaseHelper();
               await dbHelper.updateUser({
                 'id': user['id'] as int,
                 'role': selectedRole,
-                'permissions': PermissionService.getDefaultPermissions(selectedRole),
+                'permissions':
+                    PermissionService.getDefaultPermissions(selectedRole),
               });
+              if (!mounted) return;
               Navigator.pop(ctx);
               _loadData();
             },
@@ -410,16 +480,17 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
   // ========== SUPPLIERS TAB ==========
   Widget _buildSuppliersTab() {
     if (_suppliers.isEmpty) {
-      return _buildEmptyState('No suppliers found', Icons.store_outlined, 'Add Supplier', _addSupplier);
+      return _buildEmptyState('No suppliers found', Icons.store_outlined,
+          'Add Supplier', _addSupplier);
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(8),
       itemCount: _suppliers.length,
       itemBuilder: (context, index) {
         final supplier = _suppliers[index];
         final isActive = (supplier['isActive'] ?? 1) == 1;
-        
+
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 4),
           color: isActive ? null : Colors.grey.shade100,
@@ -428,7 +499,8 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
               backgroundColor: Colors.purple.shade100,
               child: const Icon(Icons.store, color: Colors.purple),
             ),
-            title: Text(supplier['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(supplier['name'] ?? '',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -439,11 +511,14 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                     if (supplier['mobile'] != null) ...[
                       const Icon(Icons.phone, size: 14),
                       const SizedBox(width: 4),
-                      Text(supplier['mobile'], style: const TextStyle(fontSize: 12)),
+                      Text(supplier['mobile'],
+                          style: const TextStyle(fontSize: 12)),
                     ],
                     if (supplier['category'] != null) ...[
                       const SizedBox(width: 12),
-                      Chip(label: Text(supplier['category'], style: const TextStyle(fontSize: 10))),
+                      Chip(
+                          label: Text(supplier['category'],
+                              style: const TextStyle(fontSize: 10))),
                     ],
                   ],
                 ),
@@ -466,7 +541,8 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
     );
   }
 
-  void _handleSupplierAction(String action, Map<String, dynamic> supplier) async {
+  void _handleSupplierAction(
+      String action, Map<String, dynamic> supplier) async {
     final dbHelper = DatabaseHelper();
     switch (action) {
       case 'edit':
@@ -474,7 +550,8 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
         break;
       case 'toggle':
         final newVal = (supplier['isActive'] ?? 1) == 1 ? 0 : 1;
-        await dbHelper.updateSupplier(supplier['id'] as int, {'isActive': newVal});
+        await dbHelper
+            .updateSupplier(supplier['id'] as int, {'isActive': newVal});
         _loadData();
         break;
       case 'delete':
@@ -487,9 +564,10 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
   // ========== SUBCONTRACTORS TAB ==========
   Widget _buildSubcontractorsTab() {
     if (_subcontractors.isEmpty) {
-      return _buildEmptyState('No subcontractors found', Icons.handshake_outlined, 'Add Subcontractor', _addSubcontractor);
+      return _buildEmptyState('No subcontractors found',
+          Icons.handshake_outlined, 'Add Subcontractor', _addSubcontractor);
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(8),
       itemCount: _subcontractors.length,
@@ -497,7 +575,7 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
         final sub = _subcontractors[index];
         final isActive = (sub['isActive'] ?? 1) == 1;
         final rating = sub['rating'] ?? 3;
-        
+
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 4),
           color: isActive ? null : Colors.grey.shade100,
@@ -508,13 +586,17 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
             ),
             title: Row(
               children: [
-                Text(sub['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(sub['name'] ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
-                ...List.generate(5, (i) => Icon(
-                  Icons.star,
-                  size: 14,
-                  color: i < rating ? Colors.amber : Colors.grey.shade300,
-                )),
+                ...List.generate(
+                    5,
+                    (i) => Icon(
+                          Icons.star,
+                          size: 14,
+                          color:
+                              i < rating ? Colors.amber : Colors.grey.shade300,
+                        )),
               ],
             ),
             subtitle: Column(
@@ -529,9 +611,11 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                       const SizedBox(width: 4),
                       Text(sub['mobile'], style: const TextStyle(fontSize: 12)),
                     ],
-                    if (sub['ratePerPax'] != null && (sub['ratePerPax'] as num) > 0) ...[
+                    if (sub['ratePerPax'] != null &&
+                        (sub['ratePerPax'] as num) > 0) ...[
                       const SizedBox(width: 12),
-                      Text('₹${sub['ratePerPax']}/pax', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('₹${sub['ratePerPax']}/pax',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ],
                 ),
@@ -540,7 +624,8 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
             trailing: PopupMenuButton(
               itemBuilder: (_) => [
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                const PopupMenuItem(value: 'rate', child: Text('Update Rating')),
+                const PopupMenuItem(
+                    value: 'rate', child: Text('Update Rating')),
                 const PopupMenuItem(value: 'delete', child: Text('Delete')),
               ],
               onSelected: (v) => _handleSubcontractorAction(v, sub),
@@ -551,7 +636,8 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
     );
   }
 
-  void _handleSubcontractorAction(String action, Map<String, dynamic> sub) async {
+  void _handleSubcontractorAction(
+      String action, Map<String, dynamic> sub) async {
     final dbHelper = DatabaseHelper();
     switch (action) {
       case 'edit':
@@ -569,7 +655,7 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
 
   Future<void> _updateRating(Map<String, dynamic> sub) async {
     int rating = sub['rating'] ?? 3;
-    
+
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -577,16 +663,23 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
           title: Text('Rate ${sub['name']}'),
           content: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (i) => IconButton(
-              icon: Icon(Icons.star, color: i < rating ? Colors.amber : Colors.grey),
-              onPressed: () => setDialogState(() => rating = i + 1),
-            )),
+            children: List.generate(
+                5,
+                (i) => IconButton(
+                      icon: Icon(Icons.star,
+                          color: i < rating ? Colors.amber : Colors.grey),
+                      onPressed: () => setDialogState(() => rating = i + 1),
+                    )),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
-                await DatabaseHelper().updateSubcontractor(sub['id'] as int, {'rating': rating});
+                await DatabaseHelper()
+                    .updateSubcontractor(sub['id'] as int, {'rating': rating});
+                if (!mounted) return;
                 Navigator.pop(ctx);
                 _loadData();
               },
@@ -624,22 +717,43 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                     color: Colors.red.shade50,
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, size: 20, color: Colors.red),
+                        const Icon(Icons.error_outline,
+                            size: 20, color: Colors.red),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(inlineError!, style: const TextStyle(color: Colors.red, fontSize: 12))),
+                        Expanded(
+                            child: Text(inlineError!,
+                                style: const TextStyle(
+                                    color: Colors.red, fontSize: 12))),
                       ],
                     ),
                   ),
-                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder())),
+                TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(
+                        labelText: 'Full Name', border: OutlineInputBorder())),
                 const SizedBox(height: 12),
-                TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, maxLength: 10, decoration: const InputDecoration(labelText: 'Mobile', border: OutlineInputBorder(), counterText: '')),
+                TextField(
+                    controller: mobileCtrl,
+                    keyboardType: TextInputType.phone,
+                    maxLength: 10,
+                    decoration: const InputDecoration(
+                        labelText: 'Mobile',
+                        border: OutlineInputBorder(),
+                        counterText: '')),
                 const SizedBox(height: 12),
-                TextField(controller: passCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder())),
+                TextField(
+                    controller: passCtrl,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                        labelText: 'Password', border: OutlineInputBorder())),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: selectedRole,
-                  decoration: const InputDecoration(labelText: 'Role', border: OutlineInputBorder()),
-                  items: _roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                  initialValue: selectedRole,
+                  decoration: const InputDecoration(
+                      labelText: 'Role', border: OutlineInputBorder()),
+                  items: _roles
+                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                      .toList(),
                   onChanged: (v) => setDialogState(() => selectedRole = v!),
                 ),
                 const SizedBox(height: 12),
@@ -652,18 +766,21 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
                 setDialogState(() => inlineError = null);
-                
+
                 // Validate
                 if (nameCtrl.text.trim().isEmpty) {
                   setDialogState(() => inlineError = 'Name is required');
                   return;
                 }
                 if (mobileCtrl.text.trim().length != 10) {
-                  setDialogState(() => inlineError = 'Mobile must be 10 digits');
+                  setDialogState(
+                      () => inlineError = 'Mobile must be 10 digits');
                   return;
                 }
                 if (passCtrl.text.length < 4) {
@@ -671,13 +788,15 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                   return;
                 }
                 if (_currentFirmId == null) {
-                  setDialogState(() => inlineError = 'System Error: No Firm ID found. Re-login.');
+                  setDialogState(() => inlineError =
+                      'System Error: No Firm ID found. Re-login.');
                   return;
                 }
 
                 try {
                   final db = DatabaseHelper();
-                  AppLogger.info('Attempting to add user for firm: $_currentFirmId');
+                  AppLogger.info(
+                      'Attempting to add user for firm: $_currentFirmId');
                   await db.insertUser({
                     'firmId': _currentFirmId!,
                     'userId': 'U-${mobileCtrl.text}',
@@ -687,7 +806,8 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
                     'mobile': mobileCtrl.text.trim(),
                     'isActive': 1,
                     'showRates': showRates ? 1 : 0,
-                    'permissions': PermissionService.getDefaultPermissions(selectedRole),
+                    'permissions':
+                        PermissionService.getDefaultPermissions(selectedRole),
                     'createdAt': DateTime.now().toIso8601String(),
                   });
                   AppLogger.info('User added successfully');
@@ -723,28 +843,58 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Company Name *', border: OutlineInputBorder())),
+              TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Company Name *',
+                      border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: contactCtrl, decoration: const InputDecoration(labelText: 'Contact Person', border: OutlineInputBorder())),
+              TextField(
+                  controller: contactCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Contact Person',
+                      border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Mobile', border: OutlineInputBorder())),
+              TextField(
+                  controller: mobileCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                      labelText: 'Mobile', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+              TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                      labelText: 'Email', border: OutlineInputBorder())),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: category,
-                decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
-                items: ['GENERAL', 'VEGETABLES', 'MEAT', 'DAIRY', 'GROCERIES', 'UTENSILS', 'PACKAGING']
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                initialValue: category,
+                decoration: const InputDecoration(
+                    labelText: 'Category', border: OutlineInputBorder()),
+                items: [
+                  'GENERAL',
+                  'VEGETABLES',
+                  'MEAT',
+                  'DAIRY',
+                  'GROCERIES',
+                  'UTENSILS',
+                  'PACKAGING'
+                ]
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
                 onChanged: (v) => category = v!,
               ),
               const SizedBox(height: 12),
-              TextField(controller: gstCtrl, decoration: const InputDecoration(labelText: 'GST Number', border: OutlineInputBorder())),
+              TextField(
+                  controller: gstCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'GST Number', border: OutlineInputBorder())),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               if (nameCtrl.text.isEmpty) return;
@@ -767,6 +917,7 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
               } else {
                 await dbHelper.updateSupplier(existing['id'] as int, data);
               }
+              if (!mounted) return;
               Navigator.pop(ctx);
               _loadData();
             },
@@ -783,32 +934,59 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
     final mobileCtrl = TextEditingController(text: existing?['mobile']);
     final emailCtrl = TextEditingController(text: existing?['email']);
     final specCtrl = TextEditingController(text: existing?['specialization']);
-    final rateCtrl = TextEditingController(text: existing?['ratePerPax']?.toString());
+    final rateCtrl =
+        TextEditingController(text: existing?['ratePerPax']?.toString());
 
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(existing == null ? 'Add Subcontractor' : 'Edit Subcontractor'),
+        title:
+            Text(existing == null ? 'Add Subcontractor' : 'Edit Subcontractor'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name *', border: OutlineInputBorder())),
+              TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Name *', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: contactCtrl, decoration: const InputDecoration(labelText: 'Contact Person', border: OutlineInputBorder())),
+              TextField(
+                  controller: contactCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Contact Person',
+                      border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: mobileCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Mobile', border: OutlineInputBorder())),
+              TextField(
+                  controller: mobileCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                      labelText: 'Mobile', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: emailCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+              TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                      labelText: 'Email', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: specCtrl, decoration: const InputDecoration(labelText: 'Specialization (e.g., Biryani, Sweets)', border: OutlineInputBorder())),
+              TextField(
+                  controller: specCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Specialization (e.g., Biryani, Sweets)',
+                      border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Rate per Pax (₹)', border: OutlineInputBorder())),
+              TextField(
+                  controller: rateCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                      labelText: 'Rate per Pax (₹)',
+                      border: OutlineInputBorder())),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               if (nameCtrl.text.isEmpty) return;
@@ -831,6 +1009,7 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
               } else {
                 await dbHelper.updateSubcontractor(existing['id'] as int, data);
               }
+              if (!mounted) return;
               Navigator.pop(ctx);
               _loadData();
             },
@@ -848,7 +1027,9 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
         title: const Text('Delete User?'),
         content: Text('Remove ${user['username']}?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
@@ -857,7 +1038,7 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
         ],
       ),
     );
-    
+
     if (confirm == true) {
       await DatabaseHelper().deleteUser(user['id']);
       _loadData();
@@ -865,14 +1046,16 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
   }
 
   // ========== HELPERS ==========
-  Widget _buildEmptyState(String message, IconData icon, String buttonText, VoidCallback onTap) {
+  Widget _buildEmptyState(
+      String message, IconData icon, String buttonText, VoidCallback onTap) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
-          Text(message, style: TextStyle(fontSize: 16, color: Colors.grey.shade600)),
+          Text(message,
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600)),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onTap,
@@ -886,14 +1069,22 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
 
   Color _getRoleColor(String role) {
     switch (role) {
-      case 'Admin': return Colors.red;
-      case 'Manager': return Colors.blue;
-      case 'Accountant': return Colors.green;
-      case 'Staff': return Colors.orange;
-      case 'Driver': return Colors.purple;
-      case 'Vendor': return Colors.teal;
-      case 'Subcontractor': return Colors.brown;
-      default: return Colors.grey;
+      case 'Admin':
+        return Colors.red;
+      case 'Manager':
+        return Colors.blue;
+      case 'Accountant':
+        return Colors.green;
+      case 'Staff':
+        return Colors.orange;
+      case 'Driver':
+        return Colors.purple;
+      case 'Vendor':
+        return Colors.teal;
+      case 'Subcontractor':
+        return Colors.brown;
+      default:
+        return Colors.grey;
     }
   }
 }

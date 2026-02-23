@@ -31,16 +31,17 @@ class _OperationsScreenState extends State<OperationsScreen> {
   Future<void> _checkUserRole() async {
     final sp = await SharedPreferences.getInstance();
     String role = sp.getString('user_role') ?? sp.getString('last_role') ?? '';
-    
+
     // If role not in SharedPreferences, try to get from database
     if (role.isEmpty) {
       final mobile = sp.getString('last_mobile');
       final firmId = sp.getString('last_firm');
-      
+
       if (mobile != null && firmId != null) {
         final db = await DatabaseHelper().database;
-        final users = await db.query('users', 
-          where: 'mobile = ? AND firmId = ?', 
+        final users = await db.query(
+          'users',
+          where: 'mobile = ? AND firmId = ?',
           whereArgs: [mobile, firmId],
         );
         if (users.isNotEmpty) {
@@ -49,11 +50,11 @@ class _OperationsScreenState extends State<OperationsScreen> {
         }
       }
     }
-    
+
     setState(() {
-      _isAdmin = role.toLowerCase() == 'admin' || 
-                 role.toLowerCase() == 'owner' ||
-                 role.toLowerCase() == 'manager';
+      _isAdmin = role.toLowerCase() == 'admin' ||
+          role.toLowerCase() == 'owner' ||
+          role.toLowerCase() == 'manager';
       _isLoading = false;
     });
   }
@@ -114,7 +115,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
                       _buildHeader(isDark),
                       const SizedBox(height: 24),
                       _buildBentoGrid(context, isDark),
-                      const SizedBox(height: 100), // padding for floating bottom bar
+                      const SizedBox(
+                          height: 100), // padding for floating bottom bar
                     ]),
                   ),
                 ),
@@ -132,13 +134,17 @@ class _OperationsScreenState extends State<OperationsScreen> {
       children: [
         const SizedBox(height: 10),
         Text(
-          AppLocalizations.of(context)!.moduleOperations,
-          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
+          AppLocalizations.of(context).moduleOperations,
+          style: const TextStyle(
+              fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -1),
         ),
         const SizedBox(height: 4),
         Text(
           'Manage daily activities and staff',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+          style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -155,7 +161,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
             children: [
               _buildBentoCard(
                 context,
-                title: AppLocalizations.of(context)!.kitchenView,
+                title: AppLocalizations.of(context).kitchenView,
                 subtitle: 'Production & Recipes',
                 icon: Icons.kitchen,
                 color: Colors.orange,
@@ -166,7 +172,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
               const SizedBox(height: 12),
               _buildBentoCard(
                 context,
-                title: AppLocalizations.of(context)!.dispatchView,
+                title: AppLocalizations.of(context).dispatchView,
                 subtitle: 'Delivery & Logistics',
                 icon: Icons.delivery_dining,
                 color: Colors.green,
@@ -180,8 +186,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
                   Expanded(
                     child: _buildBentoCard(
                       context,
-                      title: AppLocalizations.of(context)!.attendanceTitle,
-                      subtitle: AppLocalizations.of(context)!.punchInOut,
+                      title: AppLocalizations.of(context).attendanceTitle,
+                      subtitle: AppLocalizations.of(context).punchInOut,
                       icon: Icons.fingerprint,
                       color: Colors.teal,
                       height: 130,
@@ -193,8 +199,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
                     child: _isAdmin
                         ? _buildBentoCard(
                             context,
-                            title: AppLocalizations.of(context)!.staffManagement,
-                            subtitle: AppLocalizations.of(context)!.adminOnly,
+                            title: AppLocalizations.of(context).staffManagement,
+                            subtitle: AppLocalizations.of(context).adminOnly,
                             icon: Icons.people,
                             color: Colors.blue,
                             height: 130,
@@ -202,7 +208,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
                           )
                         : _buildLockedCard(
                             context,
-                            title: AppLocalizations.of(context)!.staffManagement,
+                            title: AppLocalizations.of(context).staffManagement,
                             subtitle: 'Locked',
                             icon: Icons.people,
                             height: 130,
@@ -222,7 +228,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
                 Expanded(
                   child: _buildBentoCard(
                     context,
-                    title: AppLocalizations.of(context)!.kitchenView,
+                    title: AppLocalizations.of(context).kitchenView,
                     subtitle: 'Production & Recipes',
                     icon: Icons.kitchen,
                     color: Colors.orange,
@@ -235,7 +241,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
                 Expanded(
                   child: _buildBentoCard(
                     context,
-                    title: AppLocalizations.of(context)!.dispatchView,
+                    title: AppLocalizations.of(context).dispatchView,
                     subtitle: 'Delivery & Logistics',
                     icon: Icons.delivery_dining,
                     color: Colors.green,
@@ -252,8 +258,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
                 Expanded(
                   child: _buildBentoCard(
                     context,
-                    title: AppLocalizations.of(context)!.attendanceTitle,
-                    subtitle: AppLocalizations.of(context)!.punchInOut,
+                    title: AppLocalizations.of(context).attendanceTitle,
+                    subtitle: AppLocalizations.of(context).punchInOut,
                     icon: Icons.fingerprint,
                     color: Colors.teal,
                     height: 140,
@@ -266,8 +272,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
                   child: _isAdmin
                       ? _buildBentoCard(
                           context,
-                          title: AppLocalizations.of(context)!.staffManagement,
-                          subtitle: AppLocalizations.of(context)!.adminOnly,
+                          title: AppLocalizations.of(context).staffManagement,
+                          subtitle: AppLocalizations.of(context).adminOnly,
                           icon: Icons.people,
                           color: Colors.blue,
                           height: 140,
@@ -276,7 +282,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
                         )
                       : _buildLockedCard(
                           context,
-                          title: AppLocalizations.of(context)!.staffManagement,
+                          title: AppLocalizations.of(context).staffManagement,
                           subtitle: 'Locked',
                           icon: Icons.people,
                           height: 140,
@@ -309,15 +315,18 @@ class _OperationsScreenState extends State<OperationsScreen> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200, width: 1),
-        boxShadow: isDark ? [] : [
-          BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 15,
-            spreadRadius: 2,
-            offset: const Offset(0, 4),
-          )
-        ],
+        border: Border.all(
+            color: isDark ? Colors.white12 : Colors.grey.shade200, width: 1),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: color.withOpacity(0.08),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                )
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -330,9 +339,9 @@ class _OperationsScreenState extends State<OperationsScreen> {
               borderRadius: BorderRadius.circular(24),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: isLarge 
-                 ? _buildLargeLayout(title, subtitle, icon, color)
-                 : _buildSmallLayout(title, subtitle, icon, color),
+                child: isLarge
+                    ? _buildLargeLayout(title, subtitle, icon, color)
+                    : _buildSmallLayout(title, subtitle, icon, color),
               ),
             ),
           ),
@@ -357,14 +366,18 @@ class _OperationsScreenState extends State<OperationsScreen> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.02) : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade300, width: 1),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.grey.shade300, width: 1),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppLocalizations.of(context)!.restrictedToAdmins), backgroundColor: Colors.red),
+              SnackBar(
+                  content:
+                      Text(AppLocalizations.of(context).restrictedToAdmins),
+                  backgroundColor: Colors.red),
             );
           },
           borderRadius: BorderRadius.circular(24),
@@ -372,16 +385,18 @@ class _OperationsScreenState extends State<OperationsScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Stack(
               children: [
-                isLarge 
-                 ? _buildLargeLayout(title, subtitle, icon, Colors.grey)
-                 : _buildSmallLayout(title, subtitle, icon, Colors.grey),
+                isLarge
+                    ? _buildLargeLayout(title, subtitle, icon, Colors.grey)
+                    : _buildSmallLayout(title, subtitle, icon, Colors.grey),
                 Positioned(
                   top: 0,
                   right: 0,
                   child: Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                    child: const Icon(Icons.lock, size: 14, color: Colors.white),
+                    decoration: const BoxDecoration(
+                        color: Colors.red, shape: BoxShape.circle),
+                    child:
+                        const Icon(Icons.lock, size: 14, color: Colors.white),
                   ),
                 ),
               ],
@@ -392,7 +407,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
     );
   }
 
-  Widget _buildLargeLayout(String title, String subtitle, IconData icon, Color color) {
+  Widget _buildLargeLayout(
+      String title, String subtitle, IconData icon, Color color) {
     return Row(
       children: [
         Container(
@@ -412,12 +428,18 @@ class _OperationsScreenState extends State<OperationsScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Inter'),
               ),
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -427,7 +449,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
     );
   }
 
-  Widget _buildSmallLayout(String title, String subtitle, IconData icon, Color color) {
+  Widget _buildSmallLayout(
+      String title, String subtitle, IconData icon, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -445,12 +468,19 @@ class _OperationsScreenState extends State<OperationsScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Inter', height: 1.1),
+              style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Inter',
+                  height: 1.1),
             ),
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

@@ -1,14 +1,10 @@
 // E2E TEST MODULE: AUTH & SESSION MANAGEMENT
 // Covers: T-AUTH-04 to T-AUTH-06, T-AUTH-09, T-AUTH-12 to T-AUTH-14, T-AUTH-16 to T-AUTH-18
 // Tests: Offline login, subscription expiry, firmId normalization, credential prefill
-import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:ruchiserv/services/auth_service.dart';
 import 'package:ruchiserv/db/database_helper.dart';
 import 'package:ruchiserv/services/connectivity_service.dart';

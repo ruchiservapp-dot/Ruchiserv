@@ -2,7 +2,6 @@
 // Cashfree Payment Gateway Integration for RuchiServ
 // Replacing Razorpay with Cashfree for 0% UPI fees
 
-import 'package:flutter/material.dart';
 import 'package:flutter_cashfree_pg_sdk/api/cfpayment/cfdropcheckoutpayment.dart';
 import 'package:flutter_cashfree_pg_sdk/api/cfpaymentgateway/cfpaymentgatewayservice.dart';
 import 'package:flutter_cashfree_pg_sdk/api/cfsession/cfsession.dart';
@@ -18,7 +17,7 @@ import 'package:flutter/foundation.dart';
 /// Cashfree Payment Service for handling one-time and subscription payments
 class CashfreePaymentService {
   final CFPaymentGatewayService _paymentGateway = CFPaymentGatewayService();
-  
+
   // Callbacks
   final Function(String orderId, String? paymentId) onSuccess;
   final Function(String errorCode, String message) onFailure;
@@ -27,7 +26,9 @@ class CashfreePaymentService {
     required this.onSuccess,
     required this.onFailure,
   }) {
-    if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
       _setupCallbacks();
     }
   }
@@ -53,8 +54,9 @@ class CashfreePaymentService {
   }
 
   /// Get the current environment based on sandbox mode setting
-  CFEnvironment get _environment => 
-      AppConfig.cashfreeSandbox ? CFEnvironment.SANDBOX : CFEnvironment.PRODUCTION;
+  CFEnvironment get _environment => AppConfig.cashfreeSandbox
+      ? CFEnvironment.SANDBOX
+      : CFEnvironment.PRODUCTION;
 
   /// Create a payment session on backend (MOCK for now)
   /// In production, this should call your backend API which creates order via Cashfree API
@@ -77,7 +79,7 @@ class CashfreePaymentService {
           'orderNote': orderNote,
         },
       );
-      
+
       if (response['order_id'] != null) {
         return {
           'order_id': response['order_id'] ?? '',
@@ -141,7 +143,8 @@ class CashfreePaymentService {
   }) async {
     // Check configuration
     if (!AppConfig.isCashfreeConfigured) {
-      onFailure('CONFIG_ERROR', 'Cashfree is not configured. Please add App ID and Secret Key in settings.');
+      onFailure('CONFIG_ERROR',
+          'Cashfree is not configured. Please add App ID and Secret Key in settings.');
       return;
     }
 
@@ -191,13 +194,18 @@ class CashfreePaymentService {
           'return_url': returnUrl,
         },
       );
-      
-      if (response['subscriptionId'] != null || response['subscription_id'] != null) {
+
+      if (response['subscriptionId'] != null ||
+          response['subscription_id'] != null) {
         return {
-          'subscription_id': (response['subscriptionId'] ?? response['subscription_id'] ?? '').toString(),
+          'subscription_id':
+              (response['subscriptionId'] ?? response['subscription_id'] ?? '')
+                  .toString(),
           'order_id': (response['order_id'] ?? '').toString(),
-          'payment_session_id': (response['payment_session_id'] ?? '').toString(),
-          'auth_link': (response['authLink'] ?? response['auth_link'] ?? '').toString(),
+          'payment_session_id':
+              (response['payment_session_id'] ?? '').toString(),
+          'auth_link':
+              (response['authLink'] ?? response['auth_link'] ?? '').toString(),
         };
       }
       return null;
@@ -217,7 +225,7 @@ class CashfreePaymentService {
           'subscription_id': subscriptionId,
         },
       );
-      
+
       return response['valid'] == true;
     } catch (e) {
       debugPrint('Error verifying subscription: $e');
@@ -235,7 +243,8 @@ class CashfreePaymentService {
   }) async {
     // Check configuration
     if (!AppConfig.isCashfreeConfigured) {
-      onFailure('CONFIG_ERROR', 'Cashfree is not configured. Please add App ID and Secret Key in settings.');
+      onFailure('CONFIG_ERROR',
+          'Cashfree is not configured. Please add App ID and Secret Key in settings.');
       return;
     }
 
@@ -260,27 +269,31 @@ class CashfreePaymentService {
     }
 
     // CHECK PLATFORM
-    debugPrint('Cashfree: Checking platform. kIsWeb=$kIsWeb, Platform=${defaultTargetPlatform}');
-    if (kIsWeb || (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
-        // WEB / DESKTOP FLOW
-        final authLink = sub['auth_link'];
-        if (authLink != null && authLink.isNotEmpty) {
-           // Instead of launching, we pass the link back to UI to show QR Code
-           onSuccess(sub['subscription_id']!, "QR_CODE:$authLink"); 
-        } else {
-           onFailure('LINK_ERROR', 'No payment link received from backend');
-        }
+    debugPrint(
+        'Cashfree: Checking platform. kIsWeb=$kIsWeb, Platform=$defaultTargetPlatform');
+    if (kIsWeb ||
+        (defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux)) {
+      // WEB / DESKTOP FLOW
+      final authLink = sub['auth_link'];
+      if (authLink != null && authLink.isNotEmpty) {
+        // Instead of launching, we pass the link back to UI to show QR Code
+        onSuccess(sub['subscription_id']!, "QR_CODE:$authLink");
+      } else {
+        onFailure('LINK_ERROR', 'No payment link received from backend');
+      }
     } else {
       // MOBILE FLOW (SDK)
       await openCheckout(
-        orderId: sub['order_id']!, 
+        orderId: sub['order_id']!,
         paymentSessionId: sub['payment_session_id']!,
         amount: amount,
         description: 'Subscription: $planName Plan',
       );
     }
   }
-  
+
   /// Trigger a mandate update session
   Future<void> updateMandate(String subscriptionId) async {
     try {
@@ -291,21 +304,25 @@ class CashfreePaymentService {
           'subscription_id': subscriptionId,
         },
       );
-      
+
       if (response['payment_session_id'] != null) {
         // Web guard for update mandate
-        if (kIsWeb || (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux)) {
-             onFailure('PLATFORM_ERROR', 'Please use mobile app to update UPI mandate');
-             return;
+        if (kIsWeb ||
+            (defaultTargetPlatform == TargetPlatform.macOS ||
+                defaultTargetPlatform == TargetPlatform.windows ||
+                defaultTargetPlatform == TargetPlatform.linux)) {
+          onFailure(
+              'PLATFORM_ERROR', 'Please use mobile app to update UPI mandate');
+          return;
         }
 
         await openCheckout(
-          orderId: (response['order_id'] ?? 'update_$subscriptionId').toString(),
+          orderId:
+              (response['order_id'] ?? 'update_$subscriptionId').toString(),
           paymentSessionId: response['payment_session_id']!.toString(),
           description: 'Update UPI Mandate',
         );
-      }
- else {
+      } else {
         onFailure('UPDATE_ERROR', 'Failed to trigger mandate update');
       }
     } catch (e) {
@@ -318,7 +335,9 @@ class CashfreePaymentService {
     required DateTime currentEndDate,
     required String planType, // 'Monthly', 'Yearly'
   }) {
-    DateTime base = currentEndDate.isAfter(DateTime.now()) ? currentEndDate : DateTime.now();
+    DateTime base = currentEndDate.isAfter(DateTime.now())
+        ? currentEndDate
+        : DateTime.now();
     if (planType == 'Monthly') {
       return DateTime(base.year, base.month + 1, base.day);
     } else if (planType == 'Yearly') {
@@ -327,4 +346,3 @@ class CashfreePaymentService {
     return base.add(const Duration(days: 30));
   }
 }
-

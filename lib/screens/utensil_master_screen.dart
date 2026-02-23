@@ -1,5 +1,6 @@
 // MODULE: UTENSIL MASTER (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 // Last Locked: 2025-12-07 | Features: Pre-populated Utensils, Category Grouping, Returnable/Consumable Classification
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
 import '../repositories/operation_repository.dart';
@@ -19,11 +20,23 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
   // Pre-populated common utensils for catering
   static const List<Map<String, String>> _defaultUtensils = [
     // Serving
-    {'name': 'Serving Spoon (Large)', 'category': 'SERVING', 'isReturnable': '1'},
-    {'name': 'Serving Spoon (Small)', 'category': 'SERVING', 'isReturnable': '1'},
+    {
+      'name': 'Serving Spoon (Large)',
+      'category': 'SERVING',
+      'isReturnable': '1'
+    },
+    {
+      'name': 'Serving Spoon (Small)',
+      'category': 'SERVING',
+      'isReturnable': '1'
+    },
     {'name': 'Ladle', 'category': 'SERVING', 'isReturnable': '1'},
     {'name': 'Chafing Dish', 'category': 'SERVING', 'isReturnable': '1'},
-    {'name': 'Serving Bowl (Steel)', 'category': 'SERVING', 'isReturnable': '1'},
+    {
+      'name': 'Serving Bowl (Steel)',
+      'category': 'SERVING',
+      'isReturnable': '1'
+    },
     {'name': 'Serving Tray', 'category': 'SERVING', 'isReturnable': '1'},
     {'name': 'Rice Pot', 'category': 'SERVING', 'isReturnable': '1'},
     // Cutlery
@@ -56,14 +69,14 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
     setState(() => _isLoading = true);
     final db = await DatabaseHelper().database;
     final result = await db.query('utensils', orderBy: 'category, name');
-    
+
     // Seed default utensils if table is empty (first time)
     if (result.isEmpty && !_seeded) {
       _seeded = true;
       await _seedDefaults();
       return;
     }
-    
+
     setState(() {
       _utensils = result;
       _isLoading = false;
@@ -82,7 +95,9 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
           'isReturnable': int.parse(u['isReturnable']!),
           'createdAt': now,
         });
-      } catch (_) {} // Ignore duplicates
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      } // Ignore duplicates
     }
     _loadUtensils();
   }
@@ -104,24 +119,29 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Utensil Name *'),
+                  decoration:
+                      const InputDecoration(labelText: 'Utensil Name *'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   decoration: const InputDecoration(labelText: 'Category'),
                   items: const [
                     DropdownMenuItem(value: 'SERVING', child: Text('Serving')),
                     DropdownMenuItem(value: 'COOKING', child: Text('Cooking')),
                     DropdownMenuItem(value: 'CUTLERY', child: Text('Cutlery')),
-                    DropdownMenuItem(value: 'CONSUMABLE', child: Text('Consumable')),
+                    DropdownMenuItem(
+                        value: 'CONSUMABLE', child: Text('Consumable')),
                   ],
-                  onChanged: (v) => setDialogState(() => category = v ?? 'SERVING'),
+                  onChanged: (v) =>
+                      setDialogState(() => category = v ?? 'SERVING'),
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
                   title: const Text('Returnable'),
-                  subtitle: Text(isReturnable ? 'Must be returned' : 'Consumable (no return)'),
+                  subtitle: Text(isReturnable
+                      ? 'Must be returned'
+                      : 'Consumable (no return)'),
                   value: isReturnable,
                   onChanged: (v) => setDialogState(() => isReturnable = v),
                 ),
@@ -129,7 +149,9 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isEmpty) return;
@@ -142,11 +164,13 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
                   'firmId': 'DEFAULT',
                 };
                 if (isEdit) {
-                  await OperationRepository().updateUtensil(utensil['id'] as int, data);
+                  await OperationRepository()
+                      .updateUtensil(utensil['id'] as int, data);
                 } else {
                   data['createdAt'] = now;
                   await OperationRepository().insertUtensil(data);
                 }
+                if (!mounted) return;
                 Navigator.pop(ctx);
                 _loadUtensils();
               },
@@ -166,7 +190,9 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
         title: const Text('Delete Utensil?'),
         content: const Text('This action cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
@@ -183,21 +209,31 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
 
   Color _categoryColor(String category) {
     switch (category) {
-      case 'SERVING': return Colors.blue;
-      case 'COOKING': return Colors.orange;
-      case 'CUTLERY': return Colors.purple;
-      case 'CONSUMABLE': return Colors.grey;
-      default: return Colors.indigo;
+      case 'SERVING':
+        return Colors.blue;
+      case 'COOKING':
+        return Colors.orange;
+      case 'CUTLERY':
+        return Colors.purple;
+      case 'CONSUMABLE':
+        return Colors.grey;
+      default:
+        return Colors.indigo;
     }
   }
 
   IconData _categoryIcon(String category) {
     switch (category) {
-      case 'SERVING': return Icons.room_service;
-      case 'COOKING': return Icons.outdoor_grill;
-      case 'CUTLERY': return Icons.restaurant;
-      case 'CONSUMABLE': return Icons.delete_outline;
-      default: return Icons.kitchen;
+      case 'SERVING':
+        return Icons.room_service;
+      case 'COOKING':
+        return Icons.outdoor_grill;
+      case 'CUTLERY':
+        return Icons.restaurant;
+      case 'CONSUMABLE':
+        return Icons.delete_outline;
+      default:
+        return Icons.kitchen;
     }
   }
 
@@ -214,7 +250,9 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
       appBar: AppBar(
         title: const Text('Utensil Master'),
         actions: [
-          IconButton(icon: const Icon(Icons.add), onPressed: () => _addOrEditUtensil()),
+          IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => _addOrEditUtensil()),
         ],
       ),
       body: _isLoading
@@ -224,7 +262,8 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.kitchen_outlined, size: 64, color: Colors.grey),
+                      const Icon(Icons.kitchen_outlined,
+                          size: 64, color: Colors.grey),
                       const SizedBox(height: 16),
                       const Text('No utensils added'),
                       const SizedBox(height: 16),
@@ -248,41 +287,50 @@ class _UtensilMasterScreenState extends State<UtensilMasterScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             children: [
-                              Icon(_categoryIcon(category), color: _categoryColor(category)),
+                              Icon(_categoryIcon(category),
+                                  color: _categoryColor(category)),
                               const SizedBox(width: 8),
                               Text(
                                 category,
-                                style: TextStyle(fontWeight: FontWeight.bold, color: _categoryColor(category)),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _categoryColor(category)),
                               ),
                             ],
                           ),
                         ),
                         ...items.map((u) => Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            title: Text(u['name']),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (u['isReturnable'] == 0)
-                                  Chip(
-                                    label: const Text('Consumable', style: TextStyle(fontSize: 10)),
-                                    backgroundColor: Colors.grey.shade200,
-                                  ),
-                                PopupMenuButton<String>(
-                                  onSelected: (action) {
-                                    if (action == 'edit') _addOrEditUtensil(u);
-                                    if (action == 'delete') _deleteUtensil(u['id']);
-                                  },
-                                  itemBuilder: (_) => [
-                                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                    const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                title: Text(u['name']),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (u['isReturnable'] == 0)
+                                      Chip(
+                                        label: const Text('Consumable',
+                                            style: TextStyle(fontSize: 10)),
+                                        backgroundColor: Colors.grey.shade200,
+                                      ),
+                                    PopupMenuButton<String>(
+                                      onSelected: (action) {
+                                        if (action == 'edit')
+                                          _addOrEditUtensil(u);
+                                        if (action == 'delete')
+                                          _deleteUtensil(u['id']);
+                                      },
+                                      itemBuilder: (_) => [
+                                        const PopupMenuItem(
+                                            value: 'edit', child: Text('Edit')),
+                                        const PopupMenuItem(
+                                            value: 'delete',
+                                            child: Text('Delete')),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        )),
+                              ),
+                            )),
                         const SizedBox(height: 8),
                       ],
                     );

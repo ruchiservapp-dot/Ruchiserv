@@ -19,13 +19,14 @@ class StaffScreen extends StatefulWidget {
   State<StaffScreen> createState() => _StaffScreenState();
 }
 
-class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStateMixin {
+class _StaffScreenState extends State<StaffScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> _staffList = [];
   List<Map<String, dynamic>> _todayAttendance = [];
   bool _isLoading = true;
   String? _firmId;
-  
+
   // Kitchen GPS (for geo-fence check)
   double? _kitchenLat;
   double? _kitchenLng;
@@ -46,10 +47,10 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final sp = await SharedPreferences.getInstance();
     _firmId = sp.getString('last_firm');
-    
+
     // Load firm GPS settings
     if (_firmId != null) {
       final firm = await DatabaseHelper().getFirmDetails(_firmId!);
@@ -59,10 +60,10 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
         _geoFenceRadius = (firm['geoFenceRadius'] as int?) ?? 100;
       }
     }
-    
+
     // Load staff
     final staff = await OperationRepository().getAllStaff();
-    
+
     // Load today's attendance
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final db = await DatabaseHelper().database;
@@ -71,7 +72,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
       where: 'date = ?',
       whereArgs: [today],
     );
-    
+
     setState(() {
       _staffList = staff;
       _todayAttendance = attendance;
@@ -94,7 +95,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
   Future<void> _punchIn(int staffId) async {
     if (_hasAttendanceToday(staffId)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.alreadyPunchedIn)),
+        SnackBar(content: Text(AppLocalizations.of(context).alreadyPunchedIn)),
       );
       return;
     }
@@ -102,7 +103,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     // Get current location
     final geoService = GeoFenceService.instance;
     final status = await geoService.checkLocationStatus();
-    
+
     if (status != LocationStatus.ready) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +117,8 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     if (position == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotGetLocation)),
+          SnackBar(
+              content: Text(AppLocalizations.of(context).couldNotGetLocation)),
         );
       }
       return;
@@ -124,8 +126,9 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
 
     // Check geo-fence
     bool isWithinGeoFence = false;
-    String locationNote = 'GPS: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
-    
+    String locationNote =
+        'GPS: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+
     if (_kitchenLat != null && _kitchenLng != null) {
       isWithinGeoFence = geoService.isWithinGeoFence(
         staffLat: position.latitude,
@@ -134,7 +137,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
         kitchenLng: _kitchenLng!,
         radiusMeters: _geoFenceRadius.toDouble(),
       );
-      
+
       final distance = geoService.calculateDistance(
         lat1: position.latitude,
         lng1: position.longitude,
@@ -160,26 +163,26 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isWithinGeoFence 
-              ? AppLocalizations.of(context)!.punchedInGeo 
-              : AppLocalizations.of(context)!.punchedInNoGeo),
+          content: Text(isWithinGeoFence
+              ? AppLocalizations.of(context).punchedInGeo
+              : AppLocalizations.of(context).punchedInNoGeo),
           backgroundColor: isWithinGeoFence ? Colors.green : Colors.orange,
         ),
       );
     }
-    
+
     _loadData();
   }
 
   Future<void> _punchOut(int staffId, int attendanceId) async {
     final geoService = GeoFenceService.instance;
     final position = await geoService.getCurrentPosition();
-    
+
     // Calculate hours worked
     final attendance = _getAttendanceRecord(staffId);
     double hoursWorked = 0;
     double overtime = 0;
-    
+
     if (attendance != null && attendance['punchInTime'] != null) {
       final punchInTime = attendance['punchInTime'] as String;
       final punchInParts = punchInTime.split(':');
@@ -190,10 +193,10 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
         int.parse(punchInParts[0]),
         int.parse(punchInParts[1]),
       );
-      
+
       final now = DateTime.now();
       hoursWorked = now.difference(punchInDateTime).inMinutes / 60.0;
-      
+
       // Calculate overtime (anything over 8 hours)
       if (hoursWorked > 8) {
         overtime = hoursWorked - 8;
@@ -211,12 +214,16 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.punchedOutMsg(hoursWorked.toStringAsFixed(1), overtime > 0 ? ' (${overtime.toStringAsFixed(1)} ${AppLocalizations.of(context)!.otLabel})' : '')),
+          content: Text(AppLocalizations.of(context).punchedOutMsg(
+              hoursWorked.toStringAsFixed(1),
+              overtime > 0
+                  ? ' (${overtime.toStringAsFixed(1)} ${AppLocalizations.of(context).otLabel})'
+                  : '')),
           backgroundColor: Colors.blue,
         ),
       );
     }
-    
+
     _loadData();
   }
 
@@ -229,10 +236,14 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
 
   Color _getStaffTypeColor(String? type) {
     switch (type) {
-      case 'PERMANENT': return Colors.green;
-      case 'DAILY_WAGE': return Colors.orange;
-      case 'CONTRACTOR': return Colors.purple;
-      default: return Colors.grey;
+      case 'PERMANENT':
+        return Colors.green;
+      case 'DAILY_WAGE':
+        return Colors.orange;
+      case 'CONTRACTOR':
+        return Colors.purple;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -240,15 +251,17 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.staffManagement),
+        title: Text(AppLocalizations.of(context).staffManagement),
         actions: [
           IconButton(
             icon: const Icon(Icons.payments),
-            tooltip: AppLocalizations.of(context)!.payroll,
+            tooltip: AppLocalizations.of(context).payroll,
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(
-                builder: (_) => const StaffPayrollScreen(),
-              ));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const StaffPayrollScreen(),
+                  ));
             },
           ),
           IconButton(
@@ -262,8 +275,8 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
           tabs: [
-            Tab(text: AppLocalizations.of(context)!.staff),
-            Tab(text: AppLocalizations.of(context)!.today),
+            Tab(text: AppLocalizations.of(context).staff),
+            Tab(text: AppLocalizations.of(context).today),
           ],
         ),
       ),
@@ -291,8 +304,10 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
           children: [
             Icon(Icons.people_outline, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text(AppLocalizations.of(context)!.noStaffMembers, style: const TextStyle(color: Colors.grey)),
-            Text(AppLocalizations.of(context)!.tapToAddStaff, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(AppLocalizations.of(context).noStaffMembers,
+                style: const TextStyle(color: Colors.grey)),
+            Text(AppLocalizations.of(context).tapToAddStaff,
+                style: const TextStyle(color: Colors.grey, fontSize: 12)),
           ],
         ),
       );
@@ -307,7 +322,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
           final hasAttendance = _hasAttendanceToday(staff['id']);
           final attendance = _getAttendanceRecord(staff['id']);
           final hasPunchedOut = attendance?['punchOutTime'] != null;
-          
+
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
             child: ListTile(
@@ -317,7 +332,8 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                     backgroundColor: _getStaffTypeColor(staff['staffType']),
                     child: Text(
                       (staff['name'] ?? 'S')[0].toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                   if (hasAttendance)
@@ -336,21 +352,29 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                     ),
                 ],
               ),
-              title: Text(staff['name'] ?? AppLocalizations.of(context)!.unknown),
+              title:
+                  Text(staff['name'] ?? AppLocalizations.of(context).unknown),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("${staff['role'] ?? AppLocalizations.of(context)!.staff} | ${staff['mobile'] ?? AppLocalizations.of(context)!.noMobile}"),
+                  Text(
+                      "${staff['role'] ?? AppLocalizations.of(context).staff} | ${staff['mobile'] ?? AppLocalizations.of(context).noMobile}"),
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _getStaffTypeColor(staff['staffType']).withValues(alpha: 0.2),
+                          color: _getStaffTypeColor(staff['staffType'])
+                              .withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          staff['staffType'] == 'DAILY_WAGE' ? AppLocalizations.of(context)!.dailyWage : (staff['staffType'] == 'CONTRACTOR' ? AppLocalizations.of(context)!.contractor : AppLocalizations.of(context)!.permanent),
+                          staff['staffType'] == 'DAILY_WAGE'
+                              ? AppLocalizations.of(context).dailyWage
+                              : (staff['staffType'] == 'CONTRACTOR'
+                                  ? AppLocalizations.of(context).contractor
+                                  : AppLocalizations.of(context).permanent),
                           style: TextStyle(
                             fontSize: 10,
                             color: _getStaffTypeColor(staff['staffType']),
@@ -361,26 +385,30 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                       const SizedBox(width: 8),
                       if (hasAttendance && !hasPunchedOut)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.green.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'IN: ${attendance?['punchInTime'] ?? ''}',
-                            style: const TextStyle(fontSize: 10, color: Colors.green),
+                            style: const TextStyle(
+                                fontSize: 10, color: Colors.green),
                           ),
                         ),
                       if (hasPunchedOut)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.blue.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             '${attendance?['hoursWorked']?.toStringAsFixed(1) ?? '0'}h',
-                            style: const TextStyle(fontSize: 10, color: Colors.blue),
+                            style: const TextStyle(
+                                fontSize: 10, color: Colors.blue),
                           ),
                         ),
                     ],
@@ -399,18 +427,21 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                   else if (!hasPunchedOut)
                     IconButton(
                       icon: const Icon(Icons.logout, color: Colors.orange),
-                      onPressed: () => _punchOut(staff['id'], attendance!['id']),
+                      onPressed: () =>
+                          _punchOut(staff['id'], attendance!['id']),
                       tooltip: "Punch Out",
                     )
                   else
                     const Icon(Icons.check_circle, color: Colors.blue),
                   IconButton(
                     icon: const Icon(Icons.person_outline, size: 20),
-                    tooltip: AppLocalizations.of(context)!.profile,
+                    tooltip: AppLocalizations.of(context).profile,
                     onPressed: () async {
-                      final result = await Navigator.of(context, rootNavigator: true).push(
+                      final result =
+                          await Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
-                          builder: (_) => StaffDetailScreen(staffId: staff['id']),
+                          builder: (_) =>
+                              StaffDetailScreen(staffId: staff['id']),
                         ),
                       );
                       if (result == true) _loadData();
@@ -423,7 +454,8 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
                   MaterialPageRoute(
                     builder: (_) => StaffAttendanceCalendarScreen(
                       staffId: staff['id'],
-                      staffName: staff['name'] ?? AppLocalizations.of(context)!.unknown,
+                      staffName:
+                          staff['name'] ?? AppLocalizations.of(context).unknown,
                     ),
                   ),
                 );
@@ -437,7 +469,7 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
 
   Widget _buildTodayAttendanceTab() {
     final today = DateFormat('EEEE, MMMM d').format(DateTime.now());
-    
+
     return ResponsiveCenter(
       child: Column(
         children: [
@@ -447,50 +479,70 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatCard(AppLocalizations.of(context)!.totalStaff, _staffList.length.toString(), Icons.people),
-                _buildStatCard(AppLocalizations.of(context)!.present, _todayAttendance.length.toString(), Icons.check_circle, Colors.green),
-                _buildStatCard(AppLocalizations.of(context)!.absent, (_staffList.length - _todayAttendance.length).toString(), Icons.cancel, Colors.red),
+                _buildStatCard(AppLocalizations.of(context).totalStaff,
+                    _staffList.length.toString(), Icons.people),
+                _buildStatCard(
+                    AppLocalizations.of(context).present,
+                    _todayAttendance.length.toString(),
+                    Icons.check_circle,
+                    Colors.green),
+                _buildStatCard(
+                    AppLocalizations.of(context).absent,
+                    (_staffList.length - _todayAttendance.length).toString(),
+                    Icons.cancel,
+                    Colors.red),
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8),
-            child: Text(today, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(today,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
           Expanded(
             child: _todayAttendance.isEmpty
-                ? Center(child: Text(AppLocalizations.of(context)!.noAttendanceToday))
+                ? Center(
+                    child: Text(AppLocalizations.of(context).noAttendanceToday))
                 : ListView.builder(
                     itemCount: _todayAttendance.length,
                     itemBuilder: (context, index) {
                       final record = _todayAttendance[index];
                       final staff = _staffList.firstWhere(
                         (s) => s['id'] == record['staffId'],
-                        orElse: () => {'name': AppLocalizations.of(context)!.unknown},
+                        orElse: () =>
+                            {'name': AppLocalizations.of(context).unknown},
                       );
                       final isWithinGeoFence = record['isWithinGeoFence'] == 1;
-                      
+
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: isWithinGeoFence ? Colors.green : Colors.orange,
+                            backgroundColor:
+                                isWithinGeoFence ? Colors.green : Colors.orange,
                             child: Icon(
-                              isWithinGeoFence ? Icons.location_on : Icons.location_off,
+                              isWithinGeoFence
+                                  ? Icons.location_on
+                                  : Icons.location_off,
                               color: Colors.white,
                             ),
                           ),
-                          title: Text(staff['name'] ?? AppLocalizations.of(context)!.unknown),
+                          title: Text(staff['name'] ??
+                              AppLocalizations.of(context).unknown),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('In: ${record['punchInTime'] ?? '-'}'
-                                  '${record['punchOutTime'] != null ? ' | Out: ${record['punchOutTime']}' : ' (${AppLocalizations.of(context)!.workingStatus})'}'),
-                              if (record['hoursWorked'] != null && record['hoursWorked'] > 0)
+                                  '${record['punchOutTime'] != null ? ' | Out: ${record['punchOutTime']}' : ' (${AppLocalizations.of(context).workingStatus})'}'),
+                              if (record['hoursWorked'] != null &&
+                                  record['hoursWorked'] > 0)
                                 Text(
                                   '${(record['hoursWorked'] as num).toStringAsFixed(1)} hrs'
-                                  '${(record['overtime'] ?? 0) > 0 ? ' (${(record['overtime'] as num).toStringAsFixed(1)} ${AppLocalizations.of(context)!.otLabel})' : ''}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                  '${(record['overtime'] ?? 0) > 0 ? ' (${(record['overtime'] as num).toStringAsFixed(1)} ${AppLocalizations.of(context).otLabel})' : ''}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
                                 ),
                             ],
                           ),
@@ -507,12 +559,15 @@ class _StaffScreenState extends State<StaffScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, [Color? color]) {
+  Widget _buildStatCard(String label, String value, IconData icon,
+      [Color? color]) {
     return Column(
       children: [
         Icon(icon, color: color ?? Colors.grey, size: 28),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+        Text(value,
+            style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.bold, color: color)),
         Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
       ],
     );

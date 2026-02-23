@@ -1,11 +1,9 @@
 // E2E TEST MODULE: SUBSCRIPTION + DISPATCH + GEO-FENCE + ORDER CANCELLATION
 // Covers: T-SUB-01 to T-SUB-10, T-DSP-08, T-DSP-11, T-STF-16, T-ORD-03 to T-ORD-05
-import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:ruchiserv/services/subscription_service.dart';
 import 'package:ruchiserv/services/order_cancellation_service.dart';
 import 'package:ruchiserv/services/geo_fence_service.dart';

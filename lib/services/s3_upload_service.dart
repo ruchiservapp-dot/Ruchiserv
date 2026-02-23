@@ -46,11 +46,13 @@ class S3UploadService {
         return null;
       }
 
-      AppLogger.info('📸 S3Upload: Compressed ${imageFile.lengthSync()} -> ${compressedBytes.length} bytes '
+      AppLogger.info(
+          '📸 S3Upload: Compressed ${imageFile.lengthSync()} -> ${compressedBytes.length} bytes '
           '(${(compressedBytes.length / imageFile.lengthSync() * 100).toStringAsFixed(0)}%)');
 
       // 2. Get presigned upload URL from Lambda
-      final urlResult = await _getUploadUrl(fileType: fileType, fileName: fileName);
+      final urlResult =
+          await _getUploadUrl(fileType: fileType, fileName: fileName);
       if (urlResult == null) {
         // Offline or error — queue for later
         AppLogger.info('⏳ S3Upload: Offline, queuing upload...');
@@ -62,17 +64,20 @@ class S3UploadService {
       final s3Key = urlResult['s3Key'] as String;
 
       // 3. Upload directly to S3 via presigned URL
-      final response = await http.put(
-        Uri.parse(uploadUrl),
-        headers: {'Content-Type': 'image/jpeg'},
-        body: compressedBytes,
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .put(
+            Uri.parse(uploadUrl),
+            headers: {'Content-Type': 'image/jpeg'},
+            body: compressedBytes,
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         AppLogger.success('✅ S3Upload: Uploaded successfully -> $s3Key');
         return s3Key;
       } else {
-        AppLogger.error('❌ S3Upload: Upload failed with status ${response.statusCode}');
+        AppLogger.error(
+            '❌ S3Upload: Upload failed with status ${response.statusCode}');
         await _queueUpload(compressedBytes, fileType, fileName);
         return null;
       }
@@ -82,7 +87,9 @@ class S3UploadService {
       try {
         final bytes = await imageFile.readAsBytes();
         await _queueUpload(bytes, fileType, fileName);
-      } catch (_) {}
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
       return null;
     }
   }
@@ -159,13 +166,15 @@ class S3UploadService {
   static const String _queueKey = 's3_upload_queue';
 
   /// Queue a failed upload for retry.
-  Future<void> _queueUpload(Uint8List bytes, String fileType, String? fileName) async {
+  Future<void> _queueUpload(
+      Uint8List bytes, String fileType, String? fileName) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final queueDir = Directory('${dir.path}/.upload_queue');
       if (!await queueDir.exists()) await queueDir.create(recursive: true);
 
-      final tempFile = File('${queueDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final tempFile =
+          File('${queueDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg');
       await tempFile.writeAsBytes(bytes);
 
       final sp = await SharedPreferences.getInstance();
@@ -218,7 +227,8 @@ class S3UploadService {
     }
 
     await sp.setStringList(_queueKey, remaining);
-    AppLogger.success('✅ S3Upload: Processed $processed, ${remaining.length} remaining');
+    AppLogger.success(
+        '✅ S3Upload: Processed $processed, ${remaining.length} remaining');
     return processed;
   }
 }

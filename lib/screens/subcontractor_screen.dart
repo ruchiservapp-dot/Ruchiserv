@@ -73,18 +73,18 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isEdit ? AppLocalizations.of(context)!.editSubcontractor : AppLocalizations.of(context)!.addSubcontractor),
+        title: Text(isEdit ? AppLocalizations.of(context).editSubcontractor : AppLocalizations.of(context).addSubcontractor),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.kitchenBusinessName, border: const OutlineInputBorder()),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).kitchenBusinessName, border: const OutlineInputBorder()),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: category,
+                initialValue: category,
                 decoration: InputDecoration(labelText: 'Category', border: const OutlineInputBorder()),
                 items: const [
                   DropdownMenuItem(value: 'FOOD', child: Text('Food Partner')),
@@ -95,27 +95,27 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
               const SizedBox(height: 12),
               TextField(
                 controller: mobileController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.mobileRequired, border: const OutlineInputBorder()),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).mobileRequired, border: const OutlineInputBorder()),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: emailController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.email, border: const OutlineInputBorder()),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).email, border: const OutlineInputBorder()),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: addressController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.address, border: const OutlineInputBorder()),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context).address, border: const OutlineInputBorder()),
                 maxLines: 2,
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: specializationController,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.specialization,
-                  hintText: AppLocalizations.of(context)!.specializationHint,
+                  labelText: AppLocalizations.of(context).specialization,
+                  hintText: AppLocalizations.of(context).specializationHint,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -123,7 +123,7 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
               TextField(
                 controller: rateController,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.ratePerPax,
+                  labelText: AppLocalizations.of(context).ratePerPax,
                   border: const OutlineInputBorder(),
                   prefixText: '₹ ',
                 ),
@@ -133,12 +133,12 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context).cancel)),
           ElevatedButton(
             onPressed: () async {
               if (nameController.text.trim().isEmpty || mobileController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(AppLocalizations.of(context)!.enterNameMobile), backgroundColor: Colors.red),
+                  SnackBar(content: Text(AppLocalizations.of(context).enterNameMobile), backgroundColor: Colors.red),
                 );
                 return;
               }
@@ -170,17 +170,20 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
                   'addedBy': 'ADMIN_APP',
                 });
               }
+              if (!mounted) return;
               Navigator.pop(context, true);
             },
-            child: Text(isEdit ? AppLocalizations.of(context)!.save : AppLocalizations.of(context)!.add),
+            child: Text(isEdit ? AppLocalizations.of(context).save : AppLocalizations.of(context).add),
           ),
         ],
       ),
     );
 
     if (result == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isEdit ? AppLocalizations.of(context)!.subcontractorUpdated : AppLocalizations.of(context)!.subcontractorAdded), backgroundColor: Colors.green),
+
+        SnackBar(content: Text(isEdit ? AppLocalizations.of(context).subcontractorUpdated : AppLocalizations.of(context).subcontractorAdded), backgroundColor: Colors.green),
       );
       _loadData();
     }
@@ -190,7 +193,7 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.subcontractorMaster),
+        title: Text(AppLocalizations.of(context).subcontractorMaster),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
@@ -222,12 +225,12 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
                     children: [
                       Icon(Icons.handshake, size: 64, color: Colors.grey.shade400),
                       const SizedBox(height: 16),
-                      Text(AppLocalizations.of(context)!.noSubcontractorsAdded),
+                      Text(AppLocalizations.of(context).noSubcontractorsAdded),
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
                         onPressed: () => _addOrEdit(),
                         icon: const Icon(Icons.add),
-                        label: Text(AppLocalizations.of(context)!.addSubcontractor),
+                        label: Text(AppLocalizations.of(context).addSubcontractor),
                       ),
                     ],
                   ),
@@ -246,12 +249,12 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
                             backgroundColor: isEvent ? Colors.purple.shade100 : Colors.indigo.shade100,
                             child: Icon(isEvent ? Icons.event : Icons.restaurant, color: isEvent ? Colors.purple : Colors.indigo),
                           ),
-                          title: Text(sub['name'] ?? AppLocalizations.of(context)!.unknown,
+                          title: Text(sub['name'] ?? AppLocalizations.of(context).unknown,
                             style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(sub['mobile'] ?? AppLocalizations.of(context)!.noPhone),
+                              Text(sub['mobile'] ?? AppLocalizations.of(context).noPhone),
                               if ((sub['specialization'] ?? '').isNotEmpty)
                                 Container(
                                   margin: const EdgeInsets.only(top: 4),
@@ -271,7 +274,7 @@ class _SubcontractorScreenState extends State<SubcontractorScreen> with SingleTi
                             children: [
                               Text('₹${sub['ratePerPax']?.toStringAsFixed(0) ?? '0'}',
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text(AppLocalizations.of(context)!.perPax, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                              Text(AppLocalizations.of(context).perPax, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                             ],
                           ),
                           onTap: () => _addOrEdit(sub),

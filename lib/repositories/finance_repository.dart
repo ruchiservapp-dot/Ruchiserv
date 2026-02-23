@@ -1,12 +1,10 @@
 import 'package:ruchiserv/core/app_logger.dart';
-import 'package:ruchiserv/db/aws/aws_api.dart';
 import 'package:ruchiserv/db/database_helper.dart';
 import 'package:ruchiserv/db/sync_event.dart';
 import 'package:ruchiserv/repositories/inventory_repository.dart';
 import 'package:ruchiserv/services/cloud_sync_service.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:convert';
 
 class FinanceRepository {
   static final FinanceRepository _instance = FinanceRepository._internal();
@@ -348,8 +346,9 @@ class FinanceRepository {
     data['createdAt'] = now;
     data['updatedAt'] = now;
     data['uuid'] = data['uuid'] ?? _generateUuid();
-    if (data['invoiceNumber'] == null)
+    if (data['invoiceNumber'] == null) {
       data['invoiceNumber'] = await generateInvoiceNumber(data['firmId']);
+    }
     if (data['dueDate'] == null && data['invoiceDate'] != null) {
       data['dueDate'] = DateTime.parse(data['invoiceDate'])
           .add(const Duration(days: 7))
@@ -358,8 +357,9 @@ class FinanceRepository {
     }
     data['balanceDue'] = (data['totalAmount'] ?? 0) - (data['amountPaid'] ?? 0);
     final id = await cloudSync.awsFirstWrite(table: 'invoices', data: data);
-    if (id != null && items != null && items.isNotEmpty)
+    if (id != null && items != null && items.isNotEmpty) {
       await insertInvoiceItems(id, items);
+    }
     return id;
   }
 
@@ -515,11 +515,12 @@ class FinanceRepository {
   Future<List<Map<String, dynamic>>> getSupplierPOs(int supplierId,
       {String? status}) async {
     final db = await _dbHelper.database;
-    if (status != null)
+    if (status != null) {
       return await db.query('purchase_orders',
           where: 'vendorId = ? AND status = ?',
           whereArgs: [supplierId, status],
           orderBy: 'createdAt DESC');
+    }
     return await db.query('purchase_orders',
         where: 'vendorId = ?',
         whereArgs: [supplierId],
@@ -530,9 +531,9 @@ class FinanceRepository {
     final db = await _dbHelper.database;
     final now = DateTime.now().toIso8601String();
     Map<String, dynamic> up = {'status': status};
-    if (status == 'ACCEPTED')
+    if (status == 'ACCEPTED') {
       up['acceptedAt'] = now;
-    else if (status == 'DISPATCHED')
+    } else if (status == 'DISPATCHED')
       up['dispatchedAt'] = now;
     else if (status == 'DELIVERED') up['deliveredAt'] = now;
     await db.update('purchase_orders', up, where: 'id = ?', whereArgs: [poId]);
@@ -570,8 +571,9 @@ class FinanceRepository {
       'DELIVERED': 'deliveredAt'
     };
     final up = <String, dynamic>{'status': status};
-    if (map.containsKey(status))
+    if (map.containsKey(status)) {
       up[map[status]!] = DateTime.now().toIso8601String();
+    }
     return await db
         .update('purchase_orders', up, where: 'id = ?', whereArgs: [poId]);
   }
@@ -690,7 +692,7 @@ class FinanceRepository {
         await db.query('invoices', where: 'id = ?', whereArgs: [invoiceId]);
     if (res.isEmpty) return false;
     final inv = Map<String, dynamic>.from(res.first);
-    final paid = (inv['paidAmount'] as num?)?.toDouble() ?? 0.0;
+    final paid = (inv['amountPaid'] as num?)?.toDouble() ?? 0.0;
     final total = (inv['totalAmount'] as num?)?.toDouble() ?? 0.0;
     final newPaid = paid + amount;
     final status = newPaid >= total ? 'PAID' : 'PARTIAL';
@@ -698,7 +700,7 @@ class FinanceRepository {
     await cloudSync
         .awsFirstUpdate(table: 'invoices', recordId: invoiceId, data: {
       'id': invoiceId,
-      'paidAmount': newPaid,
+      'amountPaid': newPaid,
       'status': status,
       'updatedAt': DateTime.now().toIso8601String(),
     });
@@ -711,7 +713,7 @@ class FinanceRepository {
       'category': 'Payment',
       'description': 'Payment for invoice #$invoiceId',
       'date': DateTime.now().toString().split(' ')[0],
-      'paymentMethod': method,
+      'paymentMode': method,
     });
 
     return true;

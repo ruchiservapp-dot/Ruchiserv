@@ -9,7 +9,7 @@ import 'staff_detail_screen.dart';
 class StaffAttendanceCalendarScreen extends StatefulWidget {
   final int staffId;
   final String staffName;
-  
+
   const StaffAttendanceCalendarScreen({
     super.key,
     required this.staffId,
@@ -17,16 +17,18 @@ class StaffAttendanceCalendarScreen extends StatefulWidget {
   });
 
   @override
-  State<StaffAttendanceCalendarScreen> createState() => _StaffAttendanceCalendarScreenState();
+  State<StaffAttendanceCalendarScreen> createState() =>
+      _StaffAttendanceCalendarScreenState();
 }
 
-class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarScreen> {
+class _StaffAttendanceCalendarScreenState
+    extends State<StaffAttendanceCalendarScreen> {
   DateTime _currentMonth = DateTime.now();
   bool _isLoading = true;
-  
+
   // Attendance data indexed by date string (yyyy-MM-dd)
   Map<String, Map<String, dynamic>> _attendanceByDate = {};
-  
+
   // Stats for the month
   int _totalPresent = 0;
   double _totalHours = 0;
@@ -40,16 +42,16 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
 
   Future<void> _loadMonthData() async {
     setState(() => _isLoading = true);
-    
+
     final db = await DatabaseHelper().database;
-    
+
     // Get first and last day of current month
     final firstDay = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final lastDay = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
-    
+
     final startStr = DateFormat('yyyy-MM-dd').format(firstDay);
     final endStr = DateFormat('yyyy-MM-dd').format(lastDay);
-    
+
     // Fetch attendance records for this staff and month
     final records = await db.query(
       'attendance',
@@ -57,13 +59,13 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
       whereArgs: [widget.staffId, startStr, endStr],
       orderBy: 'date ASC',
     );
-    
+
     // Index by date
     final Map<String, Map<String, dynamic>> byDate = {};
     int present = 0;
     double hours = 0;
     double ot = 0;
-    
+
     for (var record in records) {
       final dateStr = record['date'] as String;
       byDate[dateStr] = record;
@@ -71,7 +73,7 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
       hours += (record['hoursWorked'] as num?)?.toDouble() ?? 0;
       ot += (record['overtime'] as num?)?.toDouble() ?? 0;
     }
-    
+
     setState(() {
       _attendanceByDate = byDate;
       _totalPresent = present;
@@ -98,16 +100,18 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
   @override
   Widget build(BuildContext context) {
     final monthName = DateFormat('MMMM yyyy').format(_currentMonth);
-    final daysInMonth = DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
-    final firstWeekday = DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
-    
+    final daysInMonth =
+        DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
+    final firstWeekday =
+        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.staffName),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            tooltip: AppLocalizations.of(context)!.profile,
+            tooltip: AppLocalizations.of(context).profile,
             onPressed: () {
               Navigator.push(
                 context,
@@ -119,134 +123,149 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Calculate available height for the calendar grid
-          // Overhead estimates:
-          // - Total Padding: 16 (8 top/bottom)
-          // - Stat Card Header: ~80
-          // - Month Navigation: ~50
-          // - Weekday Headers: ~20
-          // - Legend: ~50
-          // Total overhead approx 216
-          const double overhead = 216.0;
-          final double availableHeight = constraints.maxHeight - overhead;
-          final double availableWidth = constraints.maxWidth - 16; // subtracting padding
-          
-          final offset = firstWeekday - 1;
-          final totalCells = offset + daysInMonth;
-          final rowsCount = (totalCells / 7).ceil();
-          
-          // Calculate dynamic childAspectRatio to fill vertical space
-          // ratio = width / height
-          final double cellWidth = availableWidth / 7;
-          final double cellHeight = (availableHeight / rowsCount).clamp(60.0, 300.0);
-          final double dynamicAspectRatio = cellWidth / cellHeight;
+      body: LayoutBuilder(builder: (context, constraints) {
+        // Calculate available height for the calendar grid
+        // Overhead estimates:
+        // - Total Padding: 16 (8 top/bottom)
+        // - Stat Card Header: ~80
+        // - Month Navigation: ~50
+        // - Weekday Headers: ~20
+        // - Legend: ~50
+        // Total overhead approx 216
+        const double overhead = 216.0;
+        final double availableHeight = constraints.maxHeight - overhead;
+        final double availableWidth =
+            constraints.maxWidth - 16; // subtracting padding
 
-          return Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              children: [
-                // Month Stats Header
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatCard(AppLocalizations.of(context)!.present, '$_totalPresent', Icons.check_circle, Colors.green),
-                      _buildStatCard(AppLocalizations.of(context)!.totalHours, _totalHours.toStringAsFixed(1), Icons.access_time, Colors.blue),
-                      _buildStatCard(AppLocalizations.of(context)!.otLabel, _totalOT.toStringAsFixed(1), Icons.timer, Colors.orange),
-                    ],
-                  ),
+        final offset = firstWeekday - 1;
+        final totalCells = offset + daysInMonth;
+        final rowsCount = (totalCells / 7).ceil();
+
+        // Calculate dynamic childAspectRatio to fill vertical space
+        // ratio = width / height
+        final double cellWidth = availableWidth / 7;
+        final double cellHeight =
+            (availableHeight / rowsCount).clamp(60.0, 300.0);
+        final double dynamicAspectRatio = cellWidth / cellHeight;
+
+        return Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: [
+              // Month Stats Header
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                
-                const SizedBox(height: 8),
-                
-                // Month Navigation
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left),
-                      onPressed: _previousMonth,
-                    ),
-                    Text(
-                      monthName,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right),
-                      onPressed: _nextMonth,
-                    ),
+                    _buildStatCard(AppLocalizations.of(context).present,
+                        '$_totalPresent', Icons.check_circle, Colors.green),
+                    _buildStatCard(
+                        AppLocalizations.of(context).totalHours,
+                        _totalHours.toStringAsFixed(1),
+                        Icons.access_time,
+                        Colors.blue),
+                    _buildStatCard(
+                        AppLocalizations.of(context).otLabel,
+                        _totalOT.toStringAsFixed(1),
+                        Icons.timer,
+                        Colors.orange),
                   ],
                 ),
-                
-                const SizedBox(height: 8),
-                
-                // Weekday Headers
-                Row(
-                  children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-                      .map((d) => Expanded(
-                            child: Center(
-                              child: Text(
-                                d,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: d == 'S' ? Colors.grey.shade700 : Colors.grey.shade700,
-                                  fontSize: 12,
-                                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Month Navigation
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _previousMonth,
+                  ),
+                  Text(
+                    monthName,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _nextMonth,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // Weekday Headers
+              Row(
+                children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+                    .map((d) => Expanded(
+                          child: Center(
+                            child: Text(
+                              d,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: d == 'S'
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade700,
+                                fontSize: 12,
                               ),
                             ),
-                          ))
-                      .toList(),
+                          ),
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 4),
+
+              // Calendar Grid
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildCalendarGrid(
+                        daysInMonth, firstWeekday, dynamicAspectRatio),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Legend
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 4),
-                
-                // Calendar Grid
-                Expanded(
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildCalendarGrid(daysInMonth, firstWeekday, dynamicAspectRatio),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildLegendItem(Colors.green, 'Present'),
+                    _buildLegendItem(Colors.red, 'Absent'),
+                    _buildLegendItem(Colors.purple, 'Holiday'),
+                    _buildLegendItem(Colors.amber, 'Missing'),
+                  ],
                 ),
-                
-                const SizedBox(height: 8),
-                
-                // Legend
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildLegendItem(Colors.green, 'Present'),
-                      _buildLegendItem(Colors.red, 'Absent'),
-                      _buildLegendItem(Colors.purple, 'Holiday'),
-                      _buildLegendItem(Colors.amber, 'Missing'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-      ),
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 
-  Widget _buildCalendarGrid(int daysInMonth, int firstWeekday, double aspectRatio) {
+  Widget _buildCalendarGrid(
+      int daysInMonth, int firstWeekday, double aspectRatio) {
     // firstWeekday: 1=Monday, 7=Sunday
     // We need to offset by (firstWeekday - 1) for Monday-start calendar
     final offset = firstWeekday - 1;
     final totalCells = offset + daysInMonth;
     final rows = (totalCells / 7).ceil();
-    
+
     return GridView.builder(
       shrinkWrap: false, // Changed to false as it's now inside Expanded
       physics: const AlwaysScrollableScrollPhysics(),
@@ -259,12 +278,12 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
       itemCount: rows * 7,
       itemBuilder: (context, index) {
         final dayNum = index - offset + 1;
-        
+
         // Empty cell for offset or overflow
         if (dayNum < 1 || dayNum > daysInMonth) {
           return Container();
         }
-        
+
         return _buildDayCell(dayNum);
       },
     );
@@ -278,21 +297,23 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
     final isToday = DateTime.now().year == _currentMonth.year &&
         DateTime.now().month == _currentMonth.month &&
         DateTime.now().day == day;
-    final isFuture = DateTime(_currentMonth.year, _currentMonth.month, day).isAfter(DateTime.now());
-    final isSunday = DateTime(_currentMonth.year, _currentMonth.month, day).weekday == 7;
-    
+    final isFuture = DateTime(_currentMonth.year, _currentMonth.month, day)
+        .isAfter(DateTime.now());
+    final isSunday =
+        DateTime(_currentMonth.year, _currentMonth.month, day).weekday == 7;
+
     // Determine status
     final isPresent = attendance != null;
     final punchIn = attendance?['punchInTime']?.toString();
     final punchOut = attendance?['punchOutTime']?.toString();
     final hoursWorked = (attendance?['hoursWorked'] as num?)?.toDouble() ?? 0;
-    
+
     // Check if punch is missing (present but no punch in or no punch out)
     final hasMissingPunch = isPresent && (punchIn == null || punchOut == null);
-    
+
     // Color coding: Green=Present, Red=Absent, Purple=Holiday/Sunday, Amber=Missing punch
     Color bandColor;
-    
+
     if (isFuture) {
       bandColor = Colors.grey.shade300;
     } else if (isSunday && !isPresent) {
@@ -308,7 +329,7 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
       // Absent - Red
       bandColor = Colors.red;
     }
-    
+
     return GestureDetector(
       onTap: isFuture ? null : () => _showDayDetails(day, attendance, isSunday),
       child: Container(
@@ -377,7 +398,8 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
                     ] else if (!isFuture && !isPresent && isSunday) ...[
                       Text(
                         'Off',
-                        style: TextStyle(fontSize: 8, color: Colors.purple.shade300),
+                        style: TextStyle(
+                            fontSize: 8, color: Colors.purple.shade300),
                       ),
                     ] else if (!isFuture && !isPresent) ...[
                       Icon(Icons.remove, size: 10, color: Colors.grey.shade400),
@@ -392,17 +414,18 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
     );
   }
 
-  void _showDayDetails(int day, Map<String, dynamic>? attendance, bool isSunday) {
+  void _showDayDetails(
+      int day, Map<String, dynamic>? attendance, bool isSunday) {
     final dateStr = DateFormat('d MMM yyyy').format(
       DateTime(_currentMonth.year, _currentMonth.month, day),
     );
-    
+
     String status;
     Color statusColor;
     final punchIn = attendance?['punchInTime']?.toString();
     final punchOut = attendance?['punchOutTime']?.toString();
     final hoursWorked = (attendance?['hoursWorked'] as num?)?.toDouble() ?? 0;
-    
+
     if (attendance == null && isSunday) {
       status = 'Holiday';
       statusColor = Colors.purple;
@@ -416,7 +439,7 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
       status = 'Present';
       statusColor = Colors.green;
     }
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -436,7 +459,9 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(status, style: TextStyle(fontWeight: FontWeight.bold, color: statusColor)),
+                Text(status,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: statusColor)),
               ],
             ),
             if (attendance != null) ...[
@@ -445,7 +470,8 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
               const SizedBox(height: 8),
               _buildDetailRow('Punch Out:', punchOut ?? '-'),
               const SizedBox(height: 8),
-              _buildDetailRow('Total Hours:', '${hoursWorked.toStringAsFixed(1)} hrs'),
+              _buildDetailRow(
+                  'Total Hours:', '${hoursWorked.toStringAsFixed(1)} hrs'),
             ],
           ],
         ),
@@ -469,13 +495,16 @@ class _StaffAttendanceCalendarScreenState extends State<StaffAttendanceCalendarS
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: color, size: 24),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+        Text(value,
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold, color: color)),
         Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
       ],
     );

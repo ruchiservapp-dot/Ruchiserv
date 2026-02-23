@@ -9,11 +9,8 @@ import '../services/biometric_service.dart';
 import '../services/permission_service.dart';
 import '../services/notification_service.dart';
 import '../services/whatsapp_service.dart';
-import 'package:ruchiserv/repositories/order_repository.dart';
 import 'package:ruchiserv/repositories/inventory_repository.dart';
-import 'package:ruchiserv/repositories/operation_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 import '../utils/time_utils.dart';
 
 class OrderFullScreenViewScreen extends StatefulWidget {
@@ -126,7 +123,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.editModeEnabled),
+            content: Text(AppLocalizations.of(context).editModeEnabled),
             backgroundColor: Colors.green,
           ),
         );
@@ -144,19 +141,19 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
           children: [
             Icon(Icons.lock_open, color: Colors.orange.shade700),
             const SizedBox(width: 8),
-            Text(AppLocalizations.of(context)!.enterPassword),
+            Text(AppLocalizations.of(context).enterPassword),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(AppLocalizations.of(context)!.adminPasswordRequired),
+            Text(AppLocalizations.of(context).adminPasswordRequired),
             const SizedBox(height: 16),
             TextField(
               controller: passwordController,
               obscureText: true,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.password,
+                labelText: AppLocalizations.of(context).password,
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.password),
               ),
@@ -167,7 +164,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -186,19 +183,22 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
               if (users.isNotEmpty) {
                 final storedPassword = users.first['passwordHash']?.toString() ?? '';
                 if (passwordController.text == storedPassword) {
+                  if (!mounted) return;
                   Navigator.pop(context, true);
                   return;
                 }
               }
               
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(AppLocalizations.of(context)!.incorrectPassword),
+
+                  content: Text(AppLocalizations.of(context).incorrectPassword),
                   backgroundColor: Colors.red,
                 ),
               );
             },
-            child: Text(AppLocalizations.of(context)!.unlock),
+            child: Text(AppLocalizations.of(context).unlock),
           ),
         ],
       ),
@@ -217,14 +217,14 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 28),
             const SizedBox(width: 8),
-            Text(AppLocalizations.of(context)!.rerunMRPTitle),
+            Text(AppLocalizations.of(context).rerunMRPTitle),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context)!.rerunMRPMessage),
+            Text(AppLocalizations.of(context).rerunMRPMessage),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -236,16 +236,16 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('• ${AppLocalizations.of(context)!.cancelOldPOs}', 
+                  Text('• ${AppLocalizations.of(context).cancelOldPOs}', 
                     style: const TextStyle(fontSize: 13)),
                   const SizedBox(height: 4),
-                  Text('• ${AppLocalizations.of(context)!.notifySuppliers}', 
+                  Text('• ${AppLocalizations.of(context).notifySuppliers}', 
                     style: const TextStyle(fontSize: 13)),
                   const SizedBox(height: 4),
-                  Text('• ${AppLocalizations.of(context)!.notifyCustomer}', 
+                  Text('• ${AppLocalizations.of(context).notifyCustomer}', 
                     style: const TextStyle(fontSize: 13)),
                   const SizedBox(height: 4),
-                  Text('• ${AppLocalizations.of(context)!.generateNewPOs}', 
+                  Text('• ${AppLocalizations.of(context).generateNewPOs}', 
                     style: const TextStyle(fontSize: 13)),
                 ],
               ),
@@ -255,11 +255,11 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           ElevatedButton.icon(
             icon: const Icon(Icons.refresh),
-            label: Text(AppLocalizations.of(context)!.rerunMRP),
+            label: Text(AppLocalizations.of(context).rerunMRP),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -316,7 +316,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.orderUpdatedRerunMRP),
+          content: Text(AppLocalizations.of(context).orderUpdatedRerunMRP),
           backgroundColor: Colors.green,
         ),
       );
@@ -371,21 +371,21 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.orderDetails),
+        title: Text(AppLocalizations.of(context).orderDetails),
         centerTitle: true,
         actions: [
           // Admin Edit Button (locked)
           if (_isAdmin && !_isEditMode)
             IconButton(
               icon: const Icon(Icons.lock),
-              tooltip: AppLocalizations.of(context)!.unlockToEdit,
+              tooltip: AppLocalizations.of(context).unlockToEdit,
               onPressed: _attemptUnlock,
             ),
           // Unlocked indicator
           if (_isAdmin && _isEditMode)
             IconButton(
               icon: const Icon(Icons.lock_open, color: Colors.green),
-              tooltip: AppLocalizations.of(context)!.editModeActive,
+              tooltip: AppLocalizations.of(context).editModeActive,
               onPressed: null,
             ),
         ],
@@ -433,7 +433,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.save),
-              label: Text(AppLocalizations.of(context)!.saveAndRerunMRP),
+              label: Text(AppLocalizations.of(context).saveAndRerunMRP),
               backgroundColor: Colors.orange,
               onPressed: _isSaving ? null : _saveAndRerunMRP,
             )
@@ -453,17 +453,17 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
       bgColor = Colors.green.shade50;
       borderColor = Colors.green.shade300;
       icon = Icons.check_circle;
-      statusText = AppLocalizations.of(context)!.poSentStatus;
+      statusText = AppLocalizations.of(context).poSentStatus;
     } else if (isLocked) {
       bgColor = Colors.blue.shade50;
       borderColor = Colors.blue.shade300;
       icon = Icons.lock;
-      statusText = AppLocalizations.of(context)!.mrpProcessedStatus;
+      statusText = AppLocalizations.of(context).mrpProcessedStatus;
     } else {
       bgColor = Colors.grey.shade100;
       borderColor = Colors.grey.shade300;
       icon = Icons.pending;
-      statusText = AppLocalizations.of(context)!.pendingStatus;
+      statusText = AppLocalizations.of(context).pendingStatus;
     }
 
     return Container(
@@ -488,7 +488,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                 )),
                 if (_isEditMode)
                   Text(
-                    AppLocalizations.of(context)!.editModeActiveMessage,
+                    AppLocalizations.of(context).editModeActiveMessage,
                     style: TextStyle(fontSize: 12, color: Colors.orange.shade700),
                   ),
               ],
@@ -507,7 +507,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context)!.orderInformation,
+            Text(AppLocalizations.of(context).orderInformation,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const Divider(),
             
@@ -516,14 +516,14 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
               children: [
                 Expanded(
                   child: _buildInfoItem(
-                    AppLocalizations.of(context)!.date,
+                    AppLocalizations.of(context).date,
                     dateStr,
                     Icons.calendar_today,
                   ),
                 ),
                 Expanded(
                   child: _buildInfoItem(
-                    AppLocalizations.of(context)!.deliveryTime,
+                    AppLocalizations.of(context).deliveryTime,
                     TimeUtils.formatTo12Hour(_orderData['time']),
                     Icons.access_time,
                   ),
@@ -557,14 +557,14 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
               TextField(
                 controller: _customerController,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.customerName,
+                  labelText: AppLocalizations.of(context).customerName,
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.person),
                 ),
               )
             else
               _buildInfoItem(
-                AppLocalizations.of(context)!.customerName,
+                AppLocalizations.of(context).customerName,
                 _customerController.text,
                 Icons.person,
               ),
@@ -579,13 +579,13 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                           controller: _mobileController,
                           keyboardType: TextInputType.phone,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.mobile,
+                            labelText: AppLocalizations.of(context).mobile,
                             border: const OutlineInputBorder(),
                             prefixIcon: const Icon(Icons.phone),
                           ),
                         )
                       : _buildInfoItem(
-                          AppLocalizations.of(context)!.mobile,
+                          AppLocalizations.of(context).mobile,
                           _mobileController.text.isEmpty ? '-' : _mobileController.text,
                           Icons.phone,
                         ),
@@ -596,13 +596,13 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                       ? TextField(
                           controller: _locationController,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.location,
+                            labelText: AppLocalizations.of(context).location,
                             border: const OutlineInputBorder(),
                             prefixIcon: const Icon(Icons.location_on),
                           ),
                         )
                       : _buildInfoItem(
-                          AppLocalizations.of(context)!.location,
+                          AppLocalizations.of(context).location,
                           _locationController.text.isEmpty ? '-' : _locationController.text,
                           Icons.location_on,
                         ),
@@ -617,9 +617,9 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                 Expanded(
                   child: _isEditMode
                       ? DropdownButtonFormField<String>(
-                          value: _mealType,
+                          initialValue: _mealType,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.mealType,
+                            labelText: AppLocalizations.of(context).mealType,
                             border: const OutlineInputBorder(),
                           ),
                           items: ['Breakfast', 'Lunch', 'Dinner', 'Snacks/Others']
@@ -628,7 +628,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                           onChanged: (v) => setState(() => _mealType = v ?? 'Lunch'),
                         )
                       : _buildInfoItem(
-                          AppLocalizations.of(context)!.mealType,
+                          AppLocalizations.of(context).mealType,
                           _mealType,
                           Icons.restaurant_menu,
                         ),
@@ -637,9 +637,9 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                 Expanded(
                   child: _isEditMode
                       ? DropdownButtonFormField<String>(
-                          value: _foodType,
+                          initialValue: _foodType,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.foodType,
+                            labelText: AppLocalizations.of(context).foodType,
                             border: const OutlineInputBorder(),
                           ),
                           items: ['Veg', 'Non-Veg']
@@ -648,7 +648,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
                           onChanged: (v) => setState(() => _foodType = v ?? 'Veg'),
                         )
                       : _buildInfoItem(
-                          AppLocalizations.of(context)!.foodType,
+                          AppLocalizations.of(context).foodType,
                           _foodType,
                           _foodType == 'Veg' ? Icons.eco : Icons.restaurant,
                         ),
@@ -688,9 +688,9 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context)!.dishes,
+                Text(AppLocalizations.of(context).dishes,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('${_dishes.length} ${AppLocalizations.of(context)!.items}',
+                Text('${_dishes.length} ${AppLocalizations.of(context).items}',
                     style: TextStyle(color: Colors.grey.shade600)),
               ],
             ),
@@ -698,7 +698,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
             if (_dishes.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Center(child: Text(AppLocalizations.of(context)!.noDishes)),
+                child: Center(child: Text(AppLocalizations.of(context).noDishes)),
               )
             else
               ..._dishes.map((dish) => ListTile(
@@ -739,7 +739,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context)!.purchaseOrders,
+                Text(AppLocalizations.of(context).purchaseOrders,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Row(
                   children: [
@@ -773,7 +773,7 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
             if (activePOs.isEmpty && cancelledPOs.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Center(child: Text(AppLocalizations.of(context)!.noPurchaseOrders)),
+                child: Center(child: Text(AppLocalizations.of(context).noPurchaseOrders)),
               )
             else ...[
               ...activePOs.map((po) => _buildPOTile(po, false)),
@@ -839,20 +839,20 @@ class _OrderFullScreenViewScreenState extends State<OrderFullScreenViewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context)!.pricingSummary,
+            Text(AppLocalizations.of(context).pricingSummary,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const Divider(),
-            _buildPriceRow(AppLocalizations.of(context)!.subtotal, '₹$beforeDiscount'),
+            _buildPriceRow(AppLocalizations.of(context).subtotal, '₹$beforeDiscount'),
             if (discountPercent > 0)
               _buildPriceRow('Discount ($discountPercent%)', '-₹${(beforeDiscount * discountPercent / 100).toStringAsFixed(0)}'),
-            _buildPriceRow(AppLocalizations.of(context)!.dishTotal, '₹$finalAmount'),
+            _buildPriceRow(AppLocalizations.of(context).dishTotal, '₹$finalAmount'),
             if (serviceCost > 0)
-              _buildPriceRow(AppLocalizations.of(context)!.serviceCost, '₹$serviceCost'),
+              _buildPriceRow(AppLocalizations.of(context).serviceCost, '₹$serviceCost'),
             if (counterSetupCost > 0)
-              _buildPriceRow(AppLocalizations.of(context)!.counterSetupCost, '₹$counterSetupCost'),
+              _buildPriceRow(AppLocalizations.of(context).counterSetupCost, '₹$counterSetupCost'),
             const Divider(),
             _buildPriceRow(
-              AppLocalizations.of(context)!.grandTotal,
+              AppLocalizations.of(context).grandTotal,
               '₹$grandTotal',
               isBold: true,
               isLarge: true,

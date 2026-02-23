@@ -4,12 +4,10 @@ import 'package:ruchiserv/core/app_logger.dart';
 // Responsive: bottom nav on mobile/tablet, sidebar rail on desktop
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/responsive_utils.dart';
 import '../services/permission_service.dart';
 import '../services/feature_gate_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
-
 
 import 'home_dashboard_screen.dart';
 import 'orders_calendar_screen.dart';
@@ -37,24 +35,64 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   bool _isLoading = true;
   bool _isExternalPortal = false; // For Driver/Subcontractor/Supplier
   Widget? _portalScreen; // Dedicated portal for external users
-  
+
   String _subscriptionTier = 'BASIC';
   String _userRole = 'Staff';
-  
+
   // Only visible menu items (filtered by role)
   List<Map<String, dynamic>> _visibleMenuItems = [];
   List<Widget> _visibleScreens = [];
 
   // All possible menu items - My Attendance is accessed via Operations, not a standalone module
   final List<Map<String, dynamic>> _allMenuItems = [
-    {'icon': Icons.dashboard_rounded, 'label': 'Home', 'module': 'HOME', 'tier': 'BASIC'},
-    {'icon': Icons.receipt_long, 'label': 'Orders', 'module': 'ORDERS', 'tier': 'BASIC'},
-    {'icon': Icons.inventory_2, 'label': 'Inventory', 'module': 'INVENTORY', 'tier': 'BASIC'},
-    {'icon': Icons.settings_suggest, 'label': 'Operations', 'module': 'KITCHEN', 'tier': 'BASIC'},
-    {'icon': Icons.account_balance_wallet, 'label': 'Finance', 'module': 'FINANCE', 'tier': 'PRO'},
-    {'icon': Icons.bar_chart_rounded, 'label': 'Reports', 'module': 'REPORTS', 'tier': 'BASIC'},
-    {'icon': Icons.insights, 'label': 'Insights', 'module': 'INSIGHTS', 'tier': 'PRO'},
-    {'icon': Icons.settings, 'label': 'Settings', 'module': 'SETTINGS', 'tier': 'BASIC'},
+    {
+      'icon': Icons.dashboard_rounded,
+      'label': 'Home',
+      'module': 'HOME',
+      'tier': 'BASIC'
+    },
+    {
+      'icon': Icons.receipt_long,
+      'label': 'Orders',
+      'module': 'ORDERS',
+      'tier': 'BASIC'
+    },
+    {
+      'icon': Icons.inventory_2,
+      'label': 'Inventory',
+      'module': 'INVENTORY',
+      'tier': 'BASIC'
+    },
+    {
+      'icon': Icons.settings_suggest,
+      'label': 'Operations',
+      'module': 'KITCHEN',
+      'tier': 'BASIC'
+    },
+    {
+      'icon': Icons.account_balance_wallet,
+      'label': 'Finance',
+      'module': 'FINANCE',
+      'tier': 'PRO'
+    },
+    {
+      'icon': Icons.bar_chart_rounded,
+      'label': 'Reports',
+      'module': 'REPORTS',
+      'tier': 'BASIC'
+    },
+    {
+      'icon': Icons.insights,
+      'label': 'Insights',
+      'module': 'INSIGHTS',
+      'tier': 'PRO'
+    },
+    {
+      'icon': Icons.settings,
+      'label': 'Settings',
+      'module': 'SETTINGS',
+      'tier': 'BASIC'
+    },
   ];
 
   final List<Widget> _allScreens = const [
@@ -80,11 +118,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     try {
       final role = await PermissionService.instance.getUserRole();
       AppLogger.info('MainMenuDebug: Role found: $role');
-      final allowedModules = await PermissionService.instance.getAllowedModules();
+      final allowedModules =
+          await PermissionService.instance.getAllowedModules();
       AppLogger.info('MainMenuDebug: Modules: ${allowedModules.length}');
       final tier = await FeatureGateService.instance.getCurrentTier();
       AppLogger.info('MainMenuDebug: Tier: $tier');
-      
+
       // Check for external portal users (Driver, Subcontractor, Supplier)
       // These users get a dedicated single-screen portal instead of the standard menu
       final roleLower = role.toLowerCase();
@@ -114,33 +153,34 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         });
         return;
       }
-      
+
       // Standard menu for Admin, Manager, Staff
       // Filter menu items based on Admin-assigned permissions for ALL roles
       List<Map<String, dynamic>> visible = [];
       List<Widget> screens = [];
-      
-      // For ALL roles (including Staff, Driver, Vendor, Subcontractor), 
+
+      // For ALL roles (including Staff, Driver, Vendor, Subcontractor),
       // filter based on module access assigned by Admin
       for (int i = 0; i < _allMenuItems.length; i++) {
         final item = _allMenuItems[i];
         final module = item['module'] as String;
-        
+
         // Check if user can access this module
-        bool hasAccess = module == 'HOME' || role == 'Admin' || 
-            allowedModules.contains(module) || 
+        bool hasAccess = module == 'HOME' ||
+            role == 'Admin' ||
+            allowedModules.contains(module) ||
             allowedModules.contains('ALL');
-        
+
         // Check tier requirements
         final requiredTier = item['tier'] as String;
         bool hasTier = role == 'Admin' || _checkTierAccess(tier, requiredTier);
-        
+
         if (hasAccess && hasTier) {
           visible.add(item);
           screens.add(_allScreens[i]);
         }
       }
-      
+
       // Fallback: If nothing visible, show My Attendance for non-Admin roles
       // or Orders for Admin
       if (visible.isEmpty) {
@@ -153,7 +193,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           screens.add(_allScreens[2]);
         }
       }
-      
+
       setState(() {
         _userRole = role;
         _subscriptionTier = tier;
@@ -171,7 +211,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   bool _checkTierAccess(String currentTier, String requiredTier) {
     if (currentTier == 'ENTERPRISE') return true;
-    if (currentTier == 'PRO' && (requiredTier == 'PRO' || requiredTier == 'BASIC')) return true;
+    if (currentTier == 'PRO' &&
+        (requiredTier == 'PRO' || requiredTier == 'BASIC')) return true;
     if (currentTier == 'BASIC' && requiredTier == 'BASIC') return true;
     return false;
   }
@@ -191,7 +232,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     // External portal mode (Driver/Subcontractor/Supplier)
     if (_isExternalPortal && _portalScreen != null) {
       return Scaffold(
@@ -209,7 +250,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         body: _portalScreen,
       );
     }
-    
+
     // Handle empty state for standard menu
     if (_visibleMenuItems.isEmpty || _visibleScreens.isEmpty) {
       return Scaffold(
@@ -220,7 +261,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               Icon(Icons.lock, size: 64, color: Colors.grey.shade400),
               const SizedBox(height: 16),
               Text(AppLocalizations.of(context).noModulesAvailable),
-              Text(AppLocalizations.of(context).contactAdministrator, style: TextStyle(color: Colors.grey.shade600)),
+              Text(AppLocalizations.of(context).contactAdministrator,
+                  style: TextStyle(color: Colors.grey.shade600)),
             ],
           ),
         ),
@@ -228,8 +270,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     }
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
-    final moduleName = _getLocalizedLabel(context, _visibleMenuItems[_selectedIndex]['module']);
+
+    final moduleName = _getLocalizedLabel(
+        context, _visibleMenuItems[_selectedIndex]['module']);
     final useSideNav = Responsive.useSideNav(context);
 
     // ── Shared AppBar ────────────────────────────────────────────────────────
@@ -237,7 +280,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       elevation: 0,
       title: Text(
         moduleName,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        style:
+            const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
       ),
       centerTitle: true,
       flexibleSpace: Container(
@@ -262,7 +306,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
                 child: Text(
                   _subscriptionTier,
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
               ),
             ),
@@ -290,14 +337,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               onDestinationSelected: _onMenuTap,
               labelType: NavigationRailLabelType.all,
               backgroundColor: theme.cardColor,
-              selectedIconTheme: IconThemeData(color: isDark ? Colors.blue.shade300 : Colors.blue.shade800),
+              selectedIconTheme: IconThemeData(
+                  color: isDark ? Colors.blue.shade300 : Colors.blue.shade800),
               selectedLabelTextStyle: TextStyle(
                 color: isDark ? Colors.blue.shade300 : Colors.blue.shade800,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
-              unselectedIconTheme: IconThemeData(color: isDark ? Colors.white54 : Colors.grey.shade600),
-              unselectedLabelTextStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey.shade600, fontSize: 12),
+              unselectedIconTheme: IconThemeData(
+                  color: isDark ? Colors.white54 : Colors.grey.shade600),
+              unselectedLabelTextStyle: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.grey.shade600,
+                  fontSize: 12),
               leading: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Container(
@@ -311,7 +362,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     ),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.restaurant, color: Colors.white, size: 22),
+                  child: const Icon(Icons.restaurant,
+                      color: Colors.white, size: 22),
                 ),
               ),
               destinations: _visibleMenuItems.map((item) {
@@ -345,15 +397,27 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       bottomNavigationBar: _visibleMenuItems.length > 1
           ? SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.black.withValues(alpha: 0.85) : Colors.white.withValues(alpha: 0.9),
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.85)
+                        : Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(40),
-                    border: Border.all(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05)),
+                    border: Border.all(
+                        color: isDark
+                            ? Colors.white12
+                            : Colors.black.withValues(alpha: 0.05)),
                     boxShadow: [
-                      BoxShadow(color: isDark ? Colors.black54 : Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 8)),
+                      BoxShadow(
+                          color: isDark
+                              ? Colors.black54
+                              : Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8)),
                     ],
                   ),
                   child: ClipRRect(
@@ -362,7 +426,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: List.generate(_visibleMenuItems.length, (index) {
+                        children:
+                            List.generate(_visibleMenuItems.length, (index) {
                           final item = _visibleMenuItems[index];
                           final isSelected = _selectedIndex == index;
                           return Expanded(
@@ -370,9 +435,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               onTap: () => _onMenuTap(index),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 6, horizontal: 4),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50) : Colors.transparent,
+                                  color: isSelected
+                                      ? (isDark
+                                          ? Colors.blue.withOpacity(0.15)
+                                          : Colors.blue.shade50)
+                                      : Colors.transparent,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Column(
@@ -381,19 +451,28 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                     Icon(
                                       item['icon'],
                                       size: 26,
-                                      color: isSelected ? (isDark ? Colors.blue.shade300 : Colors.blueAccent) : (isDark ? Colors.white54 : Colors.grey.shade400),
+                                      color: isSelected
+                                          ? (isDark
+                                              ? Colors.blue.shade300
+                                              : Colors.blueAccent)
+                                          : (isDark
+                                              ? Colors.white54
+                                              : Colors.grey.shade400),
                                     ),
                                     if (isSelected) const SizedBox(height: 4),
-                                    if (isSelected) 
+                                    if (isSelected)
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
-                                          _getLocalizedLabel(context, item['module']),
+                                          _getLocalizedLabel(
+                                              context, item['module']),
                                           maxLines: 1,
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
-                                            color: isDark ? Colors.blue.shade300 : Colors.blueAccent,
+                                            color: isDark
+                                                ? Colors.blue.shade300
+                                                : Colors.blueAccent,
                                           ),
                                         ),
                                       ),
@@ -428,7 +507,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             onPressed: () {
               Navigator.pop(ctx);
               // Navigate to login screen
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/login', (route) => false);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Logout'),
@@ -440,24 +520,37 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Color _getTierColor(String tier) {
     switch (tier) {
-      case 'ENTERPRISE': return Colors.purple;
-      case 'PRO': return Colors.orange;
-      default: return Colors.teal;
+      case 'ENTERPRISE':
+        return Colors.purple;
+      case 'PRO':
+        return Colors.orange;
+      default:
+        return Colors.teal;
     }
   }
 
   String _getLocalizedLabel(BuildContext context, String module) {
     switch (module) {
-      case 'HOME': return 'Dashboard';
-      case 'ORDERS': return AppLocalizations.of(context).moduleOrders;
-      case 'KITCHEN': return AppLocalizations.of(context).moduleOperations;
-      case 'INVENTORY': return AppLocalizations.of(context).moduleInventory;
-      case 'FINANCE': return AppLocalizations.of(context).moduleFinance;
-      case 'REPORTS': return AppLocalizations.of(context).moduleReports;
-      case 'INSIGHTS': return 'Insights';
-      case 'SETTINGS': return AppLocalizations.of(context).moduleSettings;
-      case 'ATTENDANCE': return AppLocalizations.of(context).moduleAttendance;
-      default: return module;
+      case 'HOME':
+        return 'Dashboard';
+      case 'ORDERS':
+        return AppLocalizations.of(context).moduleOrders;
+      case 'KITCHEN':
+        return AppLocalizations.of(context).moduleOperations;
+      case 'INVENTORY':
+        return AppLocalizations.of(context).moduleInventory;
+      case 'FINANCE':
+        return AppLocalizations.of(context).moduleFinance;
+      case 'REPORTS':
+        return AppLocalizations.of(context).moduleReports;
+      case 'INSIGHTS':
+        return 'Insights';
+      case 'SETTINGS':
+        return AppLocalizations.of(context).moduleSettings;
+      case 'ATTENDANCE':
+        return AppLocalizations.of(context).moduleAttendance;
+      default:
+        return module;
     }
   }
 }

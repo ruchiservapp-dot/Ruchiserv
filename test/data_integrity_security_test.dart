@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:ruchiserv/db/database_helper.dart';
 
 void main() {
@@ -259,7 +258,7 @@ void main() {
       const ivLength = 16;
       expect(ivLength, 16);
 
-      print('✅ T-SEC-04: AES-${keyBits} encryption with ${ivLength}-byte random IV per operation');
+      print('✅ T-SEC-04: AES-$keyBits encryption with $ivLength-byte random IV per operation');
     });
 
     test('T-SEC-05: No hardcoded API keys in source (static check)', () async {

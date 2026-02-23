@@ -7,10 +7,12 @@ class ManageAuthorizedMobilesScreen extends StatefulWidget {
   const ManageAuthorizedMobilesScreen({super.key});
 
   @override
-  State<ManageAuthorizedMobilesScreen> createState() => _ManageAuthorizedMobilesScreenState();
+  State<ManageAuthorizedMobilesScreen> createState() =>
+      _ManageAuthorizedMobilesScreenState();
 }
 
-class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesScreen> {
+class _ManageAuthorizedMobilesScreenState
+    extends State<ManageAuthorizedMobilesScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _mobiles = [];
   String _filterType = 'ALL';
@@ -27,7 +29,7 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
     try {
       final sp = await SharedPreferences.getInstance();
       final firmId = sp.getString('last_firm') ?? 'default_firm';
-      
+
       final db = DatabaseHelper();
       final mobiles = await db.getAuthorizedMobiles(
         firmId,
@@ -42,7 +44,9 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
       setState(() => _isLoading = false);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading mobiles: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Error loading mobiles: $e'),
+            backgroundColor: Colors.red),
       );
     }
   }
@@ -79,7 +83,7 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: selectedType,
+              initialValue: selectedType,
               decoration: const InputDecoration(
                 labelText: 'Type',
                 border: OutlineInputBorder(),
@@ -98,18 +102,20 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.trim().isEmpty || mobileController.text.trim().length != 10) {
+              if (nameController.text.trim().isEmpty ||
+                  mobileController.text.trim().length != 10) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter valid name and mobile')),
+                  const SnackBar(
+                      content: Text('Please enter valid name and mobile')),
                 );
                 return;
               }
-              
+
               try {
                 final sp = await SharedPreferences.getInstance();
                 final firmId = sp.getString('last_firm') ?? 'default_firm';
                 final userId = sp.getString('user_id') ?? 'ADMIN';
-                
+
                 final db = DatabaseHelper();
                 await db.addAuthorizedMobile(
                   firmId: firmId,
@@ -118,12 +124,14 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
                   name: nameController.text.trim(),
                   addedBy: userId,
                 );
-                
+
                 if (context.mounted) Navigator.pop(context, true);
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                    SnackBar(
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red),
                   );
                 }
               }
@@ -135,7 +143,7 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
     );
 
     if (result == true) _loadMobiles();
-    
+
     nameController.dispose();
     mobileController.dispose();
   }
@@ -145,11 +153,12 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
       final db = DatabaseHelper();
       await db.toggleAuthorizedMobile(id, !currentStatus);
       _loadMobiles();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(!currentStatus ? 'Mobile activated' : 'Mobile deactivated'),
+            content: Text(
+                !currentStatus ? 'Mobile activated' : 'Mobile deactivated'),
             backgroundColor: !currentStatus ? Colors.green : Colors.orange,
           ),
         );
@@ -168,7 +177,8 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Mobile?'),
-        content: Text('Are you sure you want to delete $name? This action cannot be undone.'),
+        content: Text(
+            'Are you sure you want to delete $name? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -188,10 +198,11 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
         final db = DatabaseHelper();
         await db.deleteAuthorizedMobile(id);
         _loadMobiles();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Mobile deleted'), backgroundColor: Colors.green),
+            const SnackBar(
+                content: Text('Mobile deleted'), backgroundColor: Colors.green),
           );
         }
       } catch (e) {
@@ -218,13 +229,15 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: DropdownButtonFormField<String>(
-              value: _filterType,
+              initialValue: _filterType,
               decoration: const InputDecoration(
                 labelText: 'Filter by Type',
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
-              items: _types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              items: _types
+                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                  .toList(),
               onChanged: (val) {
                 if (val != null) {
                   setState(() => _filterType = val);
@@ -233,7 +246,7 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
               },
             ),
           ),
-          
+
           // List
           Expanded(
             child: _isLoading
@@ -245,12 +258,13 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
                         itemBuilder: (context, index) {
                           final mobile = _mobiles[index];
                           final isActive = (mobile['isActive'] as int) == 1;
-                          
+
                           return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: isActive 
+                                backgroundColor: isActive
                                     ? Colors.green.withValues(alpha: 0.1)
                                     : Colors.red.withValues(alpha: 0.1),
                                 child: Icon(
@@ -260,7 +274,7 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
                               ),
                               title: Text(mobile['name'] ?? 'Unknown'),
                               subtitle: Text(
-                                '${mobile['mobile']} • ${mobile['type']}\n'
+                                '${mobile['mobile']} • ${mobile['role'] ?? 'User'}\n'
                                 'Added: ${mobile['addedAt']?.toString().substring(0, 10) ?? 'Unknown'}',
                               ),
                               trailing: Row(
@@ -268,11 +282,14 @@ class _ManageAuthorizedMobilesScreenState extends State<ManageAuthorizedMobilesS
                                 children: [
                                   Switch(
                                     value: isActive,
-                                    onChanged: (_) => _toggleActive(mobile['id'], isActive),
+                                    onChanged: (_) =>
+                                        _toggleActive(mobile['id'], isActive),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteMobile(mobile['id'], mobile['name']),
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red),
+                                    onPressed: () => _deleteMobile(
+                                        mobile['id'], mobile['name']),
                                   ),
                                 ],
                               ),

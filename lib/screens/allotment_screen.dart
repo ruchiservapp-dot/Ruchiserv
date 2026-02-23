@@ -1,7 +1,6 @@
 import 'package:ruchiserv/repositories/operation_repository.dart';
 import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:ruchiserv/repositories/inventory_repository.dart';
-import 'package:ruchiserv/repositories/order_repository.dart';
 import 'package:ruchiserv/core/app_logger.dart';
 // MODULE: ALLOTMENT SCREEN
 // Last Updated: 2025-12-09 | Features: Assign ingredients to suppliers, Generate POs
@@ -85,7 +84,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
 
       if (supplierGroups.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.allocateIngredientsFirst), backgroundColor: Colors.orange),
+          SnackBar(content: Text(AppLocalizations.of(context).allocateIngredientsFirst), backgroundColor: Colors.orange),
         );
         return;
       }
@@ -111,7 +110,8 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
           'poNumber': poNumber,
           'type': 'SUPPLIER',
           'vendorId': supplierId,
-          'vendorName': supplier['name'] ?? AppLocalizations.of(context)!.unknown,
+
+          'vendorName': supplier['name'] ?? AppLocalizations.of(context).unknown,
           'totalItems': items.length,
           'totalAmount': totalAmount,
           'status': 'SENT',
@@ -133,7 +133,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
         
         // Mark MRP output items as PO_SENT to prevent re-processing
         final ingredientIds = items.map((i) => i['ingredientId'] as int).toList();
-        await InventoryRepository().markMrpOutputAsPOSent(widget.mrpRunId, poId as int, ingredientIds);
+        await InventoryRepository().markMrpOutputAsPOSent(widget.mrpRunId, poId, ingredientIds);
 
         // Trigger Email (Fire & Forget)
         MessagingService().sendPurchaseOrder({
@@ -154,7 +154,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.posGeneratedSuccess(supplierGroups.length)), 
+            content: Text(AppLocalizations.of(context).posGeneratedSuccess(supplierGroups.length)), 
             backgroundColor: Colors.green,
           ),
         );
@@ -164,7 +164,9 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
         
         // If no more items to allocate, go back
         if (_mrpOutput.isEmpty) {
+          if (!mounted) return;
           Navigator.pop(context);
+          if (!mounted) return;
           Navigator.pop(context); // Go back to MRP Run
         }
       }
@@ -182,16 +184,16 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.allotmentTitle),
+        title: Text(AppLocalizations.of(context).allotmentTitle),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
           tabs: [
-            Tab(text: AppLocalizations.of(context)!.supplierAllotment),
+            Tab(text: AppLocalizations.of(context).supplierAllotment),
             Tab(text: 'Service & Events'),
-            Tab(text: AppLocalizations.of(context)!.summary),
+            Tab(text: AppLocalizations.of(context).summary),
           ],
         ),
       ),
@@ -225,14 +227,14 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
             children: [
               const Icon(Icons.info_outline),
               const SizedBox(width: 8),
-              Expanded(child: Text(AppLocalizations.of(context)!.assignIngredientHint)),
+              Expanded(child: Text(AppLocalizations.of(context).assignIngredientHint)),
               // Only count allocations for items still showing (not PO'd)
               Builder(builder: (context) {
                 final currentIngredientIds = _mrpOutput.map((i) => i['ingredientId'] as int).toSet();
                 final allocatedCount = _allocations.entries
                     .where((e) => e.value != null && currentIngredientIds.contains(e.key))
                     .length;
-                return Text(AppLocalizations.of(context)!.assignedStatus(allocatedCount, _mrpOutput.length),
+                return Text(AppLocalizations.of(context).assignedStatus(allocatedCount, _mrpOutput.length),
                   style: const TextStyle(fontWeight: FontWeight.bold));
               }),
             ],
@@ -247,26 +249,26 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
               
               return ExpansionTile(
                 title: Text(category, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(AppLocalizations.of(context)!.itemsCount(items.length)),
+                subtitle: Text(AppLocalizations.of(context).itemsCount(items.length)),
                 initiallyExpanded: true,
                 children: items.map((item) {
                   final ingredientId = item['ingredientId'] as int;
                   return ListTile(
-                    title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
+                    title: Text(item['ingredientName'] ?? AppLocalizations.of(context).unknown),
                     subtitle: Text('${(item['requiredQty'] as num?)?.toStringAsFixed(2) ?? '0'} ${item['unit'] ?? 'kg'}'),
                       trailing: SizedBox(
                         width: 130, // Reduced slightly to fit better
                         child: DropdownButtonFormField<int>(
                           isExpanded: true, // Fix: Prevent overflow by truncating text
-                          value: _allocations[ingredientId],
+                          initialValue: _allocations[ingredientId],
                           decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!.supplier,
+                            hintText: AppLocalizations.of(context).supplier,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 4), // Reduced padding
                             border: const OutlineInputBorder(),
                           ),
                           items: _suppliers.map((s) => DropdownMenuItem<int>(
                             value: s['id'],
-                            child: Text(s['name'] ?? AppLocalizations.of(context)!.unknown, overflow: TextOverflow.ellipsis),
+                            child: Text(s['name'] ?? AppLocalizations.of(context).unknown, overflow: TextOverflow.ellipsis),
                           )).toList(),
                           onChanged: (v) async {
                             setState(() => _allocations[ingredientId] = v);
@@ -292,7 +294,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
             child: ElevatedButton.icon(
               onPressed: _generatePOs,
               icon: const Icon(Icons.send),
-              label: Text(AppLocalizations.of(context)!.generateAndSendPos),
+              label: Text(AppLocalizations.of(context).generateAndSendPos),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
@@ -423,7 +425,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
         SizedBox(
           width: 160,
           child: DropdownButtonFormField<int>(
-            value: value,
+            initialValue: value,
             isExpanded: true,
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
@@ -460,7 +462,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
       children: [
         // Section 1: Pending Allocations (items ready to generate POs)
         if (hasPending) ...[
-          Text(AppLocalizations.of(context)!.posWillBeGenerated(pendingGroups.length), 
+          Text(AppLocalizations.of(context).posWillBeGenerated(pendingGroups.length), 
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           ...pendingGroups.entries.map((entry) {
@@ -471,11 +473,11 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                   backgroundColor: Colors.orange.shade100,
                   child: Icon(Icons.pending_actions, color: Colors.orange.shade700),
                 ),
-                title: Text(supplier['name'] ?? AppLocalizations.of(context)!.unknown),
-                subtitle: Text(AppLocalizations.of(context)!.itemsCount(entry.value.length)),
+                title: Text(supplier['name'] ?? AppLocalizations.of(context).unknown),
+                subtitle: Text(AppLocalizations.of(context).itemsCount(entry.value.length)),
                 children: entry.value.map((item) => ListTile(
                   dense: true,
-                  title: Text(item['ingredientName'] ?? AppLocalizations.of(context)!.unknown),
+                  title: Text(item['ingredientName'] ?? AppLocalizations.of(context).unknown),
                   trailing: Text('${(item['requiredQty'] as num?)?.toStringAsFixed(2) ?? '0'} ${item['unit']}'),
                 )).toList(),
               ),
@@ -503,7 +505,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                 child: Icon(Icons.receipt_long, color: Colors.green.shade700),
               ),
               title: Text(po['poNumber'] ?? 'PO', style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(po['vendorName'] ?? AppLocalizations.of(context)!.unknown),
+              subtitle: Text(po['vendorName'] ?? AppLocalizations.of(context).unknown),
               trailing: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -517,7 +519,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                     child: Text(po['status'] ?? 'SENT',
                       style: TextStyle(fontSize: 11, color: Colors.green.shade800, fontWeight: FontWeight.bold)),
                   ),
-                  Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0),
+                  Text(AppLocalizations.of(context).itemsCount(po['totalItems'] ?? 0),
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                 ],
               ),
@@ -535,7 +537,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                 children: [
                   Icon(Icons.warning, size: 48, color: Colors.orange.shade300),
                   const SizedBox(height: 16),
-                  Text(AppLocalizations.of(context)!.noAllocationsMade),
+                  Text(AppLocalizations.of(context).noAllocationsMade),
                 ],
               ),
             ),
@@ -548,6 +550,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
     final items = await FinanceRepository().getPoItems(po['id'] as int);
     
     showModalBottomSheet(
+
       context: context,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(
@@ -591,7 +594,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                     children: [
                       const Icon(Icons.business, size: 20),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(po['vendorName'] ?? AppLocalizations.of(context)!.unknown, 
+                      Expanded(child: Text(po['vendorName'] ?? AppLocalizations.of(context).unknown, 
                         style: const TextStyle(fontWeight: FontWeight.bold))),
                     ],
                   ),
@@ -599,7 +602,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0), 
+                      Text(AppLocalizations.of(context).itemsCount(po['totalItems'] ?? 0), 
                         style: TextStyle(color: Colors.grey.shade600)),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -631,7 +634,7 @@ class _AllotmentScreenState extends State<AllotmentScreen> with SingleTickerProv
                       backgroundColor: Colors.grey.shade200,
                       child: Text('${index + 1}'),
                     ),
-                    title: Text(item['itemName'] ?? AppLocalizations.of(context)!.unknown),
+                    title: Text(item['itemName'] ?? AppLocalizations.of(context).unknown),
                     subtitle: Text(
                       '${item['quantity']} ${item['unit'] ?? 'kg'} × ₹${rate.toStringAsFixed(2)}',
                       style: TextStyle(color: Colors.grey.shade600),

@@ -20,7 +20,18 @@ cat > web/version.json <<EOF
 EOF
 
 echo "🏗️ STEP 2: Building Flutter Web (Production)..."
-flutter build web --dart-define=PRODUCTION=true --release
+# Inject sensitive keys via --dart-define
+# Note: In a real CI/CD, these would be environment variables
+CASHFREE_APP_ID="YOUR_APP_ID_HERE"
+CASHFREE_SECRET_KEY="YOUR_SECRET_KEY_HERE"
+CASHFREE_SANDBOX="true" # Always true for now as per user request
+
+flutter build web \
+    --dart-define=PRODUCTION=true \
+    --dart-define=CASHFREE_APP_ID=$CASHFREE_APP_ID \
+    --dart-define=CASHFREE_SECRET_KEY=$CASHFREE_SECRET_KEY \
+    --dart-define=CASHFREE_SANDBOX=$CASHFREE_SANDBOX \
+    --release
 if [ $? -ne 0 ]; then
     echo "❌ FAILURE: Flutter build failed."
     exit 1

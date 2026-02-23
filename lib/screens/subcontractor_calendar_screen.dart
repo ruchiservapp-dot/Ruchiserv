@@ -8,18 +8,20 @@ import 'subcontractor_order_detail_screen.dart';
 
 class SubcontractorCalendarScreen extends StatefulWidget {
   final int subcontractorId;
-  
+
   const SubcontractorCalendarScreen({super.key, required this.subcontractorId});
 
   @override
-  State<SubcontractorCalendarScreen> createState() => _SubcontractorCalendarScreenState();
+  State<SubcontractorCalendarScreen> createState() =>
+      _SubcontractorCalendarScreenState();
 }
 
-class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScreen> {
+class _SubcontractorCalendarScreenState
+    extends State<SubcontractorCalendarScreen> {
   bool _isLoading = true;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  
+
   // Map of date -> {orderCount, totalPax}
   Map<String, Map<String, int>> _calendarData = {};
 
@@ -34,14 +36,14 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
 
   Future<void> _loadCalendarData() async {
     setState(() => _isLoading = true);
-    
+
     final db = await DatabaseHelper().database;
     final monthStart = DateTime(_focusedDay.year, _focusedDay.month, 1);
     final monthEnd = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
-    
+
     final startStr = DateFormat('yyyy-MM-dd').format(monthStart);
     final endStr = DateFormat('yyyy-MM-dd').format(monthEnd);
-    
+
     final data = await db.rawQuery('''
       SELECT o.date, COUNT(DISTINCT o.id) as orderCount, SUM(d.pax) as totalPax
       FROM orders o
@@ -50,7 +52,7 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
         AND o.date BETWEEN ? AND ?
       GROUP BY o.date
     ''', [widget.subcontractorId, startStr, endStr]);
-    
+
     Map<String, Map<String, int>> calData = {};
     for (var row in data) {
       calData[row['date'] as String] = {
@@ -58,7 +60,7 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
         'totalPax': (row['totalPax'] as num?)?.toInt() ?? 0,
       };
     }
-    
+
     setState(() {
       _calendarData = calData;
       _isLoading = false;
@@ -70,20 +72,23 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
     });
-    
+
     final dateKey = _keyOf(selectedDay);
     if (_calendarData.containsKey(dateKey)) {
-      Navigator.push(context, MaterialPageRoute(
-        builder: (_) => SubcontractorOrderDetailScreen(
-          date: dateKey,
-          subcontractorId: widget.subcontractorId,
-        ),
-      ));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SubcontractorOrderDetailScreen(
+              date: dateKey,
+              subcontractorId: widget.subcontractorId,
+            ),
+          ));
     }
   }
 
   void _onMonthChanged(DateTime newFocused) {
-    setState(() => _focusedDay = DateTime(newFocused.year, newFocused.month, 1));
+    setState(
+        () => _focusedDay = DateTime(newFocused.year, newFocused.month, 1));
     _loadCalendarData();
   }
 
@@ -93,43 +98,45 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
       appBar: AppBar(
         title: const Text('Order Calendar'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadCalendarData),
+          IconButton(
+              icon: const Icon(Icons.refresh), onPressed: _loadCalendarData),
         ],
       ),
       body: Column(
         children: [
           if (_isLoading) const LinearProgressIndicator(),
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Calculate dynamic row height
-                // Overhead: Header (~60) + Bottom Padding/Legend (~50)
-                const double overhead = 110.0;
-                final double availableHeight = constraints.maxHeight - overhead;
-                final double rowHeight = (availableHeight / 6.0).clamp(60.0, 300.0);
+            child: LayoutBuilder(builder: (context, constraints) {
+              // Calculate dynamic row height
+              // Overhead: Header (~60) + Bottom Padding/Legend (~50)
+              const double overhead = 110.0;
+              final double availableHeight = constraints.maxHeight - overhead;
+              final double rowHeight =
+                  (availableHeight / 6.0).clamp(60.0, 300.0);
 
-                return TableCalendar(
-                  firstDay: DateTime(DateTime.now().year - 1),
-                  lastDay: DateTime(DateTime.now().year + 1),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  onDaySelected: _onDaySelected,
-                  onPageChanged: _onMonthChanged,
-                  calendarFormat: CalendarFormat.month,
-                  availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-                  rowHeight: rowHeight,
-                  headerStyle: const HeaderStyle(
-                    titleCentered: true,
-                    formatButtonVisible: false,
-                  ),
-                  calendarBuilders: CalendarBuilders(
-                    defaultBuilder: (ctx, day, focused) => _buildDayCell(day),
-                    todayBuilder: (ctx, day, focused) => _buildDayCell(day, isToday: true),
-                    selectedBuilder: (ctx, day, focused) => _buildDayCell(day, isSelected: true),
-                  ),
-                );
-              }
-            ),
+              return TableCalendar(
+                firstDay: DateTime(DateTime.now().year - 1),
+                lastDay: DateTime(DateTime.now().year + 1),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: _onDaySelected,
+                onPageChanged: _onMonthChanged,
+                calendarFormat: CalendarFormat.month,
+                availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+                rowHeight: rowHeight,
+                headerStyle: const HeaderStyle(
+                  titleCentered: true,
+                  formatButtonVisible: false,
+                ),
+                calendarBuilders: CalendarBuilders(
+                  defaultBuilder: (ctx, day, focused) => _buildDayCell(day),
+                  todayBuilder: (ctx, day, focused) =>
+                      _buildDayCell(day, isToday: true),
+                  selectedBuilder: (ctx, day, focused) =>
+                      _buildDayCell(day, isSelected: true),
+                ),
+              );
+            }),
           ),
           // Legend
           Padding(
@@ -148,24 +155,27 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
     );
   }
 
-  Widget _buildDayCell(DateTime day, {bool isToday = false, bool isSelected = false}) {
+  Widget _buildDayCell(DateTime day,
+      {bool isToday = false, bool isSelected = false}) {
     final dateKey = _keyOf(day);
     final data = _calendarData[dateKey];
     final hasOrders = data != null && (data['orderCount'] ?? 0) > 0;
     final totalPax = data?['totalPax'] ?? 0;
-    
+
     Color bgColor = Colors.transparent;
     if (hasOrders) {
       bgColor = totalPax > 200 ? Colors.green.shade100 : Colors.purple.shade50;
     }
-    
+
     return Container(
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isSelected ? Colors.purple : (isToday ? Colors.blue : Colors.grey.shade300),
+          color: isSelected
+              ? Colors.purple
+              : (isToday ? Colors.blue : Colors.grey.shade300),
           width: isSelected || isToday ? 2 : 1,
         ),
       ),
@@ -208,7 +218,7 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '${data!['orderCount']}',
+                  '${data['orderCount']}',
                   style: const TextStyle(color: Colors.white, fontSize: 9),
                 ),
               ),
@@ -221,9 +231,14 @@ class _SubcontractorCalendarScreenState extends State<SubcontractorCalendarScree
   Widget _legendItem(Color color, String label) {
     return Row(
       children: [
-        Container(width: 16, height: 16, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
+        Container(
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(4))),
         const SizedBox(width: 6),
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+        Text(label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
       ],
     );
   }

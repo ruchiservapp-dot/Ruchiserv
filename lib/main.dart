@@ -3,7 +3,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'core/app_logger.dart'; // Ensure import
+// Ensure import
 import 'core/app_theme.dart';
 import 'core/encryption_helper.dart'; // COMPLIANCE: PII encryption (Rule C.3)
 import 'package:flutter_localizations/flutter_localizations.dart';

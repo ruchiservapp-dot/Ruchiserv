@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 // Conditional import for web
-import 'web_update_stub.dart'
-    if (dart.library.html) 'web_update_web.dart' as web_impl;
+import 'web_update_stub.dart' if (dart.library.html) 'web_update_web.dart'
+    as web_impl;
 
 class WebUpdateService {
   static final WebUpdateService _instance = WebUpdateService._internal();
@@ -22,10 +22,10 @@ class WebUpdateService {
 
   Future<void> init() async {
     if (!kIsWeb) return;
-    
+
     _currentVersion = await _fetchVersion();
     AppLogger.info('WebUpdateService: Initial version $_currentVersion');
-    
+
     // Start periodic check every 15 minutes
     _checkTimer = Timer.periodic(const Duration(minutes: 15), (timer) {
       checkForUpdates();
@@ -51,8 +51,11 @@ class WebUpdateService {
     if (!kIsWeb || _isUpdateAvailable) return;
 
     final newVersion = await _fetchVersion();
-    if (newVersion != null && _currentVersion != null && newVersion != _currentVersion) {
-      AppLogger.info('WebUpdateService: Update detected! Old: $_currentVersion, New: $newVersion');
+    if (newVersion != null &&
+        _currentVersion != null &&
+        newVersion != _currentVersion) {
+      AppLogger.info(
+          'WebUpdateService: Update detected! Old: $_currentVersion, New: $newVersion');
       _isUpdateAvailable = true;
       _updateController.add(true);
     }

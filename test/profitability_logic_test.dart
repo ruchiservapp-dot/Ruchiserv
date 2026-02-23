@@ -3,7 +3,6 @@ import 'package:ruchiserv/db/database_helper.dart';
 import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:ruchiserv/db/schema_manager.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite/sqflite.dart';
 import 'dart:io';
 
 void main() {

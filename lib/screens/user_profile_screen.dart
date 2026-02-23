@@ -13,7 +13,7 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _userData;
-  
+
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -46,16 +46,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (_firmId != null) {
       final db = DatabaseHelper();
       final users = await db.getUsersByFirm(_firmId!);
-      
+
       Map<String, dynamic>? foundUser;
-      
+
       if (userId != null) {
-        foundUser = users.firstWhere((u) => u['userId'] == userId || u['id'].toString() == userId, orElse: () => {});
+        foundUser = users.firstWhere(
+            (u) => u['userId'] == userId || u['id'].toString() == userId,
+            orElse: () => {});
       }
-      
+
       // Fallback to mobile check
       if ((foundUser == null || foundUser.isEmpty) && mobile != null) {
-        foundUser = users.firstWhere((u) => u['mobile'] == mobile, orElse: () => {});
+        foundUser =
+            users.firstWhere((u) => u['mobile'] == mobile, orElse: () => {});
       }
 
       if (foundUser != null && foundUser.isNotEmpty) {
@@ -75,26 +78,28 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (_userData == null) return;
     if (_nameController.text.isEmpty || _passwordController.text.length < 4) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill valid name and password (min 4 chars)')),
+        const SnackBar(
+            content: Text('Please fill valid name and password (min 4 chars)')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
-    
+
     // Update data
     _userData!['username'] = _nameController.text.trim();
-    _userData!['mobile'] = _mobileController.text.trim(); // Allow mobile change? Maybe risky if it's the key.
+    _userData!['mobile'] = _mobileController.text
+        .trim(); // Allow mobile change? Maybe risky if it's the key.
     _userData!['passwordHash'] = _passwordController.text.trim();
     _userData!['updatedAt'] = DateTime.now().toIso8601String();
 
     try {
       await DatabaseHelper().updateUser(_userData!);
-      
+
       // Update SharedPrefs if mobile changed
       final sp = await SharedPreferences.getInstance();
       await sp.setString('last_mobile', _userData!['mobile']);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Profile Updated Successfully')),
@@ -104,7 +109,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving profile: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error saving profile: $e'),
+              backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -131,12 +138,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       const CircleAvatar(
                         radius: 40,
                         backgroundColor: Colors.indigo,
-                        child: Icon(Icons.person, size: 50, color: Colors.white),
+                        child:
+                            Icon(Icons.person, size: 50, color: Colors.white),
                       ),
                       const SizedBox(height: 20),
-                      Text("Role: ${_userData!['role'] ?? 'User'}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text("Role: ${_userData!['role'] ?? 'User'}",
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 20),
-                      
                       TextField(
                         controller: _nameController,
                         decoration: const InputDecoration(
@@ -146,19 +155,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
                       TextField(
                         controller: _mobileController,
                         decoration: const InputDecoration(
                           labelText: 'Mobile Number',
                           prefixIcon: Icon(Icons.phone_android),
                           border: OutlineInputBorder(),
-                          helperText: 'Changing mobile will affect your login ID',
+                          helperText:
+                              'Changing mobile will affect your login ID',
                         ),
                         keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 16),
-                      
                       TextField(
                         controller: _passwordController,
                         decoration: const InputDecoration(
@@ -169,7 +177,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         obscureText: true,
                       ),
                       const SizedBox(height: 30),
-                      
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -177,9 +184,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           onPressed: _saveProfile,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           ),
-                          child: const Text("Save Changes", style: TextStyle(fontSize: 18, color: Colors.white)),
+                          child: const Text("Save Changes",
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white)),
                         ),
                       ),
                     ],

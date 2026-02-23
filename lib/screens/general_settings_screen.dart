@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../core/locale_provider.dart';
@@ -47,7 +48,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text("Appearance", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Appearance",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           SwitchListTile(
             title: const Text("Dark Mode"),
             subtitle: const Text("Enable dark theme"),
@@ -56,13 +58,15 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
               setState(() => _isDarkMode = val);
               _savePreference('dark_mode', val);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Theme will apply on next restart")),
+                const SnackBar(
+                    content: Text("Theme will apply on next restart")),
               );
             },
           ),
           const Divider(),
           const SizedBox(height: 16),
-          const Text("Language", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Language",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           Consumer<LocaleProvider>(
             builder: (context, provider, child) {
               return ListTile(
@@ -78,11 +82,14 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   },
                   items: const [
                     DropdownMenuItem(value: 'en', child: Text('English')),
-                    DropdownMenuItem(value: 'ml', child: Text('Malayalam (മലയാളം)')),
+                    DropdownMenuItem(
+                        value: 'ml', child: Text('Malayalam (മലയാളം)')),
                     DropdownMenuItem(value: 'ta', child: Text('Tamil (தமிழ்)')),
                     DropdownMenuItem(value: 'hi', child: Text('Hindi (हिंदी)')),
-                    DropdownMenuItem(value: 'kn', child: Text('Kannada (ಕನ್ನಡ)')),
-                    DropdownMenuItem(value: 'te', child: Text('Telugu (తెలుగు)')),
+                    DropdownMenuItem(
+                        value: 'kn', child: Text('Kannada (ಕನ್ನಡ)')),
+                    DropdownMenuItem(
+                        value: 'te', child: Text('Telugu (తెలుగు)')),
                   ],
                 ),
               );
@@ -90,7 +97,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
           ),
           const Divider(),
           const SizedBox(height: 16),
-          const Text("Notifications", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Notifications",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           SwitchListTile(
             title: const Text("WhatsApp Notifications"),
             subtitle: const Text("Send updates via WhatsApp"),
@@ -111,7 +119,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
           ),
           const Divider(),
           const SizedBox(height: 16),
-          const Text("Security", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Security",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           SwitchListTile(
             title: const Text("OTP Verification"),
             subtitle: const Text("Require OTP for login"),
@@ -123,7 +132,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
           ),
           const Divider(),
           const SizedBox(height: 16),
-          const Text("Subscription & Billing", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Subscription & Billing",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ListTile(
             leading: const Icon(Icons.star, color: Colors.amber),
             title: const Text("Manage Subscription"),
@@ -134,37 +144,46 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
               // Note: Make sure to import saas_payment_screen.dart
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SaaSPaymentScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const SaaSPaymentScreen()),
               );
             },
           ),
-          const Divider(),
-          const SizedBox(height: 16),
-          const Text("Maintenance", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ListTile(
-            leading: const Icon(Icons.build_circle, color: Colors.orange),
-            title: const Text("Fix Database Schema"),
-            subtitle: const Text("Run if you see missing column errors"),
-            onTap: () async {
-              try {
-                final db = DatabaseHelper();
-                final database = await db.database;
-                await SchemaManager.syncSchema(database);
-                
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Database Schema Synced! Try your action again."), backgroundColor: Colors.green),
-                  );
+          if (kDebugMode) ...[
+            const Divider(),
+            const SizedBox(height: 16),
+            const Text("Maintenance",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ListTile(
+              leading: const Icon(Icons.build_circle, color: Colors.orange),
+              title: const Text("Fix Database Schema"),
+              subtitle: const Text("Run if you see missing column errors"),
+              onTap: () async {
+                try {
+                  final db = DatabaseHelper();
+                  final database = await db.database;
+                  await SchemaManager.syncSchema(database);
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              "Database Schema Synced! Try your action again."),
+                          backgroundColor: Colors.green),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text("Fix failed: $e"),
+                          backgroundColor: Colors.red),
+                    );
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Fix failed: $e"), backgroundColor: Colors.red),
-                  );
-                }
-              }
-            },
-          ),
+              },
+            ),
+          ],
         ],
       ),
     );

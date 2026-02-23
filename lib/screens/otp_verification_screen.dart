@@ -1,5 +1,6 @@
 // @locked
 // lib/screens/otp_verification_screen.dart
+import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
@@ -76,7 +77,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               backgroundColor: Colors.red,
             ),
           );
-          
+
           if (result['blocked'] == true) {
             // F.3 Mandate: Block user if too many attempts
             Navigator.pop(context, false);
@@ -118,6 +119,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
     } catch (e) {
       // Handle error
+      AppLogger.error('Caught error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -166,11 +168,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             ),
             const SizedBox(height: 24),
             TextButton(
-              onPressed: _secondsRemaining == 0 && !_isLoading ? _resendOtp : null,
+              onPressed:
+                  _secondsRemaining == 0 && !_isLoading ? _resendOtp : null,
               child: Text(
-                _secondsRemaining > 0
-                    ? 'Resend OTP in $timeStr'
-                    : 'Resend OTP',
+                _secondsRemaining > 0 ? 'Resend OTP in $timeStr' : 'Resend OTP',
               ),
             ),
           ],

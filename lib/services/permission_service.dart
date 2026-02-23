@@ -28,8 +28,18 @@ class PermissionService {
 
   // Module definitions
   static const allModules = [
-    'ORDERS', 'CALENDAR', 'KITCHEN', 'DISPATCH', 'INVENTORY',
-    'FINANCE', 'REPORTS', 'SETTINGS', 'STAFF', 'SUBSCRIPTION', 'ATTENDANCE', 'INSIGHTS',
+    'ORDERS',
+    'CALENDAR',
+    'KITCHEN',
+    'DISPATCH',
+    'INVENTORY',
+    'FINANCE',
+    'REPORTS',
+    'SETTINGS',
+    'STAFF',
+    'SUBSCRIPTION',
+    'ATTENDANCE',
+    'INSIGHTS',
   ];
 
   /// Initialize permissions after login
@@ -37,35 +47,37 @@ class PermissionService {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm');
     final mobile = sp.getString('last_mobile');
-    
+
     // v43: Don't return early here! We want to check if there's a custom DB override.
     // But we use this as a base/fallback.
     final spRole = sp.getString('user_role');
     if (spRole != null && spRole.isNotEmpty && spRole != 'Staff') {
-      AppLogger.info('PermissionService: Found role in SharedPreferences: $spRole');
+      AppLogger.info(
+          'PermissionService: Found role in SharedPreferences: $spRole');
       _cachedRole = spRole;
       final rolePerms = rolePermissions[_cachedRole] ?? 'ORDERS';
       _cachedModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
       _cachedShowRates = sp.getBool('show_rates') ?? true;
       _cachedPermissions = sp.getString('user_permissions');
     }
-    
+
     if (firmId == null || mobile == null) return;
-    
+
     // PRIORITY 2: Query local database for user record
     final db = await DatabaseHelper().database;
-    final users = await db.query('users', 
-      where: 'firmId = ? AND mobile = ?', 
+    final users = await db.query(
+      'users',
+      where: 'firmId = ? AND mobile = ?',
       whereArgs: [firmId, mobile],
       limit: 1,
     );
-    
+
     if (users.isNotEmpty) {
       final user = users.first;
       _cachedRole = user['role'] as String? ?? 'Staff';
       _cachedPermissions = user['permissions'] as String?;
       _cachedShowRates = (user['showRates'] as int?) == 1;
-      
+
       // Get module access - use custom if set, otherwise use role defaults
       final moduleAccess = user['moduleAccess'] as String?;
       if (moduleAccess != null && moduleAccess.isNotEmpty) {
@@ -74,7 +86,7 @@ class PermissionService {
         final rolePerms = rolePermissions[_cachedRole] ?? 'ORDERS';
         _cachedModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
       }
-      
+
       // Cache in SharedPreferences for quick access
       await sp.setString('user_role', _cachedRole!);
       await sp.setString('user_permissions', _cachedPermissions ?? '');
@@ -82,7 +94,8 @@ class PermissionService {
       await sp.setStringList('allowed_modules', _cachedModules!);
     } else {
       // PRIORITY 3: Fallback - use any role from SharedPreferences even if 'Staff'
-      AppLogger.info('PermissionService: No user in DB, using SP fallback: $spRole');
+      AppLogger.info(
+          'PermissionService: No user in DB, using SP fallback: $spRole');
       _cachedRole = spRole ?? 'Staff';
       final rolePerms = rolePermissions[_cachedRole] ?? 'ORDERS';
       _cachedModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
@@ -95,7 +108,7 @@ class PermissionService {
     _cachedPermissions = null;
     _cachedModules = null;
     _cachedShowRates = null;
-    
+
     final sp = await SharedPreferences.getInstance();
     await sp.remove('user_role');
     await sp.remove('user_permissions');
@@ -120,22 +133,23 @@ class PermissionService {
   Future<bool> canAccess(String module) async {
     final role = await getUserRole();
     if (role == 'Admin') return true;
-    
+
     if (_cachedModules != null) {
       return _cachedModules!.contains(module);
     }
-    
+
     final sp = await SharedPreferences.getInstance();
     final modules = sp.getStringList('allowed_modules');
     if (modules != null) {
       _cachedModules = modules; // Cache it for next time
       return modules.contains(module);
     }
-    
+
     // Last resort: role-based defaults
     final spRole = sp.getString('user_role') ?? 'Staff';
     final rolePerms = rolePermissions[spRole] ?? 'ORDERS';
-    final defaultModules = rolePerms == 'ALL' ? allModules : rolePerms.split(',');
+    final defaultModules =
+        rolePerms == 'ALL' ? allModules : rolePerms.split(',');
     return defaultModules.contains(module);
   }
 
@@ -150,10 +164,11 @@ class PermissionService {
   /// Check if current user can view rates/costs
   Future<bool> canViewRates() async {
     final role = await getUserRole();
-    if (role == 'Admin' || role == 'Manager' || role == 'Accountant') return true;
-    
+    if (role == 'Admin' || role == 'Manager' || role == 'Accountant')
+      return true;
+
     if (_cachedShowRates != null) return _cachedShowRates!;
-    
+
     final sp = await SharedPreferences.getInstance();
     return sp.getBool('show_rates') ?? false;
   }
@@ -168,14 +183,13 @@ class PermissionService {
     return financeReportRoles.contains(role);
   }
 
-
   /// Get list of allowed modules for current user
   Future<List<String>> getAllowedModules() async {
     final role = await getUserRole();
     if (role == 'Admin') return allModules;
 
     if (_cachedModules != null) return _cachedModules!;
-    
+
     final sp = await SharedPreferences.getInstance();
     return sp.getStringList('allowed_modules') ?? [];
   }

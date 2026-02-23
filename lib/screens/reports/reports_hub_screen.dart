@@ -26,7 +26,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
   }
 
   Future<void> _checkPermissions() async {
-    final canAccess = await PermissionService.instance.canAccessFinanceReports();
+    final canAccess =
+        await PermissionService.instance.canAccessFinanceReports();
     setState(() {
       _canAccessFinanceReports = canAccess;
       _isLoading = false;
@@ -55,7 +56,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
                     InkWell(
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const KPIDashboardScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const KPIDashboardScreen()),
                       ),
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
@@ -63,7 +65,10 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Colors.deepPurple.shade600, Colors.deepPurple.shade400],
+                            colors: [
+                              Colors.deepPurple.shade600,
+                              Colors.deepPurple.shade400
+                            ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -84,20 +89,27 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.dashboard, size: 32, color: Colors.white),
+                              child: const Icon(Icons.dashboard,
+                                  size: 32, color: Colors.white),
                             ),
                             const SizedBox(width: 16),
                             const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('KPI Dashboard', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                                  Text('KPI Dashboard',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white)),
                                   SizedBox(height: 4),
-                                  Text('Revenue, Margin, Orders at a glance', style: TextStyle(color: Colors.white70)),
+                                  Text('Revenue, Margin, Orders at a glance',
+                                      style: TextStyle(color: Colors.white70)),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.arrow_forward_ios, color: Colors.white70),
+                            const Icon(Icons.arrow_forward_ios,
+                                color: Colors.white70),
                           ],
                         ),
                       ),
@@ -107,7 +119,11 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
 
                   // Financial Reports Section
                   if (_canAccessFinanceReports) ...[
-                    const Text("Financial Reports", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    const Text("Financial Reports",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey)),
                     const SizedBox(height: 12),
                     GridView.count(
                       crossAxisCount: 2,
@@ -122,28 +138,41 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
                           "Balance Sheet",
                           Icons.account_balance,
                           Colors.indigo,
-                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BalanceSheetScreen())),
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const BalanceSheetScreen())),
                         ),
                         _buildReportTile(
                           context,
                           "Cash Flow",
                           Icons.waterfall_chart,
                           Colors.teal,
-                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CashFlowScreen())),
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const CashFlowScreen())),
                         ),
                         _buildReportTile(
                           context,
                           "P&L Report",
                           Icons.trending_up,
                           Colors.green,
-                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PLReportScreen())),
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const PLReportScreen())),
                         ),
                         _buildReportTile(
                           context,
                           "Event Profit",
                           Icons.event_note,
                           Colors.purple,
-                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EventProfitabilityScreen())),
+                          () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const EventProfitabilityScreen())),
                         ),
                       ],
                     ),
@@ -151,7 +180,11 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
                   ],
 
                   // Operational Reports Section
-                  const Text("Operational Reports", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const Text("Operational Reports",
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey)),
                   const SizedBox(height: 12),
                   GridView.count(
                     crossAxisCount: 2,
@@ -166,14 +199,20 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
                         "Finance",
                         Icons.pie_chart,
                         Colors.blue,
-                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceReportsScreen())),
+                        () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const FinanceReportsScreen())),
                       ),
                       _buildReportTile(
                         context,
                         "Utensils",
                         Icons.restaurant,
                         Colors.orange,
-                        () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UtensilReportScreen())),
+                        () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const UtensilReportScreen())),
                       ),
                     ],
                   ),
@@ -183,7 +222,8 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
     );
   }
 
-  Widget _buildReportTile(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildReportTile(BuildContext context, String title, IconData icon,
+      Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -211,7 +251,9 @@ class _ReportsHubScreenState extends State<ReportsHubScreen> {
               child: Icon(icon, size: 28, color: color),
             ),
             const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           ],
         ),
       ),

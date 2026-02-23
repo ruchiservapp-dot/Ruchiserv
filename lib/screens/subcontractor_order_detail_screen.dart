@@ -8,14 +8,17 @@ import '../utils/time_utils.dart';
 class SubcontractorOrderDetailScreen extends StatefulWidget {
   final String date;
   final int subcontractorId;
-  
-  const SubcontractorOrderDetailScreen({super.key, required this.date, required this.subcontractorId});
+
+  const SubcontractorOrderDetailScreen(
+      {super.key, required this.date, required this.subcontractorId});
 
   @override
-  State<SubcontractorOrderDetailScreen> createState() => _SubcontractorOrderDetailScreenState();
+  State<SubcontractorOrderDetailScreen> createState() =>
+      _SubcontractorOrderDetailScreenState();
 }
 
-class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetailScreen> {
+class _SubcontractorOrderDetailScreenState
+    extends State<SubcontractorOrderDetailScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _orders = [];
   int _totalPax = 0;
@@ -29,9 +32,9 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
 
   Future<void> _loadOrders() async {
     setState(() => _isLoading = true);
-    
+
     final db = await DatabaseHelper().database;
-    
+
     // Get orders with subcontracted dishes for this date
     final orders = await db.rawQuery('''
       SELECT DISTINCT o.*, 
@@ -41,25 +44,25 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
       WHERE d.isSubcontracted = 1 AND d.subcontractorId = ? AND o.date = ?
       ORDER BY o.time ASC
     ''', [widget.subcontractorId, widget.subcontractorId, widget.date]);
-    
+
     // For each order, get the assigned dishes
     List<Map<String, dynamic>> ordersWithDishes = [];
     int totalPax = 0;
     int totalDishes = 0;
-    
+
     for (var order in orders) {
       final dishes = await db.rawQuery('''
         SELECT * FROM dishes WHERE orderId = ? AND isSubcontracted = 1 AND subcontractorId = ?
       ''', [order['id'], widget.subcontractorId]);
-      
+
       final orderMap = Map<String, dynamic>.from(order);
       orderMap['dishes'] = List<Map<String, dynamic>>.from(dishes);
       ordersWithDishes.add(orderMap);
-      
+
       totalPax += (order['assignedPax'] as num?)?.toInt() ?? 0;
       totalDishes += dishes.length;
     }
-    
+
     setState(() {
       _orders = ordersWithDishes;
       _totalPax = totalPax;
@@ -72,7 +75,9 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
     try {
       final date = DateTime.parse(widget.date);
       final today = DateTime.now();
-      if (date.year == today.year && date.month == today.month && date.day == today.day) {
+      if (date.year == today.year &&
+          date.month == today.month &&
+          date.day == today.day) {
         return 'Today';
       }
       return DateFormat('EEEE, MMM d').format(date);
@@ -89,8 +94,10 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(_getDateLabel()),
-            Text('${_orders.length} orders • $_totalDishes dishes • $_totalPax pax', 
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+            Text(
+                '${_orders.length} orders • $_totalDishes dishes • $_totalPax pax',
+                style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.normal)),
           ],
         ),
         actions: [
@@ -104,7 +111,8 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.event_busy, size: 64, color: Colors.grey.shade400),
+                      Icon(Icons.event_busy,
+                          size: 64, color: Colors.grey.shade400),
                       const SizedBox(height: 16),
                       const Text('No orders for this date'),
                     ],
@@ -120,7 +128,7 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
 
   Widget _buildOrderCard(Map<String, dynamic> order) {
     final dishes = order['dishes'] as List<Map<String, dynamic>>? ?? [];
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -132,21 +140,30 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
             backgroundColor: Colors.purple.shade100,
             child: Text(
               TimeUtils.formatTo12Hour(order['time']),
-              style: TextStyle(fontSize: 8, color: Colors.purple.shade800, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: 8,
+                  color: Colors.purple.shade800,
+                  fontWeight: FontWeight.bold),
             ),
           ),
-          title: Text(order['customerName'] ?? 'Customer', style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(order['customerName'] ?? 'Customer',
+              style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 12, color: Colors.grey.shade600),
+                  Icon(Icons.location_on,
+                      size: 12, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
-                  Expanded(child: Text(order['location'] ?? 'N/A', style: TextStyle(fontSize: 12, color: Colors.grey.shade600))),
+                  Expanded(
+                      child: Text(order['location'] ?? 'N/A',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600))),
                 ],
               ),
-              Text('${order['assignedPax']} pax • ${dishes.length} dishes', style: TextStyle(color: Colors.purple.shade700)),
+              Text('${order['assignedPax']} pax • ${dishes.length} dishes',
+                  style: TextStyle(color: Colors.purple.shade700)),
             ],
           ),
           children: [
@@ -171,7 +188,9 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
         child: Icon(Icons.restaurant, size: 16, color: Colors.green.shade700),
       ),
       title: Text(dish['dishName'] ?? 'Dish'),
-      subtitle: Text('${dish['category'] ?? ''} • ${dish['productionType'] ?? 'INTERNAL'}', style: const TextStyle(fontSize: 11)),
+      subtitle: Text(
+          '${dish['category'] ?? ''} • ${dish['productionType'] ?? 'INTERNAL'}',
+          style: const TextStyle(fontSize: 11)),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
@@ -180,7 +199,10 @@ class _SubcontractorOrderDetailScreenState extends State<SubcontractorOrderDetai
         ),
         child: Text(
           '${dish['pax']} pax',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple.shade800, fontSize: 12),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.purple.shade800,
+              fontSize: 12),
         ),
       ),
     );

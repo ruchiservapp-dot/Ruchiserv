@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import '../../db/database_helper.dart';
 import '../../repositories/order_repository.dart';
 import '../../repositories/finance_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,31 +64,57 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildKPIRow() {
     return FutureBuilder<Map<String, dynamic>>(
-      future: FinanceRepository().getKPIComparison(_firmId, 
-        DateFormat('yyyy-MM-dd').format(widget.startDate), 
-        DateFormat('yyyy-MM-dd').format(widget.endDate)),
+      future: FinanceRepository().getKPIComparison(
+          _firmId,
+          DateFormat('yyyy-MM-dd').format(widget.startDate),
+          DateFormat('yyyy-MM-dd').format(widget.endDate)),
       builder: (context, snapshot) {
-        final Map<String, dynamic> data = (snapshot.data?['current'] as Map?)?.cast<String, dynamic>() ?? {};
+        final Map<String, dynamic> data =
+            (snapshot.data?['current'] as Map?)?.cast<String, dynamic>() ?? {};
         final revenue = (data['revenue'] as num?)?.toDouble() ?? 0.0;
         final cost = (data['cogs'] as num?)?.toDouble() ?? 0.0;
         final profit = (data['grossProfit'] as num?)?.toDouble() ?? 0.0;
         final margin = revenue > 0 ? (profit / revenue) * 100 : 0.0;
-        
+
         return Column(
           children: [
             Row(
               children: [
-                Expanded(child: _buildKPICard('Total Revenue', '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format(revenue)}', Icons.payments, Colors.blue, 'Gross Sales')),
+                Expanded(
+                    child: _buildKPICard(
+                        'Total Revenue',
+                        '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format(revenue)}',
+                        Icons.payments,
+                        Colors.blue,
+                        'Gross Sales')),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKPICard('Gross Profit', '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format(profit)}', Icons.trending_up, Colors.green, '${margin.toStringAsFixed(1)}% Margin')),
+                Expanded(
+                    child: _buildKPICard(
+                        'Gross Profit',
+                        '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format(profit)}',
+                        Icons.trending_up,
+                        Colors.green,
+                        '${margin.toStringAsFixed(1)}% Margin')),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildKPICard('Material Cost', '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format(cost)}', Icons.inventory_2, Colors.orange, '${revenue > 0 ? (cost / revenue * 100).toStringAsFixed(1) : 0}% of Rev')),
+                Expanded(
+                    child: _buildKPICard(
+                        'Material Cost',
+                        '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format(cost)}',
+                        Icons.inventory_2,
+                        Colors.orange,
+                        '${revenue > 0 ? (cost / revenue * 100).toStringAsFixed(1) : 0}% of Rev')),
                 const SizedBox(width: 12),
-                Expanded(child: _buildKPICard('Other Expenses', '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format((data['totalExpense'] ?? 0.0) - cost)}', Icons.receipt_long, Colors.redAccent, 'Fixed & Variable')),
+                Expanded(
+                    child: _buildKPICard(
+                        'Other Expenses',
+                        '₹${NumberFormat.simpleCurrency(decimalDigits: 0, name: '').format((data['totalExpense'] ?? 0.0) - cost)}',
+                        Icons.receipt_long,
+                        Colors.redAccent,
+                        'Fixed & Variable')),
               ],
             ),
           ],
@@ -100,9 +125,10 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildTrendSection() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: FinanceRepository().getProfitabilityTrend(_firmId,
-        DateFormat('yyyy-MM-dd').format(widget.startDate),
-        DateFormat('yyyy-MM-dd').format(widget.endDate)),
+      future: FinanceRepository().getProfitabilityTrend(
+          _firmId,
+          DateFormat('yyyy-MM-dd').format(widget.startDate),
+          DateFormat('yyyy-MM-dd').format(widget.endDate)),
       builder: (context, snapshot) {
         final trendData = snapshot.data ?? [];
         return _buildCard(
@@ -111,8 +137,8 @@ class _DashboardViewState extends State<DashboardView> {
             children: [
               SizedBox(
                 height: 240,
-                child: trendData.isEmpty 
-                    ? const Center(child: Text("No data for period")) 
+                child: trendData.isEmpty
+                    ? const Center(child: Text("No data for period"))
                     : Padding(
                         padding: const EdgeInsets.only(right: 16, top: 8),
                         child: LineChart(_getTrendData(trendData)),
@@ -139,14 +165,17 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildMixAndExpenseSection() {
     final start = DateFormat('yyyy-MM-dd').format(widget.startDate);
     final end = DateFormat('yyyy-MM-dd').format(widget.endDate);
-    
+
     return Row(
       children: [
         Expanded(
           child: FutureBuilder<Map<String, dynamic>>(
             future: FinanceRepository().getKPIComparison(_firmId, start, end),
             builder: (context, snapshot) {
-              final Map<String, dynamic> data = (snapshot.data?['current'] as Map?)?.cast<String, dynamic>() ?? {};
+              final Map<String, dynamic> data =
+                  (snapshot.data?['current'] as Map?)
+                          ?.cast<String, dynamic>() ??
+                      {};
               return _buildCard(
                 title: 'Profitability Mix',
                 height: 250,
@@ -164,7 +193,8 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(width: 16),
         Expanded(
           child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: FinanceRepository().getExpenseBreakdown(_firmId, start, end),
+            future:
+                FinanceRepository().getExpenseBreakdown(_firmId, start, end),
             builder: (context, snapshot) {
               final expenses = snapshot.data ?? [];
               return _buildCard(
@@ -182,52 +212,73 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildTopDishesSection() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: OrderRepository().getTopDishesReport(
-        DateFormat('yyyy-MM-dd').format(widget.startDate),
-        DateFormat('yyyy-MM-dd').format(widget.endDate),
-        _firmId),
+          DateFormat('yyyy-MM-dd').format(widget.startDate),
+          DateFormat('yyyy-MM-dd').format(widget.endDate),
+          _firmId),
       builder: (context, snapshot) {
         final topDishes = (snapshot.data ?? []).take(5).toList();
         return _buildCard(
           title: 'Top Performing Items',
           child: Column(
-            children: topDishes.isEmpty 
-              ? [const Center(child: Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: Text("No items sold in this period"),
-                ))]
-              : topDishes.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final dish = entry.value;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1), width: index == topDishes.length - 1 ? 0 : 1)),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 14,
-                          backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                          child: Text('${index + 1}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(dish['name'] ?? 'Unknown', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
-                        Text('${dish['orderCount'] ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue)),
-                        const SizedBox(width: 4),
-                        const Text('sold', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                      ],
-                    ),
-                  );
-                }).toList(),
+            children: topDishes.isEmpty
+                ? [
+                    const Center(
+                        child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text("No items sold in this period"),
+                    ))
+                  ]
+                : topDishes.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final dish = entry.value;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border(
+                            bottom: BorderSide(
+                                color: Colors.grey.withValues(alpha: 0.1),
+                                width: index == topDishes.length - 1 ? 0 : 1)),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                            child: Text('${index + 1}',
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue)),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                              child: Text(dish['name'] ?? 'Unknown',
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500))),
+                          Text('${dish['orderCount'] ?? 0}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.blue)),
+                          const SizedBox(width: 4),
+                          const Text('sold',
+                              style:
+                                  TextStyle(fontSize: 10, color: Colors.grey)),
+                        ],
+                      ),
+                    );
+                  }).toList(),
           ),
         );
       },
     );
   }
 
-  Widget _buildCard({required String title, required Widget child, double? height}) {
+  Widget _buildCard(
+      {required String title, required Widget child, double? height}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       height: height,
       padding: const EdgeInsets.all(16),
@@ -235,15 +286,22 @@ class _DashboardViewState extends State<DashboardView> {
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          if (!isDark) BoxShadow(color: Colors.grey.shade100, blurRadius: 10)
-          else const BoxShadow(color: Colors.black26, blurRadius: 4),
+          if (!isDark)
+            BoxShadow(color: Colors.grey.shade100, blurRadius: 10)
+          else
+            const BoxShadow(color: Colors.black26, blurRadius: 4),
         ],
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
+        border:
+            Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.grey.shade700)),
+          Text(title,
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white70 : Colors.grey.shade700)),
           const SizedBox(height: 16),
           if (height != null) Expanded(child: child) else child,
         ],
@@ -253,7 +311,9 @@ class _DashboardViewState extends State<DashboardView> {
 
   LineChartData _getTrendData(List<Map<String, dynamic>> dailyRevenue) {
     return LineChartData(
-      lineTouchData: LineTouchData(touchTooltipData: LineTouchTooltipData(tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.8))),
+      lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+              tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.8))),
       gridData: const FlGridData(show: true, drawVerticalLine: false),
       titlesData: FlTitlesData(
         bottomTitles: AxisTitles(
@@ -266,18 +326,24 @@ class _DashboardViewState extends State<DashboardView> {
                   final date = DateTime.parse(dateStr);
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(DateFormat('dd/MM').format(date), style: const TextStyle(fontSize: 9)),
+                    child: Text(DateFormat('dd/MM').format(date),
+                        style: const TextStyle(fontSize: 9)),
                   );
-                } catch (_) { return const SizedBox(); }
+                } catch (_) {
+                  return const SizedBox();
+                }
               }
               return const SizedBox();
             },
-            interval: dailyRevenue.length > 7 ? (dailyRevenue.length / 5).ceilToDouble() : 1,
+            interval: dailyRevenue.length > 7
+                ? (dailyRevenue.length / 5).ceilToDouble()
+                : 1,
           ),
         ),
         leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles:
+            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
       ),
       borderData: FlBorderData(show: false),
       lineBarsData: [
@@ -288,19 +354,27 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  LineChartBarData _getLineData(List<Map<String, dynamic>> dailyRevenue, Color color, String key) {
+  LineChartBarData _getLineData(
+      List<Map<String, dynamic>> dailyRevenue, Color color, String key) {
     return LineChartBarData(
-      spots: dailyRevenue.asMap().entries.map((e) => FlSpot(e.key.toDouble(), (e.value[key] as num).toDouble())).toList(),
+      spots: dailyRevenue
+          .asMap()
+          .entries
+          .map(
+              (e) => FlSpot(e.key.toDouble(), (e.value[key] as num).toDouble()))
+          .toList(),
       isCurved: true,
       color: color,
       barWidth: 2,
       dotData: const FlDotData(show: false),
-      belowBarData: BarAreaData(show: key == 'income', color: color.withValues(alpha: 0.05)),
+      belowBarData: BarAreaData(
+          show: key == 'income', color: color.withValues(alpha: 0.05)),
     );
   }
 
   Widget _buildExpenseBarChart(List<Map<String, dynamic>> expenseBreakdown) {
-    if (expenseBreakdown.isEmpty) return const Center(child: Text("No expenses"));
+    if (expenseBreakdown.isEmpty)
+      return const Center(child: Text("No expenses"));
 
     return BarChart(
       BarChartData(
@@ -313,7 +387,8 @@ class _DashboardViewState extends State<DashboardView> {
                 toY: total,
                 color: _getExpenseColor(e.value['groupName']),
                 width: 14,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(4)),
               ),
             ],
           );
@@ -328,16 +403,21 @@ class _DashboardViewState extends State<DashboardView> {
                   final name = expenseBreakdown[index]['groupName'] as String;
                   return Padding(
                     padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(name.substring(0, name.length > 5 ? 5 : name.length), style: const TextStyle(fontSize: 8)),
+                    child: Text(
+                        name.substring(0, name.length > 5 ? 5 : name.length),
+                        style: const TextStyle(fontSize: 8)),
                   );
                 }
                 return const SizedBox();
               },
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: false),
         gridData: const FlGridData(show: false),
@@ -348,7 +428,10 @@ class _DashboardViewState extends State<DashboardView> {
               final name = expenseBreakdown[groupIndex]['groupName'];
               return BarTooltipItem(
                 '$name\n₹${NumberFormat.compact().format(rod.toY)}',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10),
               );
             },
           ),
@@ -359,22 +442,28 @@ class _DashboardViewState extends State<DashboardView> {
 
   Color _getExpenseColor(String groupName) {
     switch (groupName) {
-      case 'Materials': return Colors.orange;
-      case 'Staff': return Colors.blue;
-      case 'Logistics': return Colors.purple;
-      case 'Utilities': return Colors.amber;
-      default: return Colors.redAccent;
+      case 'Materials':
+        return Colors.orange;
+      case 'Staff':
+        return Colors.blue;
+      case 'Logistics':
+        return Colors.purple;
+      case 'Utilities':
+        return Colors.amber;
+      default:
+        return Colors.redAccent;
     }
   }
 
-  List<PieChartSectionData> _buildProfitabilitySections(Map<String, dynamic> metrics) {
+  List<PieChartSectionData> _buildProfitabilitySections(
+      Map<String, dynamic> metrics) {
     final revenue = metrics['revenue'] ?? 1.0;
     final profit = metrics['grossProfit'] ?? 0.0;
     final cogs = metrics['cogs'] ?? 0.0;
     final otherExpenses = (metrics['totalExpense'] ?? 0.0) - cogs;
 
     List<PieChartSectionData> sections = [];
-    
+
     // Material Cost (Orange)
     if (cogs > 0) {
       sections.add(PieChartSectionData(
@@ -382,10 +471,11 @@ class _DashboardViewState extends State<DashboardView> {
         value: cogs,
         title: '${(cogs / revenue * 100).toStringAsFixed(0)}%',
         radius: 50,
-        titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: const TextStyle(
+            fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
       ));
     }
-    
+
     // Other Expenses (Red/Amber)
     if (otherExpenses > 0) {
       sections.add(PieChartSectionData(
@@ -393,7 +483,8 @@ class _DashboardViewState extends State<DashboardView> {
         value: otherExpenses,
         title: '${(otherExpenses / revenue * 100).toStringAsFixed(0)}%',
         radius: 50,
-        titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: const TextStyle(
+            fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
       ));
     }
 
@@ -404,7 +495,8 @@ class _DashboardViewState extends State<DashboardView> {
         value: profit,
         title: '${(profit / revenue * 100).toStringAsFixed(0)}%',
         radius: 50,
-        titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: const TextStyle(
+            fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
       ));
     }
 
@@ -415,16 +507,20 @@ class _DashboardViewState extends State<DashboardView> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
         Text(title, style: const TextStyle(fontSize: 10, color: Colors.grey)),
       ],
     );
   }
 
-  Widget _buildKPICard(String title, String value, IconData icon, Color color, String subtitle) {
+  Widget _buildKPICard(
+      String title, String value, IconData icon, Color color, String subtitle) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -432,8 +528,13 @@ class _DashboardViewState extends State<DashboardView> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
         boxShadow: [
-          if (!isDark) BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
-          else const BoxShadow(color: Colors.black45, blurRadius: 4),
+          if (!isDark)
+            BoxShadow(
+                color: color.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          else
+            const BoxShadow(color: Colors.black45, blurRadius: 4),
         ],
       ),
       child: Column(
@@ -450,17 +551,36 @@ class _DashboardViewState extends State<DashboardView> {
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
-              Icon(Icons.more_horiz, color: isDark ? Colors.white24 : Colors.grey.shade300, size: 18),
+              Icon(Icons.more_horiz,
+                  color: isDark ? Colors.white24 : Colors.grey.shade300,
+                  size: 18),
             ],
           ),
           const SizedBox(height: 16),
-          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.grey.shade900, letterSpacing: -0.5)),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.grey.shade900,
+                  letterSpacing: -0.5)),
           const SizedBox(height: 4),
           Row(
             children: [
-              Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.grey.shade700)),
-              const Spacer(),
-              Text(subtitle, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+              Flexible(
+                child: Text(title,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : Colors.grey.shade700),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1),
+              ),
+              const SizedBox(width: 4),
+              Text(subtitle,
+                  style: TextStyle(
+                      fontSize: 10, color: color, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1),
             ],
           ),
         ],

@@ -17,7 +17,8 @@ class ShakeAnimation extends StatefulWidget {
   State<ShakeAnimation> createState() => _ShakeAnimationState();
 }
 
-class _ShakeAnimationState extends State<ShakeAnimation> with SingleTickerProviderStateMixin {
+class _ShakeAnimationState extends State<ShakeAnimation>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override

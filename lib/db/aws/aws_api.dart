@@ -6,7 +6,8 @@ import 'dart:convert';
 /// Minimal API client for your API Gateway (adjust base/stage).
 class AwsApi {
   // ✅ New cost-optimized serverless API (Dec 2024)
-  static const String _baseUrl = 'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com';
+  static const String _baseUrl =
+      'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com';
   static const String _stage = 'prod';
 
   /// JWT Token for authentication (Cognito)
@@ -18,20 +19,20 @@ class AwsApi {
   }
 
   static Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-  };
+        'Content-Type': 'application/json',
+        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+      };
 
   static Uri _uri(String path) {
     final clean = path.startsWith('/') ? path.substring(1) : path;
-    
+
     // HACK: Use Local Bridge for Web to fix CORS (Only for local development)
-    bool useProxy = false; 
+    bool useProxy = false;
     if (!kReleaseMode && useProxy) {
       return Uri.parse('http://localhost:9090/$clean');
     }
-    
-    return Uri.parse('$_baseUrl/$_stage/$clean'); 
+
+    return Uri.parse('$_baseUrl/$_stage/$clean');
   }
 
   static Future<Map<String, dynamic>> get({required String path}) async {
@@ -97,7 +98,8 @@ class AwsApi {
         'table': table,
         'data': data,
         'filters': filters,
-        if (firmId != null) 'firmId': firmId, // NEW: Include in body for Lambda auth
+        if (firmId != null)
+          'firmId': firmId, // NEW: Include in body for Lambda auth
       },
     );
   }
@@ -131,8 +133,9 @@ class AwsApi {
     required Map<String, dynamic> payload,
   }) async {
     // Real integration: POST to Lambda Function URL (Producer)
-    const functionUrl = 'https://ajajqugtitbljslq4kvfs33rcy0njifc.lambda-url.ap-south-1.on.aws/';
-    
+    const functionUrl =
+        'https://ajajqugtitbljslq4kvfs33rcy0njifc.lambda-url.ap-south-1.on.aws/';
+
     try {
       final res = await http.post(
         Uri.parse(functionUrl),
@@ -150,20 +153,29 @@ class AwsApi {
   }
 
   static Map<String, dynamic> _decode(http.Response res) {
-    AppLogger.info('📥 AWS Raw Response: "${res.body}" (Status: ${res.statusCode})'); // DEBUG
+    AppLogger.info(
+        '📥 AWS Raw Response: "${res.body}" (Status: ${res.statusCode})'); // DEBUG
     try {
       final decoded = jsonDecode(res.body);
       AppLogger.debug('🤔 Decoded Type: ${decoded.runtimeType}'); // DEBUG
-      
+
       if (decoded is Map<String, dynamic>) return decoded;
       // Handle List responses (e.g., query results from Lambda)
       if (decoded is List) {
         return {'Items': decoded};
       }
-      return {'status': 'error', 'message': 'Invalid JSON format (Expected Map, got ${decoded.runtimeType})'};
+      return {
+        'status': 'error',
+        'message':
+            'Invalid JSON format (Expected Map, got ${decoded.runtimeType})'
+      };
     } catch (e) {
       AppLogger.info('🔴 Decode Error Body: "${res.body}"'); // DEBUG
-      return {'status': 'error', 'message': 'Decode failed: $e. Body: ${res.body}', 'code': res.statusCode};
+      return {
+        'status': 'error',
+        'message': 'Decode failed: $e. Body: ${res.body}',
+        'code': res.statusCode
+      };
     }
   }
 }

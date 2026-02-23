@@ -13,7 +13,6 @@ import 'package:ruchiserv/core/app_logger.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
 import '../services/s3_upload_service.dart';
 
 class FileStorageHelper {
@@ -50,33 +49,33 @@ class FileStorageHelper {
   /// Check if a file exists locally (cache or legacy path).
   static bool fileExists(String? pathOrKey) {
     if (pathOrKey == null || pathOrKey.isEmpty) return false;
-    
+
     // Legacy local file path
     if (pathOrKey.startsWith('/')) return File(pathOrKey).existsSync();
-    
+
     // Pending upload (still local)
     if (pathOrKey.startsWith('pending:')) {
       return File(pathOrKey.substring(8)).existsSync();
     }
-    
+
     // S3 key — check local cache
     final cachePath = _getCachePath(pathOrKey);
     if (cachePath != null) return File(cachePath).existsSync();
-    
+
     return false;
   }
-  
+
   /// Get the local file path for display (cache, legacy, or pending).
   /// Returns null if file needs to be downloaded from S3 first.
   static String? getLocalPath(String? pathOrKey) {
     if (pathOrKey == null || pathOrKey.isEmpty) return null;
-    
+
     // Legacy local path
     if (pathOrKey.startsWith('/')) return pathOrKey;
-    
+
     // Pending upload
     if (pathOrKey.startsWith('pending:')) return pathOrKey.substring(8);
-    
+
     // S3 key — check cache
     return _getCachePath(pathOrKey);
   }
@@ -86,21 +85,21 @@ class FileStorageHelper {
   /// For local files, returns the file path directly.
   static Future<String?> getViewableUrl(String? pathOrKey) async {
     if (pathOrKey == null || pathOrKey.isEmpty) return null;
-    
+
     // Legacy local path
     if (pathOrKey.startsWith('/')) return pathOrKey;
-    
+
     // Pending upload
     if (pathOrKey.startsWith('pending:')) return pathOrKey.substring(8);
-    
+
     // S3 key — check cache first
     final cached = _getCachePath(pathOrKey);
     if (cached != null && File(cached).existsSync()) return cached;
-    
+
     // Download from S3
     final s3Service = S3UploadService();
     final url = await s3Service.getDownloadUrl(pathOrKey);
-    
+
     if (url != null) {
       // Download and cache
       try {
@@ -115,7 +114,7 @@ class FileStorageHelper {
         return url; // Return the presigned URL directly as fallback
       }
     }
-    
+
     return null;
   }
 
@@ -169,7 +168,7 @@ class FileStorageHelper {
 
     int totalBytes = 0;
     final files = <FileSystemEntity>[];
-    
+
     await for (final entity in cacheDir.list()) {
       if (entity is File) {
         totalBytes += await entity.length();
@@ -180,15 +179,17 @@ class FileStorageHelper {
     // 100MB cache limit
     if (totalBytes > 100 * 1024 * 1024) {
       // Sort by modified time (oldest first) and delete until under limit
-      files.sort((a, b) => a.statSync().modified.compareTo(b.statSync().modified));
-      
+      files.sort(
+          (a, b) => a.statSync().modified.compareTo(b.statSync().modified));
+
       for (final file in files) {
         if (totalBytes <= 50 * 1024 * 1024) break; // Target 50MB
         final size = await (file as File).length();
         await file.delete();
         totalBytes -= size;
       }
-      AppLogger.info('🗑️ FileStorage: Cleaned cache, now ${(totalBytes / 1024 / 1024).toStringAsFixed(1)}MB');
+      AppLogger.info(
+          '🗑️ FileStorage: Cleaned cache, now ${(totalBytes / 1024 / 1024).toStringAsFixed(1)}MB');
     }
   }
 

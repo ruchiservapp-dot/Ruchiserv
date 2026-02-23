@@ -1,7 +1,6 @@
 // WIDGET: STAFF ASSIGNMENT PICKER
 // Reusable widget for selecting staff to assign to orders
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
 import '../repositories/operation_repository.dart';
 
 class StaffAssignmentPicker extends StatefulWidget {
@@ -9,7 +8,7 @@ class StaffAssignmentPicker extends StatefulWidget {
   final String orderDate;
   final bool readOnly;
   final Function(List<Map<String, dynamic>>)? onChanged;
-  
+
   const StaffAssignmentPicker({
     super.key,
     required this.orderId,
@@ -36,16 +35,16 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
 
   Future<void> _loadData() async {
     final opRepo = OperationRepository();
-    
+
     // Load all active staff
     final staff = await opRepo.getAllStaff();
     _allStaff = staff.where((s) => s['isActive'] == 1).toList();
-    
+
     // Load already assigned staff for this order
     if (widget.orderId > 0) {
       _assignedStaff = await opRepo.getOrderStaffAssignments(widget.orderId);
     }
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -81,9 +80,10 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
         ],
       ),
     );
-    
+
     if (role != null && widget.orderId > 0) {
-      await OperationRepository().assignStaffToOrder(widget.orderId, staffId, role);
+      await OperationRepository()
+          .assignStaffToOrder(widget.orderId, staffId, role);
       await _loadData();
       widget.onChanged?.call(_assignedStaff);
     }
@@ -117,15 +117,18 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
           ListTile(
             leading: const Icon(Icons.people),
             title: Text('Staff Assigned (${_assignedStaff.length})'),
-            trailing: widget.readOnly 
-                ? null 
+            trailing: widget.readOnly
+                ? null
                 : IconButton(
-                    icon: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+                    icon: Icon(
+                        _isExpanded ? Icons.expand_less : Icons.expand_more),
                     onPressed: () => setState(() => _isExpanded = !_isExpanded),
                   ),
-            onTap: widget.readOnly ? null : () => setState(() => _isExpanded = !_isExpanded),
+            onTap: widget.readOnly
+                ? null
+                : () => setState(() => _isExpanded = !_isExpanded),
           ),
-          
+
           // Assigned Staff List
           if (_assignedStaff.isNotEmpty)
             Container(
@@ -139,17 +142,23 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
                       backgroundColor: _getRoleColor(assignment['role']),
                       child: Text(
                         (assignment['name'] ?? 'S')[0].toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
-                    label: Text('${assignment['name']} (${assignment['role']})'),
-                    deleteIcon: widget.readOnly ? null : const Icon(Icons.close, size: 18),
-                    onDeleted: widget.readOnly ? null : () => _removeAssignment(assignment['id']),
+                    label:
+                        Text('${assignment['name']} (${assignment['role']})'),
+                    deleteIcon: widget.readOnly
+                        ? null
+                        : const Icon(Icons.close, size: 18),
+                    onDeleted: widget.readOnly
+                        ? null
+                        : () => _removeAssignment(assignment['id']),
                   );
                 }).toList(),
               ),
             ),
-          
+
           // Staff Picker (Expanded)
           if (_isExpanded && !widget.readOnly)
             Container(
@@ -159,11 +168,13 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
                 itemCount: _allStaff.length,
                 itemBuilder: (context, index) {
                   final staff = _allStaff[index];
-                  final isAssigned = _assignedStaff.any((a) => a['staffId'] == staff['id']);
-                  
+                  final isAssigned =
+                      _assignedStaff.any((a) => a['staffId'] == staff['id']);
+
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: isAssigned ? Colors.green : Colors.grey.shade300,
+                      backgroundColor:
+                          isAssigned ? Colors.green : Colors.grey.shade300,
                       child: Icon(
                         isAssigned ? Icons.check : Icons.person,
                         color: Colors.white,
@@ -174,7 +185,8 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
                     trailing: isAssigned
                         ? const Icon(Icons.check_circle, color: Colors.green)
                         : TextButton(
-                            onPressed: () => _assignStaff(staff['id'], staff['name'] ?? 'Staff'),
+                            onPressed: () => _assignStaff(
+                                staff['id'], staff['name'] ?? 'Staff'),
                             child: const Text('Assign'),
                           ),
                     enabled: !isAssigned,
@@ -182,7 +194,7 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
                 },
               ),
             ),
-          
+
           // Empty state
           if (_assignedStaff.isEmpty && !_isExpanded)
             Padding(
@@ -199,13 +211,20 @@ class _StaffAssignmentPickerState extends State<StaffAssignmentPicker> {
 
   Color _getRoleColor(String? role) {
     switch (role) {
-      case 'Head Cook': return Colors.orange;
-      case 'Helper': return Colors.blue;
-      case 'Server': return Colors.purple;
-      case 'Driver': return Colors.green;
-      case 'Cleaner': return Colors.teal;
-      case 'Supervisor': return Colors.red;
-      default: return Colors.grey;
+      case 'Head Cook':
+        return Colors.orange;
+      case 'Helper':
+        return Colors.blue;
+      case 'Server':
+        return Colors.purple;
+      case 'Driver':
+        return Colors.green;
+      case 'Cleaner':
+        return Colors.teal;
+      case 'Supervisor':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 }

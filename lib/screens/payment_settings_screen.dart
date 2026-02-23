@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PaymentSettingsScreen extends StatefulWidget {
@@ -42,7 +43,8 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text("Payment Gateway", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Payment Gateway",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           // Cashfree info banner
           Container(
@@ -60,8 +62,10 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Cashfree", style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text("0% UPI fees • Integrated", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text("Cashfree",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text("0% UPI fees • Integrated",
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
                     ],
                   ),
                 ),
@@ -74,8 +78,8 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             subtitle: const Text("Enable Cashfree for customer payments"),
             value: _cashfreeEnabled,
             onChanged: (val) {
-               setState(() => _cashfreeEnabled = val);
-               _saveSetting('payment_cashfree', val);
+              setState(() => _cashfreeEnabled = val);
+              _saveSetting('payment_cashfree', val);
             },
           ),
           SwitchListTile(
@@ -83,8 +87,8 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             subtitle: const Text("Enable UPI payments via Cashfree"),
             value: _upiEnabled,
             onChanged: (val) {
-               setState(() => _upiEnabled = val);
-               _saveSetting('payment_upi', val);
+              setState(() => _upiEnabled = val);
+              _saveSetting('payment_upi', val);
             },
           ),
           SwitchListTile(
@@ -92,31 +96,37 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             subtitle: const Text("Accept Credit/Debit cards (1.9% fee)"),
             value: _cardEnabled,
             onChanged: (val) {
-               setState(() => _cardEnabled = val);
-               _saveSetting('payment_card', val);
+              setState(() => _cardEnabled = val);
+              _saveSetting('payment_card', val);
             },
           ),
-          const Divider(),
-          const SizedBox(height: 16),
-          const Text("Test Payment", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Mock payment
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text("Test Mode Active"),
-                  content: const Text("Cashfree SDK is in sandbox mode. Use test card 4111 1111 1111 1111 for testing."),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK")),
-                  ],
-                ),
-              );
-            },
-            icon: const Icon(Icons.payment),
-            label: const Text("Test Payment Info"),
-          ),
+          if (kDebugMode) ...[
+            const Divider(),
+            const SizedBox(height: 16),
+            const Text("Test Payment",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Mock payment
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Test Mode Active"),
+                    content: const Text(
+                        "Cashfree SDK is in sandbox mode. Use test card 4111 1111 1111 1111 for testing."),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("OK")),
+                    ],
+                  ),
+                );
+              },
+              icon: const Icon(Icons.payment),
+              label: const Text("Test Payment Info"),
+            ),
+          ],
         ],
       ),
     );

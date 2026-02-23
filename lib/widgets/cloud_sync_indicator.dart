@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/cloud_sync_service.dart';
 
 class CloudSyncIndicator extends StatelessWidget {
-  const CloudSyncIndicator({Key? key}) : super(key: key);
+  const CloudSyncIndicator({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,8 @@ class CloudSyncIndicator extends StatelessWidget {
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.orangeAccent),
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(Colors.orangeAccent),
                 ),
               ),
             ),
@@ -37,4 +38,3 @@ class CloudSyncIndicator extends StatelessWidget {
     );
   }
 }
-

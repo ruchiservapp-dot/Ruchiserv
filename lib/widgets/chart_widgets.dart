@@ -6,12 +6,13 @@ class SimpleLineChart extends StatelessWidget {
   final List<double> dataPoints;
   final List<String> xLabels;
 
-  const SimpleLineChart({super.key, required this.dataPoints, required this.xLabels});
+  const SimpleLineChart(
+      {super.key, required this.dataPoints, required this.xLabels});
 
   @override
   Widget build(BuildContext context) {
     if (dataPoints.isEmpty) return const Center(child: Text("No Data"));
-    
+
     return LineChart(
       LineChartData(
         gridData: const FlGridData(show: false),
@@ -24,7 +25,8 @@ class SimpleLineChart extends StatelessWidget {
                 if (index >= 0 && index < xLabels.length) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(xLabels[index], style: const TextStyle(fontSize: 10)),
+                    child: Text(xLabels[index],
+                        style: const TextStyle(fontSize: 10)),
                   );
                 }
                 return const Text('');
@@ -32,9 +34,12 @@ class SimpleLineChart extends StatelessWidget {
               interval: 1,
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: false),
         lineBarsData: [
@@ -46,7 +51,8 @@ class SimpleLineChart extends StatelessWidget {
             color: AppColors.primary,
             barWidth: 3,
             dotData: const FlDotData(show: true),
-            belowBarData: BarAreaData(show: true, color: AppColors.primary.withValues(alpha: 0.1)),
+            belowBarData: BarAreaData(
+                show: true, color: AppColors.primary.withValues(alpha: 0.1)),
           ),
         ],
       ),
@@ -64,7 +70,12 @@ class SimplePieChart extends StatelessWidget {
     if (data.isEmpty) return const Center(child: Text("No Data"));
 
     final List<Color> colors = [
-      Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal
+      Colors.blue,
+      Colors.red,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.teal
     ];
 
     int i = 0;
@@ -82,9 +93,13 @@ class SimplePieChart extends StatelessWidget {
                 return PieChartSectionData(
                   color: color,
                   value: e.value,
-                  title: '${(e.value / data.values.reduce((a, b) => a + b) * 100).toStringAsFixed(0)}%',
+                  title:
+                      '${(e.value / data.values.reduce((a, b) => a + b) * 100).toStringAsFixed(0)}%',
                   radius: 50,
-                  titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                  titleStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 );
               }).toList(),
             ),
@@ -95,17 +110,23 @@ class SimplePieChart extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: data.entries.map((e) {
-               final index = data.keys.toList().indexOf(e.key);
-               return Padding(
-                 padding: const EdgeInsets.symmetric(vertical: 4.0),
-                 child: Row(
-                   children: [
-                     Container(width: 12, height: 12, color: colors[index % colors.length]),
-                     const SizedBox(width: 8),
-                     Expanded(child: Text(e.key, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
-                   ],
-                 ),
-               );
+              final index = data.keys.toList().indexOf(e.key);
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Row(
+                  children: [
+                    Container(
+                        width: 12,
+                        height: 12,
+                        color: colors[index % colors.length]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: Text(e.key,
+                            style: const TextStyle(fontSize: 12),
+                            overflow: TextOverflow.ellipsis)),
+                  ],
+                ),
+              );
             }).toList(),
           ),
         ),

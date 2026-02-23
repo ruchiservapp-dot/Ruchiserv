@@ -40,7 +40,8 @@ class AnalyticsService {
   }
 
   // 3. Get Expense Breakdown (from finance table)
-  Future<List<Map<String, dynamic>>> getExpenseBreakdown(String firmId, String month) async {
+  Future<List<Map<String, dynamic>>> getExpenseBreakdown(
+      String firmId, String month) async {
     final db = await _db.database;
     final result = await db.rawQuery('''
       SELECT 
@@ -113,14 +114,15 @@ class AnalyticsService {
   // 5. Narrative Insights Generation
   Future<String> getNarrativeInsights(String firmId) async {
     final sales = await getMonthlySales(firmId);
-    if (sales.length < 2) return "Gathering data for AI narrative. Welcome to RuchiServ Analytics!";
-    
+    if (sales.length < 2)
+      return "Gathering data for AI narrative. Welcome to RuchiServ Analytics!";
+
     final current = (sales[0]['total'] as num?)?.toDouble() ?? 0.0;
     final previous = (sales[1]['total'] as num?)?.toDouble() ?? 0.0;
     final growth = previous > 0 ? ((current - previous) / previous * 100) : 0.0;
-    
+
     String direction = growth >= 0 ? "increase" : "dip";
     return "Your revenue saw a ${growth.abs().toStringAsFixed(1)}% $direction this month compared to the previous period. "
-           "Focusing on high-margin dishes identified in your BCG Matrix could boost your net profit by another 10% next month.";
+        "Focusing on high-margin dishes identified in your BCG Matrix could boost your net profit by another 10% next month.";
   }
 }

@@ -12,7 +12,8 @@ class ProductsServicesScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Products & Services', style: Theme.of(context).textTheme.headlineMedium),
+            Text('Products & Services',
+                style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 16),
             const Text(
               'Products & Services offered by ELKERON TECHNOLOGIES PRIVATE LIMITED:\n\n'

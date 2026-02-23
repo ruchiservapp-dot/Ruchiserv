@@ -4,27 +4,28 @@ import 'package:ruchiserv/core/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import '../db/aws/aws_api.dart';
-import 'package:sqflite/sqflite.dart'; 
+import 'package:sqflite/sqflite.dart';
 import 'cloud_sync_service.dart';
 import 'connectivity_service.dart';
 
 /// Service to sync firm-specific master data (ingredients, dishes, BOM) with AWS DynamoDB.
-/// 
+///
 /// Architecture:
 /// - Base seed data: firmId = 'SEED' (bundled with app, read-only)
 /// - Firm customizations: firmId = actual firm ID (synced to AWS)
 /// - When user edits seed data, a copy is created with their firmId
 class MasterDataSyncService {
-  static final MasterDataSyncService _instance = MasterDataSyncService._internal();
+  static final MasterDataSyncService _instance =
+      MasterDataSyncService._internal();
   factory MasterDataSyncService() => _instance;
   MasterDataSyncService._internal();
 
   final _db = DatabaseHelper();
-  
+
   // Tables to sync
   static const _syncTables = [
     'ingredients_master',
-    'dish_master', 
+    'dish_master',
     'recipe_detail',
     'utensils',
     'vehicles',
@@ -53,7 +54,8 @@ class MasterDataSyncService {
       return;
     }
 
-    AppLogger.info('🔄 MasterDataSync: Syncing modified data for firm $firmId...');
+    AppLogger.info(
+        '🔄 MasterDataSync: Syncing modified data for firm $firmId...');
 
     for (final table in _syncTables) {
       await _syncTableToAWS(table, firmId);
@@ -65,7 +67,7 @@ class MasterDataSyncService {
   Future<void> _syncTableToAWS(String table, String firmId) async {
     try {
       final db = await _db.database;
-      
+
       // Get all modified records for this firm
       final records = await db.query(
         table,
@@ -82,13 +84,14 @@ class MasterDataSyncService {
 
       for (final record in records) {
         final success = await CloudSyncService().syncRecord(
-          table: table, 
-          recordId: record['id'] as int, 
+          table: table,
+          recordId: record['id'] as int,
           data: record,
         );
-        
+
         if (success) {
-          await db.update(table, {'isModified': 0}, where: 'id = ?', whereArgs: [record['id']]);
+          await db.update(table, {'isModified': 0},
+              where: 'id = ?', whereArgs: [record['id']]);
         }
       }
     } catch (e) {
@@ -142,18 +145,19 @@ class MasterDataSyncService {
         return;
       }
 
-      AppLogger.info('  📥 $table: Received ${records.length} records from cloud');
+      AppLogger.info(
+          '  📥 $table: Received ${records.length} records from cloud');
 
       final db = await _db.database;
-      
+
       for (final record in records) {
         // Remove DynamoDB keys before local insert
         final data = Map<String, dynamic>.from(record);
-        
+
         // Parse local_id if present, otherwise use 'id'
         final rawId = data['local_id'] ?? data['id'];
         final recordId = int.tryParse(rawId.toString());
-        
+
         if (recordId == null) continue;
 
         data.remove('pk');
@@ -163,15 +167,16 @@ class MasterDataSyncService {
         data.remove('synced_at');
         data.remove('gsi_partition');
         data.remove('gsi_sort');
-        
+
         data['id'] = recordId;
         data['isModified'] = 0; // Already synced
-        
+
         // Sanitize for SQLite (convert string numbers back)
         final sanitized = CloudSyncService.sanitizeForSqlite(data);
-        
+
         // Upsert: Update if exists, insert if not
-        await db.insert(table, sanitized, conflictAlgorithm: ConflictAlgorithm.replace);
+        await db.insert(table, sanitized,
+            conflictAlgorithm: ConflictAlgorithm.replace);
       }
     } catch (e) {
       AppLogger.info('  ❌ $table fetch error: $e');
@@ -191,7 +196,7 @@ class MasterDataSyncService {
     if (firmId == null) throw Exception('No firm ID');
 
     final db = await _db.database;
-    
+
     // Get seed data
     final seed = await db.query(
       table,
@@ -208,15 +213,16 @@ class MasterDataSyncService {
     newRecord['baseId'] = baseId;
     newRecord['isModified'] = 1;
     newRecord['updatedAt'] = DateTime.now().toIso8601String();
-    
+
     // Apply user modifications
     newRecord.addAll(modifiedData);
 
     // Insert firm-specific copy
     final newId = await db.insert(table, newRecord);
-    
-    AppLogger.debug('📝 Created firm copy: $table #$newId (from seed #$baseId)');
-    
+
+    AppLogger.debug(
+        '📝 Created firm copy: $table #$newId (from seed #$baseId)');
+
     return newId;
   }
 
@@ -236,13 +242,14 @@ class MasterDataSyncService {
     );
 
     // Get seed data (excluding items user has customized)
-    final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
-    
+    final customizedBaseIds =
+        firmData.map((r) => r['baseId']).where((id) => id != null).toList();
+
     String seedWhere = "firmId = 'SEED'";
     if (customizedBaseIds.isNotEmpty) {
       seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
     }
-    
+
     final seedData = await db.rawQuery(
       'SELECT * FROM ingredients_master WHERE $seedWhere ORDER BY category, name',
     );
@@ -263,13 +270,14 @@ class MasterDataSyncService {
       orderBy: 'category, name',
     );
 
-    final customizedBaseIds = firmData.map((r) => r['baseId']).where((id) => id != null).toList();
-    
+    final customizedBaseIds =
+        firmData.map((r) => r['baseId']).where((id) => id != null).toList();
+
     String seedWhere = "firmId = 'SEED'";
     if (customizedBaseIds.isNotEmpty) {
       seedWhere += " AND baseId NOT IN (${customizedBaseIds.join(',')})";
     }
-    
+
     final seedData = await db.rawQuery(
       'SELECT * FROM dish_master WHERE $seedWhere ORDER BY category, name',
     );

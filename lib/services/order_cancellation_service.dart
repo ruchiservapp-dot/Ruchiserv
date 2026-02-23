@@ -1,10 +1,10 @@
 import 'package:ruchiserv/repositories/order_repository.dart';
 // lib/services/order_cancellation_service.dart
 import 'package:intl/intl.dart';
-import '../db/database_helper.dart';
 
 class OrderCancellationService {
-  static final OrderCancellationService _instance = OrderCancellationService._internal();
+  static final OrderCancellationService _instance =
+      OrderCancellationService._internal();
   factory OrderCancellationService() => _instance;
   OrderCancellationService._internal();
 
@@ -18,14 +18,16 @@ class OrderCancellationService {
       // Get order dependencies with better error handling
       Map<String, dynamic> dependencies;
       try {
-        dependencies = await OrderRepository().getOrderDependencies(orderId, firmId);
+        dependencies =
+            await OrderRepository().getOrderDependencies(orderId, firmId);
       } catch (dbError) {
         return {
           'canCancel': false,
-          'error': 'Database error: Could not load order details. Please try again.',
+          'error':
+              'Database error: Could not load order details. Please try again.',
         };
       }
-      
+
       if (dependencies.containsKey('error')) {
         return {
           'canCancel': false,
@@ -40,7 +42,7 @@ class OrderCancellationService {
           'error': 'Order not found',
         };
       }
-      
+
       // Check if already cancelled
       if ((order['isCancelled'] as int?) == 1) {
         return {
@@ -81,22 +83,24 @@ class OrderCancellationService {
 
       // Build warning message
       final warnings = <String>[];
-      
+
       if (within48Hours) {
-        warnings.add('⚠️ Event is in ${hoursUntilEvent} hours - within 48-hour window');
+        warnings.add(
+            '⚠️ Event is in $hoursUntilEvent hours - within 48-hour window');
       }
-      
+
       if (dishCount > 0) {
         warnings.add('📋 $dishCount dish(es) linked to this order');
       }
-      
+
       if (hasDispatch) {
         warnings.add('🚚 $dispatchCount dispatch record(s) linked');
       }
 
       // Note: MRP is calculated on-demand, so we show a general warning
       if (eventDate.isAfter(now)) {
-        warnings.add('📊 This order may be included in active MRP calculations');
+        warnings
+            .add('📊 This order may be included in active MRP calculations');
       }
 
       return {
@@ -189,7 +193,7 @@ class OrderCancellationService {
     // - Contractors (if subcontracted work)
     // - Service staff (if staff assigned)
     // - Transporters (if logistics arranged)
-    
+
     // This is a placeholder for the notification infrastructure
     // Actual implementation would require email/SMS service integration
   }
@@ -197,11 +201,11 @@ class OrderCancellationService {
   /// Format dependency summary for UI display
   String getDependencySummary(Map<String, dynamic> validation) {
     final warnings = validation['warnings'] as List<String>? ?? [];
-    
+
     if (warnings.isEmpty) {
       return 'No dependencies found. Safe to cancel.';
     }
-    
+
     return warnings.join('\n');
   }
 
@@ -215,15 +219,15 @@ class OrderCancellationService {
   /// Format event date/time for display
   String formatEventDateTime(String? dateStr, String? timeStr) {
     if (dateStr == null) return 'Unknown';
-    
+
     try {
       final date = DateTime.parse(dateStr);
       final formattedDate = DateFormat('MMM dd, yyyy').format(date);
-      
+
       if (timeStr != null && timeStr.isNotEmpty) {
         return '$formattedDate at $timeStr';
       }
-      
+
       return formattedDate;
     } catch (e) {
       return dateStr;

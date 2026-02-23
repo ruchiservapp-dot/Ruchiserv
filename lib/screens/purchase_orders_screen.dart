@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../db/database_helper.dart';
 import '../repositories/finance_repository.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -58,6 +57,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
     final items = await FinanceRepository().getPoItems(po['id'] as int);
     
     showModalBottomSheet(
+
       context: context,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(
@@ -101,7 +101,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                     children: [
                       const Icon(Icons.business, size: 20),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(po['vendorName'] ?? AppLocalizations.of(context)!.unknown, style: const TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(child: Text(po['vendorName'] ?? AppLocalizations.of(context).unknown, style: const TextStyle(fontWeight: FontWeight.bold))),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -111,14 +111,14 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                       const SizedBox(width: 8),
                       Text(po['sentAt'] != null 
                         ? DateFormat('MMM d, yyyy h:mm a').format(DateTime.parse(po['sentAt']))
-                        : AppLocalizations.of(context)!.unknown),
+                        : AppLocalizations.of(context).unknown),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0), style: TextStyle(color: Colors.grey.shade600)),
+                      Text(AppLocalizations.of(context).itemsCount(po['totalItems'] ?? 0), style: TextStyle(color: Colors.grey.shade600)),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
@@ -149,7 +149,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                       backgroundColor: Colors.grey.shade200,
                       child: Text('${index + 1}'),
                     ),
-                    title: Text(item['itemName'] ?? AppLocalizations.of(context)!.unknown),
+                    title: Text(item['itemName'] ?? AppLocalizations.of(context).unknown),
                     subtitle: Text(
                       '${item['quantity']} ${item['unit'] ?? 'kg'} × ₹${rate.toStringAsFixed(2)}',
                       style: TextStyle(color: Colors.grey.shade600),
@@ -172,7 +172,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.purchaseOrdersTitle),
+        title: Text(AppLocalizations.of(context).purchaseOrdersTitle),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
@@ -188,7 +188,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                 children: _statuses.map((status) => Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text(status == 'All' ? AppLocalizations.of(context)!.catAll : status), // Assuming 'All' matches catAll
+                    label: Text(status == 'All' ? AppLocalizations.of(context).catAll : status), // Assuming 'All' matches catAll
                     selected: _statusFilter == status || (status == 'All' && _statusFilter == null),
                     onSelected: (v) {
                       setState(() => _statusFilter = status == 'All' ? null : status);
@@ -206,7 +206,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                Text(AppLocalizations.of(context)!.purchaseOrdersCount(_pos.length), style: TextStyle(color: Colors.grey.shade600)),
+                Text(AppLocalizations.of(context).purchaseOrdersCount(_pos.length), style: TextStyle(color: Colors.grey.shade600)),
               ],
             ),
           ),
@@ -222,9 +222,9 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                           children: [
                             Icon(Icons.receipt_long, size: 64, color: Colors.grey.shade400),
                             const SizedBox(height: 16),
-                            Text(AppLocalizations.of(context)!.noPurchaseOrders),
+                            Text(AppLocalizations.of(context).noPurchaseOrders),
                             const SizedBox(height: 8),
-                            Text(AppLocalizations.of(context)!.runMrpHint, style: const TextStyle(color: Colors.grey)),
+                            Text(AppLocalizations.of(context).runMrpHint, style: const TextStyle(color: Colors.grey)),
                           ],
                         ),
                       )
@@ -325,7 +325,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                                                   const SizedBox(width: 4),
                                                   Expanded(
                                                     child: Text(
-                                                    po['vendorName'] ?? AppLocalizations.of(context)!.unknown,
+                                                    po['vendorName'] ?? AppLocalizations.of(context).unknown,
                                                       style: const TextStyle(fontWeight: FontWeight.bold),
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
@@ -334,7 +334,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                                                 ],
                                               ),
                                               const SizedBox(height: 4),
-                                              Text(AppLocalizations.of(context)!.itemsCount(po['totalItems'] ?? 0), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                              Text(AppLocalizations.of(context).itemsCount(po['totalItems'] ?? 0), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                                             ],
                                           ),
                                         ),

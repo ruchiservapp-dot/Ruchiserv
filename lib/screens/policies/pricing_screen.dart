@@ -12,7 +12,8 @@ class PricingScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pricing Information', style: Theme.of(context).textTheme.headlineMedium),
+            Text('Pricing Information',
+                style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 16),
             const Text(
               'ELKERON TECHNOLOGIES PRIVATE LIMITED provides straightforward subscription pricing for RuchiServ.\n\n'

@@ -1,5 +1,4 @@
 import 'package:ruchiserv/repositories/finance_repository.dart';
-import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +20,7 @@ class FinanceScreen extends StatefulWidget {
 class _FinanceScreenState extends State<FinanceScreen> {
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _endDate = DateTime.now();
-  
+
   double _totalIncome = 0;
   double _totalExpense = 0;
   double _totalAR = 0; // Accounts Receivable
@@ -35,6 +34,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     super.initState();
     _loadData();
   }
+
   Future<void> _pickDate(bool isStart) async {
     final picked = await showDatePicker(
       context: context,
@@ -45,19 +45,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             dialogTheme: DialogThemeData(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16))),
             ),
           ),
           child: child!,
         );
       },
     );
-    
+
     if (picked != null) {
       setState(() {
         if (isStart) {
           _startDate = picked;
-           // If start date is after end date, move end date to start date
+          // If start date is after end date, move end date to start date
           if (_startDate.isAfter(_endDate)) {
             _endDate = _startDate;
           }
@@ -73,20 +74,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
   }
 
-
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     // Load firm ID
     final prefs = await SharedPreferences.getInstance();
     _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
-    
+
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
 
-    final summary = await FinanceRepository().getFinanceSummary(_firmId, startStr, endStr);
+    final summary =
+        await FinanceRepository().getFinanceSummary(_firmId, startStr, endStr);
     final recent = await FinanceRepository().getTransactions(limit: 5);
-    
+
     // Load AR/AP totals
     final arTotal = await DatabaseHelper().getTotalAR(_firmId);
     final apTotal = await DatabaseHelper().getTotalAP(_firmId);
@@ -118,9 +119,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
               // Date Filter
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                   child: Row(
                     children: [
                       Expanded(
@@ -134,22 +137,29 @@ class _FinanceScreenState extends State<FinanceScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                                    Icon(Icons.calendar_today,
+                                        size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
-                                    Text("From", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    Text("From",
+                                        style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12)),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   DateFormat('MMM d, yyyy').format(_startDate),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15),
                                 ),
                               ],
                             ),
                           ),
                         ),
                       ),
-                      Container(width: 1, height: 40, color: Colors.grey.shade300),
+                      Container(
+                          width: 1, height: 40, color: Colors.grey.shade300),
                       Expanded(
                         child: InkWell(
                           onTap: () => _pickDate(false),
@@ -161,15 +171,21 @@ class _FinanceScreenState extends State<FinanceScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.event, size: 14, color: Colors.grey[600]),
+                                    Icon(Icons.event,
+                                        size: 14, color: Colors.grey[600]),
                                     const SizedBox(width: 4),
-                                    Text("To", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    Text("To",
+                                        style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12)),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   DateFormat('MMM d, yyyy').format(_endDate),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15),
                                 ),
                               ],
                             ),
@@ -192,13 +208,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 runSpacing: 12,
                 children: [
                   _buildSummaryCard(
-                    AppLocalizations.of(context)!.income,
+                    AppLocalizations.of(context).income,
                     _totalIncome,
                     Colors.green,
                     Icons.arrow_downward,
                   ),
                   _buildSummaryCard(
-                    AppLocalizations.of(context)!.expense,
+                    AppLocalizations.of(context).expense,
                     _totalExpense,
                     Colors.red,
                     Icons.arrow_upward,
@@ -211,9 +227,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
               // Net Balance
               Card(
-                color: netBalance >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                color:
+                    netBalance >= 0 ? Colors.green.shade50 : Colors.red.shade50,
                 child: ListTile(
-                  title: Text(AppLocalizations.of(context)!.netBalance, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(AppLocalizations.of(context).netBalance,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   trailing: Text(
                     "Rs. ${netBalance.toStringAsFixed(2)}",
                     style: TextStyle(
@@ -242,16 +260,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     ).then((_) => _loadData()),
                   ),
                   _buildActionButton(
-                    AppLocalizations.of(context)!.transactions,
+                    AppLocalizations.of(context).transactions,
                     Icons.list_alt,
                     Colors.blue,
                     () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const TransactionsScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const TransactionsScreen()),
                     ).then((_) => _loadData()),
                   ),
                   _buildActionButton(
-                    AppLocalizations.of(context)!.ledgers,
+                    AppLocalizations.of(context).ledgers,
                     Icons.book,
                     Colors.purple,
                     () => Navigator.push(
@@ -260,7 +279,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     ),
                   ),
                   _buildActionButton(
-                    AppLocalizations.of(context)!.export,
+                    AppLocalizations.of(context).export,
                     Icons.file_download,
                     Colors.teal,
                     () async {
@@ -268,14 +287,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       showDialog(
                         context: context,
                         barrierDismissible: false,
-                        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+                        builder: (ctx) =>
+                            const Center(child: CircularProgressIndicator()),
                       );
 
                       try {
-                        final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
-                        final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
+                        final startStr =
+                            DateFormat('yyyy-MM-dd').format(_startDate);
+                        final endStr =
+                            DateFormat('yyyy-MM-dd').format(_endDate);
 
-                        final transactions = await FinanceRepository().getTransactions(
+                        final transactions =
+                            await FinanceRepository().getTransactions(
                           startDate: startStr,
                           endDate: endStr,
                         );
@@ -285,20 +308,31 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
                         if (transactions.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(AppLocalizations.of(context)!.noTransactionsFound)),
+                            SnackBar(
+                                content: Text(AppLocalizations.of(context)
+                                    .noTransactionsFound)),
                           );
                           return;
                         }
 
-                        final headers = ['Date', 'Type', 'Category', 'Mode', 'Description', 'Amount'];
-                        final rows = transactions.map((t) => [
-                          t['date'],
-                          t['type'],
-                          t['category'] ?? '-',
-                          t['mode'] ?? '-',
-                          t['description'] ?? '-',
-                          t['amount']
-                        ]).toList();
+                        final headers = [
+                          'Date',
+                          'Type',
+                          'Category',
+                          'Mode',
+                          'Description',
+                          'Amount'
+                        ];
+                        final rows = transactions
+                            .map((t) => [
+                                  t['date'],
+                                  t['type'],
+                                  t['category'] ?? '-',
+                                  t['mode'] ?? '-',
+                                  t['description'] ?? '-',
+                                  t['amount']
+                                ])
+                            .toList();
 
                         Navigator.push(
                           context,
@@ -316,7 +350,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         if (context.mounted) {
                           Navigator.pop(context); // Close loading if error
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error generating report: $e')),
+                            SnackBar(
+                                content: Text('Error generating report: $e')),
                           );
                         }
                       }
@@ -327,12 +362,18 @@ class _FinanceScreenState extends State<FinanceScreen> {
               const SizedBox(height: 24),
 
               // Recent Transactions
-              Text(AppLocalizations.of(context)!.recentTransactions, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(AppLocalizations.of(context).recentTransactions,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _recentTransactions.isEmpty
-                      ? Center(child: Padding(padding: const EdgeInsets.all(16), child: Text(AppLocalizations.of(context)!.noTransactionsFound)))
+                      ? Center(
+                          child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(AppLocalizations.of(context)
+                                  .noTransactionsFound)))
                       : ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -344,9 +385,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: isIncome ? Colors.green.shade100 : Colors.red.shade100,
+                                  backgroundColor: isIncome
+                                      ? Colors.green.shade100
+                                      : Colors.red.shade100,
                                   child: Icon(
-                                    isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                                    isIncome
+                                        ? Icons.arrow_downward
+                                        : Icons.arrow_upward,
                                     color: isIncome ? Colors.green : Colors.red,
                                   ),
                                 ),
@@ -370,7 +415,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String title, double amount, Color color, IconData icon) {
+  Widget _buildSummaryCard(
+      String title, double amount, Color color, IconData icon) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -388,7 +434,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
             const SizedBox(height: 8),
             Text(
               "Rs. ${amount.toStringAsFixed(0)}",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.bold, color: color),
             ),
           ],
         ),
@@ -407,17 +454,24 @@ class _FinanceScreenState extends State<FinanceScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.arrow_downward, color: Colors.blue.shade700, size: 18),
+                Icon(Icons.arrow_downward,
+                    color: Colors.blue.shade700, size: 18),
                 const SizedBox(width: 4),
-                Text('Receivables', style: TextStyle(color: Colors.blue.shade700, fontSize: 12)),
+                Text('Receivables',
+                    style:
+                        TextStyle(color: Colors.blue.shade700, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               "₹${_totalAR.toStringAsFixed(0)}",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade800),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800),
             ),
-            Text('Outstanding AR', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+            Text('Outstanding AR',
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
           ],
         ),
       ),
@@ -435,24 +489,32 @@ class _FinanceScreenState extends State<FinanceScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.arrow_upward, color: Colors.orange.shade700, size: 18),
+                Icon(Icons.arrow_upward,
+                    color: Colors.orange.shade700, size: 18),
                 const SizedBox(width: 4),
-                Text('Payables', style: TextStyle(color: Colors.orange.shade700, fontSize: 12)),
+                Text('Payables',
+                    style:
+                        TextStyle(color: Colors.orange.shade700, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               "₹${_totalAP.toStringAsFixed(0)}",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade800),
             ),
-            Text('Outstanding AP', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+            Text('Outstanding AP',
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: Column(

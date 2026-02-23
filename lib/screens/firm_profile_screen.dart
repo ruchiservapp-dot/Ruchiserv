@@ -12,7 +12,7 @@ class FirmProfileScreen extends StatefulWidget {
 
 class _FirmProfileScreenState extends State<FirmProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final _nameController = TextEditingController();
   final _contactPersonController = TextEditingController();
@@ -24,11 +24,11 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
   final _websiteController = TextEditingController();
   final _otMultiplierController = TextEditingController(text: '1.5');
   final _clientUpiIdController = TextEditingController(); // UPI Subscription
-  
+
   bool _isLoading = true;
   bool _isSaving = false;
   String? _firmId;
-  
+
   // GPS Kitchen Location
   double? _kitchenLatitude;
   double? _kitchenLongitude;
@@ -56,35 +56,36 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
     super.dispose();
   }
 
-
   Future<void> _loadData() async {
     final sp = await SharedPreferences.getInstance();
     final fid = sp.getString('last_firm');
-    
+
     if (fid == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No firm ID found. Please login again.')),
+          const SnackBar(
+              content: Text('No firm ID found. Please login again.')),
         );
         Navigator.pop(context);
       }
       return;
     }
-    
+
     _firmId = fid;
     final data = await DatabaseHelper().getFirmDetails(fid);
-    
+
     if (mounted) {
       if (data != null) {
         _nameController.text = data['firmName']?.toString() ?? '';
         _contactPersonController.text = data['contactPerson']?.toString() ?? '';
         _mobileController.text = data['primaryMobile']?.toString() ?? '';
-        _emailController.text = data['primaryEmail']?.toString() ?? ''; // Usually email
-        
+        _emailController.text =
+            data['primaryEmail']?.toString() ?? ''; // Usually email
+
         // New columns
         _capacityController.text = (data['capacity'] ?? 500).toString();
         _addressController.text = data['address']?.toString() ?? '';
-        // ownerName -> contactPerson? Or separate? 
+        // ownerName -> contactPerson? Or separate?
         // User asked for "all feild required to store for sjolf be ther iclsinf capapcuty"
         // I'll map 'ownerName' to 'Contact Person' or separate field?
         // Schema has 'contactPerson' (old) and 'ownerName' (new).
@@ -94,13 +95,13 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
         // Let's add Owner Name field mapped to 'ownerName'.
         final owner = data['ownerName']?.toString() ?? '';
         if (owner.isNotEmpty) {
-           // If ownerName exists, use it.
-           // What about contactPerson?
+          // If ownerName exists, use it.
+          // What about contactPerson?
         }
-        
+
         _gstController.text = data['gstNumber']?.toString() ?? '';
         _websiteController.text = data['website']?.toString() ?? '';
-        
+
         // GPS Kitchen Location
         if (data['kitchenLatitude'] != null) {
           _kitchenLatitude = (data['kitchenLatitude'] as num).toDouble();
@@ -109,8 +110,9 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
           _kitchenLongitude = (data['kitchenLongitude'] as num).toDouble();
         }
         _geoFenceRadius = (data['geoFenceRadius'] as int?) ?? 100;
-        _otMultiplierController.text = ((data['otMultiplier'] as num?) ?? 1.5).toString();
-        
+        _otMultiplierController.text =
+            ((data['otMultiplier'] as num?) ?? 1.5).toString();
+
         // UPI Subscription
         _clientUpiIdController.text = data['client_upi_id']?.toString() ?? '';
       }
@@ -121,11 +123,11 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
   /// Capture current device location as kitchen location
   Future<void> _getKitchenLocation() async {
     setState(() => _isGettingLocation = true);
-    
+
     try {
       final geoService = GeoFenceService.instance;
       final status = await geoService.checkLocationStatus();
-      
+
       if (status != LocationStatus.ready) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -139,9 +141,9 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
         }
         return;
       }
-      
+
       final position = await geoService.getCurrentPosition();
-      
+
       if (position != null && mounted) {
         setState(() {
           _kitchenLatitude = position.latitude;
@@ -155,7 +157,8 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
         );
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not get location. Please try again.')),
+          const SnackBar(
+              content: Text('Could not get location. Please try again.')),
         );
       }
     } catch (e) {
@@ -169,12 +172,11 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
     }
   }
 
-
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSaving = true);
-    
+
     try {
       final data = {
         'firmName': _nameController.text.trim(),
@@ -194,9 +196,9 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
         // UPI Subscription
         'client_upi_id': _clientUpiIdController.text.trim(),
       };
-      
+
       await DatabaseHelper().updateFirmDetails(_firmId!, data);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully!')),
@@ -218,8 +220,8 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Firm Profile')),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator()) 
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
@@ -228,9 +230,11 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Firm Info
-                    const Text('Basic Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Basic Information',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
-                    
+
                     // Firm ID Display
                     if (_firmId != null)
                       Container(
@@ -249,10 +253,14 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Firm ID', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                  const Text('Firm ID',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey)),
                                   SelectableText(
                                     _firmId!,
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -263,13 +271,16 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
 
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Firm Name', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                          labelText: 'Firm Name', border: OutlineInputBorder()),
                       validator: (v) => v?.isEmpty == true ? 'Required' : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _contactPersonController,
-                      decoration: const InputDecoration(labelText: 'Contact Person / Owner', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                          labelText: 'Contact Person / Owner',
+                          border: OutlineInputBorder()),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -277,7 +288,9 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _mobileController,
-                            decoration: const InputDecoration(labelText: 'Mobile', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                                labelText: 'Mobile',
+                                border: OutlineInputBorder()),
                             keyboardType: TextInputType.phone,
                           ),
                         ),
@@ -285,7 +298,9 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _capacityController,
-                            decoration: const InputDecoration(labelText: 'Max Capacity (Pax)', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                                labelText: 'Max Capacity (Pax)',
+                                border: OutlineInputBorder()),
                             keyboardType: TextInputType.number,
                             validator: (v) {
                               final n = int.tryParse(v ?? '');
@@ -296,19 +311,23 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    const Text('Additional Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Additional Details',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                          labelText: 'Email', border: OutlineInputBorder()),
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _addressController,
-                      decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                          labelText: 'Address', border: OutlineInputBorder()),
                       maxLines: 3,
                     ),
                     const SizedBox(height: 12),
@@ -317,22 +336,28 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _gstController,
-                            decoration: const InputDecoration(labelText: 'GST Number', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                                labelText: 'GST Number',
+                                border: OutlineInputBorder()),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextFormField(
                             controller: _websiteController,
-                            decoration: const InputDecoration(labelText: 'Website', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                                labelText: 'Website',
+                                border: OutlineInputBorder()),
                           ),
                         ),
                       ],
                     ),
-                    
+
                     // UPI Subscription Section
                     const SizedBox(height: 24),
-                    const Text('Subscription Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Subscription Settings',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     const Text(
                       'Your UPI ID is used for subscription payment verification.',
@@ -359,17 +384,18 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                     ),
 
                     const SizedBox(height: 32),
-                    
+
                     // ===== GPS Kitchen Location Section =====
-                    const Text('Kitchen Location & Staff Settings', 
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Kitchen Location & Staff Settings',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     const Text(
                       'Set your kitchen location for GPS-based staff attendance geo-fencing.',
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // GPS Capture Card
                     Card(
                       child: Padding(
@@ -380,8 +406,12 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                             Row(
                               children: [
                                 Icon(
-                                  _kitchenLatitude != null ? Icons.check_circle : Icons.location_off,
-                                  color: _kitchenLatitude != null ? Colors.green : Colors.grey,
+                                  _kitchenLatitude != null
+                                      ? Icons.check_circle
+                                      : Icons.location_off,
+                                  color: _kitchenLatitude != null
+                                      ? Colors.green
+                                      : Colors.grey,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -391,7 +421,9 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                                         : 'Kitchen location not set',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
-                                      color: _kitchenLatitude != null ? Colors.black87 : Colors.grey,
+                                      color: _kitchenLatitude != null
+                                          ? Colors.black87
+                                          : Colors.grey,
                                     ),
                                   ),
                                 ),
@@ -401,15 +433,18 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: _isGettingLocation ? null : _getKitchenLocation,
-                                icon: _isGettingLocation 
+                                onPressed: _isGettingLocation
+                                    ? null
+                                    : _getKitchenLocation,
+                                icon: _isGettingLocation
                                     ? const SizedBox(
-                                        width: 16, 
-                                        height: 16, 
-                                        child: CircularProgressIndicator(strokeWidth: 2))
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
                                     : const Icon(Icons.my_location),
-                                label: Text(_isGettingLocation 
-                                    ? 'Getting Location...' 
+                                label: Text(_isGettingLocation
+                                    ? 'Getting Location...'
                                     : 'Capture Current Location'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue,
@@ -428,21 +463,26 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                                 },
                                 icon: const Icon(Icons.clear, size: 18),
                                 label: const Text('Clear Location'),
-                                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red),
                               ),
                             ],
                           ],
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Geo-fence Radius Slider
                     Row(
                       children: [
-                        const Text('Geo-fence Radius: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                        Text('$_geoFenceRadius m', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                        const Text('Geo-fence Radius: ',
+                            style: TextStyle(fontWeight: FontWeight.w500)),
+                        Text('$_geoFenceRadius m',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue)),
                       ],
                     ),
                     Slider(
@@ -459,19 +499,21 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                       'Staff must punch-in within this radius of kitchen location.',
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // OT Multiplier
                     TextFormField(
                       controller: _otMultiplierController,
                       decoration: const InputDecoration(
                         labelText: 'Overtime Multiplier',
                         border: OutlineInputBorder(),
-                        helperText: 'e.g., 1.5 means 1.5x hourly rate for OT hours',
+                        helperText:
+                            'e.g., 1.5 means 1.5x hourly rate for OT hours',
                         prefixIcon: Icon(Icons.access_time),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       validator: (v) {
                         final n = double.tryParse(v ?? '');
                         if (n == null || n < 1) return 'Must be >= 1';
@@ -484,9 +526,12 @@ class _FirmProfileScreenState extends State<FirmProfileScreen> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: _isSaving ? null : _save,
-                        child: _isSaving 
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('SAVE PROFILE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        child: _isSaving
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : const Text('SAVE PROFILE',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],

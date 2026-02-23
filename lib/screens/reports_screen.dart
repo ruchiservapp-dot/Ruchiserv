@@ -11,7 +11,8 @@ class ReportsScreen extends StatefulWidget {
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProviderStateMixin {
+class _ReportsScreenState extends State<ReportsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
   DateTime _endDate = DateTime.now();
@@ -41,7 +42,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
         _endDate = picked.end;
         // Adjust end date to include the full day
         if (_startDate.isAtSameMomentAs(_endDate)) {
-          _endDate = _endDate.add(const Duration(hours: 23, minutes: 59, seconds: 59));
+          _endDate =
+              _endDate.add(const Duration(hours: 23, minutes: 59, seconds: 59));
         }
       });
     }
@@ -68,8 +70,10 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                     labelColor: Colors.blue.shade900,
                     unselectedLabelColor: Colors.grey.shade600,
                     indicatorColor: Colors.blue.shade900,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
+                    labelStyle: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13),
+                    unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.normal, fontSize: 13),
                     tabs: const [
                       Tab(text: 'Dashboard'),
                       Tab(text: 'Detailed Reports'),
@@ -78,7 +82,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                   const Divider(height: 1),
                   // Date Picker Row
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
                     child: Wrap(
                       alignment: WrapAlignment.spaceBetween,
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -87,12 +92,16 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                       children: [
                         Text(
                           'Period: ${DateFormat('dd MMM').format(_startDate)} - ${DateFormat('dd MMM').format(_endDate)}',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.bold),
                         ),
                         InkWell(
                           onTap: _pickDateRange,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(20),
@@ -101,9 +110,14 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.calendar_month, size: 16, color: Colors.blue.shade800),
+                                Icon(Icons.calendar_month,
+                                    size: 16, color: Colors.blue.shade800),
                                 const SizedBox(width: 4),
-                                Text('Filter', style: TextStyle(color: Colors.blue.shade800, fontSize: 12, fontWeight: FontWeight.bold)),
+                                Text('Filter',
+                                    style: TextStyle(
+                                        color: Colors.blue.shade800,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -115,7 +129,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                 ],
               ),
             ),
-            
+
             // Tab Content
             Expanded(
               child: TabBarView(
@@ -123,13 +137,13 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                 children: [
                   DashboardView(startDate: _startDate, endDate: _endDate),
                   DetailedReportsView(
-                    initialStartDate: _startDate, 
+                    initialStartDate: _startDate,
                     initialEndDate: _endDate,
                     onDateRangeChanged: (start, end) {
-                       setState(() {
-                         _startDate = start;
-                         _endDate = end;
-                       });
+                      setState(() {
+                        _startDate = start;
+                        _endDate = end;
+                      });
                     },
                   ),
                 ],

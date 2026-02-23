@@ -11,11 +11,11 @@ class SchemaManager {
   /// This ensures that all tables and columns exist as defined.
   static Future<void> syncSchema(Database db) async {
     AppLogger.info('$TAG Starting schema synchronization...');
-    
+
     for (var table in AppSchema.tables) {
       await _syncTable(db, table);
     }
-    
+
     AppLogger.info('$TAG Schema synchronization complete.');
   }
 
@@ -31,7 +31,7 @@ class SchemaManager {
   static Future<void> _syncTable(Database db, TableSchema schema) async {
     // 1. Check if table exists
     final tableExists = await _tableExists(db, schema.tableName);
-    
+
     if (!tableExists) {
       AppLogger.info('$TAG Table "${schema.tableName}" missing. Creating...');
       await db.execute(schema.createTableSql);
@@ -40,8 +40,10 @@ class SchemaManager {
 
     // 2. Sync columns
     // Get existing columns
-    final tableInfo = await db.rawQuery('PRAGMA table_info(${schema.tableName})');
-    final existingColumns = tableInfo.map((row) => row['name'] as String).toSet();
+    final tableInfo =
+        await db.rawQuery('PRAGMA table_info(${schema.tableName})');
+    final existingColumns =
+        tableInfo.map((row) => row['name'] as String).toSet();
 
     // Check for missing columns
     for (var entry in schema.columns.entries) {
@@ -49,12 +51,16 @@ class SchemaManager {
       final colDef = entry.value;
 
       if (!existingColumns.contains(colName)) {
-        AppLogger.info('$TAG Column "$colName" missing in "${schema.tableName}". Adding...');
+        AppLogger.info(
+            '$TAG Column "$colName" missing in "${schema.tableName}". Adding...');
         try {
-          await db.execute('ALTER TABLE ${schema.tableName} ADD COLUMN $colName $colDef');
-          AppLogger.info('$TAG ✅ Added column "$colName" to "${schema.tableName}"');
+          await db.execute(
+              'ALTER TABLE ${schema.tableName} ADD COLUMN $colName $colDef');
+          AppLogger.info(
+              '$TAG ✅ Added column "$colName" to "${schema.tableName}"');
         } catch (e) {
-          AppLogger.info('$TAG ❌ Failed to add column "$colName" to "${schema.tableName}": $e');
+          AppLogger.info(
+              '$TAG ❌ Failed to add column "$colName" to "${schema.tableName}": $e');
         }
       }
     }

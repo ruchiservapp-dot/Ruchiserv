@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
-import '../db/database_helper.dart';
 import 'orders_list_screen.dart';
 // If/when you want AWS back, uncomment the next line and set useAws = true below
 // import '../db/aws/aws_api.dart';
@@ -21,12 +20,15 @@ class OrderCalendarScreen extends StatefulWidget {
   State<OrderCalendarScreen> createState() => _OrderCalendarScreenState();
 }
 
-class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAware {
+class _OrderCalendarScreenState extends State<OrderCalendarScreen>
+    with RouteAware {
   // ---- Config you can tweak later (or move to Settings) ----
-  static const double _utilizationAmberAt = 0.50; // >=50% = amber (User request: Green < 50%)
-  static const double _utilizationRedAt = 0.90;   // >=90% = red (User request: Red >= 90%)
-  int _dailyCapacity = 500;                       // Dynamic from DB
-  static const bool useAws = false;               // keep false to avoid previous shape errors
+  static const double _utilizationAmberAt =
+      0.50; // >=50% = amber (User request: Green < 50%)
+  static const double _utilizationRedAt =
+      0.90; // >=90% = red (User request: Red >= 90%)
+  int _dailyCapacity = 500; // Dynamic from DB
+  static const bool useAws = false; // keep false to avoid previous shape errors
 
   final DateTime _today = DateTime.now();
 
@@ -36,14 +38,14 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  final CalendarFormat _calendarFormat = CalendarFormat.month;
 
   // pax map keyed by 'yyyy-MM-dd'
   final Map<String, int> _dailyPax = {};
-  
+
   // MRP status maps keyed by 'yyyy-MM-dd'
-  final Map<String, bool> _dailyMrpRun = {};  // true if any order has MRP run
-  final Map<String, bool> _dailyPOSent = {};  // true if all orders have PO sent
+  final Map<String, bool> _dailyMrpRun = {}; // true if any order has MRP run
+  final Map<String, bool> _dailyPOSent = {}; // true if all orders have PO sent
 
   // month stats
   int _monthTotalPax = 0;
@@ -72,7 +74,8 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
     // Phase 3: Real-time UI updates via Sync Stream
     _syncSubscription = OrderRepository().syncStream.listen((event) {
       if (['orders', 'firms'].contains(event.table)) {
-        AppLogger.info('⚡ OrderCalendarScreen: Real-time update detected for ${event.table}. Refreshing...');
+        AppLogger.info(
+            '⚡ OrderCalendarScreen: Real-time update detected for ${event.table}. Refreshing...');
         if (event.table == 'firms') _loadFirmCapacity();
         _loadCalendarForMonth(_focusedDay);
       }
@@ -117,17 +120,21 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
         }
       } else if (Platform.isAndroid) {
         // Try Android content deep link
-        final Uri androidCalUrl = Uri.parse('content://com.android.calendar/time');
-        if (await launchUrl(androidCalUrl, mode: LaunchMode.externalApplication)) {
+        final Uri androidCalUrl =
+            Uri.parse('content://com.android.calendar/time');
+        if (await launchUrl(androidCalUrl,
+            mode: LaunchMode.externalApplication)) {
           return;
         }
       }
     } catch (_) {
       // Ignore and fall through to web fallback
+      AppLogger.error('Caught error: $_');
     }
-    
+
     // Fallback to Google Calendar in browser
-    await launchUrl(Uri.parse('https://calendar.google.com'), mode: LaunchMode.externalApplication);
+    await launchUrl(Uri.parse('https://calendar.google.com'),
+        mode: LaunchMode.externalApplication);
   }
 
   // ---------- Data load (Local DB primary, safe parsing) ----------
@@ -165,11 +172,13 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
         final paxAny = row['totalPax'] ?? row['pax'] ?? 0;
         final pax = paxAny is int
             ? paxAny
-            : (paxAny is num ? paxAny.toInt() : int.tryParse(paxAny.toString()) ?? 0);
+            : (paxAny is num
+                ? paxAny.toInt()
+                : int.tryParse(paxAny.toString()) ?? 0);
 
         final k = _keyOf(d);
         fresh[k] = (fresh[k] ?? 0) + pax;
-        
+
         // Track MRP status
         final hasMrp = (row['hasMrpRun'] ?? 0) == 1;
         final hasPO = (row['hasPOSent'] ?? 0) == 1;
@@ -197,7 +206,8 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
 
         for (final item in dataList) {
           if (item is! Map) continue;
-          final dateStr = (item['date'] ?? item['order_date'] ?? '').toString().trim();
+          final dateStr =
+              (item['date'] ?? item['order_date'] ?? '').toString().trim();
           if (dateStr.isEmpty) continue;
           DateTime? d;
           try {
@@ -210,7 +220,9 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
           final paxAny = item['totalPax'] ?? item['pax'] ?? 0;
           final pax = paxAny is int
               ? paxAny
-              : (paxAny is num ? paxAny.toInt() : int.tryParse(paxAny.toString()) ?? 0);
+              : (paxAny is num
+                  ? paxAny.toInt()
+                  : int.tryParse(paxAny.toString()) ?? 0);
 
           final k = _keyOf(d);
           fresh[k] = (fresh[k] ?? 0) + pax;
@@ -254,7 +266,8 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
   // ---------- Navigation handlers ----------
   Future<void> _onDaySelected(DateTime selectedDay, DateTime focusedDay) async {
     setState(() {
-      _selectedDay = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+      _selectedDay =
+          DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
       _focusedDay = focusedDay;
     });
 
@@ -293,163 +306,200 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
       body: Column(
         children: [
           if (_isMonthLoading)
-            const LinearProgressIndicator(minHeight: 2, backgroundColor: Colors.transparent),
-            
+            const LinearProgressIndicator(
+                minHeight: 2, backgroundColor: Colors.transparent),
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Overhead estimates:
-                // - ListView padding: 32 vertical
-                // - Calendar Card padding: 8 bottom
-                // - Header: ~50
-                // - DaysOfWeek: 30
-                // - Legend: ~80 (Increased for safety)
-                // Total overhead approx 200.
-                const double estimatedOverhead = 200.0;
-                final double availableHeight = constraints.maxHeight - estimatedOverhead;
-                
-                // We want 6 rows fixed to ensure consistent height
-                final double calculatedRowHeight = availableHeight / 6.0;
-                
-                // Clamp to reasonable limits
-                final double rowHeight = calculatedRowHeight.clamp(70.0, 400.0);
+            child: LayoutBuilder(builder: (context, constraints) {
+              // Overhead estimates:
+              // - ListView padding: 32 vertical
+              // - Calendar Card padding: 8 bottom
+              // - Header: ~50
+              // - DaysOfWeek: 30
+              // - Legend: ~80 (Increased for safety)
+              // Total overhead approx 200.
+              const double estimatedOverhead = 200.0;
+              final double availableHeight =
+                  constraints.maxHeight - estimatedOverhead;
 
-                return ListView( // Scrollable to handle smaller screens or tall calendars
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    // Calendar Card
-                    Container(
-                      decoration: BoxDecoration(
-                        color: theme.cardColor,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+              // We want 6 rows fixed to ensure consistent height
+              final double calculatedRowHeight = availableHeight / 6.0;
+
+              // Clamp to reasonable limits
+              final double rowHeight = calculatedRowHeight.clamp(70.0, 400.0);
+
+              return ListView(
+                // Scrollable to handle smaller screens or tall calendars
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  // Calendar Card
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black26
+                              : Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TableCalendar(
+                      firstDay: _firstDayLimit,
+                      lastDay: _lastDayLimit,
+                      focusedDay: _focusedDay,
+                      calendarFormat: _calendarFormat,
+                      rowHeight: rowHeight, // Dynamic height
+                      daysOfWeekHeight: 40,
+                      // Ensure 6 weeks are always shown so height parsing is consistent
+                      sixWeekMonthsEnforced: true,
+                      availableCalendarFormats: const {
+                        CalendarFormat.month: 'Month'
+                      },
+
+                      // Style Header
+                      headerVisible: true,
+                      headerStyle: HeaderStyle(
+                        titleCentered: true,
+                        formatButtonVisible: false,
+                        titleTextStyle: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87),
+                        leftChevronIcon: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                              color: isDark ? Colors.white10 : Colors.grey[100],
+                              shape: BoxShape.circle),
+                          child: Icon(Icons.chevron_left,
+                              color: isDark ? Colors.white70 : Colors.black54),
+                        ),
+                        rightChevronIcon: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                              color: isDark ? Colors.white10 : Colors.grey[100],
+                              shape: BoxShape.circle),
+                          child: Icon(Icons.chevron_right,
+                              color: isDark ? Colors.white70 : Colors.black54),
+                        ),
+                        headerPadding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TableCalendar(
-                        firstDay: _firstDayLimit,
-                        lastDay: _lastDayLimit,
-                        focusedDay: _focusedDay,
-                        calendarFormat: _calendarFormat,
-                        rowHeight: rowHeight, // Dynamic height
-                        daysOfWeekHeight: 40,
-                        // Ensure 6 weeks are always shown so height parsing is consistent
-                        sixWeekMonthsEnforced: true,
-                        availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-                        
-                        // Style Header
-                        headerVisible: true, 
-                        headerStyle: HeaderStyle(
-                          titleCentered: true,
-                          formatButtonVisible: false,
-                          titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
-                          leftChevronIcon: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.grey[100], shape: BoxShape.circle),
-                            child: Icon(Icons.chevron_left, color: isDark ? Colors.white70 : Colors.black54),
-                          ),
-                          rightChevronIcon: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.grey[100], shape: BoxShape.circle),
-                            child: Icon(Icons.chevron_right, color: isDark ? Colors.white70 : Colors.black54),
-                          ),
-                          headerPadding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        
-                        // Style Days of Week
-                        daysOfWeekStyle: DaysOfWeekStyle(
-                          weekdayStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 12),
-                          weekendStyle: TextStyle(color: Colors.red[300], fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
 
-                        selectedDayPredicate: (day) =>
-                            _selectedDay != null && isSameDay(_selectedDay, day),
+                      // Style Days of Week
+                      daysOfWeekStyle: DaysOfWeekStyle(
+                        weekdayStyle: TextStyle(
+                            color: isDark ? Colors.white54 : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12),
+                        weekendStyle: TextStyle(
+                            color: Colors.red[300],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12),
+                      ),
 
-                        onDaySelected: _onDaySelected,
-                        onPageChanged: _onMonthChanged,
+                      selectedDayPredicate: (day) =>
+                          _selectedDay != null && isSameDay(_selectedDay, day),
 
-                        calendarBuilders: CalendarBuilders(
-                          defaultBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-                          todayBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-                          selectedBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-                          outsideBuilder: (ctx, day, focused) => _buildDayCell(ctx, day, focused),
-                        ),
+                      onDaySelected: _onDaySelected,
+                      onPageChanged: _onMonthChanged,
 
-                        calendarStyle: const CalendarStyle(
-                          outsideDaysVisible: true,
-                          cellMargin: EdgeInsets.zero, // We handle margins/padding in builder
-                        ),
+                      calendarBuilders: CalendarBuilders(
+                        defaultBuilder: (ctx, day, focused) =>
+                            _buildDayCell(ctx, day, focused),
+                        todayBuilder: (ctx, day, focused) =>
+                            _buildDayCell(ctx, day, focused),
+                        selectedBuilder: (ctx, day, focused) =>
+                            _buildDayCell(ctx, day, focused),
+                        outsideBuilder: (ctx, day, focused) =>
+                            _buildDayCell(ctx, day, focused),
+                      ),
+
+                      calendarStyle: const CalendarStyle(
+                        outsideDaysVisible: true,
+                        cellMargin: EdgeInsets
+                            .zero, // We handle margins/padding in builder
                       ),
                     ),
-                    
-                    const SizedBox(height: 16),
-                    // Legend / Info
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildLegendDot(Colors.green[100]!, AppLocalizations.of(context)!.utilizationLow),
-                              _buildLegendDot(Colors.orange[100]!, AppLocalizations.of(context)!.utilizationMed),
-                              _buildLegendDot(Colors.red[100]!, AppLocalizations.of(context)!.utilizationHigh),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildMrpLegend(Icons.pending_actions, Colors.blue.shade600, 'MRP Pending'),
-                              const SizedBox(width: 24),
-                              _buildMrpLegend(Icons.check_circle, Colors.green.shade700, 'PO Sent'),
-                            ],
-                          ),
-                        ],
-                      ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  // Legend / Info
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildLegendDot(Colors.green[100]!,
+                                AppLocalizations.of(context).utilizationLow),
+                            _buildLegendDot(Colors.orange[100]!,
+                                AppLocalizations.of(context).utilizationMed),
+                            _buildLegendDot(Colors.red[100]!,
+                                AppLocalizations.of(context).utilizationHigh),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildMrpLegend(Icons.pending_actions,
+                                Colors.blue.shade600, 'MRP Pending'),
+                            const SizedBox(width: 24),
+                            _buildMrpLegend(Icons.check_circle,
+                                Colors.green.shade700, 'PO Sent'),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
-                );
-              }
-            ),
+                  ),
+                ],
+              );
+            }),
           ),
         ],
       ),
     );
   }
-  
+
   Widget _buildLegendDot(Color color, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 12, height: 12,
+          width: 12,
+          height: 12,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 11, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 11,
+                fontWeight: FontWeight.w500)),
       ],
     );
   }
-  
+
   Widget _buildMrpLegend(IconData icon, Color color, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w500)),
       ],
     );
   }
 
   // ---------- Day Cell ----------
-  Widget _buildDayCell(BuildContext context, DateTime day, DateTime focusedMonth) {
+  Widget _buildDayCell(
+      BuildContext context, DateTime day, DateTime focusedMonth) {
     final dateKey = _keyOf(day);
     final pax = _dailyPax[dateKey] ?? 0;
     final hasMrpRun = _dailyMrpRun[dateKey] ?? false;
@@ -457,7 +507,7 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
     final isOutside = day.month != focusedMonth.month;
     final isToday = isSameDay(day, _today);
     // final isPastDay = _isPast(day); // Optional: dim past days?
-    
+
     // Modern colors
     final isDark = Theme.of(context).brightness == Brightness.dark;
     Color bgColor = Colors.transparent;
@@ -469,29 +519,41 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
       if (pax > 0) {
         final u = pax / (_dailyCapacity > 0 ? _dailyCapacity : 1);
         if (u >= _utilizationRedAt) {
-          bgColor = isDark ? Colors.red.withValues(alpha: 0.2) : const Color(0xFFFFEBEE); 
+          bgColor = isDark
+              ? Colors.red.withValues(alpha: 0.2)
+              : const Color(0xFFFFEBEE);
           textColor = isDark ? Colors.red.shade300 : const Color(0xFFC62828);
         } else if (u >= _utilizationAmberAt) {
-          bgColor = isDark ? Colors.orange.withValues(alpha: 0.2) : const Color(0xFFFFF3E0);
+          bgColor = isDark
+              ? Colors.orange.withValues(alpha: 0.2)
+              : const Color(0xFFFFF3E0);
           textColor = isDark ? Colors.orange.shade300 : const Color(0xFFEF6C00);
         } else {
-          bgColor = isDark ? Colors.green.withValues(alpha: 0.2) : const Color(0xFFE8F5E9);
+          bgColor = isDark
+              ? Colors.green.withValues(alpha: 0.2)
+              : const Color(0xFFE8F5E9);
           textColor = isDark ? Colors.green.shade300 : const Color(0xFF2E7D32);
         }
         fontWeight = FontWeight.bold;
       }
-      
+
       if (isToday) {
         border = Border.all(color: Colors.indigo, width: 2);
       } else {
-        border = Border.all(color: isDark ? Colors.white10 : Colors.grey.shade300, width: 1);
+        border = Border.all(
+            color: isDark ? Colors.white10 : Colors.grey.shade300, width: 1);
       }
     } else {
-        border = Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade200, width: 1);
+      border = Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.grey.shade200,
+          width: 1);
     }
 
     return Semantics(
-      label: 'Date ${day.day}, $pax pax${hasMrpRun ? ", MRP ${hasPOSent ? 'Completed' : 'Pending'}" : ""}',
+      label:
+          'Date ${day.day}, $pax pax${hasMrpRun ? ", MRP ${hasPOSent ? 'Completed' : 'Pending'}" : ""}',
       button: !isOutside,
       child: Container(
         margin: const EdgeInsets.all(4), // Gap between cells
@@ -510,7 +572,11 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
                 '${day.day}',
                 style: TextStyle(
                   fontSize: 12,
-                  color: isOutside ? Colors.grey[300] : (isSameDay(day, _selectedDay) ? Colors.indigo : Colors.grey[600]),
+                  color: isOutside
+                      ? Colors.grey[300]
+                      : (isSameDay(day, _selectedDay)
+                          ? Colors.indigo
+                          : Colors.grey[600]),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -523,7 +589,8 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
                 child: Icon(
                   hasPOSent ? Icons.check_circle : Icons.pending_actions,
                   size: 14,
-                  color: hasPOSent ? Colors.green.shade700 : Colors.blue.shade600,
+                  color:
+                      hasPOSent ? Colors.green.shade700 : Colors.blue.shade600,
                 ),
               ),
             // Pax (Center)
@@ -543,6 +610,7 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen> with RouteAwa
       ),
     );
   }
+
   @override
   void dispose() {
     _syncSubscription?.cancel();

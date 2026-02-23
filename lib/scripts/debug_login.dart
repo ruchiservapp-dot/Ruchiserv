@@ -6,24 +6,27 @@ Future<void> main() async {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
   final dbPath = '/Users/vysakhg/Documents/ruchiserv_v2.db';
-  
+
   if (!File(dbPath).existsSync()) {
     AppLogger.error('❌ DB NOT FOUND AT $dbPath');
     return;
   }
 
   final db = await databaseFactory.openDatabase(dbPath);
-  
+
   AppLogger.info('\n--- FIRM CHECK ---');
-  final firms = await db.query('firms', where: 'firmId = ?', whereArgs: ['RCHSRV_TEST']);
+  final firms =
+      await db.query('firms', where: 'firmId = ?', whereArgs: ['RCHSRV_TEST']);
   print(firms);
 
   AppLogger.info('\n--- USER CHECK ---');
-  final users = await db.query('users', where: 'mobile = ?', whereArgs: ['9876543210']);
+  final users =
+      await db.query('users', where: 'mobile = ?', whereArgs: ['9876543210']);
   print(users);
 
   AppLogger.info('\n--- AUTHORIZED MOBILE CHECK ---');
-  final auth = await db.query('authorized_mobiles', where: 'mobile = ?', whereArgs: ['9876543210']);
+  final auth = await db.query('authorized_mobiles',
+      where: 'mobile = ?', whereArgs: ['9876543210']);
   print(auth);
 
   await db.close();

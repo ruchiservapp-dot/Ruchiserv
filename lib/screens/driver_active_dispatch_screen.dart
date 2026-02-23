@@ -3,15 +3,12 @@ import 'package:ruchiserv/core/app_logger.dart';
 // MODULE: DRIVER ACTIVE DISPATCH SCREEN (v34)
 // Features: Status timeline, stage transitions, GPS tracking, call/navigate actions
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../db/database_helper.dart';
 import '../services/location_service.dart';
 import '../services/tracking_api_service.dart'; // Local Tracking API Service
-import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'dart:async'; // For Timer
 import 'package:ruchiserv/repositories/operation_repository.dart';
-import 'package:ruchiserv/repositories/order_repository.dart';
 import 'driver_return_screen.dart';
 import '../utils/time_utils.dart';
 
@@ -126,6 +123,7 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
     }
     
     final confirmed = await showDialog<bool>(
+
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Mark as ${nextStage['label']}?'),
@@ -165,6 +163,7 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
       // Update order status
       await OrderRepository().updateOrder(_dispatch['orderId'], {'dispatchStatus': nextStatus}, []);
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Marked as ${nextStage['label']}'), backgroundColor: nextStage['color']),
       );
@@ -173,6 +172,7 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
       
       // If completed, go to return screen
       if (nextStatus == 'RETURNING') {
+        if (!mounted) return;
         Navigator.push(context, MaterialPageRoute(
           builder: (_) => DriverReturnScreen(dispatch: _dispatch),
         )).then((_) => _loadDetails());
@@ -223,10 +223,12 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
         _startTrackingLoop();
         
         setState(() => _gpsEnabled = true);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('GPS tracking enabled (Updates every 30s)'), backgroundColor: Colors.green),
         );
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('GPS error: $e'), backgroundColor: Colors.red),
         );

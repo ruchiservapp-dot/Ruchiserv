@@ -1,9 +1,6 @@
 import 'package:ruchiserv/repositories/finance_repository.dart';
-import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import '../utils/responsive_utils.dart';
-import 'package:intl/intl.dart';
-import '../db/database_helper.dart';
 import '../screens/add_transaction_screen.dart'; // Note: This might be finance/add_transaction_screen.dart if moved
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -50,14 +47,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.transactions),
+        title: Text(AppLocalizations.of(context).transactions),
         actions: [
           PopupMenuButton<String>(
             onSelected: (val) {
               setState(() => _filterType = val);
               _loadTransactions();
             },
-            itemBuilder: (context) => [AppLocalizations.of(context)!.filterAll, 'INCOME', 'EXPENSE'] // Keep API values English for logic simplicity, translate UI
+            itemBuilder: (context) => [
+              AppLocalizations.of(context).filterAll,
+              'INCOME',
+              'EXPENSE'
+            ] // Keep API values English for logic simplicity, translate UI
                 .map((e) => PopupMenuItem(value: e, child: Text(e)))
                 .toList(),
             icon: const Icon(Icons.filter_list),
@@ -71,7 +72,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _transactions.isEmpty
-              ? Center(child: Text(AppLocalizations.of(context)!.noTransactionsFound))
+              ? Center(
+                  child: Text(AppLocalizations.of(context).noTransactionsFound))
               : ResponsiveCenter(
                   child: ListView.builder(
                     itemCount: _transactions.length,
@@ -80,17 +82,32 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       final isIncome = t['type'] == 'INCOME';
                       return Dismissible(
                         key: Key(t['id'].toString()),
-                        background: Container(color: Colors.red, alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 20), child: const Icon(Icons.delete, color: Colors.white)),
+                        background: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child:
+                                const Icon(Icons.delete, color: Colors.white)),
                         direction: DismissDirection.endToStart,
                         confirmDismiss: (direction) async {
                           return await showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text(AppLocalizations.of(context)!.deleteTransactionTitle),
-                              content: Text(AppLocalizations.of(context)!.deleteTransactionContent),
+                              title: Text(AppLocalizations.of(context)
+                                  .deleteTransactionTitle),
+                              content: Text(AppLocalizations.of(context)
+                                  .deleteTransactionContent),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
-                                ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(AppLocalizations.of(context)!.delete)),
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: Text(
+                                        AppLocalizations.of(context).cancel)),
+                                ElevatedButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: Text(
+                                        AppLocalizations.of(context).delete)),
                               ],
                             ),
                           );
@@ -101,9 +118,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         },
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: isIncome ? Colors.green.shade100 : Colors.red.shade100,
+                            backgroundColor: isIncome
+                                ? Colors.green.shade100
+                                : Colors.red.shade100,
                             child: Icon(
-                              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                              isIncome
+                                  ? Icons.arrow_downward
+                                  : Icons.arrow_upward,
                               color: isIncome ? Colors.green : Colors.red,
                             ),
                           ),
@@ -111,9 +132,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("${t['date']} • ${t['paymentMode'] ?? (t['mode'] ?? 'Cash')}"),
-                              if (t['description'] != null && t['description'].toString().isNotEmpty)
-                                Text(t['description'], style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                              Text(
+                                  "${t['date']} • ${t['paymentMode'] ?? (t['mode'] ?? 'Cash')}"),
+                              if (t['description'] != null &&
+                                  t['description'].toString().isNotEmpty)
+                                Text(t['description'],
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic)),
                             ],
                           ),
                           trailing: Text(

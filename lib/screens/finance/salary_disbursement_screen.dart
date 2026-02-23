@@ -3,14 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../db/database_helper.dart';
 import '../../repositories/operation_repository.dart';
 
 class SalaryDisbursementScreen extends StatefulWidget {
   const SalaryDisbursementScreen({super.key});
 
   @override
-  State<SalaryDisbursementScreen> createState() => _SalaryDisbursementScreenState();
+  State<SalaryDisbursementScreen> createState() =>
+      _SalaryDisbursementScreenState();
 }
 
 class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
@@ -19,7 +19,7 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
   DateTime _selectedMonth = DateTime.now();
   String? _firmId;
   double _otMultiplier = 1.5;
-  
+
   // Totals
   double _totalPayable = 0;
   double _totalPaid = 0;
@@ -37,36 +37,36 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final sp = await SharedPreferences.getInstance();
     _firmId = sp.getString('last_firm');
-    
+
     if (_firmId == null) {
       setState(() => _isLoading = false);
       return;
     }
-    
+
     final db = OperationRepository();
-    
+
     // Get OT multiplier
     final firm = await db.getFirmDetails(_firmId!);
     if (firm != null && firm['otMultiplier'] != null) {
       _otMultiplier = (firm['otMultiplier'] as num).toDouble();
     }
-    
+
     // Get disbursements data
     final data = await db.getPendingDisbursements(_firmId!, _monthYear);
-    
+
     // Calculate totals and payroll for each staff
     _totalPayable = 0;
     _totalPaid = 0;
     _pendingCount = 0;
     _paidCount = 0;
-    
+
     final processedData = data.map((staff) {
       final calcs = _calculatePayroll(staff);
       final isPaid = staff['disbursementStatus'] == 'PAID';
-      
+
       if (isPaid) {
         _paidCount++;
         _totalPaid += (staff['paidAmount'] as num?)?.toDouble() ?? 0;
@@ -74,10 +74,10 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
         _pendingCount++;
         _totalPayable += calcs['netPay'] as double;
       }
-      
+
       return {...staff, ...calcs};
     }).toList();
-    
+
     setState(() {
       _staffList = processedData;
       _isLoading = false;
@@ -92,7 +92,7 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
     final daysPresent = (staff['daysPresent'] as num?)?.toInt() ?? 0;
     final totalOvertime = (staff['totalOvertime'] as num?)?.toDouble() ?? 0;
     final pendingAdvances = (staff['pendingAdvances'] as num?)?.toDouble() ?? 0;
-    
+
     double basePay = 0;
     switch (staffType) {
       case 'PERMANENT':
@@ -105,10 +105,10 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
         basePay = salary;
         break;
     }
-    
+
     final otPay = totalOvertime * hourlyRate * _otMultiplier;
     final netPay = basePay + otPay - pendingAdvances;
-    
+
     return {
       'basePay': basePay,
       'otPay': otPay,
@@ -126,10 +126,11 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
 
   void _nextMonth() {
     final now = DateTime.now();
-    if (_selectedMonth.year < now.year || 
+    if (_selectedMonth.year < now.year ||
         (_selectedMonth.year == now.year && _selectedMonth.month < now.month)) {
       setState(() {
-        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+        _selectedMonth =
+            DateTime(_selectedMonth.year, _selectedMonth.month + 1);
       });
       _loadData();
     }
@@ -139,10 +140,10 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
     final staffId = staff['id'] as int;
     final staffName = staff['name'] as String;
     final netPay = (staff['netPay'] as num).toDouble();
-    
+
     String? selectedMode;
     String? paymentRef;
-    
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -152,9 +153,12 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Amount: ₹${netPay.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('Amount: ₹${netPay.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              const Text('Payment Mode', style: TextStyle(fontWeight: FontWeight.w500)),
+              const Text('Payment Mode',
+                  style: TextStyle(fontWeight: FontWeight.w500)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -187,8 +191,8 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: selectedMode == null 
-                  ? null 
+              onPressed: selectedMode == null
+                  ? null
                   : () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child: const Text('Confirm Payment'),
@@ -197,7 +201,7 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
         ),
       ),
     );
-    
+
     if (confirmed == true && selectedMode != null && _firmId != null) {
       try {
         await OperationRepository().disburseSalary({
@@ -211,13 +215,15 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
           'paymentMode': selectedMode!,
           'paymentRef': paymentRef,
         });
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Salary disbursed to $staffName'), backgroundColor: Colors.green),
+            SnackBar(
+                content: Text('Salary disbursed to $staffName'),
+                backgroundColor: Colors.green),
           );
         }
-        
+
         _loadData();
       } catch (e) {
         if (mounted) {
@@ -246,7 +252,8 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
               children: [
                 // Month Selector
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   color: Colors.indigo.shade50,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -257,38 +264,45 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
                       ),
                       Text(
                         _monthDisplay,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       IconButton(
                         icon: Icon(
                           Icons.chevron_right,
-                          color: _selectedMonth.month == DateTime.now().month ? Colors.grey : null,
+                          color: _selectedMonth.month == DateTime.now().month
+                              ? Colors.grey
+                              : null,
                         ),
                         onPressed: _nextMonth,
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Summary Cards
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      _buildSummaryCard('Pending', _pendingCount, _totalPayable, Colors.orange),
+                      _buildSummaryCard('Pending', _pendingCount, _totalPayable,
+                          Colors.orange),
                       const SizedBox(width: 12),
-                      _buildSummaryCard('Paid', _paidCount, _totalPaid, Colors.green),
+                      _buildSummaryCard(
+                          'Paid', _paidCount, _totalPaid, Colors.green),
                     ],
                   ),
                 ),
-                
+
                 // Staff List
                 Expanded(
                   child: _staffList.isEmpty
-                      ? const Center(child: Text('No staff data for this month'))
+                      ? const Center(
+                          child: Text('No staff data for this month'))
                       : ListView.builder(
                           itemCount: _staffList.length,
-                          itemBuilder: (context, index) => _buildStaffCard(_staffList[index]),
+                          itemBuilder: (context, index) =>
+                              _buildStaffCard(_staffList[index]),
                         ),
                 ),
               ],
@@ -296,7 +310,8 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String title, int count, double amount, Color color) {
+  Widget _buildSummaryCard(
+      String title, int count, double amount, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -308,10 +323,14 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(fontWeight: FontWeight.w500, color: color)),
+            Text(title,
+                style: TextStyle(fontWeight: FontWeight.w500, color: color)),
             const SizedBox(height: 8),
-            Text('$count staff', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
-            Text('₹${amount.toStringAsFixed(0)}', style: TextStyle(fontSize: 14, color: color)),
+            Text('$count staff',
+                style: TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+            Text('₹${amount.toStringAsFixed(0)}',
+                style: TextStyle(fontSize: 14, color: color)),
           ],
         ),
       ),
@@ -329,15 +348,22 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
     final netPay = (staff['netPay'] as num?)?.toDouble() ?? 0;
     final isPaid = staff['disbursementStatus'] == 'PAID';
     final paidAmount = (staff['paidAmount'] as num?)?.toDouble() ?? 0;
-    
+
     Color typeColor;
     switch (staffType) {
-      case 'PERMANENT': typeColor = Colors.green; break;
-      case 'DAILY_WAGE': typeColor = Colors.orange; break;
-      case 'CONTRACTOR': typeColor = Colors.purple; break;
-      default: typeColor = Colors.grey;
+      case 'PERMANENT':
+        typeColor = Colors.green;
+        break;
+      case 'DAILY_WAGE':
+        typeColor = Colors.orange;
+        break;
+      case 'CONTRACTOR':
+        typeColor = Colors.purple;
+        break;
+      default:
+        typeColor = Colors.grey;
     }
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ExpansionTile(
@@ -345,7 +371,8 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
           children: [
             CircleAvatar(
               backgroundColor: typeColor,
-              child: Text(name[0].toUpperCase(), style: const TextStyle(color: Colors.white)),
+              child: Text(name[0].toUpperCase(),
+                  style: const TextStyle(color: Colors.white)),
             ),
             if (isPaid)
               Positioned(
@@ -372,11 +399,14 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
                 color: typeColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(staffType, style: TextStyle(fontSize: 10, color: typeColor)),
+              child: Text(staffType,
+                  style: TextStyle(fontSize: 10, color: typeColor)),
             ),
             const SizedBox(width: 8),
             Text('$daysPresent days', style: const TextStyle(fontSize: 12)),
-            if (totalOT > 0) Text(' • ${totalOT.toStringAsFixed(1)}h OT', style: const TextStyle(fontSize: 12)),
+            if (totalOT > 0)
+              Text(' • ${totalOT.toStringAsFixed(1)}h OT',
+                  style: const TextStyle(fontSize: 12)),
           ],
         ),
         trailing: Column(
@@ -386,15 +416,15 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
             Text(
               '₹${(isPaid ? paidAmount : netPay).toStringAsFixed(0)}',
               style: TextStyle(
-                fontSize: 16, 
-                fontWeight: FontWeight.bold, 
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
                 color: isPaid ? Colors.green : Colors.indigo,
               ),
             ),
             Text(
               isPaid ? 'PAID' : 'Pending',
               style: TextStyle(
-                fontSize: 10, 
+                fontSize: 10,
                 color: isPaid ? Colors.green : Colors.orange,
                 fontWeight: FontWeight.w500,
               ),
@@ -407,11 +437,16 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
             child: Column(
               children: [
                 _buildPayrollRow('Base Pay', basePay, Colors.blue),
-                _buildPayrollRow('OT Pay (${totalOT.toStringAsFixed(1)}h @ ${_otMultiplier}x)', otPay, Colors.orange),
+                _buildPayrollRow(
+                    'OT Pay (${totalOT.toStringAsFixed(1)}h @ ${_otMultiplier}x)',
+                    otPay,
+                    Colors.orange),
                 if (deductions > 0)
-                  _buildPayrollRow('Advances Deduction', -deductions, Colors.red),
+                  _buildPayrollRow(
+                      'Advances Deduction', -deductions, Colors.red),
                 const Divider(),
-                _buildPayrollRow('Net Payable', netPay, Colors.green, bold: true),
+                _buildPayrollRow('Net Payable', netPay, Colors.green,
+                    bold: true),
                 const SizedBox(height: 12),
                 if (!isPaid && netPay > 0)
                   SizedBox(
@@ -435,7 +470,8 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                        Icon(Icons.check_circle,
+                            color: Colors.green.shade700, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -454,13 +490,16 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
     );
   }
 
-  Widget _buildPayrollRow(String label, double value, Color color, {bool bold = false}) {
+  Widget _buildPayrollRow(String label, double value, Color color,
+      {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          Text(label,
+              style: TextStyle(
+                  fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
           Text(
             '${value >= 0 ? '+' : ''}₹${value.toStringAsFixed(0)}',
             style: TextStyle(

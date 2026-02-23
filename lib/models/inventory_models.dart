@@ -40,10 +40,12 @@ class Ingredient {
 
 class BOM {
   final int? id;
-  final String dishName; // Linking by name for simplicity as Dish ID might change if deleted/re-added
+  final String
+      dishName; // Linking by name for simplicity as Dish ID might change if deleted/re-added
   final int ingredientId;
-  final double quantity; // Qty per 1 Pax or per Dish Unit? Let's assume per 1 Pax for scalable MRP
-  
+  final double
+      quantity; // Qty per 1 Pax or per Dish Unit? Let's assume per 1 Pax for scalable MRP
+
   // Helper for UI
   final String? ingredientName;
   final String? unit;

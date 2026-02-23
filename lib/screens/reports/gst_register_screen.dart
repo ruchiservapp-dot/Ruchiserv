@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../db/database_helper.dart';
 import '../../repositories/finance_repository.dart';
 import '../report_preview_page.dart';
 
@@ -14,7 +13,8 @@ class GstRegisterScreen extends StatefulWidget {
   State<GstRegisterScreen> createState() => _GstRegisterScreenState();
 }
 
-class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTickerProviderStateMixin {
+class _GstRegisterScreenState extends State<GstRegisterScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _endDate = DateTime.now();
@@ -38,20 +38,20 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final prefs = await SharedPreferences.getInstance();
     _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
-    
+
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
-    
+
     // Output tax: From sales invoices
     final invoices = await FinanceRepository().getInvoices(
       _firmId,
       startDate: startStr,
       endDate: endStr,
     );
-    
+
     // Input tax: From expense transactions (purchases)
     final expenses = await FinanceRepository().getTransactions(
       firmId: _firmId,
@@ -59,7 +59,7 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
       endDate: endStr,
       type: 'EXPENSE',
     );
-    
+
     setState(() {
       _outputInvoices = invoices;
       _inputTransactions = expenses;
@@ -74,7 +74,7 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
-    
+
     if (picked != null) {
       setState(() {
         if (isStart) {
@@ -98,7 +98,13 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
       sgst += (inv['sgst'] as num?)?.toDouble() ?? 0;
       igst += (inv['igst'] as num?)?.toDouble() ?? 0;
     }
-    return {'taxable': taxable, 'cgst': cgst, 'sgst': sgst, 'igst': igst, 'total': cgst + sgst + igst};
+    return {
+      'taxable': taxable,
+      'cgst': cgst,
+      'sgst': sgst,
+      'igst': igst,
+      'total': cgst + sgst + igst
+    };
   }
 
   Map<String, double> get _inputTotals {
@@ -109,34 +115,58 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
         total += (txn['amount'] as num?)?.toDouble() ?? 0;
       }
     }
-    final estimatedTax = total * 0.05 / 1.05; // Reverse calculation from inclusive amount
+    final estimatedTax =
+        total * 0.05 / 1.05; // Reverse calculation from inclusive amount
     return {'taxable': total - estimatedTax, 'tax': estimatedTax};
   }
 
   void _exportGSTR1() {
-    final headers = ['Invoice No', 'Date', 'Customer', 'GSTIN', 'Taxable', 'CGST', 'SGST', 'IGST', 'Total'];
-    final rows = _outputInvoices.map((inv) => [
-      inv['invoiceNumber'] ?? '',
-      inv['invoiceDate'] ?? '',
-      inv['customerName'] ?? '',
-      inv['customerGstin'] ?? 'N/A',
-      inv['subtotal'] ?? 0,
-      inv['cgst'] ?? 0,
-      inv['sgst'] ?? 0,
-      inv['igst'] ?? 0,
-      inv['totalAmount'] ?? 0,
-    ]).toList();
-    
+    final headers = [
+      'Invoice No',
+      'Date',
+      'Customer',
+      'GSTIN',
+      'Taxable',
+      'CGST',
+      'SGST',
+      'IGST',
+      'Total'
+    ];
+    final rows = _outputInvoices
+        .map((inv) => [
+              inv['invoiceNumber'] ?? '',
+              inv['invoiceDate'] ?? '',
+              inv['customerName'] ?? '',
+              inv['customerGstin'] ?? 'N/A',
+              inv['subtotal'] ?? 0,
+              inv['cgst'] ?? 0,
+              inv['sgst'] ?? 0,
+              inv['igst'] ?? 0,
+              inv['totalAmount'] ?? 0,
+            ])
+        .toList();
+
     // Add totals row
     final totals = _outputTotals;
-    rows.add(['TOTAL', '', '', '', totals['taxable'], totals['cgst'], totals['sgst'], totals['igst'], totals['taxable']! + totals['total']!]);
-    
+    rows.add([
+      'TOTAL',
+      '',
+      '',
+      '',
+      totals['taxable'],
+      totals['cgst'],
+      totals['sgst'],
+      totals['igst'],
+      totals['taxable']! + totals['total']!
+    ]);
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ReportPreviewPage(
           title: 'GSTR-1 Summary',
-          subtitle: '${DateFormat('dd MMM').format(_startDate)} - ${DateFormat('dd MMM yyyy').format(_endDate)}',
+          subtitle:
+              '${DateFormat('dd MMM').format(_startDate)} - ${DateFormat('dd MMM yyyy').format(_endDate)}',
           headers: headers,
           rows: rows,
           accentColor: Colors.teal,
@@ -150,7 +180,7 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
     final outputTotals = _outputTotals;
     final inputTotals = _inputTotals;
     final netPayable = outputTotals['total']! - inputTotals['tax']!;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('GST Register'),
@@ -191,7 +221,8 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
                                   const SizedBox(width: 8),
                                   Text(DateFormat('MMM d').format(_startDate)),
                                   const Text(' - '),
-                                  Text(DateFormat('MMM d, yyyy').format(_endDate)),
+                                  Text(DateFormat('MMM d, yyyy')
+                                      .format(_endDate)),
                                 ],
                               ),
                             ),
@@ -207,11 +238,13 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
                       Row(
                         children: [
                           Expanded(
-                            child: _buildSummaryChip('Output', outputTotals['total']!, Colors.red),
+                            child: _buildSummaryChip(
+                                'Output', outputTotals['total']!, Colors.red),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _buildSummaryChip('Input', inputTotals['tax']!, Colors.green),
+                            child: _buildSummaryChip(
+                                'Input', inputTotals['tax']!, Colors.green),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -226,7 +259,7 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
                     ],
                   ),
                 ),
-                
+
                 // Tab Content
                 Expanded(
                   child: TabBarView(
@@ -263,9 +296,11 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
 
   Widget _buildOutputTab() {
     if (_outputInvoices.isEmpty) {
-      return Center(child: Text('No invoices in selected period', style: TextStyle(color: Colors.grey.shade600)));
+      return Center(
+          child: Text('No invoices in selected period',
+              style: TextStyle(color: Colors.grey.shade600)));
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _outputInvoices.length,
@@ -275,7 +310,7 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
         final sgst = (inv['sgst'] as num?)?.toDouble() ?? 0;
         final igst = (inv['igst'] as num?)?.toDouble() ?? 0;
         final totalTax = cgst + sgst + igst;
-        
+
         return Card(
           child: ListTile(
             title: Text(inv['invoiceNumber'] ?? 'Invoice'),
@@ -284,10 +319,14 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('₹${(inv['subtotal'] as num?)?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontSize: 12)),
+                Text('₹${(inv['subtotal'] as num?)?.toStringAsFixed(0) ?? '0'}',
+                    style: const TextStyle(fontSize: 12)),
                 Text(
                   '+₹${totalTax.toStringAsFixed(0)} GST',
-                  style: TextStyle(color: Colors.red.shade600, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.red.shade600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -298,14 +337,17 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
   }
 
   Widget _buildInputTab() {
-    final filtered = _inputTransactions.where((t) => 
-      t['category'] == 'Purchase' || t['category'] == 'Raw Materials'
-    ).toList();
-    
+    final filtered = _inputTransactions
+        .where((t) =>
+            t['category'] == 'Purchase' || t['category'] == 'Raw Materials')
+        .toList();
+
     if (filtered.isEmpty) {
-      return Center(child: Text('No purchase transactions in selected period', style: TextStyle(color: Colors.grey.shade600)));
+      return Center(
+          child: Text('No purchase transactions in selected period',
+              style: TextStyle(color: Colors.grey.shade600)));
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: filtered.length,
@@ -313,7 +355,7 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
         final txn = filtered[index];
         final amount = (txn['amount'] as num?)?.toDouble() ?? 0;
         final estimatedTax = amount * 0.05 / 1.05;
-        
+
         return Card(
           child: ListTile(
             title: Text(txn['partyName'] ?? txn['description'] ?? 'Purchase'),
@@ -322,10 +364,14 @@ class _GstRegisterScreenState extends State<GstRegisterScreen> with SingleTicker
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('₹${amount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12)),
+                Text('₹${amount.toStringAsFixed(0)}',
+                    style: const TextStyle(fontSize: 12)),
                 Text(
                   '~₹${estimatedTax.toStringAsFixed(0)} ITC',
-                  style: TextStyle(color: Colors.green.shade600, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.green.shade600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
                 ),
               ],
             ),

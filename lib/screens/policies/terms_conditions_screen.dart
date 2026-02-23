@@ -12,7 +12,8 @@ class TermsConditionsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Terms & Conditions', style: Theme.of(context).textTheme.headlineMedium),
+            Text('Terms & Conditions',
+                style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 16),
             const Text(
               'Welcome to RuchiServ, a product by ELKERON TECHNOLOGIES PRIVATE LIMITED.\n\n'

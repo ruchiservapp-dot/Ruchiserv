@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../core/app_theme.dart';
 import 'login_screen.dart'; // Full version with biometrics
 
 class SplashScreen extends StatefulWidget {
@@ -20,11 +18,11 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigate() async {
     // Show splash for 2 seconds
     await Future.delayed(const Duration(seconds: 2));
-    
+
     if (!mounted) return;
 
     // Navigate to Login Screen
-    // (Login Screen handles auto-login logic internally if needed, 
+    // (Login Screen handles auto-login logic internally if needed,
     // or we can just go there and let it decide)
     Navigator.pushReplacement(
       context,

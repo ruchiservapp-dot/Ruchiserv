@@ -5,10 +5,8 @@ import 'package:ruchiserv/core/app_logger.dart';
 // MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 // lib/screens/add_order_screen.dart
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import '../utils/haptic_helper.dart';
-import '../db/database_helper.dart';
 import '../services/permission_service.dart';
 import '../services/notification_service.dart';
 import '../utils/staffing_logic.dart';
@@ -65,14 +63,14 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   double _serviceCost = 0;
   double _counterSetupCost = 0;
   double _grandTotal = 0;
-  
+
   double get _discountAmount => _beforeDiscount * _discountPercent / 100;
 
   bool _isSaving = false;
-  
+
   bool _isStaffInfoManual = false;
   late TextEditingController _staffCountController;
-  
+
   // RBAC: Rate visibility
   bool _canViewRates = true;
 
@@ -95,7 +93,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize empty lists for all categories
     for (var cat in _categories) {
       _categorizedDishes[cat] = [];
@@ -114,7 +112,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       _beforeDiscount = _parseDouble(o['beforeDiscount']) ?? 0;
       _discountPercent = _parseDouble(o['discountPercent']) ?? 0;
       _finalAmount = _parseDouble(o['finalAmount']) ?? 0;
-      
+
       // Service fields hydration
       _serviceRequired = (o['serviceRequired'] == 1);
       _serviceType = o['serviceType']?.toString() ?? 'BUFFET';
@@ -147,24 +145,26 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       _ensureDefaultRows();
       _loadLastServiceRates();
     }
-    
+
     // Load dish suggestions from database
     _loadDishSuggestions();
-    
+
     // RBAC: Check if user can view rates
     _loadRateVisibility();
-    
+
     _staffCountController = TextEditingController(text: _staffCount.toString());
   }
 
   Future<void> _loadLastServiceRates() async {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm') ?? 'DEFAULT';
-    
+
     if (firmId != 'DEFAULT') {
-      final sRate = await InventoryRepository().getLastServiceRate(firmId, 'STAFF');
-      final cRate = await InventoryRepository().getLastServiceRate(firmId, 'COUNTER');
-      
+      final sRate =
+          await InventoryRepository().getLastServiceRate(firmId, 'STAFF');
+      final cRate =
+          await InventoryRepository().getLastServiceRate(firmId, 'COUNTER');
+
       if (mounted) {
         setState(() {
           if (sRate > 0 && _staffRate == 0) _staffRate = sRate;
@@ -174,7 +174,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       }
     }
   }
-  
+
   Future<void> _loadRateVisibility() async {
     final canView = await PermissionService.instance.canViewRates();
     if (mounted) {
@@ -186,7 +186,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm') ?? 'DEFAULT';
     final dishes = await OrderRepository().getDishesForOrder(orderId, firmId);
-    
+
     // Group dishes by category
     for (final dish in dishes) {
       final category = dish['category']?.toString() ?? 'Main Course';
@@ -198,12 +198,14 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         'name': dish['dishName'], // DB column is 'dishName'
         'pax': dish['pax'] ?? 0,
         'rate': dish['pricePerPlate'] ?? 0, // DB column is 'pricePerPlate'
-        'cost': (dish['pax'] ?? 0) * (dish['pricePerPlate'] ?? 0), // Recalculate cost
+        'cost': (dish['pax'] ?? 0) *
+            (dish['pricePerPlate'] ?? 0), // Recalculate cost
         'foodType': dish['foodType'] ?? _foodType,
-        '_localId': '${DateTime.now().microsecondsSinceEpoch}_${dish['id'] ?? 'new'}',
+        '_localId':
+            '${DateTime.now().microsecondsSinceEpoch}_${dish['id'] ?? 'new'}',
       });
     }
-    
+
     // Ensure at least one row per category
     _ensureDefaultRows();
     _recalculateTotals();
@@ -342,16 +344,16 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           // Filter: Must have a name selected. Qty can be 0 if you want to just list it, but usually cost implies qty>0.
           // User said "rows can be kept blank", so we ignore those with null name.
           if (d['name'] != null) {
-             // If you want to enforce qty > 0 for saved items:
-             // if ((_parseInt(d['pax']) ?? 0) > 0) ...
-             // For now, I'll allow saving 0 qty items if they have a name, or just filter them.
-             // Usually 0 qty means "not ordered". Let's filter > 0 qty to be clean.
-             if ((_parseInt(d['pax']) ?? 0) > 0) {
-               allValidDishes.add({
-                 ...d,
-                 'category': cat, // Attach category here
-               });
-             }
+            // If you want to enforce qty > 0 for saved items:
+            // if ((_parseInt(d['pax']) ?? 0) > 0) ...
+            // For now, I'll allow saving 0 qty items if they have a name, or just filter them.
+            // Usually 0 qty means "not ordered". Let's filter > 0 qty to be clean.
+            if ((_parseInt(d['pax']) ?? 0) > 0) {
+              allValidDishes.add({
+                ...d,
+                'category': cat, // Attach category here
+              });
+            }
           }
         }
       }
@@ -366,7 +368,9 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         'date': dateStr,
         'customerName': _customerController.text.trim(),
         'mobile': _mobileController.text.trim(),
-        'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+        'email': _emailController.text.trim().isEmpty
+            ? null
+            : _emailController.text.trim(),
         'location': _locationController.text.trim(),
         'mealType': _mealType,
         'foodType': _foodType,
@@ -396,12 +400,12 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       // prepare dishes payload
       final dishRows = allValidDishes.map((d) {
         return {
-            'dishName': d['name'], // Schema uses 'dishName' column
-            'foodType': d['foodType'] ?? _foodType,
-            'pax': _parseInt(d['pax']) ?? 0, // Pax is int
-            'pricePerPlate': d['rate'] ?? 0, // Schema uses 'pricePerPlate' column
-            'category': d['category'],
-          };
+          'dishName': d['name'], // Schema uses 'dishName' column
+          'foodType': d['foodType'] ?? _foodType,
+          'pax': _parseInt(d['pax']) ?? 0, // Pax is int
+          'pricePerPlate': d['rate'] ?? 0, // Schema uses 'pricePerPlate' column
+          'category': d['category'],
+        };
       }).toList();
 
       if (widget.existingOrder != null) {
@@ -410,7 +414,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           order,
           dishRows,
         );
-        
+
         // Trigger WhatsApp Update (Fire & Forget)
         WhatsAppService.sendOrderUpdate(
           toNumber: _mobileController.text.trim(),
@@ -421,12 +425,17 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       } else {
         final id = await OrderRepository().insertOrder(order, dishRows);
         if (id == null || id <= 0) throw Exception('Insert failed');
-        
+
         // Trigger Notification (Fire & Forget)
         NotificationService.queueOrderConfirmation(
           orderId: id,
-          orderData: {...order, 'id': id, 'dishes': dishRows}, // Ensure ID is passed
-        ).then((_) => AppLogger.info('🔔 Notification queued')).catchError((e) => AppLogger.info('🔕 Notification trigger failed: $e'));
+          orderData: {
+            ...order,
+            'id': id,
+            'dishes': dishRows
+          }, // Ensure ID is passed
+        ).then((_) => AppLogger.info('🔔 Notification queued')).catchError(
+            (e) => AppLogger.info('🔕 Notification trigger failed: $e'));
 
         // Fetch Firm Details for WhatsApp Params
         String cateringName = 'RuchiServ';
@@ -435,15 +444,23 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         String cateringEmail = '';
         String cateringGstin = '';
         try {
-           final firmMap = await OrderRepository().getFirm(firmId);
-           if (firmMap != null) {
-              cateringName = firmMap['firmName']?.toString() ?? firmMap['name']?.toString() ?? 'RuchiServ';
-              cateringPhone = firmMap['mobile']?.toString() ?? '91XXXXXXXXXX';
-              cateringAddress = firmMap['address']?.toString() ?? '';
-              cateringEmail = firmMap['email']?.toString() ?? firmMap['primaryEmail']?.toString() ?? '';
-              cateringGstin = firmMap['gstNumber']?.toString() ?? firmMap['gstin']?.toString() ?? '';
-           }
-        } catch (_) {}
+          final firmMap = await OrderRepository().getFirm(firmId);
+          if (firmMap != null) {
+            cateringName = firmMap['firmName']?.toString() ??
+                firmMap['name']?.toString() ??
+                'RuchiServ';
+            cateringPhone = firmMap['mobile']?.toString() ?? '91XXXXXXXXXX';
+            cateringAddress = firmMap['address']?.toString() ?? '';
+            cateringEmail = firmMap['email']?.toString() ??
+                firmMap['primaryEmail']?.toString() ??
+                '';
+            cateringGstin = firmMap['gstNumber']?.toString() ??
+                firmMap['gstin']?.toString() ??
+                '';
+          }
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
 
         // Trigger WhatsApp Confirmation (Fire & Forget)
         WhatsAppService.sendOrderConfirmation(
@@ -452,30 +469,31 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           orderId: id.toString(),
           totalAmount: _grandTotal.toStringAsFixed(0),
           date: dateStr,
-          time: _selectedTime != null 
-              ? DateFormat('h:mm a').format(DateTime(2026, 1, 1, _selectedTime!.hour, _selectedTime!.minute)) 
+          time: _selectedTime != null
+              ? DateFormat('h:mm a').format(DateTime(
+                  2026, 1, 1, _selectedTime!.hour, _selectedTime!.minute))
               : 'N/A',
           pax: _pax.toString(),
           cateringName: cateringName,
           cateringPhone: cateringPhone,
           // Full order data for PDF - MUST include all firm details
           orderData: {
-            ...order, 
-            'id': id, 
+            ...order,
+            'id': id,
             'firmName': cateringName,
             'firmAddress': cateringAddress,
             'firmMobile': cateringPhone,
             'firmEmail': cateringEmail,
             'firmGstin': cateringGstin,
-          }, 
+          },
           dishes: dishRows, // Dishes for PDF
         ).then((_) => AppLogger.info('💬 WhatsApp trigger done'));
-        
+
         // Trigger Email Confirmation (Fire & Forget) - include full firm details for letterpad
         MessagingService().sendOrderConfirmation(
           {
-            ...order, 
-            'id': id, 
+            ...order,
+            'id': id,
             'firmName': cateringName,
             'firmAddress': cateringAddress,
             'firmMobile': cateringPhone,
@@ -489,8 +507,12 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       // Save service rates for future use (Non-critical, wrap in try-catch)
       if (firmId != 'DEFAULT') {
         try {
-          if (_staffRate > 0) await OrderRepository().upsertServiceRate(firmId, 'STAFF', _staffRate);
-          if (_counterSetupRate > 0) await OrderRepository().upsertServiceRate(firmId, 'COUNTER', _counterSetupRate);
+          if (_staffRate > 0)
+            await OrderRepository()
+                .upsertServiceRate(firmId, 'STAFF', _staffRate);
+          if (_counterSetupRate > 0)
+            await OrderRepository()
+                .upsertServiceRate(firmId, 'COUNTER', _counterSetupRate);
         } catch (_) {
           // Ignore service rate save errors to prevent blocking order completion
           AppLogger.info('Failed to save service rates: $_');
@@ -514,15 +536,16 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         }
       } catch (_) {
         // Silently ignore dish master save errors - main order is already saved
+        AppLogger.error('Caught error: $_');
       }
 
       if (!mounted) return;
-      
+
       // Trigger Master Data Sync (for any new dishes created)
       MasterDataSyncService().syncToAWS();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.orderSaved)),
+        SnackBar(content: Text(AppLocalizations.of(context).orderSaved)),
       );
       HapticHelper.success();
       Navigator.pop(context, true);
@@ -530,7 +553,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       HapticHelper.error();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.saveOrderError(e.toString())), backgroundColor: Colors.redAccent),
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context).saveOrderError(e.toString())),
+            backgroundColor: Colors.redAccent),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -550,19 +576,23 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey.shade300, width: 1)),
+            border: Border(
+                bottom: BorderSide(color: Colors.grey.shade300, width: 1)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 category,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueGrey),
               ),
               TextButton.icon(
                 onPressed: () => _addDishRow(category),
                 icon: const Icon(Icons.add, size: 18),
-                label: Text(AppLocalizations.of(context)!.addItem),
+                label: Text(AppLocalizations.of(context).addItem),
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
@@ -572,13 +602,14 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        
+
         // Rows
         ...rows.asMap().entries.map((entry) {
           final index = entry.key;
           final dish = entry.value;
           return DishRowItem(
-            key: ValueKey(dish['_localId'] ?? ObjectKey(dish)), // Fallback if ID missing
+            key: ValueKey(
+                dish['_localId'] ?? ObjectKey(dish)), // Fallback if ID missing
             dish: dish,
             suggestions: suggestions,
             category: category,
@@ -594,34 +625,32 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
             },
           );
         }),
-        
+
         const SizedBox(height: 16),
       ],
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existingOrder != null;
-    final dateStr = '${widget.date.day}/${widget.date.month}/${widget.date.year}';
-    
+    final dateStr =
+        '${widget.date.day}/${widget.date.month}/${widget.date.year}';
+
     // Check if order is locked (MRP processed) or explicitly view-only
-    final isOrderLocked = isEdit && (
-      widget.existingOrder!['isLocked'] == 1 ||
-      (widget.existingOrder!['mrpStatus']?.toString() ?? '').isNotEmpty &&
-      widget.existingOrder!['mrpStatus']?.toString() != 'PENDING'
-    );
+    final isOrderLocked = isEdit &&
+        (widget.existingOrder!['isLocked'] == 1 ||
+            (widget.existingOrder!['mrpStatus']?.toString() ?? '').isNotEmpty &&
+                widget.existingOrder!['mrpStatus']?.toString() != 'PENDING');
     final isViewOnly = widget.viewOnly || isOrderLocked;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isViewOnly 
-            ? AppLocalizations.of(context)!.viewOrder 
-            : (isEdit ? AppLocalizations.of(context)!.editOrder : AppLocalizations.of(context)!.addOrder)
-        ),
+        title: Text(isViewOnly
+            ? AppLocalizations.of(context).viewOrder
+            : (isEdit
+                ? AppLocalizations.of(context).editOrder
+                : AppLocalizations.of(context).addOrder)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -642,14 +671,18 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(isOrderLocked ? Icons.lock : Icons.visibility, color: Colors.blue.shade700),
+                      Icon(isOrderLocked ? Icons.lock : Icons.visibility,
+                          color: Colors.blue.shade700),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          isOrderLocked 
-                            ? AppLocalizations.of(context)!.orderLockedCannotModify
-                            : AppLocalizations.of(context)!.viewOnlyMode,
-                          style: TextStyle(color: Colors.blue.shade900, fontWeight: FontWeight.w500),
+                          isOrderLocked
+                              ? AppLocalizations.of(context)
+                                  .orderLockedCannotModify
+                              : AppLocalizations.of(context).viewOnlyMode,
+                          style: TextStyle(
+                              color: Colors.blue.shade900,
+                              fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -660,7 +693,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      AppLocalizations.of(context)!.dateLabel(dateStr),
+                      AppLocalizations.of(context).dateLabel(dateStr),
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -718,13 +751,16 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       child: AbsorbPointer(
                         child: TextFormField(
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.deliveryTime,
-                            hintText: AppLocalizations.of(context)!.tapToSelectTime,
+                            labelText:
+                                AppLocalizations.of(context).deliveryTime,
+                            hintText:
+                                AppLocalizations.of(context).tapToSelectTime,
                             suffixIcon: const Icon(Icons.access_time),
                           ),
                           controller: TextEditingController(
                             text: _selectedTime != null
-                                ? TimeUtils.formatTo12Hour('${_selectedTime!.hour}:${_selectedTime!.minute}')
+                                ? TimeUtils.formatTo12Hour(
+                                    '${_selectedTime!.hour}:${_selectedTime!.minute}')
                                 : '',
                           ),
                         ),
@@ -743,8 +779,11 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
               TextFormField(
                 controller: _customerController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.customerName),
-                validator: (v) => (v == null || v.trim().isEmpty) ? AppLocalizations.of(context)!.required : null,
+                decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).customerName),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? AppLocalizations.of(context).required
+                    : null,
               ),
               const SizedBox(height: 8),
 
@@ -753,7 +792,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                 keyboardType: TextInputType.phone,
                 maxLength: 10,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.mobile,
+                  labelText: AppLocalizations.of(context).mobile,
                   counterText: '',
                 ),
                 validator: (v) {
@@ -763,10 +802,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                   // If anything is entered, must be exactly 10 digits
                   final cleaned = v.trim();
                   if (!RegExp(r'^[0-9]+$').hasMatch(cleaned)) {
-                    return AppLocalizations.of(context)!.digitsOnly;
+                    return AppLocalizations.of(context).digitsOnly;
                   }
                   if (cleaned.length != 10) {
-                    return AppLocalizations.of(context)!.mobileLengthError;
+                    return AppLocalizations.of(context).mobileLengthError;
                   }
                   return null;
                 },
@@ -786,7 +825,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                     return null; // Optional field
                   }
                   // Basic email validation
-                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  final emailRegex =
+                      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                   if (!emailRegex.hasMatch(v.trim())) {
                     return 'Enter a valid email';
                   }
@@ -797,7 +837,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
               TextFormField(
                 controller: _locationController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.location),
+                decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).location),
               ),
               const SizedBox(height: 8),
 
@@ -805,27 +846,44 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _mealType,
+                      initialValue: _mealType,
                       items: [
-                        DropdownMenuItem(value: 'Breakfast', child: Text(AppLocalizations.of(context)!.breakfast)),
-                        DropdownMenuItem(value: 'Lunch', child: Text(AppLocalizations.of(context)!.lunch)),
-                        DropdownMenuItem(value: 'Dinner', child: Text(AppLocalizations.of(context)!.dinner)),
-                        DropdownMenuItem(value: 'Snacks/Others', child: Text(AppLocalizations.of(context)!.snacksOthers)),
+                        DropdownMenuItem(
+                            value: 'Breakfast',
+                            child:
+                                Text(AppLocalizations.of(context).breakfast)),
+                        DropdownMenuItem(
+                            value: 'Lunch',
+                            child: Text(AppLocalizations.of(context).lunch)),
+                        DropdownMenuItem(
+                            value: 'Dinner',
+                            child: Text(AppLocalizations.of(context).dinner)),
+                        DropdownMenuItem(
+                            value: 'Snacks/Others',
+                            child: Text(
+                                AppLocalizations.of(context).snacksOthers)),
                       ],
-                      onChanged: (v) => setState(() => _mealType = v ?? 'Lunch'),
-                      decoration: InputDecoration(labelText: AppLocalizations.of(context)!.mealType),
+                      onChanged: (v) =>
+                          setState(() => _mealType = v ?? 'Lunch'),
+                      decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context).mealType),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _foodType,
+                      initialValue: _foodType,
                       items: [
-                        DropdownMenuItem(value: 'Veg', child: Text(AppLocalizations.of(context)!.veg)),
-                        DropdownMenuItem(value: 'Non-Veg', child: Text(AppLocalizations.of(context)!.nonVeg)),
+                        DropdownMenuItem(
+                            value: 'Veg',
+                            child: Text(AppLocalizations.of(context).veg)),
+                        DropdownMenuItem(
+                            value: 'Non-Veg',
+                            child: Text(AppLocalizations.of(context).nonVeg)),
                       ],
                       onChanged: (v) => setState(() => _foodType = v ?? 'Veg'),
-                      decoration: InputDecoration(labelText: AppLocalizations.of(context)!.foodType),
+                      decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context).foodType),
                     ),
                   ),
                 ],
@@ -834,11 +892,12 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
               // --- Categorized Dishes Sections ---
               Text(
-                AppLocalizations.of(context)!.menuItems,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                AppLocalizations.of(context).menuItems,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              
+
               ..._categories.map((cat) => _buildCategorySection(cat)),
 
               const SizedBox(height: 20),
@@ -856,10 +915,13 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       children: [
                         Expanded(
                           child: TextFormField(
-                            key: ValueKey('bd_$_beforeDiscount'), // force rebuild on update
+                            key: ValueKey(
+                                'bd_$_beforeDiscount'), // force rebuild on update
                             initialValue: _beforeDiscount.toStringAsFixed(0),
                             keyboardType: TextInputType.number,
-                            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.subtotal),
+                            decoration: InputDecoration(
+                                labelText:
+                                    AppLocalizations.of(context).subtotal),
                             onChanged: (v) {
                               _beforeDiscount = double.tryParse(v) ?? 0;
                               _recalculateTotals();
@@ -872,7 +934,9 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                           child: TextFormField(
                             initialValue: _discountPercent.toStringAsFixed(0),
                             keyboardType: TextInputType.number,
-                            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.discPercent),
+                            decoration: InputDecoration(
+                                labelText:
+                                    AppLocalizations.of(context).discPercent),
                             onChanged: (v) {
                               _discountPercent = double.tryParse(v) ?? 0;
                               _recalculateTotals();
@@ -885,14 +949,20 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(AppLocalizations.of(context)!.dishTotal, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        Text('₹${_finalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                        Text(AppLocalizations.of(context).dishTotal,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text('₹${_finalAmount.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent)),
                       ],
                     ),
                   ],
                 ),
               ),
-              
+
               // ===== SERVICE & COUNTER SETUP SECTION =====
               const SizedBox(height: 16),
               Card(
@@ -901,12 +971,15 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppLocalizations.of(context)!.serviceAndCounterSetup, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(AppLocalizations.of(context).serviceAndCounterSetup,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
                       const Divider(),
-                      
+
                       // Service Required Toggle
                       SwitchListTile(
-                        title: Text(AppLocalizations.of(context)!.serviceRequiredQuestion),
+                        title: Text(AppLocalizations.of(context)
+                            .serviceRequiredQuestion),
                         value: _serviceRequired,
                         dense: true,
                         contentPadding: EdgeInsets.zero,
@@ -915,21 +988,29 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                           _recalculateServiceCosts();
                         }),
                       ),
-                      
+
                       if (_serviceRequired) ...[
                         // Service Type Dropdown
                         Row(
                           children: [
-                            Text(AppLocalizations.of(context)!.serviceType),
+                            Text(AppLocalizations.of(context).serviceType),
                             const SizedBox(width: 8),
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: _serviceType,
-                                decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8)),
+                                initialValue: _serviceType,
+                                decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 8)),
                                 items: const [
-                                  DropdownMenuItem(value: 'BUFFET', child: Text('Buffet')),
-                                  DropdownMenuItem(value: 'TABLE_SERVICE', child: Text('Table Service')),
-                                  DropdownMenuItem(value: 'HYBRID', child: Text('Both (Hybrid)')),
+                                  DropdownMenuItem(
+                                      value: 'BUFFET', child: Text('Buffet')),
+                                  DropdownMenuItem(
+                                      value: 'TABLE_SERVICE',
+                                      child: Text('Table Service')),
+                                  DropdownMenuItem(
+                                      value: 'HYBRID',
+                                      child: Text('Both (Hybrid)')),
                                 ],
                                 onChanged: (v) => setState(() {
                                   _serviceType = v ?? 'BUFFET';
@@ -940,7 +1021,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        
+
                         // Counter Count & Staff Rate
                         Row(
                           children: [
@@ -948,7 +1029,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                               child: TextFormField(
                                 initialValue: _counterCount.toString(),
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.countersCount, isDense: true),
+                                decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)
+                                        .countersCount,
+                                    isDense: true),
                                 onChanged: (v) => setState(() {
                                   _counterCount = int.tryParse(v) ?? 1;
                                   if (_counterCount < 1) _counterCount = 1;
@@ -959,9 +1043,14 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: TextFormField(
-                                initialValue: _staffRate > 0 ? _staffRate.toStringAsFixed(0) : '',
+                                initialValue: _staffRate > 0
+                                    ? _staffRate.toStringAsFixed(0)
+                                    : '',
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.ratePerStaff, isDense: true),
+                                decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)
+                                        .ratePerStaff,
+                                    isDense: true),
                                 onChanged: (v) => setState(() {
                                   _staffRate = double.tryParse(v) ?? 0;
                                   _recalculateServiceCosts();
@@ -971,7 +1060,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        
+
                         // Staff Count (Editable)
                         Row(
                           children: [
@@ -980,7 +1069,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                               child: TextFormField(
                                 controller: _staffCountController,
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.staffRequired, isDense: true),
+                                decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)
+                                        .staffRequired,
+                                    isDense: true),
                                 onChanged: (v) => setState(() {
                                   _isStaffInfoManual = true;
                                   _staffCount = int.tryParse(v) ?? 0;
@@ -990,8 +1082,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                             ),
                             if (_isStaffInfoManual)
                               IconButton(
-                                icon: const Icon(Icons.refresh, size: 20, color: Colors.blue),
-                                tooltip: AppLocalizations.of(context)!.resetCalculation,
+                                icon: const Icon(Icons.refresh,
+                                    size: 20, color: Colors.blue),
+                                tooltip: AppLocalizations.of(context)
+                                    .resetCalculation,
                                 onPressed: () => setState(() {
                                   _isStaffInfoManual = false;
                                   _recalculateServiceCosts();
@@ -1000,17 +1094,23 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               flex: 4,
-                              child: Text(AppLocalizations.of(context)!.costWithRupee(_serviceCost.toStringAsFixed(0)), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                              child: Text(
+                                  AppLocalizations.of(context).costWithRupee(
+                                      _serviceCost.toStringAsFixed(0)),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green)),
                             ),
                           ],
                         ),
                       ],
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // Counter Setup Toggle
                       SwitchListTile(
-                        title: Text(AppLocalizations.of(context)!.counterSetupNeeded),
+                        title: Text(
+                            AppLocalizations.of(context).counterSetupNeeded),
                         value: _counterSetupRequired,
                         dense: true,
                         contentPadding: EdgeInsets.zero,
@@ -1019,15 +1119,20 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                           _recalculateServiceCosts();
                         }),
                       ),
-                      
+
                       if (_counterSetupRequired) ...[
                         Row(
                           children: [
                             Expanded(
                               child: TextFormField(
-                                initialValue: _counterSetupRate > 0 ? _counterSetupRate.toStringAsFixed(0) : '',
+                                initialValue: _counterSetupRate > 0
+                                    ? _counterSetupRate.toStringAsFixed(0)
+                                    : '',
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.ratePerCounter, isDense: true),
+                                decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)
+                                        .ratePerCounter,
+                                    isDense: true),
                                 onChanged: (v) => setState(() {
                                   _counterSetupRate = double.tryParse(v) ?? 0;
                                   _recalculateServiceCosts();
@@ -1036,48 +1141,86 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(AppLocalizations.of(context)!.counterCostWithRupee(_counterSetupCost.toStringAsFixed(0)), style: const TextStyle(fontWeight: FontWeight.bold)),
+                              child: Text(
+                                  AppLocalizations.of(context)
+                                      .counterCostWithRupee(
+                                          _counterSetupCost.toStringAsFixed(0)),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                       ],
-                      
+
                       const Divider(),
-                      
+
                       // Grand Total Breakdown
                       Column(
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                               Text(AppLocalizations.of(context)!.dishTotal, style: const TextStyle(fontSize: 14)),
-                               Text(_canViewRates ? '₹${_beforeDiscount.toStringAsFixed(0)}' : '****', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                              Text(AppLocalizations.of(context).dishTotal,
+                                  style: const TextStyle(fontSize: 14)),
+                              Text(
+                                  _canViewRates
+                                      ? '₹${_beforeDiscount.toStringAsFixed(0)}'
+                                      : '****',
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500)),
                             ],
                           ),
                           if (_discountAmount > 0)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                               Text(AppLocalizations.of(context)!.discountWithPercent(_discountPercent.toStringAsFixed(1)), style: const TextStyle(fontSize: 14, color: Colors.green)),
-                               Text(_canViewRates ? '-₹${_discountAmount.toStringAsFixed(0)}' : '****', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.green)),
-                            ],
-                          ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    AppLocalizations.of(context)
+                                        .discountWithPercent(_discountPercent
+                                            .toStringAsFixed(1)),
+                                    style: const TextStyle(
+                                        fontSize: 14, color: Colors.green)),
+                                Text(
+                                    _canViewRates
+                                        ? '-₹${_discountAmount.toStringAsFixed(0)}'
+                                        : '****',
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.green)),
+                              ],
+                            ),
                           if (_serviceCost > 0)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                               Text(AppLocalizations.of(context)!.serviceCost, style: const TextStyle(fontSize: 14)),
-                               Text(_canViewRates ? '+₹${_serviceCost.toStringAsFixed(0)}' : '****', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                            ],
-                          ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(AppLocalizations.of(context).serviceCost,
+                                    style: const TextStyle(fontSize: 14)),
+                                Text(
+                                    _canViewRates
+                                        ? '+₹${_serviceCost.toStringAsFixed(0)}'
+                                        : '****',
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500)),
+                              ],
+                            ),
                           if (_counterSetupCost > 0)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                               Text(AppLocalizations.of(context)!.counterSetup, style: const TextStyle(fontSize: 14)),
-                               Text(_canViewRates ? '+₹${_counterSetupCost.toStringAsFixed(0)}' : '****', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                            ],
-                          ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(AppLocalizations.of(context).counterSetup,
+                                    style: const TextStyle(fontSize: 14)),
+                                Text(
+                                    _canViewRates
+                                        ? '+₹${_counterSetupCost.toStringAsFixed(0)}'
+                                        : '****',
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500)),
+                              ],
+                            ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -1086,20 +1229,30 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(AppLocalizations.of(context)!.grandTotal, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text(_canViewRates ? '₹${_grandTotal.toStringAsFixed(0)}' : '****', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                          Text(AppLocalizations.of(context).grandTotal,
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(
+                              _canViewRates
+                                  ? '₹${_grandTotal.toStringAsFixed(0)}'
+                                  : '****',
+                              style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple)),
                         ],
                       ),
                     ],
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 8),
               TextFormField(
                 controller: _notesController,
                 maxLines: 2,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.notes),
+                decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).notes),
               ),
               const SizedBox(height: 24),
 
@@ -1110,12 +1263,17 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       child: ElevatedButton(
                         onPressed: isViewOnly ? null : _saveOrder,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isViewOnly ? Colors.grey : Colors.blueAccent,
+                          backgroundColor:
+                              isViewOnly ? Colors.grey : Colors.blueAccent,
                           foregroundColor: Colors.white,
                         ),
                         child: Text(
-                          isViewOnly ? AppLocalizations.of(context)!.orderLockedCannotModify : AppLocalizations.of(context)!.saveOrder, 
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          isViewOnly
+                              ? AppLocalizations.of(context)
+                                  .orderLockedCannotModify
+                              : AppLocalizations.of(context).saveOrder,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -1172,9 +1330,12 @@ class _DishRowItemState extends State<DishRowItem> {
   @override
   void initState() {
     super.initState();
-    _rateController = TextEditingController(text: _formatNum(widget.dish['rate']));
-    _qtyController = TextEditingController(text: (widget.dish['pax'] ?? 0).toString());
-    _costController = TextEditingController(text: _formatNum(widget.dish['cost']));
+    _rateController =
+        TextEditingController(text: _formatNum(widget.dish['rate']));
+    _qtyController =
+        TextEditingController(text: (widget.dish['pax'] ?? 0).toString());
+    _costController =
+        TextEditingController(text: _formatNum(widget.dish['cost']));
   }
 
   String _formatNum(dynamic v) {
@@ -1188,31 +1349,33 @@ class _DishRowItemState extends State<DishRowItem> {
   @override
   void didUpdateWidget(covariant DishRowItem oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Fix: Updating controllers notifies Form, triggering setState on ancestor Form during build.
     // Wrap in addPostFrameCallback to avoid this.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       // Rate check
       final currentRate = double.tryParse(_rateController.text) ?? 0;
-      final dishRate = double.tryParse(widget.dish['rate']?.toString() ?? '0') ?? 0;
+      final dishRate =
+          double.tryParse(widget.dish['rate']?.toString() ?? '0') ?? 0;
       if ((currentRate - dishRate).abs() > 0.01) {
-         _rateController.text = _formatNum(dishRate);
+        _rateController.text = _formatNum(dishRate);
       }
 
       // Qty Check
       final currentQty = int.tryParse(_qtyController.text) ?? 0;
       final dishQty = widget.dish['pax'] ?? 0;
       if (currentQty != dishQty) {
-         _qtyController.text = dishQty.toString();
+        _qtyController.text = dishQty.toString();
       }
-      
+
       // Cost Check
       final currentCost = double.tryParse(_costController.text) ?? 0;
-      final dishCost = double.tryParse(widget.dish['cost']?.toString() ?? '0') ?? 0;
+      final dishCost =
+          double.tryParse(widget.dish['cost']?.toString() ?? '0') ?? 0;
       if ((currentCost - dishCost).abs() > 1.0) {
-         _costController.text = _formatNum(dishCost);
+        _costController.text = _formatNum(dishCost);
       }
     });
   }
@@ -1235,159 +1398,185 @@ class _DishRowItemState extends State<DishRowItem> {
           // 1. Dish Name with Autocomplete
           Expanded(
             flex: 3,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Try to find master ID for localization
-                int? masterId;
-                final currentName = widget.dish['name']?.toString() ?? '';
-                if (currentName.isNotEmpty) {
-                  try {
-                    final match = widget.suggestions.firstWhere(
-                      (s) => s['name'] == currentName,
-                      orElse: () => {},
-                    );
-                    if (match.isNotEmpty) masterId = match['id'] as int?;
-                  } catch (_) {}
-                }
-
-                String localizedLabel = '';
-                if (masterId != null) {
-                  localizedLabel = LanguageService().getLocalizedName(
-                    entityType: 'DISH',
-                    entityId: masterId,
-                    defaultName: '',
+            child: LayoutBuilder(builder: (context, constraints) {
+              // Try to find master ID for localization
+              int? masterId;
+              final currentName = widget.dish['name']?.toString() ?? '';
+              if (currentName.isNotEmpty) {
+                try {
+                  final match = widget.suggestions.firstWhere(
+                    (s) => s['name'] == currentName,
+                    orElse: () => {},
                   );
-                  // Don't show if same as english (or default)
-                  if (localizedLabel == currentName) localizedLabel = '';
+                  if (match.isNotEmpty) masterId = match['id'] as int?;
+                } catch (_) {
+                  AppLogger.error('Caught error: $_');
                 }
+              }
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Autocomplete<Map<String, dynamic>>(
-                      optionsBuilder: (textEditingValue) {
-                        if (textEditingValue.text.isEmpty) {
-                          return widget.suggestions;
-                        }
-                        // Filter by English Name OR Localized Name
-                        return widget.suggestions.where((s) {
-                          final name = s['name']?.toString().toLowerCase() ?? '';
-                          // Check English
-                          if (name.contains(textEditingValue.text.toLowerCase())) return true;
-                          
-                          // Check Localized
-                          final loc = LanguageService().getLocalizedName(
-                            entityType: 'DISH',
-                            entityId: s['id'] as int,
-                            defaultName: ''
-                          ).toLowerCase();
-                          return loc.contains(textEditingValue.text.toLowerCase());
-                        });
-                      },
-                      displayStringForOption: (option) => option['name']?.toString() ?? '',
-                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                        if (controller.text.isEmpty && widget.dish['name'] != null) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (controller.text.isEmpty && mounted) {
-                              controller.text = widget.dish['name'].toString();
-                            }
-                          });
-                        }
-                        return TextFormField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          autocorrect: false,
-                          enableSuggestions: false,
-                          decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!.typeDishName,
-                            hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                            border: const OutlineInputBorder(),
-                          ),
-                          style: const TextStyle(fontSize: 13),
-                          onChanged: (val) {
-                            widget.parentSetState(() {
-                              widget.dish['name'] = val.isNotEmpty ? val : null;
-                              if (val.isNotEmpty && (widget.dish['pax'] ?? 0) == 0 && widget.totalPax > 0) {
-                                widget.dish['pax'] = widget.totalPax;
-                              }
-                              widget.recalculateTotals();
-                            });
-                          },
-                        );
-                      },
-                      onSelected: (option) {
-                        widget.parentSetState(() {
-                          widget.dish['name'] = option['name'];
-                          widget.dish['rate'] = (option['rate'] is int) 
-                              ? (option['rate'] as int).toDouble() 
-                              : (option['rate'] != null ? (option['rate'] is double ? option['rate'] : double.tryParse(option['rate'].toString()) ?? 0.0) : 0.0);
-                              
-                          if ((widget.dish['pax'] ?? 0) == 0 && widget.totalPax > 0) {
-                            widget.dish['pax'] = widget.totalPax;
+              String localizedLabel = '';
+              if (masterId != null) {
+                localizedLabel = LanguageService().getLocalizedName(
+                  entityType: 'DISH',
+                  entityId: masterId,
+                  defaultName: '',
+                );
+                // Don't show if same as english (or default)
+                if (localizedLabel == currentName) localizedLabel = '';
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Autocomplete<Map<String, dynamic>>(
+                    optionsBuilder: (textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return widget.suggestions;
+                      }
+                      // Filter by English Name OR Localized Name
+                      return widget.suggestions.where((s) {
+                        final name = s['name']?.toString().toLowerCase() ?? '';
+                        // Check English
+                        if (name.contains(textEditingValue.text.toLowerCase()))
+                          return true;
+
+                        // Check Localized
+                        final loc = LanguageService()
+                            .getLocalizedName(
+                                entityType: 'DISH',
+                                entityId: s['id'] as int,
+                                defaultName: '')
+                            .toLowerCase();
+                        return loc
+                            .contains(textEditingValue.text.toLowerCase());
+                      });
+                    },
+                    displayStringForOption: (option) =>
+                        option['name']?.toString() ?? '',
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onFieldSubmitted) {
+                      if (controller.text.isEmpty &&
+                          widget.dish['name'] != null) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (controller.text.isEmpty && mounted) {
+                            controller.text = widget.dish['name'].toString();
                           }
-                          widget.recalculateTotals();
                         });
-                      },
-                      optionsViewBuilder: (context, onSelected, options) {
-                        return SizedBox(
-                          width: constraints.maxWidth, // Match parent input field width
-                          child: Material(
-                            elevation: 8,
-                            shadowColor: Colors.black54,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 250),
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: options.length,
-                                itemBuilder: (context, i) {
-                                  final opt = options.elementAt(i);
-                                  final locName = LanguageService().getLocalizedName(
-                                    entityType: 'DISH',
-                                    entityId: opt['id'] as int,
-                                    defaultName: opt['name'],
-                                  );
-                                  
-                                  return ListTile(
-                                    dense: true,
-                                    // Show Localized Name primarily if language is not English
-                                    title: Text(
-                                      locName, 
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    subtitle: locName != opt['name'] 
-                                        ? Text(
-                                            opt['name'],
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ) 
-                                        : null,
-                                    trailing: Text('₹${opt['rate'] ?? 0}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                    onTap: () => onSelected(opt),
-                                  );
-                                },
-                              ),
+                      }
+                      return TextFormField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context).typeDishName,
+                          hintStyle:
+                              const TextStyle(fontSize: 13, color: Colors.grey),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 12),
+                          border: const OutlineInputBorder(),
+                        ),
+                        style: const TextStyle(fontSize: 13),
+                        onChanged: (val) {
+                          widget.parentSetState(() {
+                            widget.dish['name'] = val.isNotEmpty ? val : null;
+                            if (val.isNotEmpty &&
+                                (widget.dish['pax'] ?? 0) == 0 &&
+                                widget.totalPax > 0) {
+                              widget.dish['pax'] = widget.totalPax;
+                            }
+                            widget.recalculateTotals();
+                          });
+                        },
+                      );
+                    },
+                    onSelected: (option) {
+                      widget.parentSetState(() {
+                        widget.dish['name'] = option['name'];
+                        widget.dish['rate'] = (option['rate'] is int)
+                            ? (option['rate'] as int).toDouble()
+                            : (option['rate'] != null
+                                ? (option['rate'] is double
+                                    ? option['rate']
+                                    : double.tryParse(
+                                            option['rate'].toString()) ??
+                                        0.0)
+                                : 0.0);
+
+                        if ((widget.dish['pax'] ?? 0) == 0 &&
+                            widget.totalPax > 0) {
+                          widget.dish['pax'] = widget.totalPax;
+                        }
+                        widget.recalculateTotals();
+                      });
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return SizedBox(
+                        width: constraints
+                            .maxWidth, // Match parent input field width
+                        child: Material(
+                          elevation: 8,
+                          shadowColor: Colors.black54,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 250),
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              itemCount: options.length,
+                              itemBuilder: (context, i) {
+                                final opt = options.elementAt(i);
+                                final locName =
+                                    LanguageService().getLocalizedName(
+                                  entityType: 'DISH',
+                                  entityId: opt['id'] as int,
+                                  defaultName: opt['name'],
+                                );
+
+                                return ListTile(
+                                  dense: true,
+                                  // Show Localized Name primarily if language is not English
+                                  title: Text(
+                                    locName,
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: locName != opt['name']
+                                      ? Text(
+                                          opt['name'],
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        )
+                                      : null,
+                                  trailing: Text('₹${opt['rate'] ?? 0}',
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey)),
+                                  onTap: () => onSelected(opt),
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
-                    ),
-                    if (localizedLabel.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2, left: 4),
-                        child: Text(
-                          localizedLabel,
-                          style: TextStyle(fontSize: 11, color: Colors.blueGrey[700], fontStyle: FontStyle.italic),
                         ),
+                      );
+                    },
+                  ),
+                  if (localizedLabel.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, left: 4),
+                      child: Text(
+                        localizedLabel,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.blueGrey[700],
+                            fontStyle: FontStyle.italic),
                       ),
-                  ],
-                );
-              }
-            ),
+                    ),
+                ],
+              );
+            }),
           ),
           const SizedBox(width: 8),
 
@@ -1396,17 +1585,19 @@ class _DishRowItemState extends State<DishRowItem> {
             flex: 2,
             child: TextFormField(
               controller: _rateController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.rate,
+                labelText: AppLocalizations.of(context).rate,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
                 border: const OutlineInputBorder(),
               ),
               onChanged: (val) {
                 widget.dish['rate'] = double.tryParse(val) ?? 0;
-                widget.recalculateTotals(); 
+                widget.recalculateTotals();
               },
             ),
           ),
@@ -1420,9 +1611,10 @@ class _DishRowItemState extends State<DishRowItem> {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.qty,
+                labelText: AppLocalizations.of(context).qty,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
                 border: const OutlineInputBorder(),
               ),
               onChanged: (val) {
@@ -1438,25 +1630,27 @@ class _DishRowItemState extends State<DishRowItem> {
             flex: 2,
             child: TextFormField(
               controller: _costController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.cost,
+                labelText: AppLocalizations.of(context).cost,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
                 border: const OutlineInputBorder(),
               ),
               onChanged: (val) {
-                 final cost = double.tryParse(val) ?? 0;
-                 widget.dish['cost'] = cost;
-                 
-                 final qty = widget.dish['pax'] ?? 0;
-                 if (qty > 0) {
-                     // Recalculate and update Rate
-                     final rate = cost / qty;
-                     widget.dish['rate'] = rate;
-                 }
-                 widget.recalculateTotals();
+                final cost = double.tryParse(val) ?? 0;
+                widget.dish['cost'] = cost;
+
+                final qty = widget.dish['pax'] ?? 0;
+                if (qty > 0) {
+                  // Recalculate and update Rate
+                  final rate = cost / qty;
+                  widget.dish['rate'] = rate;
+                }
+                widget.recalculateTotals();
               },
             ),
           ),

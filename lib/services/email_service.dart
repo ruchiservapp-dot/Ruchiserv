@@ -3,7 +3,6 @@ import '../db/aws/aws_api.dart';
 
 /// Email Notification Service (Real Implementation via SES)
 class EmailService {
-  
   /// Send Order Confirmation Email
   /// This uses the transactional template on the backend.
   static Future<bool> sendOrderConfirmation({
@@ -40,7 +39,7 @@ class EmailService {
         AppLogger.error('❌ Email Backend Error: ${resp['error']}');
         return false;
       }
-      
+
       AppLogger.success('✅ Email Sent Successfully');
       return true;
     } catch (e) {
@@ -56,7 +55,7 @@ class EmailService {
     required String resetCode,
   }) async {
     AppLogger.info('📧 [EMAIL] Sending password reset to: $toEmail');
-    
+
     try {
       final resp = await AwsApi.callDbHandler(
         method: 'POST',
@@ -65,8 +64,10 @@ class EmailService {
         data: {
           'to': toEmail,
           'subject': 'RuchiServ Password Reset',
-          'body': 'Your password reset code is: $resetCode\n\nIf you did not request this, please ignore this email.',
-          'html_body': '<h2>Password Reset Request</h2><p>Your password reset code is: <strong>$resetCode</strong></p><p>If you did not request this, please ignore this email.</p>',
+          'body':
+              'Your password reset code is: $resetCode\n\nIf you did not request this, please ignore this email.',
+          'html_body':
+              '<h2>Password Reset Request</h2><p>Your password reset code is: <strong>$resetCode</strong></p><p>If you did not request this, please ignore this email.</p>',
         },
       );
 
@@ -89,7 +90,7 @@ class EmailService {
     required String invoiceData, // Can be HTML content or link
   }) async {
     AppLogger.info('📧 [EMAIL] Sending invoice to: $toEmail');
-    
+
     try {
       final resp = await AwsApi.callDbHandler(
         method: 'POST',

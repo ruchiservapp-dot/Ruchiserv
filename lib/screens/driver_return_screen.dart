@@ -3,13 +3,11 @@ import 'package:ruchiserv/repositories/order_repository.dart';
 // MODULE: DRIVER RETURN SCREEN (v34)
 // Features: Track return items, mark utensils returned/damaged/missing
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
-import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class DriverReturnScreen extends StatefulWidget {
   final Map<String, dynamic> dispatch;
-  
+
   const DriverReturnScreen({super.key, required this.dispatch});
 
   @override
@@ -19,8 +17,9 @@ class DriverReturnScreen extends StatefulWidget {
 class _DriverReturnScreenState extends State<DriverReturnScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _returnables = [];
-  Map<int, String> _itemStatus = {}; // itemId -> RETURNED, DAMAGED, MISSING
-  Map<int, int> _returnedQty = {};
+  final Map<int, String> _itemStatus =
+      {}; // itemId -> RETURNED, DAMAGED, MISSING
+  final Map<int, int> _returnedQty = {};
 
   @override
   void initState() {
@@ -30,10 +29,10 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
 
   Future<void> _loadReturnables() async {
     setState(() => _isLoading = true);
-    
+
     final db = await DatabaseHelper().database;
     final dispatchId = widget.dispatch['id'];
-    
+
     // Get returnable items (utensils)
     final items = await db.rawQuery('''
       SELECT di.*, 
@@ -41,16 +40,16 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
       FROM dispatch_items di
       WHERE di.dispatchId = ? AND di.itemType = 'UTENSIL'
     ''', [dispatchId]);
-    
+
     _returnables = List<Map<String, dynamic>>.from(items);
-    
+
     // Initialize status for each item
     for (var item in _returnables) {
       final id = item['id'] as int;
       _itemStatus[id] = 'RETURNED';
       _returnedQty[id] = (item['loadedQty'] as int?) ?? 0;
     }
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -59,9 +58,12 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Complete Return?'),
-        content: const Text('Mark all items as returned and complete this dispatch?'),
+        content: const Text(
+            'Mark all items as returned and complete this dispatch?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -70,31 +72,31 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       final db = await DatabaseHelper().database;
       final now = DateTime.now().toIso8601String();
-      
+
       // Update each item
       for (var item in _returnables) {
         final id = item['id'] as int;
         final status = _itemStatus[id] ?? 'RETURNED';
         final returnedQty = _returnedQty[id] ?? 0;
         final loadedQty = (item['loadedQty'] as int?) ?? 0;
-        
+
         await OperationRepository().updateDispatchItem(id, {
           'returnedQty': status == 'RETURNED' ? returnedQty : 0,
           'status': status,
           'unloadedQty': status == 'RETURNED' ? returnedQty : 0,
         });
-        
+
         // Update utensil stock (return to available)
         if (status == 'RETURNED') {
           await OperationRepository().updateUtensilByName(item['itemName'], {
             'availableStock': (item['availableStock'] ?? 0) + returnedQty,
           });
         }
-        
+
         // For damaged/missing, record it (stock reduced)
         if (status == 'DAMAGED' || status == 'MISSING') {
           await OperationRepository().updateUtensilByName(item['itemName'], {
@@ -102,24 +104,29 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
           });
         }
       }
-      
+
       // Update dispatch as completed
       await OperationRepository().updateDispatch(widget.dispatch['id'], {
         'dispatchStatus': 'COMPLETED',
         'updatedAt': now,
       });
-      
+
       // Update order
       await OrderRepository().updateOrder(widget.dispatch['orderId'], {
         'dispatchStatus': 'COMPLETED',
         'returnedAt': now,
       }, []); // Empty dishes list since we are only updating specific fields
-      
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dispatch completed!'), backgroundColor: Colors.green),
+        const SnackBar(
+            content: Text('Dispatch completed!'),
+            backgroundColor: Colors.green),
       );
-      
+
+      if (!mounted) return;
       Navigator.pop(context, true);
+      if (!mounted) return;
       Navigator.pop(context, true); // Go back to home
     }
   }
@@ -159,10 +166,13 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle, size: 64, color: Colors.green.shade300),
+                  Icon(Icons.check_circle,
+                      size: 64, color: Colors.green.shade300),
                   const SizedBox(height: 16),
-                  const Text('No returnable items', style: TextStyle(fontSize: 18)),
-                  const Text('You can complete this dispatch', style: TextStyle(color: Colors.grey)),
+                  const Text('No returnable items',
+                      style: TextStyle(fontSize: 18)),
+                  const Text('You can complete this dispatch',
+                      style: TextStyle(color: Colors.grey)),
                 ],
               ),
             )
@@ -175,7 +185,9 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)],
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -208,11 +220,11 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
     final loadedQty = (item['loadedQty'] as int?) ?? 0;
     final status = _itemStatus[id] ?? 'RETURNED';
     final qty = _returnedQty[id] ?? loadedQty;
-    
+
     Color statusColor = Colors.green;
     if (status == 'DAMAGED') statusColor = Colors.orange;
     if (status == 'MISSING') statusColor = Colors.red;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -236,26 +248,32 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('Loaded: $loadedQty', style: TextStyle(color: Colors.grey.shade600)),
+                      Text(name,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('Loaded: $loadedQty',
+                          style: TextStyle(color: Colors.grey.shade600)),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Status selection
             Row(
               children: [
-                _buildStatusChip(id, 'RETURNED', 'Returned', Colors.green, Icons.check_circle),
+                _buildStatusChip(id, 'RETURNED', 'Returned', Colors.green,
+                    Icons.check_circle),
                 const SizedBox(width: 8),
-                _buildStatusChip(id, 'DAMAGED', 'Damaged', Colors.orange, Icons.warning),
+                _buildStatusChip(
+                    id, 'DAMAGED', 'Damaged', Colors.orange, Icons.warning),
                 const SizedBox(width: 8),
-                _buildStatusChip(id, 'MISSING', 'Missing', Colors.red, Icons.cancel),
+                _buildStatusChip(
+                    id, 'MISSING', 'Missing', Colors.red, Icons.cancel),
               ],
             ),
-            
+
             // Quantity input (if returned)
             if (status == 'RETURNED') ...[
               const SizedBox(height: 12),
@@ -264,24 +282,32 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
                   const Text('Qty Returned: '),
                   const SizedBox(width: 8),
                   IconButton(
-                    onPressed: qty > 0 ? () => setState(() => _returnedQty[id] = qty - 1) : null,
+                    onPressed: qty > 0
+                        ? () => setState(() => _returnedQty[id] = qty - 1)
+                        : null,
                     icon: const Icon(Icons.remove_circle_outline),
                     color: Colors.red,
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    child: Text('$qty',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18)),
                   ),
                   IconButton(
-                    onPressed: qty < loadedQty ? () => setState(() => _returnedQty[id] = qty + 1) : null,
+                    onPressed: qty < loadedQty
+                        ? () => setState(() => _returnedQty[id] = qty + 1)
+                        : null,
                     icon: const Icon(Icons.add_circle_outline),
                     color: Colors.green,
                   ),
-                  Text(' / $loadedQty', style: TextStyle(color: Colors.grey.shade600)),
+                  Text(' / $loadedQty',
+                      style: TextStyle(color: Colors.grey.shade600)),
                 ],
               ),
             ],
@@ -291,9 +317,10 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
     );
   }
 
-  Widget _buildStatusChip(int itemId, String status, String label, Color color, IconData icon) {
+  Widget _buildStatusChip(
+      int itemId, String status, String label, Color color, IconData icon) {
     final isSelected = _itemStatus[itemId] == status;
-    
+
     return GestureDetector(
       onTap: () => setState(() => _itemStatus[itemId] = status),
       child: Container(
@@ -305,13 +332,15 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isSelected ? Colors.white : Colors.grey),
+            Icon(icon,
+                size: 14, color: isSelected ? Colors.white : Colors.grey),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            )),
+            Text(label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey,
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                )),
           ],
         ),
       ),
@@ -320,16 +349,22 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
 
   Widget _buildReturnSummary() {
     int returned = 0, damaged = 0, missing = 0;
-    
+
     for (var item in _returnables) {
       final id = item['id'] as int;
       switch (_itemStatus[id]) {
-        case 'RETURNED': returned++; break;
-        case 'DAMAGED': damaged++; break;
-        case 'MISSING': missing++; break;
+        case 'RETURNED':
+          returned++;
+          break;
+        case 'DAMAGED':
+          damaged++;
+          break;
+        case 'MISSING':
+          missing++;
+          break;
       }
     }
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
@@ -349,10 +384,12 @@ class _DriverReturnScreenState extends State<DriverReturnScreen> {
             color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          child: Text('$count',
+              style: TextStyle(color: color, fontWeight: FontWeight.bold)),
         ),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+        Text(label,
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
       ],
     );
   }

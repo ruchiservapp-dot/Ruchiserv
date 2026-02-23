@@ -1,7 +1,5 @@
 import 'package:ruchiserv/repositories/finance_repository.dart';
-import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
-import '../../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -14,26 +12,42 @@ class AddTransactionScreen extends StatefulWidget {
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late String _type;
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _dateController = TextEditingController();
-  
+
   String _selectedCategory = 'Other';
   String _selectedMode = 'Cash';
   DateTime _selectedDate = DateTime.now();
-  bool _isGlobal = false; // If implemented, to select Firm scope. Default to DEFAULT firm.
+  final bool _isGlobal =
+      false; // If implemented, to select Firm scope. Default to DEFAULT firm.
 
-  final List<String> _incomeCategories = ['Sales', 'Services', 'Refund', 'Investment', 'Other'];
-  final List<String> _expenseCategories = ['Groceries', 'Salary', 'Rent', 'Utilities', 'Maintenance', 'Fuel', 'Other'];
+  final List<String> _incomeCategories = [
+    'Sales',
+    'Services',
+    'Refund',
+    'Investment',
+    'Other'
+  ];
+  final List<String> _expenseCategories = [
+    'Groceries',
+    'Salary',
+    'Rent',
+    'Utilities',
+    'Maintenance',
+    'Fuel',
+    'Other'
+  ];
   final List<String> _modes = ['Cash', 'UPI', 'Bank Transfer', 'Cheque'];
 
   @override
   void initState() {
     super.initState();
     _type = widget.type ?? 'INCOME';
-    _selectedCategory = _type == 'INCOME' ? _incomeCategories.first : _expenseCategories.first;
+    _selectedCategory =
+        _type == 'INCOME' ? _incomeCategories.first : _expenseCategories.first;
     _dateController.text = _selectedDate.toString().split(' ')[0];
   }
 
@@ -49,7 +63,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_type == 'INCOME' ? AppLocalizations.of(context)!.addIncome : AppLocalizations.of(context)!.addExpense),
+        title: Text(_type == 'INCOME'
+            ? AppLocalizations.of(context).addIncome
+            : AppLocalizations.of(context).addExpense),
         backgroundColor: _type == 'INCOME' ? Colors.green : Colors.red,
         foregroundColor: Colors.white,
       ),
@@ -64,7 +80,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 children: [
                   Expanded(
                     child: ChoiceChip(
-                      label: Center(child: Text(AppLocalizations.of(context)!.income)),
+                      label: Center(
+                          child: Text(AppLocalizations.of(context).income)),
                       selected: _type == 'INCOME',
                       selectedColor: Colors.green.shade100,
                       onSelected: (val) {
@@ -78,7 +95,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ChoiceChip(
-                      label: Center(child: Text(AppLocalizations.of(context)!.expense)),
+                      label: Center(
+                          child: Text(AppLocalizations.of(context).expense)),
                       selected: _type == 'EXPENSE',
                       selectedColor: Colors.red.shade100,
                       onSelected: (val) {
@@ -98,15 +116,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.amountLabel,
+                  labelText: AppLocalizations.of(context).amountLabel,
                   prefixText: '₹ ',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   filled: true,
                   fillColor: Colors.grey.shade50,
                 ),
                 validator: (val) {
-                  if (val == null || val.isEmpty) return AppLocalizations.of(context)!.enterAmount;
-                  if (double.tryParse(val) == null) return AppLocalizations.of(context)!.invalidAmount;
+                  if (val == null || val.isEmpty)
+                    return AppLocalizations.of(context).enterAmount;
+                  if (double.tryParse(val) == null)
+                    return AppLocalizations.of(context).invalidAmount;
                   return null;
                 },
               ),
@@ -114,14 +135,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
               // Category
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.categoryLabel,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  labelText: AppLocalizations.of(context).categoryLabel,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                items: (_type == 'INCOME' ? _incomeCategories : _expenseCategories)
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
+                items:
+                    (_type == 'INCOME' ? _incomeCategories : _expenseCategories)
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
                 onChanged: (val) => setState(() => _selectedCategory = val!),
               ),
               const SizedBox(height: 16),
@@ -131,9 +154,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 controller: _dateController,
                 readOnly: true,
                 decoration: InputDecoration(
-                  labelText: (AppLocalizations.of(context)?.dateLabel ?? 'Date') as String,
+                  labelText: (AppLocalizations.of(context).dateLabel ?? 'Date')
+                      as String,
                   suffixIcon: const Icon(Icons.calendar_today),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -154,12 +179,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
               // Mode
               DropdownButtonFormField<String>(
-                value: _selectedMode,
+                initialValue: _selectedMode,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.paymentModeLabel,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  labelText: AppLocalizations.of(context).paymentModeLabel,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                items: _modes.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                items: _modes
+                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                    .toList(),
                 onChanged: (val) => setState(() => _selectedMode = val!),
               ),
               const SizedBox(height: 16),
@@ -169,8 +197,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 controller: _descriptionController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.descriptionLabel,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  labelText: AppLocalizations.of(context).descriptionLabel,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               const SizedBox(height: 32),
@@ -183,10 +212,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: _saveTransaction,
-                  child: Text(AppLocalizations.of(context)!.saveTransaction, style: const TextStyle(fontSize: 16)),
+                  child: Text(AppLocalizations.of(context).saveTransaction,
+                      style: const TextStyle(fontSize: 16)),
                 ),
               ),
             ],
@@ -213,12 +244,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     try {
       await FinanceRepository().insertTransaction(data);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.transactionSaved)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context).transactionSaved)));
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }

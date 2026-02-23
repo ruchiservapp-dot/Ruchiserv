@@ -15,7 +15,8 @@ class ReturnTrackingScreen extends StatefulWidget {
 class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
   List<Map<String, dynamic>> _items = [];
   List<Map<String, dynamic>> _vehicles = [];
-  final Map<int, int> _returnedValues = {};  // Track values directly, not via controllers
+  final Map<int, int> _returnedValues =
+      {}; // Track values directly, not via controllers
   final Map<int, int> _maxValues = {};
   int? _returnVehicleId;
   bool _isLoading = true;
@@ -50,7 +51,7 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
       } else {
         _returnedValues[id] = savedReturnedQty;
       }
-      
+
       _maxValues[id] = loaded;
     }
 
@@ -86,9 +87,10 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
       final id = item['id'] as int;
       final returnedQty = _returnedValues[id] ?? 0;
       final loadedQty = _maxValues[id] ?? 0;
-      
-      AppLogger.info('💾 Saving Return: Item $id, Loaded: $loadedQty, Returned: $returnedQty, Missing: ${loadedQty - returnedQty}');
-      
+
+      AppLogger.info(
+          '💾 Saving Return: Item $id, Loaded: $loadedQty, Returned: $returnedQty, Missing: ${loadedQty - returnedQty}');
+
       await OperationRepository().updateDispatchItem(id, {
         'returnedQty': returnedQty,
         'status': 'RETURNED',
@@ -138,7 +140,7 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
-                value: _returnVehicleId,
+                initialValue: _returnVehicleId,
                 decoration: const InputDecoration(
                   labelText: 'Return Vehicle',
                   border: OutlineInputBorder(),
@@ -146,7 +148,8 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
                 items: _vehicles.map((v) {
                   return DropdownMenuItem<int>(
                     value: v['id'] as int,
-                    child: Text('${v['vehicleNumber']} - ${v['driverName'] ?? 'N/A'}'),
+                    child: Text(
+                        '${v['vehicleNumber']} - ${v['driverName'] ?? 'N/A'}'),
                   );
                 }).toList(),
                 onChanged: (v) => setState(() => _returnVehicleId = v),
@@ -165,7 +168,7 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
                     final id = item['id'] as int;
                     final max = _maxValues[id] ?? 0;
                     final current = _returnedValues[id] ?? 0;
-                    
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: Padding(
@@ -178,11 +181,14 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
                                 children: [
                                   Text(
                                     item['itemName']?.toString() ?? 'Unknown',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   Text(
                                     'Loaded: $max',
-                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                    style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12),
                                   ),
                                   // Show missing count if returned < loaded
                                   if (current < max)
@@ -203,20 +209,23 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
                               children: [
                                 // Minus button
                                 IconButton(
-                                  icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                  icon: const Icon(Icons.remove_circle,
+                                      color: Colors.red),
                                   iconSize: 32,
-                                  onPressed: current > 0 
-                                      ? () => _updateValue(id, -1) 
+                                  onPressed: current > 0
+                                      ? () => _updateValue(id, -1)
                                       : null,
                                 ),
                                 // Tappable value display
                                 GestureDetector(
-                                  onTap: () => _showValueEditor(id, current, max),
+                                  onTap: () =>
+                                      _showValueEditor(id, current, max),
                                   child: Container(
                                     width: 50,
                                     height: 40,
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey.shade400),
+                                      border: Border.all(
+                                          color: Colors.grey.shade400),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Center(
@@ -232,10 +241,11 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
                                 ),
                                 // Plus button
                                 IconButton(
-                                  icon: const Icon(Icons.add_circle, color: Colors.green),
+                                  icon: const Icon(Icons.add_circle,
+                                      color: Colors.green),
                                   iconSize: 32,
-                                  onPressed: current < max 
-                                      ? () => _updateValue(id, 1) 
+                                  onPressed: current < max
+                                      ? () => _updateValue(id, 1)
                                       : null,
                                 ),
                               ],
@@ -257,7 +267,8 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
                     backgroundColor: Colors.orange,
                   ),
                   child: const Text('Complete Return',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -266,7 +277,7 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
       ),
     );
   }
-  
+
   /// Show a dialog to manually enter value
   Future<void> _showValueEditor(int id, int currentValue, int maxValue) async {
     final controller = TextEditingController(text: currentValue.toString());
@@ -277,7 +288,8 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Max: $maxValue', style: TextStyle(color: Colors.grey.shade600)),
+            Text('Max: $maxValue',
+                style: TextStyle(color: Colors.grey.shade600)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
@@ -286,7 +298,8 @@ class _ReturnTrackingScreenState extends State<ReturnTrackingScreen> {
               autofocus: true,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),

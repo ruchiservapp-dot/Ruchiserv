@@ -6,7 +6,6 @@ import '../db/database_helper.dart';
 
 /// Handles external notifications via SQS (Rule C.4)
 class NotificationService {
-  
   /// Queue an order confirmation message
   /// [isEdit] determines the message template (New vs Update)
   static Future<void> queueOrderConfirmation({
@@ -17,20 +16,21 @@ class NotificationService {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm') ?? 'default_firm';
     final userId = sp.getString('user_id') ?? 'system';
-    
+
     // 1. Prepare Payload
-    final mobile = orderData['mobile']?.toString() ?? ''; // Encrypted? No, usually decrypted for use, but here we pass as is?
-    // Wait, if it's encrypted in DB, we need to decrypt it before sending to queue? 
+    final mobile = orderData['mobile']?.toString() ??
+        ''; // Encrypted? No, usually decrypted for use, but here we pass as is?
+    // Wait, if it's encrypted in DB, we need to decrypt it before sending to queue?
     // OR the backend decrypts it?
     // Rule C.3 says "Apply encryption/decryption on customer mobile/email during all DB interactions."
     // If we passed the raw map from UI (before encryption), it's plain text.
     // If we passed the map from DB (after encryption), it's encrypted.
     // Let's assume the caller passes the UI data (plain text) or we handle it.
-    // Ideally, we send encrypted data to queue and Lambda decrypts it using the same key? 
+    // Ideally, we send encrypted data to queue and Lambda decrypts it using the same key?
     // No, Lambda might not have the key if it's local-only key.
-    // Actually, for SaaS, the key is likely managed. 
+    // Actually, for SaaS, the key is likely managed.
     // For now, let's send the mobile as provided.
-    
+
     final payload = {
       'type': 'ORDER_CONFIRMATION',
       'action': isEdit ? 'UPDATE' : 'CREATE',
@@ -38,7 +38,8 @@ class NotificationService {
       'firmId': firmId,
       'mobile': mobile, // Target mobile
       'email': orderData['email']?.toString() ?? '', // Target email (optional)
-      'orderData': orderData, // Full details including dishes for PDF generation
+      'orderData':
+          orderData, // Full details including dishes for PDF generation
       'channels': ['WHATSAPP', 'EMAIL'],
       'fallback': 'SMS',
       'delaySeconds': 900, // 15 minutes delay (Rule C.4)
@@ -54,44 +55,43 @@ class NotificationService {
     // For now, we'll skip explicit DB audit here and rely on the "Order Insert/Update" audit which implicitly implies notification.
     // BUT the requirement says: "Log the attempt to send the message in the audit_log before sending it to the queue."
     // So we MUST log it.
-    
+
     // We'll use a raw insert since we don't have a specific method exposed yet.
     await db.database.then((d) => d.insert('audit_log', {
-      'table_name': 'notifications',
-      'record_id': orderId,
-      'action': 'QUEUE_ATTEMPT',
-      'user_id': userId,
-      'firm_id': firmId,
-      'notes': 'Queuing notification for order $orderId',
-      'timestamp': DateTime.now().toIso8601String(),
-    }));
+          'table_name': 'notifications',
+          'record_id': orderId,
+          'action': 'QUEUE_ATTEMPT',
+          'user_id': userId,
+          'firm_id': firmId,
+          'notes': 'Queuing notification for order $orderId',
+          'timestamp': DateTime.now().toIso8601String(),
+        }));
 
     // 3. Push to Queue (Rule C.4)
     try {
       final result = await AwsApi.pushToQueue(payload: payload);
-      
+
       // Log success
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': orderId,
-        'action': 'QUEUE_SUCCESS',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Message ID: ${result['messageId']}',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
-      
+            'table_name': 'notifications',
+            'record_id': orderId,
+            'action': 'QUEUE_SUCCESS',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Message ID: ${result['messageId']}',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
     } catch (e) {
       // Log failure
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': orderId,
-        'action': 'QUEUE_FAILED',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Error: $e',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+            'table_name': 'notifications',
+            'record_id': orderId,
+            'action': 'QUEUE_FAILED',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Error: $e',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
       rethrow; // Let UI know
     }
   }
@@ -106,10 +106,10 @@ class NotificationService {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm') ?? 'default_firm';
     final userId = sp.getString('user_id') ?? 'system';
-    
+
     // Generate tracking URL
     final trackingUrl = 'https://ruchiserv.in/track/$dispatchId';
-    
+
     final payload = {
       'type': 'DISPATCH_NOTIFICATION',
       'action': 'DISPATCHED',
@@ -135,40 +135,40 @@ Track your delivery: $trackingUrl''',
     };
 
     final db = DatabaseHelper();
-    
+
     // Audit log
     await db.database.then((d) => d.insert('audit_log', {
-      'table_name': 'notifications',
-      'record_id': dispatchId,
-      'action': 'DISPATCH_QUEUE_ATTEMPT',
-      'user_id': userId,
-      'firm_id': firmId,
-      'notes': 'Queuing dispatch notification for order ${orderData['id']}',
-      'timestamp': DateTime.now().toIso8601String(),
-    }));
+          'table_name': 'notifications',
+          'record_id': dispatchId,
+          'action': 'DISPATCH_QUEUE_ATTEMPT',
+          'user_id': userId,
+          'firm_id': firmId,
+          'notes': 'Queuing dispatch notification for order ${orderData['id']}',
+          'timestamp': DateTime.now().toIso8601String(),
+        }));
 
     try {
       final result = await AwsApi.pushToQueue(payload: payload);
-      
+
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': dispatchId,
-        'action': 'DISPATCH_QUEUE_SUCCESS',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Message ID: ${result['messageId']}',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+            'table_name': 'notifications',
+            'record_id': dispatchId,
+            'action': 'DISPATCH_QUEUE_SUCCESS',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Message ID: ${result['messageId']}',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
     } catch (e) {
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': dispatchId,
-        'action': 'DISPATCH_QUEUE_FAILED',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Error: $e',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+            'table_name': 'notifications',
+            'record_id': dispatchId,
+            'action': 'DISPATCH_QUEUE_FAILED',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Error: $e',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
       rethrow;
     }
   }
@@ -180,7 +180,7 @@ Track your delivery: $trackingUrl''',
   }) async {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm') ?? 'default_firm';
-    
+
     final payload = {
       'type': 'DELIVERY_NOTIFICATION',
       'action': 'DELIVERED',
@@ -239,37 +239,37 @@ Thank you for your understanding.''',
 
     // Audit log
     await db.database.then((d) => d.insert('audit_log', {
-      'table_name': 'notifications',
-      'record_id': poId,
-      'action': 'PO_CANCEL_QUEUE_ATTEMPT',
-      'user_id': userId,
-      'firm_id': firmId,
-      'notes': 'Queuing PO cancellation notification for PO $poId',
-      'timestamp': DateTime.now().toIso8601String(),
-    }));
+          'table_name': 'notifications',
+          'record_id': poId,
+          'action': 'PO_CANCEL_QUEUE_ATTEMPT',
+          'user_id': userId,
+          'firm_id': firmId,
+          'notes': 'Queuing PO cancellation notification for PO $poId',
+          'timestamp': DateTime.now().toIso8601String(),
+        }));
 
     try {
       final result = await AwsApi.pushToQueue(payload: payload);
-      
+
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': poId,
-        'action': 'PO_CANCEL_QUEUE_SUCCESS',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Message ID: ${result['messageId']}',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+            'table_name': 'notifications',
+            'record_id': poId,
+            'action': 'PO_CANCEL_QUEUE_SUCCESS',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Message ID: ${result['messageId']}',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
     } catch (e) {
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': poId,
-        'action': 'PO_CANCEL_QUEUE_FAILED',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Error: $e',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+            'table_name': 'notifications',
+            'record_id': poId,
+            'action': 'PO_CANCEL_QUEUE_FAILED',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Error: $e',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
       AppLogger.info('PO cancellation notification error: $e');
     }
   }
@@ -308,37 +308,37 @@ Thank you for your patience!''',
     final db = DatabaseHelper();
 
     await db.database.then((d) => d.insert('audit_log', {
-      'table_name': 'notifications',
-      'record_id': orderId,
-      'action': 'ORDER_UPDATE_QUEUE_ATTEMPT',
-      'user_id': userId,
-      'firm_id': firmId,
-      'notes': 'Queuing order update notification for order $orderId',
-      'timestamp': DateTime.now().toIso8601String(),
-    }));
+          'table_name': 'notifications',
+          'record_id': orderId,
+          'action': 'ORDER_UPDATE_QUEUE_ATTEMPT',
+          'user_id': userId,
+          'firm_id': firmId,
+          'notes': 'Queuing order update notification for order $orderId',
+          'timestamp': DateTime.now().toIso8601String(),
+        }));
 
     try {
       final result = await AwsApi.pushToQueue(payload: payload);
-      
+
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': orderId,
-        'action': 'ORDER_UPDATE_QUEUE_SUCCESS',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Message ID: ${result['messageId']}',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+            'table_name': 'notifications',
+            'record_id': orderId,
+            'action': 'ORDER_UPDATE_QUEUE_SUCCESS',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Message ID: ${result['messageId']}',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
     } catch (e) {
       await db.database.then((d) => d.insert('audit_log', {
-        'table_name': 'notifications',
-        'record_id': orderId,
-        'action': 'ORDER_UPDATE_QUEUE_FAILED',
-        'user_id': userId,
-        'firm_id': firmId,
-        'notes': 'Error: $e',
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+            'table_name': 'notifications',
+            'record_id': orderId,
+            'action': 'ORDER_UPDATE_QUEUE_FAILED',
+            'user_id': userId,
+            'firm_id': firmId,
+            'notes': 'Error: $e',
+            'timestamp': DateTime.now().toIso8601String(),
+          }));
       AppLogger.info('Order update notification error: $e');
     }
   }
@@ -464,4 +464,3 @@ Open the RuchiServ app for full details.''',
     }
   }
 }
-

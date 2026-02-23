@@ -7,7 +7,8 @@ class ExpiredScreen extends StatelessWidget {
 
   Future<void> _contactSupport() async {
     // Update to your support WhatsApp or mailto/call as needed
-    final uri = Uri.parse('https://wa.me/0000000000?text=Renew%20RuchiServ%20Subscription');
+    final uri = Uri.parse(
+        'https://wa.me/0000000000?text=Renew%20RuchiServ%20Subscription');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -30,7 +31,9 @@ class ExpiredScreen extends StatelessWidget {
                   children: [
                     const Icon(Icons.lock, size: 56),
                     const SizedBox(height: 16),
-                    const Text('Subscription Required', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                    const Text('Subscription Required',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     Text(
                       'Your subscription expired on $expiryDateText and the grace period has ended.',

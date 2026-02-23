@@ -19,8 +19,9 @@ class InvoicePdfService {
     try {
       final pdfBytes = await generateInvoicePdfBytes(invoiceId);
       if (pdfBytes == null) return false;
-      
-      await Printing.layoutPdf(onLayout: (_) async => Uint8List.fromList(pdfBytes));
+
+      await Printing.layoutPdf(
+          onLayout: (_) async => Uint8List.fromList(pdfBytes));
       return true;
     } catch (e) {
       AppLogger.error('❌ Invoice PDF preview error: $e');
@@ -33,19 +34,19 @@ class InvoicePdfService {
     try {
       final pdfBytes = await generateInvoicePdfBytes(invoiceId);
       if (pdfBytes == null) return null;
-      
+
       final invoice = await DatabaseHelper().getInvoiceWithItems(invoiceId);
       final invoiceNumber = invoice?['invoiceNumber'] ?? 'invoice';
-      
+
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$invoiceNumber.pdf');
       await file.writeAsBytes(pdfBytes);
-      
+
       await Share.shareXFiles(
         [XFile(file.path)],
         subject: 'Invoice $invoiceNumber',
       );
-      
+
       return file;
     } catch (e) {
       AppLogger.error('❌ Invoice share error: $e');
@@ -58,22 +59,24 @@ class InvoicePdfService {
     // Get invoice data
     final invoice = await DatabaseHelper().getInvoiceWithItems(invoiceId);
     if (invoice == null) return null;
-    
+
     // Get firm details
     final prefs = await SharedPreferences.getInstance();
     final firmId = prefs.getString('last_firm') ?? 'DEFAULT';
     final db = DatabaseHelper();
-    final firmData = await (await db.database).query('firms', where: 'firmId = ?', whereArgs: [firmId]);
+    final firmData = await (await db.database)
+        .query('firms', where: 'firmId = ?', whereArgs: [firmId]);
     final firm = firmData.isNotEmpty ? firmData.first : <String, dynamic>{};
-    
-    final items = (invoice['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    
+
+    final items =
+        (invoice['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
     // Create PDF document
     final pdf = pw.Document();
-    
+
     // Date formatter
     final dateFormat = DateFormat('dd MMM yyyy');
-    
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -85,19 +88,19 @@ class InvoicePdfService {
               // Header
               _buildHeader(firm, invoice),
               pw.SizedBox(height: 20),
-              
+
               // Customer & Invoice Info
               _buildCustomerSection(invoice, dateFormat),
               pw.SizedBox(height: 20),
-              
+
               // Items Table
               _buildItemsTable(items),
               pw.SizedBox(height: 20),
-              
+
               // Totals
               _buildTotalsSection(invoice),
               pw.SizedBox(height: 30),
-              
+
               // Footer
               _buildFooter(firm),
             ],
@@ -105,11 +108,12 @@ class InvoicePdfService {
         },
       ),
     );
-    
+
     return pdf.save();
   }
 
-  static pw.Widget _buildHeader(Map<String, dynamic> firm, Map<String, dynamic> invoice) {
+  static pw.Widget _buildHeader(
+      Map<String, dynamic> firm, Map<String, dynamic> invoice) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -121,15 +125,20 @@ class InvoicePdfService {
             children: [
               pw.Text(
                 firm['name']?.toString() ?? 'Your Company',
-                style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 4),
               if (firm['address'] != null)
-                pw.Text(firm['address'].toString(), style: const pw.TextStyle(fontSize: 10)),
+                pw.Text(firm['address'].toString(),
+                    style: const pw.TextStyle(fontSize: 10)),
               if (firm['mobile'] != null)
-                pw.Text('Ph: ${firm['mobile']}', style: const pw.TextStyle(fontSize: 10)),
+                pw.Text('Ph: ${firm['mobile']}',
+                    style: const pw.TextStyle(fontSize: 10)),
               if (firm['gstin'] != null)
-                pw.Text('GSTIN: ${firm['gstin']}', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                pw.Text('GSTIN: ${firm['gstin']}',
+                    style: pw.TextStyle(
+                        fontSize: 10, fontWeight: pw.FontWeight.bold)),
             ],
           ),
         ),
@@ -138,14 +147,18 @@ class InvoicePdfService {
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
             pw.Container(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding:
+                  const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: pw.BoxDecoration(
                 color: PdfColors.indigo,
                 borderRadius: pw.BorderRadius.circular(4),
               ),
               child: pw.Text(
                 'TAX INVOICE',
-                style: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 14),
+                style: pw.TextStyle(
+                    color: PdfColors.white,
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 14),
               ),
             ),
             pw.SizedBox(height: 8),
@@ -159,14 +172,15 @@ class InvoicePdfService {
     );
   }
 
-  static pw.Widget _buildCustomerSection(Map<String, dynamic> invoice, DateFormat dateFormat) {
-    final invoiceDate = invoice['invoiceDate'] != null 
+  static pw.Widget _buildCustomerSection(
+      Map<String, dynamic> invoice, DateFormat dateFormat) {
+    final invoiceDate = invoice['invoiceDate'] != null
         ? dateFormat.format(DateTime.parse(invoice['invoiceDate'].toString()))
         : '';
-    final dueDate = invoice['dueDate'] != null 
+    final dueDate = invoice['dueDate'] != null
         ? dateFormat.format(DateTime.parse(invoice['dueDate'].toString()))
         : '';
-    
+
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
@@ -182,18 +196,24 @@ class InvoicePdfService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Bill To:', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                pw.Text('Bill To:',
+                    style:
+                        pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
                 pw.SizedBox(height: 4),
                 pw.Text(
                   invoice['customerName']?.toString() ?? 'Customer',
-                  style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                  style: pw.TextStyle(
+                      fontSize: 12, fontWeight: pw.FontWeight.bold),
                 ),
                 if (invoice['customerAddress'] != null)
-                  pw.Text(invoice['customerAddress'].toString(), style: const pw.TextStyle(fontSize: 10)),
+                  pw.Text(invoice['customerAddress'].toString(),
+                      style: const pw.TextStyle(fontSize: 10)),
                 if (invoice['customerMobile'] != null)
-                  pw.Text('Ph: ${invoice['customerMobile']}', style: const pw.TextStyle(fontSize: 10)),
+                  pw.Text('Ph: ${invoice['customerMobile']}',
+                      style: const pw.TextStyle(fontSize: 10)),
                 if (invoice['customerGstin'] != null)
-                  pw.Text('GSTIN: ${invoice['customerGstin']}', style: const pw.TextStyle(fontSize: 10)),
+                  pw.Text('GSTIN: ${invoice['customerGstin']}',
+                      style: const pw.TextStyle(fontSize: 10)),
               ],
             ),
           ),
@@ -204,7 +224,8 @@ class InvoicePdfService {
               children: [
                 _buildDetailRow('Date:', invoiceDate),
                 _buildDetailRow('Due Date:', dueDate),
-                _buildDetailRow('Status:', invoice['status']?.toString() ?? 'UNPAID'),
+                _buildDetailRow(
+                    'Status:', invoice['status']?.toString() ?? 'UNPAID'),
               ],
             ),
           ),
@@ -219,9 +240,12 @@ class InvoicePdfService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.end,
         children: [
-          pw.Text(label, style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+          pw.Text(label,
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
           pw.SizedBox(width: 8),
-          pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+          pw.Text(value,
+              style:
+                  pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
         ],
       ),
     );
@@ -263,9 +287,11 @@ class InvoicePdfService {
               _tableCell(item['description']?.toString() ?? ''),
               _tableCell(item['hsnCode']?.toString() ?? '-'),
               _tableCell('${item['quantity'] ?? 1}'),
-              _tableCell('Rs.${(item['rate'] as num?)?.toStringAsFixed(0) ?? '0'}'),
+              _tableCell(
+                  'Rs.${(item['rate'] as num?)?.toStringAsFixed(0) ?? '0'}'),
               _tableCell('${item['gstRate'] ?? 18}%'),
-              _tableCell('Rs.${(item['totalAmount'] as num?)?.toStringAsFixed(0) ?? '0'}'),
+              _tableCell(
+                  'Rs.${(item['totalAmount'] as num?)?.toStringAsFixed(0) ?? '0'}'),
             ],
           );
         }),
@@ -295,7 +321,7 @@ class InvoicePdfService {
     final total = (invoice['totalAmount'] as num?)?.toDouble() ?? 0;
     final paid = (invoice['amountPaid'] as num?)?.toDouble() ?? 0;
     final balance = (invoice['balanceDue'] as num?)?.toDouble() ?? total;
-    
+
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.end,
       children: [
@@ -310,7 +336,9 @@ class InvoicePdfService {
               pw.Divider(color: PdfColors.grey400),
               _totalRow('Total', total, isBold: true),
               if (paid > 0) _totalRow('Paid', paid, color: PdfColors.green700),
-              if (balance > 0) _totalRow('Balance Due', balance, isBold: true, color: PdfColors.red700),
+              if (balance > 0)
+                _totalRow('Balance Due', balance,
+                    isBold: true, color: PdfColors.red700),
             ],
           ),
         ),
@@ -318,16 +346,24 @@ class InvoicePdfService {
     );
   }
 
-  static pw.Widget _totalRow(String label, double amount, {bool isBold = false, PdfColor? color}) {
+  static pw.Widget _totalRow(String label, double amount,
+      {bool isBold = false, PdfColor? color}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 3),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(label, style: pw.TextStyle(fontSize: 10, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+          pw.Text(label,
+              style: pw.TextStyle(
+                  fontSize: 10,
+                  fontWeight:
+                      isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
           pw.Text(
             'Rs.${amount.toStringAsFixed(2)}',
-            style: pw.TextStyle(fontSize: 10, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal, color: color),
+            style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+                color: color),
           ),
         ],
       ),
@@ -340,10 +376,13 @@ class InvoicePdfService {
       children: [
         pw.Divider(),
         pw.SizedBox(height: 8),
-        pw.Text('Terms & Conditions:', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+        pw.Text('Terms & Conditions:',
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 4),
-        pw.Text('1. Payment is due within 7 days of invoice date.', style: const pw.TextStyle(fontSize: 9)),
-        pw.Text('2. Please include invoice number with your payment.', style: const pw.TextStyle(fontSize: 9)),
+        pw.Text('1. Payment is due within 7 days of invoice date.',
+            style: const pw.TextStyle(fontSize: 9)),
+        pw.Text('2. Please include invoice number with your payment.',
+            style: const pw.TextStyle(fontSize: 9)),
         pw.SizedBox(height: 16),
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -351,17 +390,24 @@ class InvoicePdfService {
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Bank Details:', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                pw.Text(firm['bankName']?.toString() ?? 'Bank Name', style: const pw.TextStyle(fontSize: 9)),
-                pw.Text('A/C: ${firm['bankAccount'] ?? 'XXXXXXXXXXXX'}', style: const pw.TextStyle(fontSize: 9)),
-                pw.Text('IFSC: ${firm['ifscCode'] ?? 'XXXXXXXX'}', style: const pw.TextStyle(fontSize: 9)),
+                pw.Text('Bank Details:',
+                    style: pw.TextStyle(
+                        fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                pw.Text(firm['bankName']?.toString() ?? 'Bank Name',
+                    style: const pw.TextStyle(fontSize: 9)),
+                pw.Text('A/C: ${firm['bankAccount'] ?? 'XXXXXXXXXXXX'}',
+                    style: const pw.TextStyle(fontSize: 9)),
+                pw.Text('IFSC: ${firm['ifscCode'] ?? 'XXXXXXXX'}',
+                    style: const pw.TextStyle(fontSize: 9)),
               ],
             ),
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
                 pw.SizedBox(height: 30),
-                pw.Text('Authorized Signatory', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                pw.Text('Authorized Signatory',
+                    style: pw.TextStyle(
+                        fontSize: 9, fontWeight: pw.FontWeight.bold)),
               ],
             ),
           ],

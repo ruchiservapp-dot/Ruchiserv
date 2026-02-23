@@ -10,7 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 class UPIService {
   /// Your merchant UPI ID (RuchiServ's receiving account for SaaS subscriptions)
   /// Dummy ID as requested - will be updated later
-  static const String merchantUpiId = 'ruchiserv@ybl'; 
+  static const String merchantUpiId = 'ruchiserv@ybl';
   static const String merchantName = 'RuchiServ SaaS';
 
   /// Get the UPI deep link URL string
@@ -26,12 +26,13 @@ class UPIService {
       scheme: 'upi',
       host: 'pay',
       queryParameters: {
-        'pa': customMerchantId ?? merchantUpiId,    // Use custom ID if provided (e.g. for Firm-level pay)
-        'pn': customMerchantName ?? merchantName,   // Payee Name
-        'am': amount.toStringAsFixed(2),            // Amount
-        'tn': transactionNote,                       // Transaction Note
-        'tr': transactionRef,                        // Transaction Reference
-        'cu': 'INR',                                 // Currency
+        'pa': customMerchantId ??
+            merchantUpiId, // Use custom ID if provided (e.g. for Firm-level pay)
+        'pn': customMerchantName ?? merchantName, // Payee Name
+        'am': amount.toStringAsFixed(2), // Amount
+        'tn': transactionNote, // Transaction Note
+        'tr': transactionRef, // Transaction Reference
+        'cu': 'INR', // Currency
       },
     ).toString();
   }
@@ -116,12 +117,13 @@ class UPIService {
   }
 
   /// Calculate new subscription end date
-  static DateTime calculateNewEndDate(DateTime? currentEndDate, String planName) {
+  static DateTime calculateNewEndDate(
+      DateTime? currentEndDate, String planName) {
     final now = DateTime.now();
-    final base = (currentEndDate != null && currentEndDate.isAfter(now)) 
-        ? currentEndDate 
+    final base = (currentEndDate != null && currentEndDate.isAfter(now))
+        ? currentEndDate
         : now;
-    
+
     return base.add(Duration(days: getPlanDurationDays(planName)));
   }
 
@@ -133,18 +135,18 @@ class UPIService {
   }) async {
     // 1. Build the message
     final message = Uri.encodeComponent(
-      "Hi RuchiServ, I have made a payment of ₹$amount for Order/Sub ID: $orderId.\n"
-      "Ref: ${transactionRef ?? 'N/A'}\n\n"
-      "Here is the payment screenshot attached below:"
-    );
+        "Hi RuchiServ, I have made a payment of ₹$amount for Order/Sub ID: $orderId.\n"
+        "Ref: ${transactionRef ?? 'N/A'}\n\n"
+        "Here is the payment screenshot attached below:");
 
     // 2. RuchiServ Support Number (Hardwired for now)
     // TODO: Move to AppConfig if needed
-    const supportNumber = "919074067332"; // Replace with actual support number if different
+    const supportNumber =
+        "919074067332"; // Replace with actual support number if different
 
     // 3. Create URL
     final url = "https://wa.me/$supportNumber?text=$message";
-    
+
     // 4. Launch
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {

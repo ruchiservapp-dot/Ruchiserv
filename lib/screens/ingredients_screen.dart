@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ruchiserv/repositories/inventory_repository.dart';
-import '../db/database_helper.dart';
 import '../services/language_service.dart';
 import '../services/master_data_sync_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
@@ -76,7 +75,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.addIngredient),
+          title: Text(AppLocalizations.of(context).addIngredient),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -84,7 +83,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.ingredientName,
+                    labelText: AppLocalizations.of(context).ingredientName,
                     border: const OutlineInputBorder(),
                   ),
                   autofocus: true,
@@ -93,7 +92,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 TextField(
                   controller: skuController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.skuBrandOptional,
+                    labelText: AppLocalizations.of(context).skuBrandOptional,
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -102,15 +101,15 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   controller: costController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.costPerUnit,
+                    labelText: AppLocalizations.of(context).costPerUnit,
                     border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.category,
+                    labelText: AppLocalizations.of(context).category,
                     border: const OutlineInputBorder(),
                   ),
                   items: _categories.where((c) => c != 'All').map((c) => 
@@ -120,18 +119,18 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: unit,
+                  initialValue: unit,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.unit,
+                    labelText: AppLocalizations.of(context).unit,
                     border: const OutlineInputBorder(),
                   ),
                   items: [
-                    DropdownMenuItem(value: 'kg', child: Text(AppLocalizations.of(context)!.unitKg)),
-                    DropdownMenuItem(value: 'g', child: Text(AppLocalizations.of(context)!.unitG)),
-                    DropdownMenuItem(value: 'liter', child: Text(AppLocalizations.of(context)!.unitL)),
-                    DropdownMenuItem(value: 'ml', child: Text(AppLocalizations.of(context)!.unitMl)),
-                    DropdownMenuItem(value: 'nos', child: Text(AppLocalizations.of(context)!.unitNos)),
-                    DropdownMenuItem(value: 'bunch', child: Text(AppLocalizations.of(context)!.unitBunch)),
+                    DropdownMenuItem(value: 'kg', child: Text(AppLocalizations.of(context).unitKg)),
+                    DropdownMenuItem(value: 'g', child: Text(AppLocalizations.of(context).unitG)),
+                    DropdownMenuItem(value: 'liter', child: Text(AppLocalizations.of(context).unitL)),
+                    DropdownMenuItem(value: 'ml', child: Text(AppLocalizations.of(context).unitMl)),
+                    DropdownMenuItem(value: 'nos', child: Text(AppLocalizations.of(context).unitNos)),
+                    DropdownMenuItem(value: 'bunch', child: Text(AppLocalizations.of(context).unitBunch)),
                   ],
                   onChanged: (v) => setDialogState(() => unit = v!),
                 ),
@@ -139,12 +138,12 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context).cancel)),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.enterIngredientName), backgroundColor: Colors.red),
+                    SnackBar(content: Text(AppLocalizations.of(context).enterIngredientName), backgroundColor: Colors.red),
                   );
                   return;
                 }
@@ -162,14 +161,17 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   // Trigger Background Sync
                   MasterDataSyncService().syncToAWS();
                   
+                  if (!mounted) return;
                   Navigator.pop(context, true);
                 } catch (e) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.error(e.toString())), backgroundColor: Colors.red),
+
+                    SnackBar(content: Text(AppLocalizations.of(context).error(e.toString())), backgroundColor: Colors.red),
                   );
                 }
               },
-              child: Text(AppLocalizations.of(context)!.add),
+              child: Text(AppLocalizations.of(context).add),
             ),
           ],
         ),
@@ -177,8 +179,10 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     );
 
     if (result == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.ingredientAdded), backgroundColor: Colors.green),
+
+        SnackBar(content: Text(AppLocalizations.of(context).ingredientAdded), backgroundColor: Colors.green),
       );
       _loadData();
     }
@@ -201,7 +205,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.editIngredient),
+          title: Text(AppLocalizations.of(context).editIngredient),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -209,7 +213,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.ingredientName,
+                    labelText: AppLocalizations.of(context).ingredientName,
                     border: const OutlineInputBorder(),
                   ),
                   autofocus: true,
@@ -218,7 +222,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 TextField(
                   controller: skuController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.skuBrandOptional,
+                    labelText: AppLocalizations.of(context).skuBrandOptional,
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -227,15 +231,15 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   controller: costController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.costPerUnit,
+                    labelText: AppLocalizations.of(context).costPerUnit,
                     border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _categories.contains(category) && category != 'All' ? category : 'Vegetable',
+                  initialValue: _categories.contains(category) && category != 'All' ? category : 'Vegetable',
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.category,
+                    labelText: AppLocalizations.of(context).category,
                     border: const OutlineInputBorder(),
                   ),
                   items: _categories.where((c) => c != 'All').map((c) => 
@@ -245,19 +249,19 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: unit,
+                  initialValue: unit,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.unit,
+                    labelText: AppLocalizations.of(context).unit,
                     border: const OutlineInputBorder(),
                   ),
                   items: [
-                    DropdownMenuItem(value: 'kg', child: Text(AppLocalizations.of(context)!.unitKg)),
-                    DropdownMenuItem(value: 'g', child: Text(AppLocalizations.of(context)!.unitG)),
-                    DropdownMenuItem(value: 'liter', child: Text(AppLocalizations.of(context)!.unitL)),
-                    DropdownMenuItem(value: 'ml', child: Text(AppLocalizations.of(context)!.unitMl)),
-                    DropdownMenuItem(value: 'nos', child: Text(AppLocalizations.of(context)!.unitNos)),
-                    DropdownMenuItem(value: 'pcs', child: Text(AppLocalizations.of(context)!.unitPcs)),
-                    DropdownMenuItem(value: 'bunch', child: Text(AppLocalizations.of(context)!.unitBunch)),
+                    DropdownMenuItem(value: 'kg', child: Text(AppLocalizations.of(context).unitKg)),
+                    DropdownMenuItem(value: 'g', child: Text(AppLocalizations.of(context).unitG)),
+                    DropdownMenuItem(value: 'liter', child: Text(AppLocalizations.of(context).unitL)),
+                    DropdownMenuItem(value: 'ml', child: Text(AppLocalizations.of(context).unitMl)),
+                    DropdownMenuItem(value: 'nos', child: Text(AppLocalizations.of(context).unitNos)),
+                    DropdownMenuItem(value: 'pcs', child: Text(AppLocalizations.of(context).unitPcs)),
+                    DropdownMenuItem(value: 'bunch', child: Text(AppLocalizations.of(context).unitBunch)),
                   ],
                   onChanged: (v) => setDialogState(() => unit = v!),
                 ),
@@ -265,12 +269,12 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context).cancel)),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.enterIngredientName), backgroundColor: Colors.red),
+                    SnackBar(content: Text(AppLocalizations.of(context).enterIngredientName), backgroundColor: Colors.red),
                   );
                   return;
                 }
@@ -287,14 +291,17 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   // Trigger Background Sync
                   MasterDataSyncService().syncToAWS();
                   
+                  if (!mounted) return;
                   Navigator.pop(context, true);
                 } catch (e) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.error(e.toString())), backgroundColor: Colors.red),
+
+                    SnackBar(content: Text(AppLocalizations.of(context).error(e.toString())), backgroundColor: Colors.red),
                   );
                 }
               },
-              child: Text(AppLocalizations.of(context)!.save),
+              child: Text(AppLocalizations.of(context).save),
             ),
           ],
         ),
@@ -302,8 +309,10 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     );
 
     if (result == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.ingredientUpdated), backgroundColor: Colors.green),
+
+        SnackBar(content: Text(AppLocalizations.of(context).ingredientUpdated), backgroundColor: Colors.green),
       );
       _loadData();
     }
@@ -320,7 +329,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.ingredientsMaster),
+        title: Text(AppLocalizations.of(context).ingredientsMaster),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
@@ -342,7 +351,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.searchPlaceholder,
+                      hintText: AppLocalizations.of(context).searchPlaceholder,
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -355,7 +364,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
@@ -380,10 +389,10 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                Text(AppLocalizations.of(context)!.ingredientsCount(_filteredIngredients.length), 
+                Text(AppLocalizations.of(context).ingredientsCount(_filteredIngredients.length), 
                   style: TextStyle(color: Colors.grey.shade600)),
                 const Spacer(),
-                Text(AppLocalizations.of(context)!.categoriesCount(grouped.keys.length),
+                Text(AppLocalizations.of(context).categoriesCount(grouped.keys.length),
                   style: TextStyle(color: Colors.grey.shade600)),
               ],
             ),
@@ -400,12 +409,12 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                           children: [
                             Icon(Icons.restaurant_menu, size: 64, color: Colors.grey.shade400),
                             const SizedBox(height: 16),
-                            Text(AppLocalizations.of(context)!.noIngredientsFound),
+                            Text(AppLocalizations.of(context).noIngredientsFound),
                             const SizedBox(height: 8),
                             ElevatedButton.icon(
                               onPressed: _addIngredient,
                               icon: const Icon(Icons.add),
-                              label: Text(AppLocalizations.of(context)!.addIngredient),
+                              label: Text(AppLocalizations.of(context).addIngredient),
                             ),
                           ],
                         ),

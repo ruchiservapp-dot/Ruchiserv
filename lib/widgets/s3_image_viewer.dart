@@ -9,7 +9,7 @@ import '../utils/file_storage_helper.dart';
 /// Displays an image from an S3 key or local path.
 /// Used across ledger detail screens, transaction lists, etc.
 class S3ImageViewer extends StatefulWidget {
-  final String? imageUrl;  // S3 key, local path, or pending path
+  final String? imageUrl; // S3 key, local path, or pending path
   final double? height;
   final double? width;
   final BoxFit fit;
@@ -74,7 +74,8 @@ class _S3ImageViewerState extends State<S3ImageViewer> {
 
       // If S3 key, download and cache
       if (FileStorageHelper.isS3Key(widget.imageUrl)) {
-        final viewablePath = await FileStorageHelper.getViewableUrl(widget.imageUrl);
+        final viewablePath =
+            await FileStorageHelper.getViewableUrl(widget.imageUrl);
         if (mounted) {
           setState(() {
             _resolvedPath = viewablePath;
@@ -155,7 +156,8 @@ class _S3ImageViewerState extends State<S3ImageViewer> {
           child: Center(
             child: CircularProgressIndicator(
               value: progress.expectedTotalBytes != null
-                  ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                  ? progress.cumulativeBytesLoaded /
+                      progress.expectedTotalBytes!
                   : null,
               strokeWidth: 2,
             ),
@@ -171,7 +173,8 @@ class _S3ImageViewerState extends State<S3ImageViewer> {
 
 /// Shows a fullscreen image dialog with an S3ImageViewer.
 /// Use this for viewing invoice/bill images from transaction tiles.
-void showS3ImageDialog(BuildContext context, String? imageUrl, {String title = 'Image'}) {
+void showS3ImageDialog(BuildContext context, String? imageUrl,
+    {String title = 'Image'}) {
   if (imageUrl == null || imageUrl.isEmpty) return;
 
   final isPending = imageUrl.startsWith('pending:');
@@ -190,7 +193,8 @@ void showS3ImageDialog(BuildContext context, String? imageUrl, {String title = '
                 const Padding(
                   padding: EdgeInsets.only(right: 8),
                   child: Chip(
-                    label: Text('Pending Upload', style: TextStyle(fontSize: 11)),
+                    label:
+                        Text('Pending Upload', style: TextStyle(fontSize: 11)),
                     backgroundColor: Colors.orange,
                     labelStyle: TextStyle(color: Colors.white),
                   ),

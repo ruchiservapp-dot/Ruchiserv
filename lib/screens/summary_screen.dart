@@ -1,7 +1,6 @@
 import 'package:ruchiserv/repositories/order_repository.dart';
 // MODULE: ORDER MANAGEMENT (LOCKED) - DO NOT EDIT WITHOUT AUTHORIZATION
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,7 +33,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
       final dateString = widget.date.toIso8601String().split('T').first;
       final sp = await SharedPreferences.getInstance();
       final firmId = sp.getString('last_firm') ?? 'DEFAULT';
-      final data = await OrderRepository().getDishesSummaryByDate(dateString, firmId);
+      final data =
+          await OrderRepository().getDishesSummaryByDate(dateString, firmId);
       setState(() {
         _dishSummary = data;
         _isLoading = false;
@@ -43,15 +43,20 @@ class _SummaryScreenState extends State<SummaryScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = AppLocalizations.of(context)!.failedLoadSummary(e.toString());
+        _errorMessage =
+            AppLocalizations.of(context).failedLoadSummary(e.toString());
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorLoadingSummary(e.toString())), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(
+                AppLocalizations.of(context).errorLoadingSummary(e.toString())),
+            backgroundColor: Colors.red),
       );
     }
   }
 
-  Map<String, List<Map<String, dynamic>>> _groupByMealType(List<Map<String, dynamic>> items) {
+  Map<String, List<Map<String, dynamic>>> _groupByMealType(
+      List<Map<String, dynamic>> items) {
     final grouped = <String, List<Map<String, dynamic>>>{};
     for (var d in items) {
       final meal = (d['mealType'] ?? 'Snacks/Others') as String;
@@ -62,11 +67,15 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = '${widget.date.day}/${widget.date.month}/${widget.date.year}';
+    final formattedDate =
+        '${widget.date.day}/${widget.date.month}/${widget.date.year}';
     final grouped = _groupByMealType(_dishSummary);
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.summaryDateTitle(formattedDate)), centerTitle: true),
+      appBar: AppBar(
+          title: Text(
+              AppLocalizations.of(context).summaryDateTitle(formattedDate)),
+          centerTitle: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
@@ -74,27 +83,35 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                      Icon(Icons.error_outline,
+                          size: 64, color: Colors.red.shade300),
                       const SizedBox(height: 16),
                       Text(_errorMessage!),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: _loadDishSummary,
                         icon: const Icon(Icons.refresh),
-                        label: Text(AppLocalizations.of(context)!.retry),
+                        label: Text(AppLocalizations.of(context).retry),
                       ),
                     ],
                   ),
                 )
               : _dishSummary.isEmpty
-                  ? Center(child: Text(AppLocalizations.of(context)!.noDishesFound))
+                  ? Center(
+                      child: Text(AppLocalizations.of(context).noDishesFound))
                   : RefreshIndicator(
                       onRefresh: _loadDishSummary,
                       child: ListView(
                         children: [
-                          for (final meal in ['Breakfast', 'Lunch', 'Dinner', 'Snacks/Others'])
+                          for (final meal in [
+                            'Breakfast',
+                            'Lunch',
+                            'Dinner',
+                            'Snacks/Others'
+                          ])
                             if (grouped[meal]?.isNotEmpty ?? false)
-                              _MealGroupCard(meal: meal, dishes: grouped[meal]!),
+                              _MealGroupCard(
+                                  meal: meal, dishes: grouped[meal]!),
                           const SizedBox(height: 24),
                         ],
                       ),
@@ -115,14 +132,20 @@ class _MealGroupCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(meal, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(meal,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           for (final d in dishes)
             ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: Text(d['name']?.toString() ?? AppLocalizations.of(context)!.unnamedDish),
-              trailing: Text(AppLocalizations.of(context)!.qtyWithCount(d['totalPax'] ?? 0), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              title: Text(d['name']?.toString() ??
+                  AppLocalizations.of(context).unnamedDish),
+              trailing: Text(
+                  AppLocalizations.of(context).qtyWithCount(d['totalPax'] ?? 0),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
             ),
         ]),
       ),

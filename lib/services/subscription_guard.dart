@@ -9,19 +9,19 @@ class SubscriptionGuard {
     try {
       final prefs = await SharedPreferences.getInstance();
       final firmId = prefs.getString('firmId');
-      
+
       if (firmId == null) return false;
-      
+
       final firms = await DatabaseHelper().getFirmByFirmId(firmId);
       if (firms.isEmpty) return false;
-      
+
       final firm = firms.first;
       final status = firm['subscriptionStatus'] as String?;
       final endDate = firm['subscriptionEnd'] as String?;
-      
+
       if (status == null || endDate == null) return false;
       if (status.toLowerCase() != 'active') return false;
-      
+
       final expiry = DateTime.parse(endDate);
       return DateTime.now().isBefore(expiry);
     } catch (e) {
@@ -32,7 +32,8 @@ class SubscriptionGuard {
   static Future<void> checkAndRedirect(BuildContext context) async {
     final isActive = await isSubscriptionActive();
     if (!isActive && context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/subscription-required', (route) => false);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/subscription-required', (route) => false);
     }
   }
 }

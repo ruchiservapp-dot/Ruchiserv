@@ -45,10 +45,11 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
     final sp = await SharedPreferences.getInstance();
     final firmId = sp.getString('last_firm') ?? 'DEFAULT';
     final firmDetails = await DatabaseHelper().getFirmDetails(firmId);
-    
+
     if (firmDetails != null) {
       setState(() {
-        _currentSubscriptionId = firmDetails['txnId']; // Using txnId as a fallback for subId
+        _currentSubscriptionId =
+            firmDetails['txnId']; // Using txnId as a fallback for subId
         _currentExpiry = firmDetails['subscriptionEnd'];
       });
     }
@@ -57,7 +58,8 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
   Future<void> _updateMandate() async {
     if (_currentSubscriptionId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No active subscription found to update.")),
+        const SnackBar(
+            content: Text("No active subscription found to update.")),
       );
       return;
     }
@@ -73,36 +75,33 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
   }
 
   Future<void> _proceedToPayment() async {
-    AppLogger.info('SaaSPayment: Proceeding to payment via $_selectedMethod...');
+    AppLogger.info(
+        'SaaSPayment: Proceeding to payment via $_selectedMethod...');
     setState(() => _isLoading = true);
 
     final sp = await SharedPreferences.getInstance();
     final mobile = sp.getString('last_mobile') ?? '9999999999';
-    final email = sp.getString('last_email') ?? 'user@example.com'; 
+    final email = sp.getString('last_email') ?? 'user@example.com';
     final name = sp.getString('last_name') ?? 'User';
     final amount = _plans[_selectedPlan]!['price'] as double;
-    
+
     if (_selectedMethod == 'Direct') {
       // DIRECT UPI FLOW
       final firmId = sp.getString('last_firm') ?? 'UNK';
       final txnRef = UPIService.generateTransactionRef(firmId);
       final note = 'SaaS Subscription: $_selectedPlan';
-      
-      if (kIsWeb || (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS)) {
+
+      if (kIsWeb ||
+          (defaultTargetPlatform != TargetPlatform.android &&
+              defaultTargetPlatform != TargetPlatform.iOS)) {
         // Desktop/Web QR
         final qrData = UPIService.generateUpiQrData(
-          amount: amount, 
-          transactionNote: note, 
-          transactionRef: txnRef
-        );
+            amount: amount, transactionNote: note, transactionRef: txnRef);
         _showQrDialog(txnRef, qrData, isDirect: true);
       } else {
         // Mobile Intent
         final success = await UPIService.launchUpiPayment(
-          amount: amount, 
-          transactionNote: note, 
-          transactionRef: txnRef
-        );
+            amount: amount, transactionNote: note, transactionRef: txnRef);
         if (success) {
           _showVerifySelection(txnRef);
         } else {
@@ -129,16 +128,18 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Confirm Payment"),
-        content: const Text("If you have completed the payment in your UPI app, click verify to activate your subscription."),
+        content: const Text(
+            "If you have completed the payment in your UPI app, click verify to activate your subscription."),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _verifyAndActivate(refId);
-            }, 
-            child: const Text("Verify Payment")
-          ),
+              onPressed: () {
+                Navigator.pop(context);
+                _verifyAndActivate(refId);
+              },
+              child: const Text("Verify Payment")),
         ],
       ),
     );
@@ -165,13 +166,13 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              isDirect 
-                ? "Scan and pay using any UPI app. Subscription will activate after verification."
-                : "Scan this QR code with any UPI app to setup your auto-pay subscription.",
+              isDirect
+                  ? "Scan and pay using any UPI app. Subscription will activate after verification."
+                  : "Scan this QR code with any UPI app to setup your auto-pay subscription.",
               textAlign: TextAlign.center,
             ),
             if (!isDirect && data.startsWith('http'))
-            TextButton.icon(
+              TextButton.icon(
                 onPressed: () async {
                   final uri = Uri.parse(data);
                   if (await canLaunchUrl(uri)) {
@@ -204,7 +205,7 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
           ],
         ),
         actions: [
-           TextButton(
+          TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("Cancel"),
           ),
@@ -228,17 +229,16 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
     try {
       final sp = await SharedPreferences.getInstance();
       final firmId = sp.getString('last_firm') ?? 'UNK';
-      
+
       // 1. Grant Local Extension (7 Days)
       await SubscriptionService().grantManualExtension(firmId);
-      
+
       // 2. Launch WhatsApp
       final amount = _plans[_selectedPlan]!['price'] as double;
       await UPIService.launchWhatsAppForVerification(
-        amount: amount, 
-        orderId: _currentSubscriptionId ?? 'NEW_SUB',
-        transactionRef: refId
-      );
+          amount: amount,
+          orderId: _currentSubscriptionId ?? 'NEW_SUB',
+          transactionRef: refId);
 
       setState(() => _isLoading = false);
 
@@ -273,7 +273,7 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
 
   Future<void> _handlePaymentSuccess(String orderId, String? paymentId) async {
     if (!mounted) return;
-    
+
     // Check if this is a Web/Desktop flow start (QR Code)
     if (paymentId != null && paymentId.startsWith("QR_CODE:")) {
       final authLink = paymentId.replaceFirst("QR_CODE:", "");
@@ -287,34 +287,33 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
 
   Future<void> _verifyAndActivate(String refId) async {
     setState(() => _isLoading = true);
-    
+
     // Verify with Backend
     final isValid = await _paymentService.verifySubscription(refId);
-    
+
     if (!isValid) {
-      _handlePaymentError('VERIFY_FAILED', 'Payment verification failed. If payment was successful, please wait 2 minutes or contact support.');
+      _handlePaymentError('VERIFY_FAILED',
+          'Payment verification failed. If payment was successful, please wait 2 minutes or contact support.');
       return;
     }
 
     try {
       final sp = await SharedPreferences.getInstance();
-      
+
       // Calculate new date for UI display
       String currentEndStr = DateTime.now().toIso8601String();
       if (_currentExpiry != null) {
         currentEndStr = _currentExpiry!;
       }
-      
+
       DateTime currentEnd = DateTime.tryParse(currentEndStr) ?? DateTime.now();
       if (currentEnd.isBefore(DateTime.now())) {
         currentEnd = DateTime.now();
       }
-      
+
       final newEndArr = CashfreePaymentService.calculateNewSubscriptionEndDate(
-        currentEndDate: currentEnd,
-        planType: _selectedPlan
-      );
-      final newEnd = newEndArr is DateTime ? newEndArr : DateTime.now().add(const Duration(days: 30));
+          currentEndDate: currentEnd, planType: _selectedPlan);
+      final newEnd = newEndArr;
       final newEndStr = DateFormat('yyyy-MM-dd').format(newEnd);
 
       // Update Local Preferences for immediate Auth check success
@@ -327,15 +326,16 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: Text(AppLocalizations.of(context)!.subscriptionActivated),
-            content: Text(AppLocalizations.of(context)!.planActiveUntil(newEndStr)),
+            title: Text(AppLocalizations.of(context).subscriptionActivated),
+            content:
+                Text(AppLocalizations.of(context).planActiveUntil(newEndStr)),
             actions: [
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context); // Close dialog
                   Navigator.of(context).pop(); // Close Payment Screen
                 },
-                child: Text(AppLocalizations.of(context)!.continueBtn),
+                child: Text(AppLocalizations.of(context).continueBtn),
               ),
             ],
           ),
@@ -351,13 +351,15 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.paymentFailed(message)), backgroundColor: Colors.red),
+      SnackBar(
+          content: Text(AppLocalizations.of(context).paymentFailed(message)),
+          backgroundColor: Colors.red),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.chooseSubscription)),
       body: Stack(
@@ -370,11 +372,12 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
                 Center(
                   child: Text(
                     l10n.selectStartPlan,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Plans
                 ..._plans.entries.map((entry) {
                   final plan = entry.key;
@@ -385,7 +388,9 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: _selectedPlan == plan ? Colors.indigo : Colors.grey.shade300,
+                        color: _selectedPlan == plan
+                            ? Colors.indigo
+                            : Colors.grey.shade300,
                         width: _selectedPlan == plan ? 2 : 1,
                       ),
                     ),
@@ -393,60 +398,81 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
                       value: plan,
                       groupValue: _selectedPlan,
                       onChanged: (val) => setState(() => _selectedPlan = val!),
-                      title: Text(plan, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      subtitle: Text("₹${details['price']} / ${details['duration']}"),
-                      secondary: details['discount'] != null 
+                      title: Text(plan,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18)),
+                      subtitle:
+                          Text("₹${details['price']} / ${details['duration']}"),
+                      secondary: details['discount'] != null
                           ? Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(12)),
-                              child: Text(details['discount'], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(12)),
+                              child: Text(details['discount'],
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold)),
                             )
                           : null,
                     ),
                   );
-                }).toList(),
-                
+                }),
+
                 const SizedBox(height: 24),
-                const Text("Payment Method", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text("Payment Method",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-                
+
                 Card(
                   elevation: 1,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade300)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.grey.shade300)),
                   child: Column(
                     children: [
                       RadioListTile<String>(
                         value: 'Mandate',
                         groupValue: _selectedMethod,
-                        onChanged: (val) => setState(() => _selectedMethod = val!),
-                        title: const Text("UPI Auto-Pay (Recommended)", style: TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: const Text("Automatic monthly renewal using UPI Mandate."),
+                        onChanged: (val) =>
+                            setState(() => _selectedMethod = val!),
+                        title: const Text("UPI Auto-Pay (Recommended)",
+                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: const Text(
+                            "Automatic monthly renewal using UPI Mandate."),
                         secondary: const Icon(Icons.sync, color: Colors.indigo),
                       ),
                       const Divider(height: 1),
                       RadioListTile<String>(
                         value: 'Direct',
                         groupValue: _selectedMethod,
-                        onChanged: (val) => setState(() => _selectedMethod = val!),
+                        onChanged: (val) =>
+                            setState(() => _selectedMethod = val!),
                         title: const Text("One-time UPI Payment"),
-                        subtitle: const Text("Direct payment via GPay, PhonePe, etc. Manual renewal."),
-                        secondary: const Icon(Icons.account_balance_wallet, color: Colors.indigo),
+                        subtitle: const Text(
+                            "Direct payment via GPay, PhonePe, etc. Manual renewal."),
+                        secondary: const Icon(Icons.account_balance_wallet,
+                            color: Colors.indigo),
                       ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
                 if (_currentExpiry != null) ...[
                   Center(
                     child: Text(
                       "Current Plan active until $_currentExpiry",
-                      style: const TextStyle(color: Colors.indigo, fontStyle: FontStyle.italic),
+                      style: const TextStyle(
+                          color: Colors.indigo, fontStyle: FontStyle.italic),
                     ),
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -455,13 +481,15 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
-                      _selectedMethod == 'Mandate' 
-                        ? "ENABLE AUTO-PAY (₹${_plans[_selectedPlan]!['price']})"
-                        : "PAY ₹${_plans[_selectedPlan]!['price']} NOW",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      _selectedMethod == 'Mandate'
+                          ? "ENABLE AUTO-PAY (₹${_plans[_selectedPlan]!['price']})"
+                          : "PAY ₹${_plans[_selectedPlan]!['price']} NOW",
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

@@ -70,79 +70,79 @@ class _SupplierScreenState extends State<SupplierScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(isEdit ? AppLocalizations.of(context)!.editSupplier : AppLocalizations.of(context)!.addSupplier),
+          title: Text(isEdit ? AppLocalizations.of(context).editSupplier : AppLocalizations.of(context).addSupplier),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.nameRequired, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).nameRequired, border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: mobileController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.mobile, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).mobile, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: emailController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.email, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).email, border: const OutlineInputBorder()),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: category,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.category, border: const OutlineInputBorder()),
+                  initialValue: category,
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).category, border: const OutlineInputBorder()),
                   items: [
-                    DropdownMenuItem(value: 'Vegetable', child: Text(AppLocalizations.of(context)!.catVegetable)),
-                    DropdownMenuItem(value: 'Meat', child: Text(AppLocalizations.of(context)!.catMeat)),
-                    DropdownMenuItem(value: 'Seafood', child: Text(AppLocalizations.of(context)!.catSeafood)),
-                    DropdownMenuItem(value: 'Grocery', child: Text(AppLocalizations.of(context)!.catGrocery)),
-                    DropdownMenuItem(value: 'Dairy', child: Text(AppLocalizations.of(context)!.catDairy)),
-                    DropdownMenuItem(value: 'Other', child: Text(AppLocalizations.of(context)!.catOther)),
+                    DropdownMenuItem(value: 'Vegetable', child: Text(AppLocalizations.of(context).catVegetable)),
+                    DropdownMenuItem(value: 'Meat', child: Text(AppLocalizations.of(context).catMeat)),
+                    DropdownMenuItem(value: 'Seafood', child: Text(AppLocalizations.of(context).catSeafood)),
+                    DropdownMenuItem(value: 'Grocery', child: Text(AppLocalizations.of(context).catGrocery)),
+                    DropdownMenuItem(value: 'Dairy', child: Text(AppLocalizations.of(context).catDairy)),
+                    DropdownMenuItem(value: 'Other', child: Text(AppLocalizations.of(context).catOther)),
                   ],
                   onChanged: (v) => setDialogState(() => category = v!),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: addressController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.address, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).address, border: const OutlineInputBorder()),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: gstController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.gstNumber, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).gstNumber, border: const OutlineInputBorder()),
                 ),
                 const Divider(height: 24),
-                Text(AppLocalizations.of(context)!.bankDetails, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context).bankDetails, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 TextField(
                   controller: bankNameController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.bankName, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).bankName, border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: bankAccountController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.accountNumber, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).accountNumber, border: const OutlineInputBorder()),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: bankIfscController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.ifscCode, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context).ifscCode, border: const OutlineInputBorder()),
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context)!.cancel)),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(AppLocalizations.of(context).cancel)),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.enterSupplierName), backgroundColor: Colors.red),
+                    SnackBar(content: Text(AppLocalizations.of(context).enterSupplierName), backgroundColor: Colors.red),
                   );
                   return;
                 }
@@ -176,9 +176,10 @@ class _SupplierScreenState extends State<SupplierScreen> {
                     'addedBy': 'ADMIN_APP',
                   });
                 }
+                if (!mounted) return;
                 Navigator.pop(context, true);
               },
-              child: Text(isEdit ? AppLocalizations.of(context)!.save : AppLocalizations.of(context)!.add),
+              child: Text(isEdit ? AppLocalizations.of(context).save : AppLocalizations.of(context).add),
             ),
           ],
         ),
@@ -186,8 +187,10 @@ class _SupplierScreenState extends State<SupplierScreen> {
     );
 
     if (result == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isEdit ? AppLocalizations.of(context)!.supplierUpdated : AppLocalizations.of(context)!.supplierAdded), backgroundColor: Colors.green),
+
+        SnackBar(content: Text(isEdit ? AppLocalizations.of(context).supplierUpdated : AppLocalizations.of(context).supplierAdded), backgroundColor: Colors.green),
       );
       _loadData();
     }
@@ -197,7 +200,7 @@ class _SupplierScreenState extends State<SupplierScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.supplierMaster),
+        title: Text(AppLocalizations.of(context).supplierMaster),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
@@ -215,12 +218,12 @@ class _SupplierScreenState extends State<SupplierScreen> {
                     children: [
                       Icon(Icons.local_shipping, size: 64, color: Colors.grey.shade400),
                       const SizedBox(height: 16),
-                      Text(AppLocalizations.of(context)!.noSuppliersAdded),
+                      Text(AppLocalizations.of(context).noSuppliersAdded),
                       const SizedBox(height: 8),
                       ElevatedButton.icon(
                         onPressed: () => _addOrEditSupplier(),
                         icon: const Icon(Icons.add),
-                        label: Text(AppLocalizations.of(context)!.addSupplier),
+                        label: Text(AppLocalizations.of(context).addSupplier),
                       ),
                     ],
                   ),
@@ -237,12 +240,12 @@ class _SupplierScreenState extends State<SupplierScreen> {
                             backgroundColor: _getCategoryColor(supplier['category'] ?? 'Other'),
                             child: const Icon(Icons.local_shipping, color: Colors.white),
                           ),
-                          title: Text(supplier['name'] ?? AppLocalizations.of(context)!.unknown,
+                          title: Text(supplier['name'] ?? AppLocalizations.of(context).unknown,
                             style: const TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(supplier['mobile'] ?? AppLocalizations.of(context)!.noPhone),
+                              Text(supplier['mobile'] ?? AppLocalizations.of(context).noPhone),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(

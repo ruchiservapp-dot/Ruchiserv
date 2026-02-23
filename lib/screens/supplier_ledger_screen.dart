@@ -5,14 +5,14 @@ import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
 import 'report_preview_page.dart';
 import '../widgets/invoice_scanner_widget.dart';
-import '../utils/file_storage_helper.dart';
 import '../widgets/s3_image_viewer.dart';
 
 class SupplierLedgerScreen extends StatefulWidget {
   final int supplierId;
   final String supplierName;
-  
-  const SupplierLedgerScreen({super.key, required this.supplierId, required this.supplierName});
+
+  const SupplierLedgerScreen(
+      {super.key, required this.supplierId, required this.supplierName});
 
   @override
   State<SupplierLedgerScreen> createState() => _SupplierLedgerScreenState();
@@ -22,7 +22,7 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
   bool _isLoading = true;
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _endDate = DateTime.now();
-  
+
   List<Map<String, dynamic>> _transactions = [];
   double _totalInvoices = 0;
   double _totalPaid = 0;
@@ -36,11 +36,11 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final db = await DatabaseHelper().database;
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
-    
+
     // Get transactions for this supplier
     final transactions = await db.rawQuery('''
       SELECT f.*, 
@@ -51,25 +51,31 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
       WHERE (f.partyName LIKE ? OR f.referenceId LIKE ?) 
         AND f.date BETWEEN ? AND ?
       ORDER BY f.date DESC
-    ''', ['%${widget.supplierName}%', '%SUPPLIER:${widget.supplierId}%', startStr, endStr]);
-    
+    ''', [
+      '%${widget.supplierName}%',
+      '%SUPPLIER:${widget.supplierId}%',
+      startStr,
+      endStr
+    ]);
+
     // Also get PO summaries as invoices
     final poSummary = await db.rawQuery('''
       SELECT SUM(totalAmount) as totalInvoiced
       FROM purchase_orders 
       WHERE vendorId = ? AND DATE(createdAt) BETWEEN ? AND ?
     ''', [widget.supplierId, startStr, endStr]);
-    
-    double invoiced = (poSummary.first['totalInvoiced'] as num?)?.toDouble() ?? 0;
+
+    double invoiced =
+        (poSummary.first['totalInvoiced'] as num?)?.toDouble() ?? 0;
     double paid = 0;
-    
+
     for (var t in transactions) {
       final amount = (t['amount'] as num?)?.toDouble() ?? 0;
       if (t['txnType'] == 'PAYMENT') {
         paid += amount;
       }
     }
-    
+
     setState(() {
       _transactions = List<Map<String, dynamic>>.from(transactions);
       _totalInvoices = invoiced;
@@ -97,22 +103,27 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
 
   void _exportReport() {
     final headers = ['Date', 'Description', 'Type', 'Amount'];
-    final rows = _transactions.map((t) => [
-      t['date'] ?? '',
-      t['description'] ?? t['category'] ?? '',
-      t['txnType'] ?? '',
-      '₹${(t['amount'] as num?)?.toStringAsFixed(0) ?? '0'}',
-    ]).toList();
-    
-    Navigator.push(context, MaterialPageRoute(
-      builder: (_) => ReportPreviewPage(
-        title: 'Supplier Ledger',
-        subtitle: '${widget.supplierName} - ${DateFormat('MMM d').format(_startDate)} to ${DateFormat('MMM d').format(_endDate)}',
-        headers: headers,
-        rows: rows,
-        accentColor: Colors.teal,
-      ),
-    ));
+    final rows = _transactions
+        .map((t) => [
+              t['date'] ?? '',
+              t['description'] ?? t['category'] ?? '',
+              t['txnType'] ?? '',
+              '₹${(t['amount'] as num?)?.toStringAsFixed(0) ?? '0'}',
+            ])
+        .toList();
+
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ReportPreviewPage(
+            title: 'Supplier Ledger',
+            subtitle:
+                '${widget.supplierName} - ${DateFormat('MMM d').format(_startDate)} to ${DateFormat('MMM d').format(_endDate)}',
+            headers: headers,
+            rows: rows,
+            accentColor: Colors.teal,
+          ),
+        ));
   }
 
   @override
@@ -121,7 +132,10 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
       appBar: AppBar(
         title: const Text('My Ledger'),
         actions: [
-          IconButton(icon: const Icon(Icons.file_download), onPressed: _exportReport, tooltip: 'Export'),
+          IconButton(
+              icon: const Icon(Icons.file_download),
+              onPressed: _exportReport,
+              tooltip: 'Export'),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
       ),
@@ -132,23 +146,27 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
             isScrollControlled: true,
             builder: (context) => Container(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                top: 20, left: 16, right: 16
-              ),
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  top: 20,
+                  left: 16,
+                  right: 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Submit New Invoice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Submit New Invoice',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
                   InvoiceScannerWidget(
                     onScanComplete: (result) async {
                       Navigator.pop(context); // Close bottom sheet
-                      
+
                       try {
                         final db = DatabaseHelper();
                         final Map<String, dynamic> txn = {
-                          'firmId': 'DEFAULT', 
-                          'date': result['date'] ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                          'firmId': 'DEFAULT',
+                          'date': result['date'] ??
+                              DateFormat('yyyy-MM-dd').format(DateTime.now()),
                           'type': 'EXPENSE',
                           'amount': result['amount'] ?? 0.0,
                           'category': 'PURCHASE',
@@ -159,20 +177,21 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
                           'imageUrl': result['imageUrl'],
                           'createdAt': DateTime.now().toIso8601String(),
                         };
-                        
+
                         await db.insertTransaction(txn);
                         _loadData(); // Refresh list
-                        
+
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Invoice Submitted!'), backgroundColor: Colors.green)
-                          );
+                              const SnackBar(
+                                  content: Text('Invoice Submitted!'),
+                                  backgroundColor: Colors.green));
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red)
-                          );
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.red));
                         }
                       }
                     },
@@ -200,18 +219,22 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.calendar_today, size: 18, color: Colors.teal.shade700),
+                        Icon(Icons.calendar_today,
+                            size: 18, color: Colors.teal.shade700),
                         const SizedBox(width: 8),
                         Text(
                           '${DateFormat('MMM d').format(_startDate)} - ${DateFormat('MMM d, yyyy').format(_endDate)}',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal.shade700),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal.shade700),
                         ),
-                        Icon(Icons.arrow_drop_down, color: Colors.teal.shade700),
+                        Icon(Icons.arrow_drop_down,
+                            color: Colors.teal.shade700),
                       ],
                     ),
                   ),
                 ),
-                
+
                 // Summary Card
                 Padding(
                   padding: const EdgeInsets.all(12),
@@ -223,24 +246,35 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _summaryItem('PO Value', _totalInvoices, Colors.indigo),
-                              Container(width: 1, height: 40, color: Colors.grey.shade300),
+                              _summaryItem(
+                                  'PO Value', _totalInvoices, Colors.indigo),
+                              Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: Colors.grey.shade300),
                               _summaryItem('Paid', _totalPaid, Colors.green),
-                              Container(width: 1, height: 40, color: Colors.grey.shade300),
-                              _summaryItem('Balance', _balance, _balance > 0 ? Colors.orange : Colors.green),
+                              Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: Colors.grey.shade300),
+                              _summaryItem('Balance', _balance,
+                                  _balance > 0 ? Colors.orange : Colors.green),
                             ],
                           ),
                           if (_balance > 0) ...[
                             const SizedBox(height: 12),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Colors.orange.shade100,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 'Pending payment: ₹${_balance.toStringAsFixed(0)}',
-                                style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    color: Colors.orange.shade800,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
@@ -249,7 +283,7 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
                     ),
                   ),
                 ),
-                
+
                 // Transactions list
                 Expanded(
                   child: _transactions.isEmpty
@@ -257,7 +291,8 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.receipt_long, size: 48, color: Colors.grey.shade400),
+                              Icon(Icons.receipt_long,
+                                  size: 48, color: Colors.grey.shade400),
                               const SizedBox(height: 8),
                               const Text('No transactions in this period'),
                             ],
@@ -266,7 +301,8 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           itemCount: _transactions.length,
-                          itemBuilder: (ctx, i) => _buildTransactionTile(_transactions[i]),
+                          itemBuilder: (ctx, i) =>
+                              _buildTransactionTile(_transactions[i]),
                         ),
                 ),
               ],
@@ -277,11 +313,13 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
   Widget _summaryItem(String label, double amount, Color color) {
     return Column(
       children: [
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+        Text(label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
         const SizedBox(height: 4),
         Text(
           '₹${amount.toStringAsFixed(0)}',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 16, color: color),
         ),
       ],
     );
@@ -291,10 +329,10 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
     final txnType = txn['txnType'] ?? 'OTHER';
     final isPayment = txnType == 'PAYMENT';
     final amount = (txn['amount'] as num?)?.toDouble() ?? 0;
-    
+
     Color color = Colors.grey;
     IconData icon = Icons.receipt;
-    
+
     if (isPayment) {
       color = Colors.green;
       icon = Icons.payment;
@@ -302,7 +340,7 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
       color = Colors.indigo;
       icon = Icons.receipt_long;
     }
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -311,13 +349,16 @@ class _SupplierLedgerScreenState extends State<SupplierLedgerScreen> {
           child: Icon(icon, color: color, size: 20),
         ),
         title: Text(txn['description'] ?? txn['category'] ?? 'Transaction'),
-        subtitle: Text('${txn['date']} • $txnType', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+        subtitle: Text('${txn['date']} • $txnType',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (txn['imageUrl'] != null && txn['imageUrl'].toString().isNotEmpty)
+            if (txn['imageUrl'] != null &&
+                txn['imageUrl'].toString().isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.attach_file, size: 18, color: Colors.blue),
+                icon:
+                    const Icon(Icons.attach_file, size: 18, color: Colors.blue),
                 onPressed: () => _viewInvoice(txn['imageUrl']),
                 tooltip: 'View Invoice',
               ),

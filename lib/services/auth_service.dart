@@ -3,14 +3,13 @@
 // Version: 2.1.0 | Date: 2026-01-26
 // Consolidated Fix: Case-sensitivity, AWS standard filters, robust authorization sync
 // DO NOT MODIFY without explicit approval - critical auth/sync logic
+import 'package:ruchiserv/core/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/aws/aws_api.dart';
 import '../db/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'master_data_sync_service.dart';
 import 'cloud_sync_service.dart';
-import 'fcm_service.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:amazon_cognito_identity_dart_2/cognito.dart';
 import '../config/app_config.dart';
 
@@ -100,15 +99,21 @@ class AuthService {
           final cloudSync = CloudSyncService();
           await cloudSync.syncTableFromCloud('users', firmId);
           await cloudSync.syncTableFromCloud('authorized_mobiles', firmId);
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
 
         // 6. Background Sync for other tables
         try {
           MasterDataSyncService().syncFromAWS();
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
         try {
           CloudSyncService().fullSyncFromCloud();
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
 
         return true;
       }
@@ -174,14 +179,20 @@ class AuthService {
 
         try {
           await MasterDataSyncService().syncFromAWS();
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
         try {
           await CloudSyncService().fullSyncFromCloud();
-        } catch (_) {}
+        } catch (_) {
+          AppLogger.error('Caught error: $_');
+        }
 
         return true;
       }
-    } catch (_) {}
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
     return false;
   }
 
@@ -195,7 +206,9 @@ class AuthService {
 
     try {
       await CloudSyncService().syncTableFromCloud('authorized_mobiles', firmId);
-    } catch (_) {}
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
 
     final isAuth = await db.isMobileAuthorized(firmId, mobile);
     if (isAuth) return true;
@@ -211,7 +224,9 @@ class AuthService {
               (resp['Items'] is List && resp['Items'].isNotEmpty))) {
         return true;
       }
-    } catch (_) {}
+    } catch (_) {
+      AppLogger.error('Caught error: $_');
+    }
 
     return false;
   }
@@ -666,9 +681,12 @@ class AuthService {
           table: 'firms',
           filters: {'firmid': firmId},
         );
-        if (resp['status'] == 'success' || resp['firmid'] != null)
+        if (resp['status'] == 'success' || resp['firmid'] != null) {
           firmFound = true;
-      } catch (_) {}
+        }
+      } catch (_) {
+        AppLogger.error('Caught error: $_');
+      }
     }
 
     if (!firmFound) return {'valid': false, 'error': 'Wrong Firm ID'};

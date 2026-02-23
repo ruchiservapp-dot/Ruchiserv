@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
-import '../../widgets/chart_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_theme.dart';
 
@@ -8,7 +7,8 @@ class AnalyticsDashboardScreen extends StatefulWidget {
   const AnalyticsDashboardScreen({super.key});
 
   @override
-  State<AnalyticsDashboardScreen> createState() => _AnalyticsDashboardScreenState();
+  State<AnalyticsDashboardScreen> createState() =>
+      _AnalyticsDashboardScreenState();
 }
 
 class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
@@ -18,7 +18,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
 
   // Data Holders
   String _narrative = "Analyzing your business data...";
-  Map<String, List<String>> _menuAnalysis = {'Stars': [], 'Plowhorses': [], 'Puzzles': [], 'Dogs': []};
+  Map<String, List<String>> _menuAnalysis = {
+    'Stars': [],
+    'Plowhorses': [],
+    'Puzzles': [],
+    'Dogs': []
+  };
 
   @override
   void initState() {
@@ -29,7 +34,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   Future<void> _loadData() async {
     final sp = await SharedPreferences.getInstance();
     _firmId = sp.getString('last_firm');
-    
+
     if (_firmId != null) {
       final narrative = await _analyticsService.getNarrativeInsights(_firmId!);
       final analysis = await _analyticsService.getMenuAnalysis(_firmId!);
@@ -75,9 +80,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDark 
-            ? [const Color(0xFF0D47A1).withValues(alpha: 0.3), const Color(0xFF1E88E5).withValues(alpha: 0.1)]
-            : [const Color(0xFFE3F2FD), Colors.white],
+          colors: isDark
+              ? [
+                  const Color(0xFF0D47A1).withValues(alpha: 0.3),
+                  const Color(0xFF1E88E5).withValues(alpha: 0.1)
+                ]
+              : [const Color(0xFFE3F2FD), Colors.white],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -91,12 +99,21 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
             children: [
               const Icon(Icons.auto_awesome, color: Colors.blue, size: 20),
               const SizedBox(width: 8),
-              Text('AI Summary', style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.blue.shade200 : Colors.blue.shade900)),
+              Text('AI Summary',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDark
+                          ? Colors.blue.shade200
+                          : Colors.blue.shade900)),
             ],
           ),
           const SizedBox(height: 12),
-          Text(_narrative,
-            style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : Colors.black87, height: 1.5),
+          Text(
+            _narrative,
+            style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white70 : Colors.black87,
+                height: 1.5),
           ),
         ],
       ),
@@ -114,9 +131,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.query_stats, size: 48, color: AppColors.primary.withValues(alpha: 0.3)),
+              Icon(Icons.query_stats,
+                  size: 48, color: AppColors.primary.withValues(alpha: 0.3)),
               const SizedBox(height: 8),
-              const Text('Predictive Engine Warming Up...', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              const Text('Predictive Engine Warming Up...',
+                  style: TextStyle(color: Colors.grey, fontSize: 13)),
             ],
           ),
         ),
@@ -131,18 +150,30 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
       icon: Icons.restaurant_menu,
       child: Column(
         children: [
-          _buildMatrixRow('Stars (High Margin/Volume)', 
-            _menuAnalysis['Stars']!.isEmpty ? 'No stars identified yet' : _menuAnalysis['Stars']!.join(', '), 
-            Colors.green),
-          _buildMatrixRow('Plowhorses (Low Margin/Vol)', 
-            _menuAnalysis['Plowhorses']!.isEmpty ? 'No data' : _menuAnalysis['Plowhorses']!.join(', '), 
-            Colors.orange),
-          _buildMatrixRow('Puzzles (High Margin/Low Vol)', 
-            _menuAnalysis['Puzzles']!.isEmpty ? 'No data' : _menuAnalysis['Puzzles']!.join(', '), 
-            Colors.blue),
-           _buildMatrixRow('Dogs (Review Necessary)', 
-            _menuAnalysis['Dogs']!.isEmpty ? 'No data' : _menuAnalysis['Dogs']!.join(', '), 
-            Colors.red),
+          _buildMatrixRow(
+              'Stars (High Margin/Volume)',
+              _menuAnalysis['Stars']!.isEmpty
+                  ? 'No stars identified yet'
+                  : _menuAnalysis['Stars']!.join(', '),
+              Colors.green),
+          _buildMatrixRow(
+              'Plowhorses (Low Margin/Vol)',
+              _menuAnalysis['Plowhorses']!.isEmpty
+                  ? 'No data'
+                  : _menuAnalysis['Plowhorses']!.join(', '),
+              Colors.orange),
+          _buildMatrixRow(
+              'Puzzles (High Margin/Low Vol)',
+              _menuAnalysis['Puzzles']!.isEmpty
+                  ? 'No data'
+                  : _menuAnalysis['Puzzles']!.join(', '),
+              Colors.blue),
+          _buildMatrixRow(
+              'Dogs (Review Necessary)',
+              _menuAnalysis['Dogs']!.isEmpty
+                  ? 'No data'
+                  : _menuAnalysis['Dogs']!.join(', '),
+              Colors.red),
         ],
       ),
     );
@@ -154,14 +185,23 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Container(width: 4, height: 32, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+          Container(
+              width: 4,
+              height: 32,
+              decoration: BoxDecoration(
+                  color: color, borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                Text(items, style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.grey)),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(items,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.white54 : Colors.grey)),
               ],
             ),
           ),
@@ -177,15 +217,21 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
       icon: Icons.gpp_maybe,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+            color: Colors.red.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 20),
+            const Icon(Icons.warning_amber_rounded,
+                color: Colors.red, size: 20),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
                 'High Waste Alert: Your raw material spend on "Dairy" is 15% higher than average.',
-                style: TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -194,7 +240,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
     );
   }
 
-  Widget _buildHubCard({required String title, required String subtitle, required IconData icon, required Widget child}) {
+  Widget _buildHubCard(
+      {required String title,
+      required String subtitle,
+      required IconData icon,
+      required Widget child}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
@@ -202,9 +252,14 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade100),
+        border:
+            Border.all(color: isDark ? Colors.white10 : Colors.grey.shade100),
         boxShadow: [
-          if (!isDark) BoxShadow(color: Colors.grey.shade200, blurRadius: 20, offset: const Offset(0, 10)),
+          if (!isDark)
+            BoxShadow(
+                color: Colors.grey.shade200,
+                blurRadius: 20,
+                offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -217,8 +272,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(subtitle,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey)),
                 ],
               ),
             ],

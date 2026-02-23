@@ -17,24 +17,25 @@ class MyAttendanceScreen extends StatefulWidget {
   State<MyAttendanceScreen> createState() => _MyAttendanceScreenState();
 }
 
-class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTickerProviderStateMixin {
+class _MyAttendanceScreenState extends State<MyAttendanceScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   bool _isPunching = false;
-  
+
   // User/Staff info
   Map<String, dynamic>? _staffRecord;
   Map<String, dynamic>? _todayAttendance;
   String? _userMobile;
   String? _firmId;
-  
+
   // Geo-fence
   double? _kitchenLat;
   double? _kitchenLng;
   int _geoFenceRadius = 100;
   bool? _isWithinGeoFence;
   String? _locationMessage;
-  
+
   // Calendar
   DateTime _currentMonth = DateTime.now();
   Map<String, Map<String, dynamic>> _attendanceByDate = {};
@@ -54,67 +55,71 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final sp = await SharedPreferences.getInstance();
     _userMobile = sp.getString('last_mobile');
     _firmId = sp.getString('last_firm');
-    
+
     final opRepo = OperationRepository();
-    
+
     // Find staff record by mobile
     final staffList = await opRepo.getAllStaff(onlyActive: true);
-    final staff = staffList.where((s) => s['mobile'] == _userMobile).firstOrNull;
-    
+    final staff =
+        staffList.where((s) => s['mobile'] == _userMobile).firstOrNull;
+
     if (staff != null) {
       _staffRecord = staff;
-      
+
       // Load today's attendance
       final now = DateTime.now();
       final todayStart = DateTime(now.year, now.month, now.day);
-      final attendanceList = await opRepo.getAttendanceForStaff(staff['id'], todayStart, todayStart);
-      
+      final attendanceList = await opRepo.getAttendanceForStaff(
+          staff['id'], todayStart, todayStart);
+
       if (attendanceList.isNotEmpty) {
         _todayAttendance = attendanceList.first;
       }
-      
+
       // Load calendar data
       await _loadCalendarData();
     }
-    
+
     // Load firm GPS settings
     if (_firmId != null) {
       final firm = await OrderRepository().getFirm(_firmId!);
       if (firm != null) {
-        _kitchenLat = double.tryParse(firm['kitchenLatitude']?.toString() ?? '');
-        _kitchenLng = double.tryParse(firm['kitchenLongitude']?.toString() ?? '');
+        _kitchenLat =
+            double.tryParse(firm['kitchenLatitude']?.toString() ?? '');
+        _kitchenLng =
+            double.tryParse(firm['kitchenLongitude']?.toString() ?? '');
         _geoFenceRadius = (firm['geoFenceRadius'] as int?) ?? 100;
       }
     }
-    
+
     // Check current location status
     await _checkLocation();
-    
+
     setState(() => _isLoading = false);
   }
 
   Future<void> _loadCalendarData() async {
     if (_staffRecord == null) return;
-    
+
     final firstDay = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final lastDay = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
-    
+
     final records = await OperationRepository().getAttendanceForStaff(
       _staffRecord!['id'],
       firstDay,
       lastDay,
     );
-    
+
     final Map<String, Map<String, dynamic>> byDate = {};
     for (var record in records) {
       final dateStr = record['date'] as String;
       byDate[dateStr] = record;
     }
-    
+
     setState(() => _attendanceByDate = byDate);
   }
 
@@ -137,23 +142,23 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
       _locationMessage = '⚠️ Kitchen location not configured';
       return;
     }
-    
+
     final geoService = GeoFenceService.instance;
     final status = await geoService.checkLocationStatus();
-    
+
     if (status != LocationStatus.ready) {
       _locationMessage = geoService.getStatusMessage(status);
       _isWithinGeoFence = null;
       return;
     }
-    
+
     final position = await geoService.getCurrentPosition();
     if (position == null) {
       _locationMessage = '❌ Could not get current location';
       _isWithinGeoFence = null;
       return;
     }
-    
+
     _isWithinGeoFence = geoService.isWithinGeoFence(
       staffLat: position.latitude,
       staffLng: position.longitude,
@@ -161,18 +166,20 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
       kitchenLng: _kitchenLng!,
       radiusMeters: _geoFenceRadius.toDouble(),
     );
-    
+
     final distance = geoService.calculateDistance(
       lat1: position.latitude,
       lng1: position.longitude,
       lat2: _kitchenLat!,
       lng2: _kitchenLng!,
     );
-    
+
     if (_isWithinGeoFence == true) {
-      _locationMessage = '✅ You are within the kitchen area (${geoService.formatDistance(distance)})';
+      _locationMessage =
+          '✅ You are within the kitchen area (${geoService.formatDistance(distance)})';
     } else {
-      _locationMessage = '⚠️ You are ${geoService.formatDistance(distance)} away from kitchen. Punch will be marked as "Outside Location".';
+      _locationMessage =
+          '⚠️ You are ${geoService.formatDistance(distance)} away from kitchen. Punch will be marked as "Outside Location".';
     }
   }
 
@@ -181,18 +188,19 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
 
   Future<void> _punchIn() async {
     if (_staffRecord == null || _hasPunchedIn) return;
-    
+
     setState(() => _isPunching = true);
-    
+
     final geoService = GeoFenceService.instance;
     final position = await geoService.getCurrentPosition();
-    
+
     bool isWithinGeoFence = false;
     String locationNote = '';
-    
+
     if (position != null) {
-      locationNote = 'GPS: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
-      
+      locationNote =
+          'GPS: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+
       if (_kitchenLat != null && _kitchenLng != null) {
         isWithinGeoFence = geoService.isWithinGeoFence(
           staffLat: position.latitude,
@@ -201,17 +209,18 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
           kitchenLng: _kitchenLng!,
           radiusMeters: _geoFenceRadius.toDouble(),
         );
-        
+
         final distance = geoService.calculateDistance(
           lat1: position.latitude,
           lng1: position.longitude,
           lat2: _kitchenLat!,
           lng2: _kitchenLng!,
         );
-        locationNote += ' | ${geoService.formatDistance(distance)} from kitchen';
+        locationNote +=
+            ' | ${geoService.formatDistance(distance)} from kitchen';
       }
     }
-    
+
     final now = DateTime.now();
     await OperationRepository().insertAttendance({
       'staffId': _staffRecord!['id'],
@@ -224,29 +233,29 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
       'status': 'Present',
       'createdAt': now.toIso8601String(),
     });
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isWithinGeoFence 
-              ? AppLocalizations.of(context).punchSuccess 
+          content: Text(isWithinGeoFence
+              ? AppLocalizations.of(context).punchSuccess
               : AppLocalizations.of(context).punchWarning),
           backgroundColor: isWithinGeoFence ? Colors.green : Colors.orange,
         ),
       );
     }
-    
+
     await _loadData();
   }
 
   Future<void> _punchOut() async {
     if (_todayAttendance == null || _hasPunchedOut) return;
-    
+
     setState(() => _isPunching = true);
-    
+
     final geoService = GeoFenceService.instance;
     final position = await geoService.getCurrentPosition();
-    
+
     // Calculate hours worked
     final punchInTime = _todayAttendance!['punchInTime'] as String;
     final punchInParts = punchInTime.split(':');
@@ -257,48 +266,51 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
       int.parse(punchInParts[0]),
       int.parse(punchInParts[1]),
     );
-    
+
     final now = DateTime.now();
     final hoursWorked = now.difference(punchInDateTime).inMinutes / 60.0;
     final overtime = hoursWorked > 8 ? hoursWorked - 8 : 0.0;
-    
-    await OperationRepository().updateAttendanceRecord(_todayAttendance!['id'] as int, {
+
+    await OperationRepository()
+        .updateAttendanceRecord(_todayAttendance!['id'] as int, {
       'punchOutTime': DateFormat('HH:mm').format(now),
       'punchOutLat': position?.latitude,
       'punchOutLng': position?.longitude,
       'hoursWorked': hoursWorked,
       'overtime': overtime,
     });
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).punchOutSuccess(hoursWorked.toStringAsFixed(1))),
+          content: Text(AppLocalizations.of(context)
+              .punchOutSuccess(hoursWorked.toStringAsFixed(1))),
           backgroundColor: Colors.blue,
         ),
       );
     }
-    
+
     await _loadData();
   }
-
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text(AppLocalizations.of(context).attendanceTitle)),
+        appBar:
+            AppBar(title: Text(AppLocalizations.of(context).attendanceTitle)),
         body: const SafeArea(child: Center(child: CircularProgressIndicator())),
       );
     }
-    
+
     if (_staffRecord == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(AppLocalizations.of(context).attendanceTitle)),
+        appBar:
+            AppBar(title: Text(AppLocalizations.of(context).attendanceTitle)),
         body: SafeArea(child: _buildNoStaffRecord()),
       );
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).attendanceTitle),
@@ -320,7 +332,8 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => StaffDetailScreen(staffId: _staffRecord!['id']),
+                  builder: (_) =>
+                      StaffDetailScreen(staffId: _staffRecord!['id']),
                 ),
               );
             },
@@ -336,8 +349,12 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
           tabs: [
-            Tab(text: AppLocalizations.of(context).today, icon: const Icon(Icons.today, size: 18)),
-            Tab(text: AppLocalizations.of(context).history, icon: const Icon(Icons.calendar_month, size: 18)),
+            Tab(
+                text: AppLocalizations.of(context).today,
+                icon: const Icon(Icons.today, size: 18)),
+            Tab(
+                text: AppLocalizations.of(context).history,
+                icon: const Icon(Icons.calendar_month, size: 18)),
           ],
         ),
       ),
@@ -373,7 +390,8 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
-            Text('Mobile: $_userMobile', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('Mobile: $_userMobile',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -384,7 +402,7 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     final name = _staffRecord!['name'] ?? 'Staff';
     final role = _staffRecord!['role'] ?? '';
     final today = DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now());
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -398,17 +416,26 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.blue,
-                    child: Text(name[0].toUpperCase(), 
-                      style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                    child: Text(name[0].toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        if (role.isNotEmpty) Text(role, style: TextStyle(color: Colors.grey.shade600)),
-                        Text(today, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                        Text(name,
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
+                        if (role.isNotEmpty)
+                          Text(role,
+                              style: TextStyle(color: Colors.grey.shade600)),
+                        Text(today,
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey.shade500)),
                       ],
                     ),
                   ),
@@ -417,40 +444,41 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Location Status Card
           Card(
-            color: _isWithinGeoFence == true 
-                ? Colors.green.shade50 
-                : _isWithinGeoFence == false 
-                    ? Colors.orange.shade50 
+            color: _isWithinGeoFence == true
+                ? Colors.green.shade50
+                : _isWithinGeoFence == false
+                    ? Colors.orange.shade50
                     : Colors.grey.shade100,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   Icon(
-                    _isWithinGeoFence == true 
-                        ? Icons.location_on 
-                        : _isWithinGeoFence == false 
-                            ? Icons.location_off 
+                    _isWithinGeoFence == true
+                        ? Icons.location_on
+                        : _isWithinGeoFence == false
+                            ? Icons.location_off
                             : Icons.location_searching,
-                    color: _isWithinGeoFence == true 
-                        ? Colors.green 
-                        : _isWithinGeoFence == false 
-                            ? Colors.orange 
+                    color: _isWithinGeoFence == true
+                        ? Colors.green
+                        : _isWithinGeoFence == false
+                            ? Colors.orange
                             : Colors.grey,
                     size: 32,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _locationMessage ?? AppLocalizations.of(context).checkingLocation,
+                      _locationMessage ??
+                          AppLocalizations.of(context).checkingLocation,
                       style: TextStyle(
-                        color: _isWithinGeoFence == true 
-                            ? Colors.green.shade700 
-                            : _isWithinGeoFence == false 
-                                ? Colors.orange.shade700 
+                        color: _isWithinGeoFence == true
+                            ? Colors.green.shade700
+                            : _isWithinGeoFence == false
+                                ? Colors.orange.shade700
                                 : Colors.grey.shade700,
                       ),
                     ),
@@ -467,12 +495,12 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Punch Status & Button
           _buildPunchSection(),
-          
+
           const SizedBox(height: 24),
-          
+
           // Today's Details
           if (_todayAttendance != null) _buildTodayDetails(),
         ],
@@ -482,13 +510,16 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
 
   Widget _buildCalendarTab() {
     final monthName = DateFormat('MMMM yyyy').format(_currentMonth);
-    final daysInMonth = DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
-    final firstWeekday = DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
-    
+    final daysInMonth =
+        DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
+    final firstWeekday =
+        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+
     // Calculate stats
     int totalPresent = _attendanceByDate.length;
-    double totalHours = _attendanceByDate.values.fold(0, (sum, a) => sum + ((a['hoursWorked'] as num?)?.toDouble() ?? 0));
-    
+    double totalHours = _attendanceByDate.values.fold(
+        0, (sum, a) => sum + ((a['hoursWorked'] as num?)?.toDouble() ?? 0));
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(8),
       child: Column(
@@ -503,14 +534,19 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatCard(AppLocalizations.of(context).present, '$totalPresent', Icons.check_circle, Colors.green),
-                _buildStatCard(AppLocalizations.of(context).totalHours, totalHours.toStringAsFixed(1), Icons.access_time, Colors.blue),
+                _buildStatCard(AppLocalizations.of(context).present,
+                    '$totalPresent', Icons.check_circle, Colors.green),
+                _buildStatCard(
+                    AppLocalizations.of(context).totalHours,
+                    totalHours.toStringAsFixed(1),
+                    Icons.access_time,
+                    Colors.blue),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Month Navigation
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -521,7 +557,8 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
               ),
               Text(
                 monthName,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
@@ -529,9 +566,9 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Weekday Headers
           Row(
             children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -541,7 +578,9 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
                           d,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: d == 'S' ? Colors.grey.shade700 : Colors.grey.shade700,
+                            color: d == 'S'
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade700,
                             fontSize: 12,
                           ),
                         ),
@@ -550,12 +589,12 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
                 .toList(),
           ),
           const SizedBox(height: 4),
-          
+
           // Calendar Grid
           _buildCalendarGrid(daysInMonth, firstWeekday),
-          
+
           const SizedBox(height: 16),
-          
+
           // Legend
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -582,7 +621,7 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     final offset = firstWeekday - 1;
     final totalCells = offset + daysInMonth;
     final rows = (totalCells / 7).ceil();
-    
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -595,11 +634,11 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
       itemCount: rows * 7,
       itemBuilder: (context, index) {
         final dayNum = index - offset + 1;
-        
+
         if (dayNum < 1 || dayNum > daysInMonth) {
           return Container();
         }
-        
+
         return _buildDayCell(dayNum);
       },
     );
@@ -613,17 +652,19 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     final isToday = DateTime.now().year == _currentMonth.year &&
         DateTime.now().month == _currentMonth.month &&
         DateTime.now().day == day;
-    final isFuture = DateTime(_currentMonth.year, _currentMonth.month, day).isAfter(DateTime.now());
-    final isSunday = DateTime(_currentMonth.year, _currentMonth.month, day).weekday == 7;
-    
+    final isFuture = DateTime(_currentMonth.year, _currentMonth.month, day)
+        .isAfter(DateTime.now());
+    final isSunday =
+        DateTime(_currentMonth.year, _currentMonth.month, day).weekday == 7;
+
     final isPresent = attendance != null;
     final punchIn = attendance?['punchInTime']?.toString();
     final punchOut = attendance?['punchOutTime']?.toString();
     final hoursWorked = (attendance?['hoursWorked'] as num?)?.toDouble() ?? 0;
-    
+
     // Check if punch is missing (present but no punch in or no punch out)
     final hasMissingPunch = isPresent && (punchIn == null || punchOut == null);
-    
+
     Color bandColor;
     if (isFuture) {
       bandColor = Colors.grey.shade300;
@@ -636,12 +677,14 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     } else {
       bandColor = Colors.red;
     }
-    
+
     return Semantics(
-      label: 'Date $day, ${isPresent ? "Present, $punchIn to $punchOut" : isSunday ? "Holiday" : "Absent"}',
+      label:
+          'Date $day, ${isPresent ? "Present, $punchIn to $punchOut" : isSunday ? "Holiday" : "Absent"}',
       button: !isFuture,
       child: GestureDetector(
-        onTap: isFuture ? null : () => _showDayDetails(day, attendance, isSunday),
+        onTap:
+            isFuture ? null : () => _showDayDetails(day, attendance, isSunday),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -673,7 +716,8 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
               // Content area - punch times
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -705,10 +749,12 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
                       ] else if (!isFuture && !isPresent && isSunday) ...[
                         Text(
                           'Off',
-                          style: TextStyle(fontSize: 8, color: Colors.purple.shade300),
+                          style: TextStyle(
+                              fontSize: 8, color: Colors.purple.shade300),
                         ),
                       ] else if (!isFuture && !isPresent) ...[
-                        Icon(Icons.remove, size: 10, color: Colors.grey.shade400),
+                        Icon(Icons.remove,
+                            size: 10, color: Colors.grey.shade400),
                       ],
                     ],
                   ),
@@ -727,25 +773,37 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
         children: [
           Icon(Icons.login, size: 60, color: Colors.green.shade300),
           const SizedBox(height: 16),
-          Text(AppLocalizations.of(context).readyToPunchIn, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).readyToPunchIn,
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 24),
           Semantics(
-            label: _hasPunchedIn ? AppLocalizations.of(context).punchOut : AppLocalizations.of(context).punchIn,
+            label: _hasPunchedIn
+                ? AppLocalizations.of(context).punchOut
+                : AppLocalizations.of(context).punchIn,
             button: true,
             child: SizedBox(
               width: 200,
               height: 60,
               child: ElevatedButton.icon(
                 onPressed: _isPunching ? null : _punchIn,
-                icon: _isPunching 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                icon: _isPunching
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.login, size: 28),
-                label: Text(_isPunching ? AppLocalizations.of(context).punching : AppLocalizations.of(context).punchIn, 
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                label: Text(
+                    _isPunching
+                        ? AppLocalizations.of(context).punching
+                        : AppLocalizations.of(context).punchIn,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -758,7 +816,9 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
         children: [
           Icon(Icons.timer, size: 60, color: Colors.blue.shade300),
           const SizedBox(height: 16),
-          Text(AppLocalizations.of(context).workingSince(punchInTime), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).workingSince(punchInTime),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           _buildElapsedTime(),
           const SizedBox(height: 24),
@@ -767,15 +827,23 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
             height: 60,
             child: ElevatedButton.icon(
               onPressed: _isPunching ? null : _punchOut,
-              icon: _isPunching 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              icon: _isPunching
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.logout, size: 28),
-              label: Text(_isPunching ? AppLocalizations.of(context).punching : AppLocalizations.of(context).punchOut, 
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              label: Text(
+                  _isPunching
+                      ? AppLocalizations.of(context).punching
+                      : AppLocalizations.of(context).punchOut,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -784,16 +852,20 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     } else {
       final punchInTime = _todayAttendance!['punchInTime'] ?? '--:--';
       final punchOutTime = _todayAttendance!['punchOutTime'] ?? '--:--';
-      final hoursWorked = (_todayAttendance!['hoursWorked'] as num?)?.toDouble() ?? 0;
+      final hoursWorked =
+          (_todayAttendance!['hoursWorked'] as num?)?.toDouble() ?? 0;
       final overtime = (_todayAttendance!['overtime'] as num?)?.toDouble() ?? 0;
-      
+
       return Column(
         children: [
           Icon(Icons.check_circle, size: 60, color: Colors.green.shade400),
           const SizedBox(height: 16),
-          Text(AppLocalizations.of(context).todayShiftCompleted, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(AppLocalizations.of(context).todayShiftCompleted,
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text('$punchInTime → $punchOutTime', style: const TextStyle(fontSize: 24)),
+          Text('$punchInTime → $punchOutTime',
+              style: const TextStyle(fontSize: 24)),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -828,11 +900,11 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
       int.parse(punchInParts[0]),
       int.parse(punchInParts[1]),
     );
-    
+
     final elapsed = DateTime.now().difference(punchInDateTime);
     final hours = elapsed.inHours;
     final minutes = elapsed.inMinutes % 60;
-    
+
     return Text(
       AppLocalizations.of(context).elapsedTime(hours, minutes),
       style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
@@ -844,28 +916,36 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     final punchOutTime = _todayAttendance!['punchOutTime'];
     final isWithinGeoFence = _todayAttendance!['isWithinGeoFence'] == 1;
     final location = _todayAttendance!['location'] ?? '';
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context).todayDetails, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context).todayDetails,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const Divider(),
-            _detailRow(AppLocalizations.of(context).punchedIn, punchInTime, Icons.login, Colors.green),
+            _detailRow(AppLocalizations.of(context).punchedIn, punchInTime,
+                Icons.login, Colors.green),
             if (punchOutTime != null)
-              _detailRow(AppLocalizations.of(context).punchedOut, punchOutTime, Icons.logout, Colors.red),
+              _detailRow(AppLocalizations.of(context).punchedOut, punchOutTime,
+                  Icons.logout, Colors.red),
             _detailRow(
-              AppLocalizations.of(context).location, 
-              isWithinGeoFence ? AppLocalizations.of(context).withinKitchen : AppLocalizations.of(context).outsideKitchen, 
+              AppLocalizations.of(context).location,
+              isWithinGeoFence
+                  ? AppLocalizations.of(context).withinKitchen
+                  : AppLocalizations.of(context).outsideKitchen,
               isWithinGeoFence ? Icons.location_on : Icons.location_off,
               isWithinGeoFence ? Colors.green : Colors.orange,
             ),
             if (location.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text(location, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                child: Text(location,
+                    style:
+                        TextStyle(fontSize: 11, color: Colors.grey.shade500)),
               ),
           ],
         ),
@@ -888,28 +968,33 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: color, size: 24),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+        Text(value,
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold, color: color)),
         Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
       ],
     );
   }
-  void _showDayDetails(int day, Map<String, dynamic>? attendance, bool isSunday) {
+
+  void _showDayDetails(
+      int day, Map<String, dynamic>? attendance, bool isSunday) {
     var dateStr = DateFormat('d MMM yyyy').format(
       DateTime(_currentMonth.year, _currentMonth.month, day),
     );
-    
+
     String status;
     Color statusColor;
     final punchIn = attendance?['punchInTime']?.toString();
     final punchOut = attendance?['punchOutTime']?.toString();
     final hoursWorked = (attendance?['hoursWorked'] as num?)?.toDouble() ?? 0;
-    
+
     if (attendance == null && isSunday) {
       status = 'Holiday';
       statusColor = Colors.purple;
@@ -923,7 +1008,7 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
       status = 'Present';
       statusColor = Colors.green;
     }
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -943,7 +1028,9 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(status, style: TextStyle(fontWeight: FontWeight.bold, color: statusColor)),
+                Text(status,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: statusColor)),
               ],
             ),
             if (attendance != null) ...[
@@ -952,7 +1039,8 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen> with SingleTick
               const SizedBox(height: 8),
               _buildDetailRow('Punch Out:', punchOut ?? '-'),
               const SizedBox(height: 8),
-              _buildDetailRow('Total Hours:', '${hoursWorked.toStringAsFixed(1)} hrs'),
+              _buildDetailRow(
+                  'Total Hours:', '${hoursWorked.toStringAsFixed(1)} hrs'),
             ],
           ],
         ),

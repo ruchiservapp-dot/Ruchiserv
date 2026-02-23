@@ -3,8 +3,8 @@ import 'package:shimmer/shimmer.dart';
 
 class ShimmerListLoader extends StatelessWidget {
   final int itemCount;
-  
-  const ShimmerListLoader({Key? key, this.itemCount = 5}) : super(key: key);
+
+  const ShimmerListLoader({super.key, this.itemCount = 5});
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +60,8 @@ class ShimmerListLoader extends StatelessWidget {
 
 class ShimmerCardLoader extends StatelessWidget {
   final int itemCount;
-  
-  const ShimmerCardLoader({Key? key, this.itemCount = 3}) : super(key: key);
+
+  const ShimmerCardLoader({super.key, this.itemCount = 3});
 
   @override
   Widget build(BuildContext context) {

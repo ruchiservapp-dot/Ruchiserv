@@ -55,9 +55,11 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
     final mobile = _mobileCtrl.text.trim();
 
     try {
-      final pre = await AuthService.precheckRegistration(firmId: firmId, mobile: mobile);
+      final pre = await AuthService.precheckRegistration(
+          firmId: firmId, mobile: mobile);
       if (!pre) {
-        _showError('This mobile is not allowed for the given firm. Contact admin.');
+        _showError(
+            'This mobile is not allowed for the given firm. Contact admin.');
         return;
       }
 
@@ -100,7 +102,7 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
   Future<void> _setPassword() async {
     final pwd = _pwdCtrl.text.trim();
     final confirm = _confirmPwdCtrl.text.trim();
-    
+
     if (pwd.length < 4) {
       _showError('Password must be at least 4 characters.');
       return;
@@ -114,9 +116,10 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
     try {
       final firmId = _firmCtrl.text.trim();
       final mobile = _mobileCtrl.text.trim();
-      
+
       // 0. Fetch the role from authorized_mobiles
-      final auth = await DatabaseHelper().getAuthorizedMobileByPhone(firmId, mobile);
+      final auth =
+          await DatabaseHelper().getAuthorizedMobileByPhone(firmId, mobile);
       final role = auth != null ? auth['role']?.toString() ?? 'Staff' : 'Staff';
       final name = auth != null ? auth['name']?.toString() ?? 'User' : 'User';
 
@@ -135,7 +138,7 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
       await AuthService.registerLocalUser(
         firmId: firmId,
         mobile: mobile,
-        password: pwd, 
+        password: pwd,
         name: name,
         role: role, // Pass the discovered role!
       );
@@ -143,7 +146,8 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration complete. You can login now.')),
+        const SnackBar(
+            content: Text('Registration complete. You can login now.')),
       );
     } catch (e) {
       _showError('Registration Error: $e');
@@ -170,7 +174,9 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
                         labelText: 'Firm ID',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter firm id' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Enter firm id'
+                          : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -180,8 +186,9 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
                         labelText: 'Mobile',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().length < 8) ? 'Enter valid mobile' : null,
+                      validator: (v) => (v == null || v.trim().length < 8)
+                          ? 'Enter valid mobile'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     busy
@@ -229,8 +236,11 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
                           labelText: 'Password',
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            icon: Icon(_obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
                           ),
                         ),
                       ),
@@ -242,8 +252,12 @@ class _RegisterChoiceScreenState extends State<RegisterChoiceScreen> {
                           labelText: 'Confirm Password',
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                            icon: Icon(_obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(() =>
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword),
                           ),
                         ),
                       ),

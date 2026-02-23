@@ -31,7 +31,9 @@ class SyncStatusWidget extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             message ??
-                (hasError ? "Sync failed. Retrying..." : "Syncing with server..."),
+                (hasError
+                    ? "Sync failed. Retrying..."
+                    : "Syncing with server..."),
             style: const TextStyle(color: Colors.white),
           ),
         ],

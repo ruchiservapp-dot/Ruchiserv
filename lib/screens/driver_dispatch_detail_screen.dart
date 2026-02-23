@@ -2,14 +2,12 @@ import 'package:ruchiserv/core/app_logger.dart';
 // MODULE: DRIVER DISPATCH DETAIL SCREEN (v34)
 // Features: Full order details, customer info, dishes, utensils, loading checklist
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
-import '../services/tracking_api_service.dart'; // Local Tracking API Service
+// Local Tracking API Service
 import '../services/location_service.dart'; // For permission check
 import '../db/aws/aws_api.dart'; // Added import for AwsApi
-import 'package:ruchiserv/l10n/app_localizations.dart';
 
 class DriverDispatchDetailScreen extends StatefulWidget {
   final Map<String, dynamic> dispatch;
@@ -114,6 +112,7 @@ class _DriverDispatchDetailScreenState extends State<DriverDispatchDetailScreen>
     // 2. Request Location Permission (Always) for tracking
     final perm = await LocationService.instance.requestPermission();
     if (!perm) {
+       if (!mounted) return;
        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Location permission is required for dispatch tracking.')),
       );
@@ -121,6 +120,7 @@ class _DriverDispatchDetailScreenState extends State<DriverDispatchDetailScreen>
     }
 
     final confirmed = await showDialog<bool>(
+
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Accept & Start Loading?'),
@@ -194,9 +194,11 @@ class _DriverDispatchDetailScreenState extends State<DriverDispatchDetailScreen>
         AppLogger.info("⚠️ Notification Trigger Failed: $e");
       }
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Dispatch Accepted! Tracking Link sent to Customer.'), backgroundColor: Colors.green),
       );
+      if (!mounted) return;
       Navigator.pop(context, true);
     }
   }
@@ -376,8 +378,9 @@ class _DriverDispatchDetailScreenState extends State<DriverDispatchDetailScreen>
     final status = dish['productionStatus'] ?? 'PENDING';
     
     Color statusColor = Colors.grey;
-    if (status == 'COMPLETED') statusColor = Colors.green;
-    else if (status == 'QUEUED') statusColor = Colors.orange;
+    if (status == 'COMPLETED') {
+      statusColor = Colors.green;
+    } else if (status == 'QUEUED') statusColor = Colors.orange;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

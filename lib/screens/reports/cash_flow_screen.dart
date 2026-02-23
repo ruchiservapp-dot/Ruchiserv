@@ -28,15 +28,16 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final prefs = await SharedPreferences.getInstance();
     _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
-    
+
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
-    
-    final data = await DatabaseHelper().getCashFlowData(_firmId, startStr, endStr);
-    
+
+    final data =
+        await DatabaseHelper().getCashFlowData(_firmId, startStr, endStr);
+
     setState(() {
       _data = data;
       _isLoading = false;
@@ -50,7 +51,7 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
-    
+
     if (picked != null) {
       setState(() {
         if (isStart) {
@@ -67,37 +68,37 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
 
   void _exportReport() {
     if (_data == null) return;
-    
+
     final inflows = (_data!['inflows'] as List?) ?? [];
     final outflows = (_data!['outflows'] as List?) ?? [];
-    
+
     final headers = ['Item', 'Amount (₹)'];
     final rows = <List<dynamic>>[
       ['Opening Cash Balance', _data!['openingBalance']],
       ['', ''],
       ['--- CASH INFLOWS ---', ''],
     ];
-    
+
     for (var i in inflows) {
       rows.add([i['category'] ?? 'Other', i['total']]);
     }
     rows.add(['Total Cash In', _data!['totalInflow']]);
-    
+
     rows.add(['', '']);
     rows.add(['--- CASH OUTFLOWS ---', '']);
-    
+
     for (var o in outflows) {
       rows.add([o['expenseGroup'] ?? 'Other', o['total']]);
     }
     rows.add(['Total Cash Out', _data!['totalOutflow']]);
-    
+
     rows.add(['', '']);
     rows.add(['NET CASH FLOW', _data!['netCashFlow']]);
     rows.add(['Closing Cash Balance', _data!['closingBalance']]);
-    
+
     final startStr = DateFormat('MMM d').format(_startDate);
     final endStr = DateFormat('MMM d, yyyy').format(_endDate);
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -119,9 +120,11 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
     final totalOutflow = (_data?['totalOutflow'] as num?)?.toDouble() ?? 0;
     final netCashFlow = (_data?['netCashFlow'] as num?)?.toDouble() ?? 0;
     final closingBalance = (_data?['closingBalance'] as num?)?.toDouble() ?? 0;
-    final inflows = (_data?['inflows'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final outflows = (_data?['outflows'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    
+    final inflows =
+        (_data?['inflows'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final outflows =
+        (_data?['outflows'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cash Flow'),
@@ -157,30 +160,44 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('From', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                                    Text('From',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12)),
                                     const SizedBox(height: 4),
                                     Text(
-                                      DateFormat('MMM d, yyyy').format(_startDate),
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      DateFormat('MMM d, yyyy')
+                                          .format(_startDate),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                            Container(width: 1, height: 40, color: Colors.grey.shade300),
+                            Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.grey.shade300),
                             Expanded(
                               child: InkWell(
                                 onTap: () => _pickDate(false),
                                 child: Padding(
                                   padding: const EdgeInsets.only(left: 16),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text('To', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                                      Text('To',
+                                          style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 12)),
                                       const SizedBox(height: 4),
                                       Text(
-                                        DateFormat('MMM d, yyyy').format(_endDate),
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        DateFormat('MMM d, yyyy')
+                                            .format(_endDate),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
@@ -192,64 +209,83 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Summary Cards Row
                     Row(
                       children: [
                         Expanded(
-                          child: _buildSummaryCard('Opening', openingBalance, Colors.grey),
+                          child: _buildSummaryCard(
+                              'Opening', openingBalance, Colors.grey),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _buildSummaryCard('Net Flow', netCashFlow, netCashFlow >= 0 ? Colors.green : Colors.red),
+                          child: _buildSummaryCard('Net Flow', netCashFlow,
+                              netCashFlow >= 0 ? Colors.green : Colors.red),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _buildSummaryCard('Closing', closingBalance, Colors.teal),
+                          child: _buildSummaryCard(
+                              'Closing', closingBalance, Colors.teal),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Cash Inflows Section
-                    _buildSectionHeader('Cash Inflows', Icons.arrow_downward, Colors.green),
+                    _buildSectionHeader(
+                        'Cash Inflows', Icons.arrow_downward, Colors.green),
                     const SizedBox(height: 8),
                     Card(
                       child: Column(
                         children: [
                           if (inflows.isEmpty)
-                            const ListTile(title: Text('No cash inflows', style: TextStyle(color: Colors.grey)))
+                            const ListTile(
+                                title: Text('No cash inflows',
+                                    style: TextStyle(color: Colors.grey)))
                           else
                             ...inflows.map((i) => Column(
-                              children: [
-                                _buildFlowItem(i['category'] ?? 'Other', (i['total'] as num).toDouble(), Colors.green),
-                                if (inflows.last != i) const Divider(height: 1),
-                              ],
-                            )),
+                                  children: [
+                                    _buildFlowItem(
+                                        i['category'] ?? 'Other',
+                                        (i['total'] as num).toDouble(),
+                                        Colors.green),
+                                    if (inflows.last != i)
+                                      const Divider(height: 1),
+                                  ],
+                                )),
                           const Divider(height: 1),
-                          _buildTotalItem('Total Inflow', totalInflow, Colors.green),
+                          _buildTotalItem(
+                              'Total Inflow', totalInflow, Colors.green),
                         ],
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Cash Outflows Section
-                    _buildSectionHeader('Cash Outflows', Icons.arrow_upward, Colors.red),
+                    _buildSectionHeader(
+                        'Cash Outflows', Icons.arrow_upward, Colors.red),
                     const SizedBox(height: 8),
                     Card(
                       child: Column(
                         children: [
                           if (outflows.isEmpty)
-                            const ListTile(title: Text('No cash outflows', style: TextStyle(color: Colors.grey)))
+                            const ListTile(
+                                title: Text('No cash outflows',
+                                    style: TextStyle(color: Colors.grey)))
                           else
                             ...outflows.map((o) => Column(
-                              children: [
-                                _buildFlowItem(o['expenseGroup'] ?? 'Other', (o['total'] as num).toDouble(), Colors.red),
-                                if (outflows.last != o) const Divider(height: 1),
-                              ],
-                            )),
+                                  children: [
+                                    _buildFlowItem(
+                                        o['expenseGroup'] ?? 'Other',
+                                        (o['total'] as num).toDouble(),
+                                        Colors.red),
+                                    if (outflows.last != o)
+                                      const Divider(height: 1),
+                                  ],
+                                )),
                           const Divider(height: 1),
-                          _buildTotalItem('Total Outflow', totalOutflow, Colors.red),
+                          _buildTotalItem(
+                              'Total Outflow', totalOutflow, Colors.red),
                         ],
                       ),
                     ),
@@ -266,11 +302,13 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            Text(title, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+            Text(title,
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
             const SizedBox(height: 4),
             Text(
               '₹${amount.toStringAsFixed(0)}',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.bold, color: color),
             ),
           ],
         ),
@@ -290,7 +328,8 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
           child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(width: 12),
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -313,7 +352,8 @@ class _CashFlowScreenState extends State<CashFlowScreen> {
         title: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         trailing: Text(
           '₹${amount.toStringAsFixed(0)}',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 16, color: color),
         ),
       ),
     );

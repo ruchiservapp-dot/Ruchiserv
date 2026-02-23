@@ -19,18 +19,21 @@ class MrpRunScreen extends StatefulWidget {
   State<MrpRunScreen> createState() => _MrpRunScreenState();
 }
 
-class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderStateMixin {
+class _MrpRunScreenState extends State<MrpRunScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   bool _isCalculating = false;
   String? _firmId;
   late TabController _tabController;
-  
+
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _orders = []; // Pending orders (selectable)
-  List<Map<String, dynamic>> _processedOrders = []; // Already processed (read-only)
+  List<Map<String, dynamic>> _processedOrders =
+      []; // Already processed (read-only)
   List<Map<String, dynamic>> _subcontractors = [];
-  
-  Map<int, List<Map<String, dynamic>>> _orderDishes = {}; // orderId -> List<Dish>
+
+  final Map<int, List<Map<String, dynamic>>> _orderDishes =
+      {}; // orderId -> List<Dish>
 
   @override
   void initState() {
@@ -49,31 +52,35 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
     setState(() => _isLoading = true);
     final sp = await SharedPreferences.getInstance();
     _firmId = sp.getString('last_firm');
-    
+
     if (_firmId != null) {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-      
+
       // STRICT: Only fetch PENDING orders for MRP selection
-      _orders = await OrderRepository().getPendingOrdersForMrp(dateStr, _firmId!);
+      _orders =
+          await OrderRepository().getPendingOrdersForMrp(dateStr, _firmId!);
       // Also fetch processed orders for read-only display
-      _processedOrders = await OrderRepository().getProcessedOrdersForMrp(dateStr, _firmId!);
-      
-      _subcontractors = await FinanceRepository().getAllSubcontractors(_firmId!);
-      
+      _processedOrders =
+          await OrderRepository().getProcessedOrdersForMrp(dateStr, _firmId!);
+
+      _subcontractors =
+          await FinanceRepository().getAllSubcontractors(_firmId!);
+
       // Load dishes for pending orders only
       _orderDishes.clear();
       for (var order in _orders) {
         final orderId = order['id'] as int;
-        final dishes = await OrderRepository().getDishesForOrder(orderId, _firmId ?? 'DEFAULT');
+        final dishes = await OrderRepository()
+            .getDishesForOrder(orderId, _firmId ?? 'DEFAULT');
         // Make mutable copy and init excluded set
         _orderDishes[orderId] = dishes.map((d) {
-           final map = Map<String, dynamic>.from(d);
-           map['excludedIngredientIds'] = <int>{}; // Initialize set
-           return map;
+          final map = Map<String, dynamic>.from(d);
+          map['excludedIngredientIds'] = <int>{}; // Initialize set
+          return map;
         }).toList();
       }
     }
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -108,9 +115,10 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
       final db = await DatabaseHelper().database;
       for (var order in _orders) {
         final orderId = order['id'] as int;
-        final check = await db.query('orders', 
+        final check = await db.query(
+          'orders',
           columns: ['mrpStatus', 'mrpRunId'],
-          where: 'id = ?', 
+          where: 'id = ?',
           whereArgs: [orderId],
         );
         if (check.isNotEmpty) {
@@ -124,17 +132,26 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: const Text('Order Already Processed'),
-                  content: Text('This order was already included in MRP Run #$existingRunId.\n\nWould you like to view that run instead?'),
+                  content: Text(
+                      'This order was already included in MRP Run #$existingRunId.\n\nWould you like to view that run instead?'),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                    ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('View Run')),
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel')),
+                    ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('View Run')),
                   ],
                 ),
               );
               if (goToExisting == true) {
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => MrpOutputScreen(mrpRunId: existingRunId as int, firmId: _firmId!),
-                ));
+                if (!mounted) return;
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MrpOutputScreen(
+                          mrpRunId: existingRunId as int, firmId: _firmId!),
+                    ));
               }
               await _loadData(); // Refresh to remove the order from list
             }
@@ -162,47 +179,53 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
           'subcontractorId': null,
         };
       }).toList();
-      await InventoryRepository().addOrdersToMrpRun(mrpRunId as int, orderRecords);
+      await InventoryRepository()
+          .addOrdersToMrpRun(mrpRunId as int, orderRecords);
 
       // Calculate ingredient requirements
-      final output = <int, Map<String, dynamic>>{}; 
-      
-      AppLogger.info('📊 [MRP] Starting ingredient calculation for ${_orders.length} orders');
-      
+      final output = <int, Map<String, dynamic>>{};
+
+      AppLogger.info(
+          '📊 [MRP] Starting ingredient calculation for ${_orders.length} orders');
+
       for (var order in _orders) {
         final orderId = order['id'] as int;
         final dishes = _orderDishes[orderId] ?? [];
-        
+
         for (var dish in dishes) {
           // SKIP SUBCONTRACTED DISHES (Use productionType as truth)
           if (dish['productionType'] == 'SUBCONTRACT') {
-            AppLogger.info('📊 [MRP] Skipping subcontracted dish: ${dish['name']}');
+            AppLogger.info(
+                '📊 [MRP] Skipping subcontracted dish: ${dish['name']}');
             continue;
           }
 
           final dishName = (dish['dishName'] ?? dish['name']) as String?;
           if (dishName == null || dishName.isEmpty) continue;
-          
+
           final dishQty = (dish['pax'] as num?)?.toInt() ?? 1;
           final excludedIds = dish['excludedIngredientIds'] as Set<int>? ?? {};
-          
+
           // Look up BOM
-          final bom = await InventoryRepository().getRecipeForDishByName(dishName, dishQty);
-          
+          final bom = await InventoryRepository()
+              .getRecipeForDishByName(dishName, dishQty);
+
           for (var bomItem in bom) {
             final ingredientId = bomItem['ing_id'] as int?;
             if (ingredientId == null) continue;
-            
+
             // Check exclusion
             if (excludedIds.contains(ingredientId)) {
-               AppLogger.error('❌ [MRP] Skipping excluded ingredient ID: $ingredientId for dish: $dishName');
-               continue;
+              AppLogger.error(
+                  '❌ [MRP] Skipping excluded ingredient ID: $ingredientId for dish: $dishName');
+              continue;
             }
-            
-            final scaledQty = (bomItem['scaledQuantity'] as num?)?.toDouble() ?? 0;
+
+            final scaledQty =
+                (bomItem['scaledQuantity'] as num?)?.toDouble() ?? 0;
             final unit = bomItem['unit'] ?? 'kg';
             final category = bomItem['category'] ?? 'Other';
-            
+
             if (output.containsKey(ingredientId)) {
               output[ingredientId]!['requiredQty'] += scaledQty;
             } else {
@@ -216,48 +239,57 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
           }
         }
       }
-      
+
       // Save output
-      await InventoryRepository().saveMrpOutput(mrpRunId as int, output.values.toList());
+      await InventoryRepository()
+          .saveMrpOutput(mrpRunId, output.values.toList());
 
       // Lock Orders (implied partial lock or full lock? Legacy method locks full order)
       // We should probably still mark orders as part of this run.
-      await InventoryRepository().lockOrdersForMrp(mrpRunId as int, _orders.map((o) => o['id'] as int).toList());
+      await InventoryRepository().lockOrdersForMrp(
+          mrpRunId, _orders.map((o) => o['id'] as int).toList());
 
       setState(() => _isCalculating = false);
 
       if (mounted) {
-        Navigator.push(context, MaterialPageRoute(
-          builder: (_) => MrpOutputScreen(mrpRunId: mrpRunId as int, firmId: _firmId!),
-        ));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  MrpOutputScreen(mrpRunId: mrpRunId, firmId: _firmId!),
+            ));
       }
     } catch (e) {
       setState(() => _isCalculating = false);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
     }
   }
-  
+
   Future<void> _toggleDishSubcontract(int orderId, int index, bool val) async {
     final dish = _orderDishes[orderId]![index];
     final dishId = dish['id'] as int;
-    
+
     // Check lock via UI state first (optimistic)
     // Actually DB check inside helper is safer
-    
-    final success = await OperationRepository().toggleDishSubcontract(dishId, val);
+
+    final success =
+        await OperationRepository().toggleDishSubcontract(dishId, val);
     if (success) {
       setState(() {
         dish['isSubcontracted'] = val ? 1 : 0;
         dish['productionType'] = val ? 'SUBCONTRACT' : 'INTERNAL';
       });
     } else {
-       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot change: Order is locked/finalized.'), backgroundColor: Colors.orange),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Cannot change: Order is locked/finalized.'),
+              backgroundColor: Colors.orange),
         );
-       }
+      }
     }
   }
 
@@ -265,19 +297,18 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
     final dish = _orderDishes[orderId]![dishIndex];
     final dishName = (dish['dishName'] ?? dish['name']) as String;
     final pax = (dish['pax'] as num?)?.toInt() ?? 0;
-    
+
     // Fetch ingredients for this dish
-    final ingredients = await InventoryRepository().getRecipeForDishByName(dishName, pax);
+    final ingredients =
+        await InventoryRepository().getRecipeForDishByName(dishName, pax);
     final excludedIds = dish['excludedIngredientIds'] as Set<int>;
-    
+
     if (!mounted) return;
-    
+
     showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: (context, setDialogState) {
             double totalCost = 0;
             // Calculate cost OF INCLUDED ITEMS ONLY
             for (var i in ingredients) {
@@ -294,7 +325,9 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 children: [
                   const Icon(Icons.restaurant, color: Colors.blue),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(dishName, style: const TextStyle(fontSize: 16))),
+                  Expanded(
+                      child:
+                          Text(dishName, style: const TextStyle(fontSize: 16))),
                 ],
               ),
               content: SizedBox(
@@ -302,7 +335,7 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 child: ingredients.isEmpty
                     ? Center(
                         child: Text(
-                          AppLocalizations.of(context)!.noIngredientsAdded,
+                          AppLocalizations.of(context).noIngredientsAdded,
                           style: TextStyle(color: Colors.grey.shade500),
                         ),
                       )
@@ -321,65 +354,99 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.group, size: 16, color: Colors.blue.shade700),
+                                    Icon(Icons.group,
+                                        size: 16, color: Colors.blue.shade700),
                                     const SizedBox(width: 8),
-                                    Text('$pax pax', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
+                                    Text('$pax pax',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue.shade700)),
                                   ],
                                 ),
-                                Text('Est. Cost: ₹${totalCost.toStringAsFixed(2)}', 
-                                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                                Text(
+                                    'Est. Cost: ₹${totalCost.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green)),
                               ],
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Text(AppLocalizations.of(context)!.ingredientsRequired, 
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text(AppLocalizations.of(context).ingredientsRequired,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14)),
                           const SizedBox(height: 8),
                           Flexible(
                             child: ListView.separated(
                               shrinkWrap: true,
                               itemCount: ingredients.length,
-                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              separatorBuilder: (_, __) =>
+                                  const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 final ing = ingredients[index];
                                 final id = ing['ing_id'] as int;
                                 final name = ing['ingredientName'] ?? 'Unknown';
-                                final qty = (ing['scaledQuantity'] as num?)?.toStringAsFixed(2) ?? '0';
+                                final qty = (ing['scaledQuantity'] as num?)
+                                        ?.toStringAsFixed(2) ??
+                                    '0';
                                 final unit = ing['unit'] ?? 'kg';
                                 // Cost calculation
-                                final rate = (ing['cost_per_unit'] as num?)?.toDouble() ?? 0;
-                                final amount = ((ing['scaledQuantity'] as num?)?.toDouble() ?? 0) * rate;
-                                
+                                final rate = (ing['cost_per_unit'] as num?)
+                                        ?.toDouble() ??
+                                    0;
+                                final amount = ((ing['scaledQuantity'] as num?)
+                                            ?.toDouble() ??
+                                        0) *
+                                    rate;
+
                                 final isIncluded = !excludedIds.contains(id);
 
                                 return CheckboxListTile(
                                   dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  controlAffinity: ListTileControlAffinity.leading,
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
                                   activeColor: Colors.green,
                                   value: isIncluded,
                                   onChanged: (val) {
-                                     setDialogState(() {
-                                        if (val == true) {
-                                          excludedIds.remove(id);
-                                        } else {
-                                          excludedIds.add(id);
-                                        }
-                                     });
-                                     // Also update parent set if needed, but it's passed by reference so it updates directly
+                                    setDialogState(() {
+                                      if (val == true) {
+                                        excludedIds.remove(id);
+                                      } else {
+                                        excludedIds.add(id);
+                                      }
+                                    });
+                                    // Also update parent set if needed, but it's passed by reference so it updates directly
                                   },
-                                  title: Text(name, style: TextStyle(
-                                     fontSize: 13, 
-                                     color: isIncluded ? Colors.black : Colors.grey,
-                                     decoration: isIncluded ? null : TextDecoration.lineThrough
-                                  )),
-                                  subtitle: Text('Rate: ₹${rate.toStringAsFixed(2)} / $unit', style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                                  title: Text(name,
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: isIncluded
+                                              ? Colors.black
+                                              : Colors.grey,
+                                          decoration: isIncluded
+                                              ? null
+                                              : TextDecoration.lineThrough)),
+                                  subtitle: Text(
+                                      'Rate: ₹${rate.toStringAsFixed(2)} / $unit',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey.shade600)),
                                   secondary: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text('₹${amount.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isIncluded ? Colors.black : Colors.grey)),
-                                      Text('$qty $unit', style: TextStyle(color: Colors.grey.shade600, fontSize: 10)),
+                                      Text('₹${amount.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                              color: isIncluded
+                                                  ? Colors.black
+                                                  : Colors.grey)),
+                                      Text('$qty $unit',
+                                          style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 10)),
                                     ],
                                   ),
                                 );
@@ -392,16 +459,14 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(AppLocalizations.of(context)!.ok),
+                  child: Text(AppLocalizations.of(context).ok),
                 ),
               ],
             );
-          }
-        );
-      }
-    );
+          });
+        });
   }
-  
+
   Widget _summaryCard(String label, String value, Color color) {
     return Expanded(
       child: Container(
@@ -412,7 +477,9 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
         ),
         child: Column(
           children: [
-            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: color)),
             Text(label, style: TextStyle(fontSize: 10, color: color)),
           ],
         ),
@@ -423,7 +490,7 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
   Widget _buildOrderCard(Map<String, dynamic> order) {
     final orderId = order['id'] as int;
     final dishes = _orderDishes[orderId] ?? [];
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Padding(
@@ -431,31 +498,37 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Row(
+            Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade100,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('#${order['id']}', style: TextStyle(color: Colors.blue.shade800)),
+                  child: Text('#${order['id']}',
+                      style: TextStyle(color: Colors.blue.shade800)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(order['customerName'] ?? 'Customer', 
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(order['customerName'] ?? 'Customer',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                Text('${order['totalPax'] ?? 0} pax', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('${order['totalPax'] ?? 0} pax',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 8),
-            Text(order['venue'] ?? AppLocalizations.of(context)!.venueNotSpecified, style: TextStyle(color: Colors.grey.shade600)),
-            
+            Text(
+                order['location'] ??
+                    order['venue'] ??
+                    AppLocalizations.of(context).venueNotSpecified,
+                style: TextStyle(color: Colors.grey.shade600)),
             const SizedBox(height: 12),
-            const Text('Dishes Configuration:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Text('Dishes Configuration:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 4),
-            
             ListView.separated(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
@@ -467,93 +540,129 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 final isSub = dish['productionType'] == 'SUBCONTRACT';
                 final name = dish['dishName'] ?? dish['name'] ?? 'Unknown';
                 final pax = dish['pax'] ?? 0;
-                
+
                 return FutureBuilder<List<Map<String, dynamic>>>(
-                  future: InventoryRepository().getRecipeForDishByName(name, pax),
-                  builder: (context, bomSnapshot) {
-                    final hasIngredients = (bomSnapshot.data?.isNotEmpty ?? false);
-                    final ingredientCount = bomSnapshot.data?.length ?? 0;
-                    
-                    return InkWell(
-                      onTap: () => _showIngredients(orderId, index),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSub ? Colors.purple.shade50 : Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isSub 
-                                ? Colors.purple.shade100 
-                                : (hasIngredients ? Colors.green.shade200 : Colors.red.shade300),
-                            width: 1,
+                    future:
+                        InventoryRepository().getRecipeForDishByName(name, pax),
+                    builder: (context, bomSnapshot) {
+                      final hasIngredients =
+                          (bomSnapshot.data?.isNotEmpty ?? false);
+                      final ingredientCount = bomSnapshot.data?.length ?? 0;
+
+                      return InkWell(
+                        onTap: () => _showIngredients(orderId, index),
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSub ? Colors.purple.shade50 : Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isSub
+                                  ? Colors.purple.shade100
+                                  : (hasIngredients
+                                      ? Colors.green.shade200
+                                      : Colors.red.shade300),
+                              width: 1,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            // Validation Icon (Only relevant if not subcontracted?)
-                            // User wants to see validation regardless
-                             Container(
+                          child: Row(
+                            children: [
+                              // Validation Icon (Only relevant if not subcontracted?)
+                              // User wants to see validation regardless
+                              Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: hasIngredients ? Colors.green.shade50 : Colors.red.shade50,
+                                  color: hasIngredients
+                                      ? Colors.green.shade50
+                                      : Colors.red.shade50,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  hasIngredients ? Icons.check_circle : Icons.warning_rounded,
+                                  hasIngredients
+                                      ? Icons.check_circle
+                                      : Icons.warning_rounded,
                                   size: 16,
-                                  color: hasIngredients ? Colors.green.shade700 : Colors.red.shade700,
+                                  color: hasIngredients
+                                      ? Colors.green.shade700
+                                      : Colors.red.shade700,
                                 ),
                               ),
-                             const SizedBox(width: 8),
-                             
-                             Expanded(
-                               child: Column(
-                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                 children: [
-                                   Text(name, style: TextStyle(
-                                     fontWeight: FontWeight.w500,
-                                     decoration: isSub ? TextDecoration.lineThrough : null,
-                                     color: isSub ? Colors.grey : Colors.black
-                                   )),
-                                   Row(
-                                     children: [
-                                       Text('Qty: $pax', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                                       const SizedBox(width: 8),
-                                       if (hasIngredients)
-                                         Text('$ingredientCount items', style: TextStyle(fontSize: 10, color: Colors.green.shade700, fontWeight: FontWeight.bold))
-                                       else
-                                         Text('No BOM', style: TextStyle(fontSize: 10, color: Colors.red.shade700, fontWeight: FontWeight.bold)),
-                                     ],
-                                   ),
-                                 ],
-                               ),
-                             ),
-                             
-                             Column(
-                               crossAxisAlignment: CrossAxisAlignment.end,
-                               children: [
-                                 Text(isSub ? 'Subcontract' : 'In-House', 
-                                    style: TextStyle(fontSize: 10, color: isSub ? Colors.purple : Colors.green, fontWeight: FontWeight.bold)),
-                                 Switch(
-                                   value: !isSub, // True = In-House (Include in MRP)
-                                   activeColor: Colors.green,
-                                   inactiveThumbColor: Colors.purple,
-                                   trackColor: MaterialStateProperty.resolveWith((states) => isSub ? Colors.purple.shade100 : Colors.green.shade100),
-                                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                   onChanged: (val) {
+                              const SizedBox(width: 8),
+
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(name,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            decoration: isSub
+                                                ? TextDecoration.lineThrough
+                                                : null,
+                                            color: isSub
+                                                ? Colors.grey
+                                                : Colors.black)),
+                                    Row(
+                                      children: [
+                                        Text('Qty: $pax',
+                                            style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey)),
+                                        const SizedBox(width: 8),
+                                        if (hasIngredients)
+                                          Text('$ingredientCount items',
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.green.shade700,
+                                                  fontWeight: FontWeight.bold))
+                                        else
+                                          Text('No BOM',
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.red.shade700,
+                                                  fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(isSub ? 'Subcontract' : 'In-House',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: isSub
+                                              ? Colors.purple
+                                              : Colors.green,
+                                          fontWeight: FontWeight.bold)),
+                                  Switch(
+                                    value:
+                                        !isSub, // True = In-House (Include in MRP)
+                                    activeThumbColor: Colors.green,
+                                    inactiveThumbColor: Colors.purple,
+                                    trackColor: WidgetStateProperty.resolveWith(
+                                        (states) => isSub
+                                            ? Colors.purple.shade100
+                                            : Colors.green.shade100),
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    onChanged: (val) {
                                       // val=true -> InHouse -> isSub=false
-                                      _toggleDishSubcontract(orderId, index, !val);
-                                   },
-                                 ),
-                               ],
-                             ),
-                          ],
+                                      _toggleDishSubcontract(
+                                          orderId, index, !val);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  }
-                );
+                      );
+                    });
               },
             ),
           ],
@@ -561,11 +670,12 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.mrpRunScreenTitle),
+        title: Text(AppLocalizations.of(context).mrpRunScreenTitle),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
@@ -593,17 +703,18 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 Expanded(
                   child: Text(
                     DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
                 OutlinedButton(
                   onPressed: _selectDate,
-                  child: Text(AppLocalizations.of(context)!.changeDate),
+                  child: Text(AppLocalizations.of(context).changeDate),
                 ),
               ],
             ),
           ),
-          
+
           // Summary Cards (only for Pending tab)
           Container(
             padding: const EdgeInsets.all(16),
@@ -611,13 +722,14 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
               children: [
                 _summaryCard('Pending', '${_orders.length}', Colors.orange),
                 const SizedBox(width: 8),
-                _summaryCard('Processed', '${_processedOrders.length}', Colors.green),
+                _summaryCard(
+                    'Processed', '${_processedOrders.length}', Colors.green),
                 const SizedBox(width: 8),
                 _summaryCard('Total Pax', '$_totalPax', Colors.purple),
               ],
             ),
           ),
-          
+
           // Tabbed Order List
           Expanded(
             child: _isLoading
@@ -631,26 +743,33 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.check_circle, size: 64, color: Colors.green.shade400),
+                                  Icon(Icons.check_circle,
+                                      size: 64, color: Colors.green.shade400),
                                   const SizedBox(height: 16),
-                                  const Text('All orders processed!', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  const Text('All orders processed!',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
                                   const SizedBox(height: 8),
-                                  Text('No pending orders for this date.', style: TextStyle(color: Colors.grey.shade600)),
+                                  Text('No pending orders for this date.',
+                                      style: TextStyle(
+                                          color: Colors.grey.shade600)),
                                 ],
                               ),
                             )
                           : ListView.builder(
                               itemCount: _orders.length,
-                              itemBuilder: (context, index) => _buildOrderCard(_orders[index]),
+                              itemBuilder: (context, index) =>
+                                  _buildOrderCard(_orders[index]),
                             ),
-                      
+
                       // TAB 2: Processed Orders (Read-only)
                       _processedOrders.isEmpty
                           ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.pending_actions, size: 64, color: Colors.grey.shade400),
+                                  Icon(Icons.pending_actions,
+                                      size: 64, color: Colors.grey.shade400),
                                   const SizedBox(height: 16),
                                   const Text('No processed orders yet'),
                                 ],
@@ -658,12 +777,14 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                             )
                           : ListView.builder(
                               itemCount: _processedOrders.length,
-                              itemBuilder: (context, index) => _buildProcessedOrderCard(_processedOrders[index]),
+                              itemBuilder: (context, index) =>
+                                  _buildProcessedOrderCard(
+                                      _processedOrders[index]),
                             ),
                     ],
                   ),
           ),
-          
+
           // Run MRP Button (only visible when on Pending tab with orders)
           if (_orders.isNotEmpty)
             Container(
@@ -674,13 +795,19 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 child: ElevatedButton.icon(
                   onPressed: _isCalculating ? null : _runMrp,
                   icon: _isCalculating
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.calculate),
-                  label: Text(_isCalculating ? AppLocalizations.of(context)!.calculating : AppLocalizations.of(context)!.runMrp),
+                  label: Text(_isCalculating
+                      ? AppLocalizations.of(context).calculating
+                      : AppLocalizations.of(context).runMrp),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -694,7 +821,7 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
   Widget _buildProcessedOrderCard(Map<String, dynamic> order) {
     final mrpStatus = order['mrpStatus'] ?? 'PROCESSED';
     final statusColor = mrpStatus == 'PO_SENT' ? Colors.green : Colors.blue;
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       color: Colors.grey.shade100,
@@ -708,17 +835,19 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
                 color: statusColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text('#${order['id']}', style: TextStyle(color: statusColor)),
+              child:
+                  Text('#${order['id']}', style: TextStyle(color: statusColor)),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(order['customerName'] ?? 'Customer', 
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text('${order['totalPax'] ?? 0} pax', 
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  Text(order['customerName'] ?? 'Customer',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('${order['totalPax'] ?? 0} pax',
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                 ],
               ),
             ),
@@ -730,7 +859,10 @@ class _MrpRunScreenState extends State<MrpRunScreen> with SingleTickerProviderSt
               ),
               child: Text(
                 mrpStatus.toString().replaceAll('_', ' '),
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ],
