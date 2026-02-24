@@ -10,7 +10,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'core/locale_provider.dart';
-
+import 'core/theme_provider.dart';
+import 'core/settings_provider.dart';
 import 'screens/login_screen.dart'; // Full version with biometrics
 import 'screens/main_menu_screen.dart'; // Proper menu navigation
 import 'services/cloud_sync_service.dart'; // Background Sync
@@ -114,10 +115,14 @@ class RuchiServApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => LocaleProvider(),
-      child: Consumer<LocaleProvider>(
-        builder: (context, localeProvider, child) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+      ],
+      child: Consumer2<LocaleProvider, ThemeProvider>(
+        builder: (context, localeProvider, themeProvider, child) {
           return MaterialApp(
             title: 'Ruchiserv Kitchen',
             // App text follows user's language preference
@@ -132,7 +137,7 @@ class RuchiServApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.light,
+            themeMode: themeProvider.themeMode,
             navigatorKey: SessionService.navigatorKey, // Add navigator key
             builder: (context, child) {
               // Version check on app start

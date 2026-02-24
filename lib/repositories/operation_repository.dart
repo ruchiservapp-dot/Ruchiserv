@@ -51,10 +51,8 @@ class OperationRepository {
     final existing = await db.query('attendance',
         where: 'staffId = ? AND date = ?', whereArgs: [staffId, date]);
     if (existing.isNotEmpty) {
-      await cloudSync.awsFirstUpdate(
-          table: 'attendance',
-          recordId: existing.first['id'] as int,
-          data: data);
+      await _dbHelper.updateRecord(
+          'attendance', existing.first['id'] as int, data);
     } else {
       data['uuid'] = const Uuid().v4();
       await cloudSync.awsFirstWrite(table: 'attendance', data: data);
@@ -87,13 +85,8 @@ class OperationRepository {
   }
 
   Future<bool> updateStaffFields(int id, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = id;
     updates['updatedAt'] = DateTime.now().toIso8601String();
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'staff', recordId: id, data: updates);
-    AppLogger.success('✅ [Operation] Updated staff #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('staff', id, updates);
   }
 
   Future<bool> deleteStaff(int id) async {
@@ -116,12 +109,7 @@ class OperationRepository {
 
   Future<bool> updateAttendanceRecord(
       int id, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'attendance', recordId: id, data: updates);
-    AppLogger.success('✅ [Operation] Updated attendance #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('attendance', id, updates);
   }
 
   Future<List<Map<String, dynamic>>> getAttendanceForStaff(
@@ -254,17 +242,11 @@ class OperationRepository {
       'updatedAt': DateTime.now().toIso8601String(),
     };
 
-    return await cloudSync.awsFirstUpdate(
-        table: 'dishes', recordId: dishId, data: data);
+    return await _dbHelper.updateRecord('dishes', dishId, data);
   }
 
   Future<bool> updateUtensil(int id, Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'utensils', recordId: id, data: data);
-    AppLogger.success('✅ [Operation] Updated utensil #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('utensils', id, data);
   }
 
   Future<bool> deleteUtensil(int id) async {
@@ -295,13 +277,8 @@ class OperationRepository {
   }
 
   Future<bool> updateVehicle(int id, Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'vehicles', recordId: id, data: data);
-    AppLogger.success('✅ [Operation] Updated vehicle #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('vehicles', id, data);
   }
 
   Future<bool> deleteVehicle(int id) async {
@@ -381,41 +358,17 @@ class OperationRepository {
     return result.isNotEmpty ? result.first : null;
   }
 
-  Future<void> updateDispatchAssignment(int dispatchId, String status,
-      {String? rejectionReason}) async {
-    final cloudSync = CloudSyncService();
-    final now = DateTime.now().toIso8601String();
-    Map<String, dynamic> updates = {
-      'id': dispatchId,
-      'assignmentStatus': status
-    };
-    if (status == 'ACCEPTED') {
-      updates['acceptedAt'] = now;
-    } else if (status == 'REJECTED') {
-      updates['rejectedAt'] = now;
-      updates['rejectionReason'] = rejectionReason;
-      updates['driverId'] = null;
-    }
-    await cloudSync.awsFirstUpdate(
-        table: 'dispatches', recordId: dispatchId, data: updates);
-    AppLogger.success(
-        '✅ [Operation] Updated assignment #$dispatchId to $status (AWS-first)');
-  }
+    await _dbHelper.updateRecord('dispatches', dispatchId, updates);
 
   Future<void> updateDispatchKmAndEarnings(int dispatchId,
       {double? kmForward, double? kmReturn, double? driverShare}) async {
-    final cloudSync = CloudSyncService();
     Map<String, dynamic> updates = {
-      'id': dispatchId,
       'updatedAt': DateTime.now().toIso8601String()
     };
     if (kmForward != null) updates['kmForward'] = kmForward;
     if (kmReturn != null) updates['kmReturn'] = kmReturn;
     if (driverShare != null) updates['driverShare'] = driverShare;
-    await cloudSync.awsFirstUpdate(
-        table: 'dispatches', recordId: dispatchId, data: updates);
-    AppLogger.success(
-        '✅ [Operation] Updated km/earnings for #$dispatchId (AWS-first)');
+    await _dbHelper.updateRecord('dispatches', dispatchId, updates);
   }
 
   Future<Map<String, dynamic>> getDriverEarningsReport(
@@ -484,38 +437,21 @@ class OperationRepository {
 
   Future<void> updateOrderServiceAssignment(int orderId,
       {int? serviceSubId, int? counterSubId}) async {
-    final cloudSync = CloudSyncService();
-    final updates = <String, dynamic>{'id': orderId};
-    if (serviceSubId != -1) updates['serviceSubcontractorId'] = serviceSubId;
-    if (counterSubId != -1) updates['counterSubcontractorId'] = counterSubId;
-    if (updates.length > 1) {
-      await cloudSync.awsFirstUpdate(
-          table: 'orders', recordId: orderId, data: updates);
-      AppLogger.success(
-          '✅ [Operation] Updated service assignments for order #$orderId (AWS-first)');
+    if (updates.isNotEmpty) {
+      await _dbHelper.updateRecord('orders', orderId, updates);
     }
   }
 
   Future<void> assignDriverToDispatch(int dispatchId, int driverId) async {
-    final db = await _dbHelper.database;
-    await db.update(
-        'dispatches',
-        {
-          'driverId': driverId,
-          'assignmentStatus': 'PENDING',
-          'assignedAt': DateTime.now().toIso8601String()
-        },
-        where: 'id = ?',
-        whereArgs: [dispatchId]);
+    await _dbHelper.updateRecord('dispatches', dispatchId, {
+      'driverId': driverId,
+      'assignmentStatus': 'PENDING',
+      'assignedAt': DateTime.now().toIso8601String()
+    });
   }
 
   Future<bool> updateDispatchItem(int id, Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'dispatch_items', recordId: id, data: data);
-    AppLogger.success('✅ [Operation] Updated dispatch item #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('dispatch_items', id, data);
   }
 
   Future<bool> updateUtensilByName(
@@ -526,19 +462,11 @@ class OperationRepository {
     if (res.isEmpty) return false;
     final id = res.first['id'] as int;
     final cloudSync = CloudSyncService();
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'utensils', recordId: id, data: data);
-    AppLogger.success('✅ [Operation] Updated utensil "$name" (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('utensils', id, data);
   }
 
   Future<bool> updateDispatch(int id, Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'dispatches', recordId: id, data: data);
-    AppLogger.success('✅ [Operation] Updated dispatch #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('dispatches', id, data);
   }
 
   // ---------- DISPATCH HUB SPECIALIZED QUERIES ----------

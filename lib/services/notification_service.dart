@@ -123,7 +123,7 @@ class NotificationService {
       'driverMobile': vehicleData['driverMobile'] ?? '',
       'vehicleNumber': vehicleData['vehicleNumber'] ?? '',
       'trackingUrl': trackingUrl,
-      'channels': ['WHATSAPP', 'SMS'],
+      'channels': ['WHATSAPP', 'SMS', 'EMAIL'],
       'message': '''🚚 Your order is on the way!
 
 Driver: ${vehicleData['driverName'] ?? 'N/A'}

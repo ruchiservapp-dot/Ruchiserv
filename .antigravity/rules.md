@@ -18,7 +18,7 @@ A.5 MEMORY & CPU LIMITS: Lambda/Cloud functions must be coded efficiently. Long 
 SECTION B: SECURITY & CONCURRENCY
 B.1 TENANT ISOLATION (CRITICAL): Every single database query accessing user data MUST include a WHERE firm_id = [current_firm_id]. No cross-firm data leakage is allowed.
 
-B.2 CONCURRENCY SAFETY: When updating shared resources, you MUST use database row-level locking or optimistic locking.
+B.2 CONCURRENCY SAFETY (ATOMIC MERGE): All data updates MUST use `DatabaseHelper.updateRecord`. Direct writes to SQLite that bypass the merge logic are strictly forbidden. Use `awsFirstUpdate` via `CloudSyncService` for all synced tables.
 
 B.3 API INPUT VALIDATION: Every API endpoint must validate required fields, types, ranges, and length before processing data.
 

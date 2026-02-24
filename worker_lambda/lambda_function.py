@@ -147,6 +147,8 @@ def process_notification(data):
         if not success:
             print(f"⚠️ Template dispatch_notification failed.")
             
+        send_dispatch_email(data)
+            
         return
 
     # === HANDLE DISPATCH ACCEPTED (Send Tracking Link from Driver App) ===
@@ -531,6 +533,55 @@ RuchiServ Team
         print(f"✅ Email sent to: {recipient}")
     except Exception as e:
         print(f"❌ Email Error: {e}")
+
+def send_dispatch_email(data):
+    sender = os.environ.get('SENDER_EMAIL')
+    if not sender:
+        print("Skipping Email: Missing SENDER_EMAIL")
+        return
+
+    recipient = data.get('email')
+    if not recipient or recipient.strip() == '':
+        print(f"Skipping Dispatch Email: No email address for dispatch #{data.get('dispatchId')}")
+        return
+        
+    order_id = data.get('orderId', 'Unknown')
+    customer_name = data.get('customerName', 'Customer')
+    driver_name = data.get('driverName', 'N/A')
+    vehicle_number = data.get('vehicleNumber', 'N/A')
+    driver_mobile = data.get('driverMobile', 'N/A')
+    tracking_url = data.get('trackingUrl', f"https://ruchiserv.in/track/{data.get('dispatchId', '')}")
+    
+    msg = MIMEMultipart()
+    msg['Subject'] = f"RuchiServ - Your Order is on the way!"
+    msg['From'] = sender
+    msg['To'] = recipient
+    
+    body = f"""Dear {customer_name},
+
+Your order #{order_id} has been dispatched and is on the way!
+
+Driver Details:
+Name: {driver_name}
+Vehicle: {vehicle_number}
+Contact: {driver_mobile}
+
+You can track your delivery in real-time here:
+{tracking_url}
+
+Thank you for choosing RuchiServ Catering!
+"""
+    msg.attach(MIMEText(body, 'plain'))
+    
+    try:
+        ses.send_raw_email(
+            Source=sender,
+            Destinations=[recipient],
+            RawMessage={'Data': msg.as_string()}
+        )
+        print(f"✅ Dispatch Email sent to: {recipient}")
+    except Exception as e:
+        print(f"❌ Dispatch Email Error: {e}")
 
 def send_sms(mobile, order):
     api_key = os.environ.get('SMS_API_KEY')

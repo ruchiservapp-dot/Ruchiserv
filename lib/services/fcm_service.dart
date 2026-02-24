@@ -58,6 +58,24 @@ class FcmService {
       saveTokenToBackend(newToken);
     });
 
+    // 3b. Configure Foreground Notifications for iOS/Android
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings();
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+      macOS: initializationSettingsIOS,
+    );
+    await _localNotifications.initialize(initializationSettings);
+
     // 4. Foreground Message Handler - PUSH-PULL SYNC TRIGGER
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       AppLogger.info('📩 Foreground Message: ${message.data}');
@@ -102,10 +120,34 @@ class FcmService {
 
   /// Display a local notification when app is in foreground
   static Future<void> _showLocalNotification(RemoteMessage message) async {
-    // Basic setup for local notifications usually requires more init in main.dart
-    // For now, we just print, but this is where you'd show a dialog or snackbar
-    AppLogger.info(
-        "🔔 Notification: ${message.notification?.title} - ${message.notification?.body}");
+    final notification = message.notification;
+    if (notification == null) return;
+
+    AppLogger.info("🔔 Foreground Notification Triggered: ${notification.title}");
+
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'ruchiserv_high_importance_channel', // Must match AndroidManifest
+      'Alerts', // Channel name
+      channelDescription: 'High importance notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      icon: '@mipmap/launcher_icon',
+      showWhen: true,
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    // Create a unique ID based on timestamp to avoid overlapping notifications
+    final id = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    await _localNotifications.show(
+      id,
+      notification.title,
+      notification.body,
+      platformChannelSpecifics,
+      payload: message.data.toString(),
+    );
   }
 
   /// Save FCM token to the User table in AWS

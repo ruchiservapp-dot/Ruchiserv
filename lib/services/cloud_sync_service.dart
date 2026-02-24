@@ -55,6 +55,10 @@ class CloudSyncService {
     'dish_master',
     'recipe_detail',
     'salary_disbursements',
+    'dispatch_items', // v44: Added for cross-device tracking
+    'transactions', // v44: Added for ledger parity
+    'staff_assignments', // v44: Added for driver portal parity
+    'service_rates', // v44: Added for configuration parity
   ];
 
   /// Get current firm ID
@@ -179,22 +183,36 @@ class CloudSyncService {
       if (isOnline) {
         try {
           final awsData = _prepareAwsRecord(table, firmId, data);
+          // v44: Extract prev_updated_at for backend-level OCC
+          final prevUpdatedAt = data['prev_updated_at'];
+          
           final resp = await AwsApi.pushToQueue(
             payload: {
               'method': 'PUT',
               'table': 'ruchiserv_data',
               'firmId': firmId,
+              'prev_updated_at': prevUpdatedAt, // Passed to Lambda ConditionExpression
               'data': _injectGsiAttributes(table, firmId, awsData),
             },
           );
+
+          if (resp['error'] == 'conflict_detected' || resp['message'] == 'conflict_detected') {
+            AppLogger.warning('🚩 CloudSync: Conflict detected for $table#$recordId. Forcing re-sync.');
+            await syncTableFromCloud(table, firmId, force: true);
+            return false; 
+          }
 
           if (resp['error'] == null &&
               resp['status'] != 'error' &&
               resp['message'] != 'This account is suspended') {
             data['sync_status'] = 'SYNCED';
             data['synced_at'] = now;
-            await db
-                .update(table, data, where: 'id = ?', whereArgs: [recordId]);
+            
+            // Remove metadata before writing to SQL
+            final sqlData = Map<String, dynamic>.from(data);
+            sqlData.remove('prev_updated_at');
+            
+            await db.update(table, sqlData, where: 'id = ?', whereArgs: [recordId]);
             AppLogger.success(
                 '✅ CloudSync [AWS-First]: $table#$recordId updated and synced');
             return true;
@@ -209,7 +227,11 @@ class CloudSyncService {
       }
 
       data['sync_status'] = 'PENDING';
-      await db.update(table, data, where: 'id = ?', whereArgs: [recordId]);
+      
+      final sqlData = Map<String, dynamic>.from(data);
+      sqlData.remove('prev_updated_at');
+      
+      await db.update(table, sqlData, where: 'id = ?', whereArgs: [recordId]);
       await _queuePendingSyncEnhanced(table, recordId, data, 'PUT');
       AppLogger.info(
           '📥 CloudSync [AWS-First]: $table#$recordId queued for update');
@@ -326,6 +348,7 @@ class CloudSyncService {
     required String table,
     required int recordId,
     required Map<String, dynamic> data,
+    bool isRetry = false, // v44: Prevent recursive re-queuing
   }) async {
     final firmId = await _getFirmId();
     if (firmId == null || firmId == 'DEFAULT') {
@@ -335,9 +358,11 @@ class CloudSyncService {
 
     final isOnline = await ConnectivityService().isOnline();
     if (!isOnline) {
-      // Queue for later sync
-      await _queuePendingSync(table, recordId, data, 'PUT');
-      AppLogger.info('📥 CloudSync: Offline - queued for later');
+      if (!isRetry) {
+        // Queue for later sync
+        await _queuePendingSync(table, recordId, data, 'PUT');
+        AppLogger.info('📥 CloudSync: Offline - queued for later');
+      }
       return false;
     }
 
@@ -374,7 +399,7 @@ class CloudSyncService {
       if (resp['error'] != null || resp['status'] == 'error') {
         AppLogger.error(
             '❌ CloudSync: Failed to queue $table#$recordId: ${resp['error'] ?? resp['message']}');
-        await _queuePendingSync(table, recordId, data, 'PUT');
+        if (!isRetry) await _queuePendingSync(table, recordId, data, 'PUT');
         return false;
       }
 
@@ -382,7 +407,7 @@ class CloudSyncService {
       return true;
     } catch (e) {
       AppLogger.error('❌ CloudSync: Exception syncing $table#$recordId: $e');
-      await _queuePendingSync(table, recordId, data, 'PUT');
+      if (!isRetry) await _queuePendingSync(table, recordId, data, 'PUT');
       return false;
     }
   }
@@ -391,6 +416,7 @@ class CloudSyncService {
   Future<bool> deleteRecord({
     required String table,
     required int recordId,
+    bool isRetry = false, // v44
   }) async {
     final firmId = await _getFirmId();
     if (firmId == null) return false;
@@ -529,15 +555,21 @@ class CloudSyncService {
           final localId =
               localIdRaw == null ? null : int.tryParse(localIdRaw.toString());
 
+          // v44: Handle Soft Deletion propagation
+          if (data['is_deleted'] == true) {
+            final uuid = data['uuid']?.toString();
+            final id = localId; // from local_id field
+            
+            if (uuid != null) {
+              await db.delete(table, where: 'uuid = ?', whereArgs: [uuid]);
+            } else if (id != null) {
+              await db.delete(table, where: 'id = ?', whereArgs: [id]);
+            }
+            AppLogger.info('    🗑️ CloudSync: Removed $table#${uuid ?? id} (propagated delete)');
+            continue;
+          }
+
           // Remove DynamoDB metadata (but keep firmId - needed for tables)
-          data.remove('pk');
-          data.remove('sk');
-          data.remove('table_name');
-          data.remove('local_id');
-          data.remove('synced_at');
-          data.remove('gsi_partition'); // Fix: Remove GSI keys not in local DB
-          data.remove('gsi_sort'); // Fix: Remove GSI keys not in local DB
-          // data.remove('firmId'); // KEEP firmId, required for local DB constraints
 
           // Sanitize for SQLite (convert string numbers back)
           final sanitized = sanitizeForSqlite(data);
@@ -744,6 +776,7 @@ class CloudSyncService {
       case 'finance':
       case 'attendance':
       case 'invoices':
+      case 'transactions': // v44: Use date for ledger GSI
         return data['date']?.toString() ??
             data['invoiceDate']?.toString() ??
             '';
@@ -779,7 +812,10 @@ class CloudSyncService {
       'vehicleNumber',
       'zip',
       'pin',
-      'postalCode'
+      'postalCode',
+      'passwordHash', // v44: Critical - prevent numeric casting
+      'uuid', // v44: Critical - keep as string
+      'id', // v44: Keep local ID as string if incoming from cloud
     };
 
     final result = <String, dynamic>{};
@@ -883,9 +919,9 @@ class CloudSyncService {
       try {
         if (action == 'PUT') {
           success =
-              await syncRecord(table: table, recordId: recordId, data: data);
+              await syncRecord(table: table, recordId: recordId, data: data, isRetry: true);
         } else if (action == 'DELETE') {
-          success = await deleteRecord(table: table, recordId: recordId);
+          success = await deleteRecord(table: table, recordId: recordId, isRetry: true);
         }
       } catch (e) {
         errorMessage = e.toString();

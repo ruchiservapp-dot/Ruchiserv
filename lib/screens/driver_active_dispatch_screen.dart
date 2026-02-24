@@ -11,6 +11,7 @@ import 'dart:async'; // For Timer
 import 'package:ruchiserv/repositories/operation_repository.dart';
 import 'driver_return_screen.dart';
 import '../utils/time_utils.dart';
+import '../services/notification_service.dart';
 
 class DriverActiveDispatchScreen extends StatefulWidget {
   final Map<String, dynamic> dispatch;
@@ -151,8 +152,26 @@ class _DriverActiveDispatchScreenState extends State<DriverActiveDispatchScreen>
       if (nextStatus == 'DISPATCHED') {
         updates['dispatchTime'] = now;
         updates['kmForward'] = double.tryParse(_kmForwardController.text) ?? 0;
+        
+        // Queue customer notification for tracking
+        NotificationService.queueDispatchNotification(
+          dispatchId: _dispatch['id'],
+          orderData: _order,
+          vehicleData: {
+            'driverName': _dispatch['driverName'] ?? 'Our Driver',
+            'driverMobile': _dispatch['driverMobile'] ?? '',
+            'vehicleNumber': _dispatch['vehicleNumber'] ?? 'Assigned Vehicle',
+          },
+        ).catchError((e) => AppLogger.info('Failed to send tracking notification: $e'));
+        
       } else if (nextStatus == 'DELIVERED') {
         updates['deliveredAt'] = now;
+        
+        NotificationService.queueDeliveryComplete(
+          dispatchId: _dispatch['id'],
+          orderData: _order,
+        ).catchError((e) => AppLogger.info('Failed to send delivery notification: $e'));
+        
       } else if (nextStatus == 'RETURNING') {
         updates['returnTime'] = now;
         updates['kmReturn'] = double.tryParse(_kmReturnController.text) ?? 0;

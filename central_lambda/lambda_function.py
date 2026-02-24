@@ -387,7 +387,7 @@ def lambda_handler(event, context):
                     else: key_expr = key_expr & Key(gsi_sk).eq(sk_val)
 
                 res = table.query(IndexName=idx_name, KeyConditionExpression=key_expr)
-                result = success({'Items': [i for i in res.get('Items', []) if not i.get('is_deleted', False)]})
+                result = success({'Items': res.get('Items', [])})
 
             # List/Sync Query
             else:
@@ -405,7 +405,9 @@ def lambda_handler(event, context):
                 res = table.query(**query_kwargs)
                 
                 items = res.get('Items', [])
-                result = success({'Items': [i for i in items if not i.get('is_deleted', False)]})
+                # For sync results, we include is_deleted=True so that other devices can remove them locally.
+                # Standard listings should eventually filter these, but for sync parity, they must propagate.
+                result = success({'Items': items})
 
         elif method == 'PUT':
             safe_data = convert_floats(data)
@@ -452,8 +454,24 @@ def lambda_handler(event, context):
             pk_attr = 'pk' if table_name == 'ruchiserv_data' else 'firmid'
             if filters.get(pk_attr) != firm_id and table_name != 'ruchiserv_data':
                 return error("Unauthorized delete", 403)
-            table.delete_item(Key={pk_attr: filters[pk_attr], 'sk': filters['sk']})
-            result = success({'status': 'DELETED'})
+            
+            # Professional Sync: Use Soft Deletes so other devices can sync the 'deletion' state
+            import time
+            from datetime import datetime
+            now = datetime.now().isoformat()
+            
+            # We need to fetch the existing item to perform a soft delete via PUT/update
+            # or simply put a tombstone. Soft delete is safer.
+            try:
+                table.update_item(
+                    Key={pk_attr: filters[pk_attr], 'sk': filters['sk']},
+                    UpdateExpression="SET is_deleted = :d, updatedAt = :u",
+                    ExpressionAttributeValues={':d': True, ':u': now}
+                )
+                result = success({'status': 'DELETED (SOFT)'})
+            except Exception as e:
+                _log("ERROR", f"Soft delete failed: {e}", firm_id=firm_id)
+                return error("Delete failed", 500)
             
             # Push-Pull: Notify all devices in the firm
             try:

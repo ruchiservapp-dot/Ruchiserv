@@ -1,0 +1,24 @@
+# RuchiServ Anti-Regression Policy (CRITICAL AI INSTRUCTIONS)
+
+You are interacting with the `RuchiServ` commercial codebase. This project has suffered from severe AI-induced regressions where multiple AI models across different chat sessions have overwritten previous fixes, resulting in "going in circles" and redundant UI bugs. 
+
+**This file is strictly enforced. Any AI reading this MUST abide by the following rules before writing any code.**
+
+## 1. Mandatory Pre-Flight Context Check
+Before modifying ANY existing file (especially `DatabaseHelper.dart`, `SettingsScreen.dart`, `GeneralSettingsScreen.dart`, or `PaymentSettingsScreen.dart`), you MUST:
+1. Run `git diff <filename>` to see if there are uncommitted changes from another recent chat session that you are about to overwrite.
+2. Run `git log -n 3 --oneline` to understand the immediate prior context. 
+3. *Never assume your LLM context window has the latest version of the file.* Always rely on `view_file` or `cat` to read the absolute latest disk state before executing a replace operation.
+
+## 2. The Strict Duplication Ban (Settings Menus)
+Under NO CIRCUMSTANCES should you re-introduce the following removed items:
+*   **Duplicate Payment Settings:** `PaymentSettings` belongs inside `GeneralSettingsScreen`. Do NOT add it back as a standalone item in `SettingsScreen`.
+*   **Duplicate Subscriptions:** `Manage Subscription` belongs in `SettingsScreen`. Do NOT duplicate it inside `GeneralSettingsScreen`.
+*   **Debug/Dummy Data:** Do NOT re-add the "Test Payment Info" (sandbox card mock) into `PaymentSettingsScreen`. 
+*   **Debug Database Tools:** Do NOT re-add the "Fix Database Schema" button into `GeneralSettingsScreen`.
+
+## 3. UI vs. Database Separation
+When an objective requires both Frontend UI fixes and Backend Database fixes, you must treat them as separate atomic operations. 
+*   Do not overwrite a perfectly fine `SettingsScreen.dart` just because you needed to fix `SchemaManager`. 
+
+**Failure to abide by these rules will result in unacceptable regressions.**

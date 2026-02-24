@@ -176,16 +176,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 ListTile(
                   leading:
-                      const Icon(Icons.payment_rounded, color: Colors.indigo),
-                  title: const Text("Payment Settings"),
-                  subtitle: const Text("Configure payment gateways"),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => PaymentSettingsScreen()),
-                  ),
-                ),
-                ListTile(
-                  leading:
                       const Icon(Icons.settings_rounded, color: Colors.indigo),
                   title: const Text("General Settings"),
                   subtitle: const Text("Theme, Notifications, Security"),

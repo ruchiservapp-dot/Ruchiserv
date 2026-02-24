@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 class PaymentSettingsScreen extends StatefulWidget {
   const PaymentSettingsScreen({super.key});
 
@@ -10,31 +10,8 @@ class PaymentSettingsScreen extends StatefulWidget {
 }
 
 class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
-  bool _cashfreeEnabled = true;
-  bool _upiEnabled = true;
-  bool _cardEnabled = true;
-  bool _isLoading = true;
+  // Local state removed, using SettingsProvider via Consumer
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final sp = await SharedPreferences.getInstance();
-    setState(() {
-      _cashfreeEnabled = sp.getBool('payment_cashfree') ?? true;
-      _upiEnabled = sp.getBool('payment_upi') ?? true;
-      _cardEnabled = sp.getBool('payment_card') ?? true;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _saveSetting(String key, bool val) async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.setBool(key, val);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,60 +50,38 @@ class _PaymentSettingsScreenState extends State<PaymentSettingsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          SwitchListTile(
-            title: const Text("Cashfree Payments"),
-            subtitle: const Text("Enable Cashfree for customer payments"),
-            value: _cashfreeEnabled,
-            onChanged: (val) {
-              setState(() => _cashfreeEnabled = val);
-              _saveSetting('payment_cashfree', val);
-            },
-          ),
-          SwitchListTile(
-            title: const Text("UPI (0% fee)"),
-            subtitle: const Text("Enable UPI payments via Cashfree"),
-            value: _upiEnabled,
-            onChanged: (val) {
-              setState(() => _upiEnabled = val);
-              _saveSetting('payment_upi', val);
-            },
-          ),
-          SwitchListTile(
-            title: const Text("Card Payments"),
-            subtitle: const Text("Accept Credit/Debit cards (1.9% fee)"),
-            value: _cardEnabled,
-            onChanged: (val) {
-              setState(() => _cardEnabled = val);
-              _saveSetting('payment_card', val);
-            },
-          ),
-          if (kDebugMode) ...[
-            const Divider(),
-            const SizedBox(height: 16),
-            const Text("Test Payment",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: () {
-                // Mock payment
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Test Mode Active"),
-                    content: const Text(
-                        "Cashfree SDK is in sandbox mode. Use test card 4111 1111 1111 1111 for testing."),
-                    actions: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("OK")),
-                    ],
+          Consumer<SettingsProvider>(
+            builder: (context, settings, child) {
+              return Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text("Cashfree Payments"),
+                    subtitle: const Text("Enable Cashfree for customer payments"),
+                    value: settings.paymentCashfree,
+                    onChanged: (val) {
+                      settings.setPaymentCashfree(val);
+                    },
                   ),
-                );
-              },
-              icon: const Icon(Icons.payment),
-              label: const Text("Test Payment Info"),
-            ),
-          ],
+                  SwitchListTile(
+                    title: const Text("UPI (0% fee)"),
+                    subtitle: const Text("Enable UPI payments via Cashfree"),
+                    value: settings.paymentUpi,
+                    onChanged: (val) {
+                      settings.setPaymentUpi(val);
+                    },
+                  ),
+                  SwitchListTile(
+                    title: const Text("Card Payments"),
+                    subtitle: const Text("Accept Credit/Debit cards (1.9% fee)"),
+                    value: settings.paymentCard,
+                    onChanged: (val) {
+                      settings.setPaymentCard(val);
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );

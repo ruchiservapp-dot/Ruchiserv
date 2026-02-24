@@ -40,17 +40,9 @@ class FinanceRepository {
   }
 
   Future<int> updateTransaction(int id, Map<String, dynamic> data) async {
-    final db = await _dbHelper.database;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final rows =
-        await db.update('transactions', data, where: 'id = ?', whereArgs: [id]);
-
-    _dbHelper.syncStreamController.add(SyncEvent(
-        table: 'transactions',
-        data: {...data, 'id': id},
-        action: 'UPDATE',
-        filters: {'id': id}));
-    return rows;
+    final success = await _dbHelper.updateRecord('transactions', id, data);
+    return success ? 1 : 0;
   }
 
   Future<int> deleteTransaction(int id) async {
@@ -227,10 +219,7 @@ class FinanceRepository {
 
   Future<bool> updatePurchaseOrderFields(
       int id, Map<String, dynamic> updates) async {
-    final success = await CloudSyncService()
-        .awsFirstUpdate(table: 'purchase_orders', recordId: id, data: updates);
-    AppLogger.success('✅ [Finance] Updated PO #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('purchase_orders', id, updates);
   }
 
   // ---------- MASTER DATA (FINANCIAL ENTITIES) ----------
@@ -290,6 +279,13 @@ class FinanceRepository {
       required String status,
       String? txnId}) async {
     final db = await _dbHelper.database;
+    // v44: firms table uses firmId as pk, but our updateRecord expects int id.
+    // However, firms table DOES have an autoincrement id.
+    final res = await db.query('firms',
+        columns: ['id'], where: 'firmId = ?', whereArgs: [firmId]);
+    if (res.isEmpty) return;
+    final id = res.first['id'] as int;
+
     final data = {
       'subscriptionPlan': plan,
       'subscriptionEnd': endDate,
@@ -297,12 +293,7 @@ class FinanceRepository {
       if (txnId != null) 'lastRenewalTxnId': txnId,
       'updatedAt': DateTime.now().toIso8601String(),
     };
-    await db.update('firms', data, where: 'firmId = ?', whereArgs: [firmId]);
-    _dbHelper.syncStreamController.add(SyncEvent(
-        table: 'firms',
-        data: {...data, 'firmId': firmId},
-        action: 'UPDATE',
-        filters: {'firmId': firmId}));
+    await _dbHelper.updateRecord('firms', id, data);
   }
 
   // --- SUBCONTRACTORS ---
@@ -588,13 +579,11 @@ class FinanceRepository {
       if (ids.split(',').map((s) => s.trim()).contains(orderId.toString()) &&
           po['status'] != 'CANCELLED') {
         final up = {
-          'id': po['id'],
           'status': 'CANCELLED',
           'cancelledAt': DateTime.now().toIso8601String(),
           'cancelReason': 'Order updated - MRP re-run required'
         };
-        await cloudSync.awsFirstUpdate(
-            table: 'purchase_orders', recordId: po['id'] as int, data: up);
+        await _dbHelper.updateRecord('purchase_orders', po['id'] as int, up);
         cancelled.add(po);
       }
     }
@@ -697,9 +686,7 @@ class FinanceRepository {
     final newPaid = paid + amount;
     final status = newPaid >= total ? 'PAID' : 'PARTIAL';
 
-    await cloudSync
-        .awsFirstUpdate(table: 'invoices', recordId: invoiceId, data: {
-      'id': invoiceId,
+    await _dbHelper.updateRecord('invoices', invoiceId, {
       'amountPaid': newPaid,
       'status': status,
       'updatedAt': DateTime.now().toIso8601String(),

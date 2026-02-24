@@ -96,10 +96,9 @@ class InventoryRepository {
   }
 
   Future<int> updateIngredient(int id, Map<String, dynamic> data) async {
-    final db = await _dbHelper.database;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    return await db
-        .update('ingredients_master', data, where: 'id = ?', whereArgs: [id]);
+    final success = await _dbHelper.updateRecord('ingredients_master', id, data);
+    return success ? 1 : 0;
   }
 
   Future<void> cancelPOsForOrder(int orderId) async {
@@ -111,14 +110,10 @@ class InventoryRepository {
         .query('purchase_orders', where: 'orderId = ?', whereArgs: [orderId]);
     for (var po in pos) {
       final poId = po['id'] as int;
-      await cloudSync.awsFirstUpdate(
-        table: 'purchase_orders',
-        recordId: poId,
-        data: {
-          'status': 'CANCELLED',
-          'updatedAt': DateTime.now().toIso8601String(),
-        },
-      );
+      await _dbHelper.updateRecord('purchase_orders', poId, {
+        'status': 'CANCELLED',
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
       AppLogger.info('🚫 [Inventory] Cancelled PO #$poId for order #$orderId');
     }
   }
@@ -274,10 +269,7 @@ class InventoryRepository {
   }
 
   Future<bool> updateBomItem(int id, Map<String, dynamic> data) async {
-    final success = await CloudSyncService()
-        .awsFirstUpdate(table: 'recipe_detail', recordId: id, data: data);
-    AppLogger.success('✅ [BOM] Updated recipe_detail #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('recipe_detail', id, data);
   }
 
   // ---------- MRP (Material Requirements Planning) ----------
@@ -720,16 +712,14 @@ class InventoryRepository {
   }
 
   Future<void> resetOrderForMRP(int orderId) async {
-    final cloudSync = CloudSyncService();
     final updates = {
-      'id': orderId,
       'mrpStatus': 'PENDING',
       'mrpRunId': null,
       'isLocked': 0,
       'lockedAt': null,
+      'updatedAt': DateTime.now().toIso8601String(),
     };
-    await cloudSync.awsFirstUpdate(
-        table: 'orders', recordId: orderId, data: updates);
+    await _dbHelper.updateRecord('orders', orderId, updates);
     AppLogger.info(
         '📦 [Inventory] Reset order $orderId for MRP re-run (AWS-first)');
   }

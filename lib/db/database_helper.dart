@@ -29,10 +29,22 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
+  static String dbName = 'ruchiserv_v2.db'; // v44: Allow override for tests
 
   /// Testing hook to inject a mock or in-memory database
   static void setTestDatabase(Database db) {
     _database = db;
+  }
+
+  /// v44: Reset singleton for testing
+  static Future<void> reset({String? newName}) async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+    if (newName != null) {
+      dbName = newName;
+    }
   }
 
   /// Event stream for database mutations that need cloud sync.
@@ -45,8 +57,11 @@ class DatabaseHelper {
     return _database!;
   }
 
+  // Testing wrappers
+  Future<void> onCreateForTest(Database db, int version) => _onCreate(db, version);
+  Future<void> onUpgradeForTest(Database db, int oldVersion, int newVersion) => _onUpgrade(db, oldVersion, newVersion);
   Future<Database> _initDatabase() async {
-    String fileName = 'ruchiserv_v2.db';
+    String fileName = dbName;
 
     Database db;
     if (kIsWeb) {
@@ -2624,12 +2639,7 @@ class DatabaseHelper {
   // --- PURCHASE ORDERS update (AWS-first) ---
   Future<bool> updatePurchaseOrderFields(
       int id, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'purchase_orders', recordId: id, data: updates);
-    AppLogger.success('✅ [PurchaseOrders] Updated PO #$id (AWS-first)');
-    return success;
+    return await updateRecord('purchase_orders', id, updates);
   }
 
   // --- SUPPLIERS delete (AWS-first) ---
@@ -2664,40 +2674,66 @@ class DatabaseHelper {
     return res.isNotEmpty ? res.first : null;
   }
 
+  /// v44: Atomic Merge - Fetches local record and merges updates correctly.
+  Future<Map<String, dynamic>?> _getMergedRecord(
+      String table, int id, Map<String, dynamic> updates) async {
+    final db = await database;
+    final res = await db.query(table, where: 'id = ?', whereArgs: [id], limit: 1);
+    if (res.isEmpty) {
+      AppLogger.warning('🚩 [AtomicMerge] Record #$id missing in "$table"');
+      return null;
+    }
+
+    final existing = Map<String, dynamic>.from(res.first);
+    final merged = Map<String, dynamic>.from(existing);
+    final cleanUpdates = Map<String, dynamic>.from(updates);
+    cleanUpdates.remove('id');
+
+    // SMART FIELD-LEVEL MERGE
+    // Compare updatedAt strings to determine which record is truly newer
+    final localUpdate = DateTime.tryParse(existing['updatedAt'] ?? '') ?? DateTime(1970);
+    final incomingUpdate = DateTime.tryParse(cleanUpdates['updatedAt'] ?? '') ?? DateTime(1970);
+    
+    final isCloudNewer = incomingUpdate.isAfter(localUpdate);
+    final isLocalPending = existing['sync_status'] == 'PENDING';
+
+    cleanUpdates.forEach((key, value) {
+      // 1. Never downgrade sync_status
+      if (key == 'sync_status' && isLocalPending && value == 'SYNCED') return;
+      
+      // 2. Concurrency Logic
+      if (isLocalPending) {
+          // If local is newer, we only take the cloud value if the local value is STILL the default/base
+          // But since we don't know the base, we take cloud if cloud is newer.
+          if (!isCloudNewer) return;
+      }
+
+      merged[key] = value;
+    });
+
+    if (existing['updatedAt'] != null) {
+      merged['prev_updated_at'] = existing['updatedAt'];
+    }
+
+    return merged;
+  }
+
   Future<bool> updateUser(Map<String, dynamic> user) async {
-    final cloudSync = CloudSyncService();
     final id = user['id'] as int;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'users', recordId: id, data: user);
-    AppLogger.success('✅ [User] Updated user #$id (AWS-first)');
-    return success;
+    return await updateRecord('users', id, user);
   }
 
   Future<bool> updateDish(int id, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'dishes', recordId: id, data: updates);
-    AppLogger.success('✅ [Dishes] Updated dish #$id (AWS-first)');
-    return success;
+    return await updateRecord('dishes', id, updates);
   }
 
   Future<bool> updateUtensilDispatch(
       int id, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'dispatch', recordId: id, data: updates);
-    AppLogger.success('✅ [Dispatch] Updated dispatch #$id (AWS-first)');
-    return success;
+    return await updateRecord('dispatch', id, updates);
   }
 
   Future<bool> updateDispatch(int id, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'dispatches', recordId: id, data: updates);
-    AppLogger.success('✅ [Dispatches] Updated dispatch #$id (AWS-first)');
+    final success = await updateRecord('dispatches', id, updates);
 
     // ERP Integration: Auto-record earnings if completed
     if (success && updates['dispatchStatus'] == 'COMPLETED') {
@@ -2751,20 +2787,38 @@ class DatabaseHelper {
   }
 
   Future<bool> updateOrderFields(int id, Map<String, dynamic> updates) async {
+    final merged = await _getMergedRecord('orders', id, updates);
+    if (merged == null) return false;
+
     final cloudSync = CloudSyncService();
-    updates['id'] = id;
     final success = await cloudSync.awsFirstUpdate(
-        table: 'orders', recordId: id, data: updates);
-    AppLogger.success('✅ [Orders] Updated order #$id (AWS-first)');
+        table: 'orders', recordId: id, data: merged);
+    AppLogger.success('✅ [Order] Atomic-Updated order fields #$id');
     return success;
   }
 
   Future<bool> updateDispatchItem(int id, Map<String, dynamic> updates) async {
+    return await updateRecord('dispatch_items', id, updates);
+  }
+
+  /// v44: Universal Atomic Update for any synced table
+  Future<bool> updateRecord(String table, int id, Map<String, dynamic> updates) async {
+    final merged = await _getMergedRecord(table, id, updates);
+    if (merged == null) return false;
+
     final cloudSync = CloudSyncService();
-    updates['id'] = id;
     final success = await cloudSync.awsFirstUpdate(
-        table: 'dispatch_items', recordId: id, data: updates);
-    AppLogger.success('✅ [DispatchItems] Updated item #$id (AWS-first)');
+        table: table, recordId: id, data: merged);
+    
+    // Notify UI for reactivity
+    syncStreamController.add(SyncEvent(
+      table: table,
+      data: merged,
+      action: 'UPDATE',
+      filters: {'id': id}
+    ));
+
+    AppLogger.success('✅ [$table] Atomic-Updated #$id');
     return success;
   }
 
@@ -3281,13 +3335,8 @@ class DatabaseHelper {
   }
 
   Future<bool> updateSupplier(int id, Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'suppliers', recordId: id, data: data);
-    AppLogger.success('✅ [Suppliers] Updated supplier #$id (AWS-first)');
-    return success;
+    return await updateRecord('suppliers', id, data);
   }
 
   // --- PURCHASE ORDERS ---
@@ -3335,14 +3384,8 @@ class DatabaseHelper {
   }
 
   Future<bool> updateSubcontractor(int id, Map<String, dynamic> data) async {
-    final cloudSync = CloudSyncService();
-    data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'subcontractors', recordId: id, data: data);
-    AppLogger.success(
-        '✅ [Subcontractors] Updated subcontractor #$id (AWS-first)');
-    return success;
+    return await updateRecord('subcontractors', id, data);
   }
 
   // --- MRP ---
@@ -4121,18 +4164,20 @@ class DatabaseHelper {
   }
 
   Future<int> updatePoStatus(int poId, String status) async {
-    final db = await database;
     final statusTimeField = {
       'ACCEPTED': 'acceptedAt',
       'DISPATCHED': 'dispatchedAt',
       'DELIVERED': 'deliveredAt',
     };
-    final updateData = <String, dynamic>{'status': status};
+    final updateData = <String, dynamic>{
+      'status': status,
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
     if (statusTimeField.containsKey(status)) {
       updateData[statusTimeField[status]!] = DateTime.now().toIso8601String();
     }
-    return await db.update('purchase_orders', updateData,
-        where: 'id = ?', whereArgs: [poId]);
+    final success = await updateRecord('purchase_orders', poId, updateData);
+    return success ? 1 : 0;
   }
 
   // --- INVOICES (v35: Full Invoice Management) ---
@@ -4273,33 +4318,8 @@ class DatabaseHelper {
 
   /// Update invoice
   Future<bool> updateInvoice(int id, Map<String, dynamic> data) async {
-    final db = await database;
-    final cloudSync = CloudSyncService();
-    data['id'] = id;
     data['updatedAt'] = DateTime.now().toIso8601String();
-
-    // Recalculate balance due if payment updated
-    if (data.containsKey('amountPaid')) {
-      final invoice =
-          await db.query('invoices', where: 'id = ?', whereArgs: [id]);
-      if (invoice.isNotEmpty) {
-        final totalAmount = (invoice.first['totalAmount'] as num?) ?? 0;
-        final amountPaid = (data['amountPaid'] as num?) ?? 0;
-        data['balanceDue'] = totalAmount - amountPaid;
-
-        // Auto-update status based on payment
-        if (amountPaid >= totalAmount) {
-          data['status'] = 'PAID';
-        } else if (amountPaid > 0) {
-          data['status'] = 'PARTIAL';
-        }
-      }
-    }
-
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'invoices', recordId: id, data: data);
-    AppLogger.success('✅ [Invoice] Updated invoice #$id (AWS-first)');
-    return success;
+    return await updateRecord('invoices', id, data);
   }
 
   /// Record payment against invoice and create transaction

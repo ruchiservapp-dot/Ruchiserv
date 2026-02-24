@@ -155,7 +155,17 @@ class LocationService {
         firmId: firmId, // Required for Lambda authentication
         filters: {'dispatchId': dispatchId},
       );
-      if (result['status'] == 'success' && result['data'] != null) {
+      
+      final list = (result['data'] is List)
+          ? (result['data'] as List)
+          : (result['Items'] is List)
+              ? (result['Items'] as List)
+              : null;
+
+      if (list != null && list.isNotEmpty) {
+        return list.first as Map<String, dynamic>;
+      } else if (result['status'] == 'success' && result['data'] != null) {
+        // Fallback for older API format if applicable
         return result['data'] as Map<String, dynamic>;
       }
     } catch (e) {

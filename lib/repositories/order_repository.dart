@@ -74,11 +74,7 @@ class OrderRepository {
     order['id'] = orderId;
 
     // v38: AWS-First - Update order via cloud sync
-    final success = await cloudSync.awsFirstUpdate(
-      table: 'orders',
-      recordId: orderId,
-      data: order,
-    );
+    final success = await _dbHelper.updateRecord('orders', orderId, order);
 
     if (!success) {
       AppLogger.warning('⚠️ [Order] Update queued for order #$orderId');
@@ -113,12 +109,8 @@ class OrderRepository {
 
   Future<void> updateOrderFields(
       int orderId, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = orderId;
     updates['updatedAt'] = DateTime.now().toIso8601String();
-    await cloudSync.awsFirstUpdate(
-        table: 'orders', recordId: orderId, data: updates);
-    AppLogger.success('✅ [Order] Updated fields for order #$orderId');
+    await _dbHelper.updateRecord('orders', orderId, updates);
   }
 
   Future<Map<String, dynamic>?> getFirm(String firmId) async {
@@ -144,10 +136,8 @@ class OrderRepository {
     };
 
     if (existing.isNotEmpty) {
-      await cloudSync.awsFirstUpdate(
-          table: 'service_rates',
-          recordId: existing.first['id'] as int,
-          data: data);
+      await _dbHelper.updateRecord('service_rates',
+          existing.first['id'] as int, data);
     } else {
       data['uuid'] = const Uuid().v4();
       await cloudSync.awsFirstWrite(table: 'service_rates', data: data);
@@ -213,12 +203,7 @@ class OrderRepository {
   }
 
   Future<bool> updateDish(int id, Map<String, dynamic> updates) async {
-    final cloudSync = CloudSyncService();
-    updates['id'] = id;
-    final success = await cloudSync.awsFirstUpdate(
-        table: 'dishes', recordId: id, data: updates);
-    AppLogger.success('✅ [Dishes] Updated dish #$id (AWS-first)');
-    return success;
+    return await _dbHelper.updateRecord('dishes', id, updates);
   }
 
   Future<bool> isDishLocked(int dishId) async {
@@ -580,16 +565,12 @@ class OrderRepository {
 
   Future<void> updateOrderServiceAssignment(int orderId,
       {int? serviceSubId, int? counterSubId}) async {
-    final cloudSync = CloudSyncService();
-    final updates = <String, dynamic>{'id': orderId};
+    final updates = <String, dynamic>{};
     if (serviceSubId != -1) updates['serviceSubcontractorId'] = serviceSubId;
     if (counterSubId != -1) updates['counterSubcontractorId'] = counterSubId;
 
-    if (updates.length > 1) {
-      await cloudSync.awsFirstUpdate(
-          table: 'orders', recordId: orderId, data: updates);
-      AppLogger.success(
-          '✅ [Orders] Updated service assignments for order #$orderId (AWS-first)');
+    if (updates.isNotEmpty) {
+      await _dbHelper.updateRecord('orders', orderId, updates);
     }
   }
 

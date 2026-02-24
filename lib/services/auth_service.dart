@@ -435,6 +435,10 @@ class AuthService {
 
       print(' - Comparing: DB[${m.trim()}] vs Input[${mobile.trim()}]');
       if (m.trim() == mobile.trim()) {
+        if (p.isEmpty) {
+          print('⚠️ Local password hash is empty! Forcing AWS fallback.');
+          break; // Let AWS fallback fetch the correct record
+        }
         mobileFound = true;
         if (p == password) {
           // Check authorization
@@ -489,13 +493,16 @@ class AuthService {
           table: 'ruchiserv_data',
           filters: {
             'pk': firmId,
-            'sk':
-                'users#$mobile', // Using mobile as SK for users in unified table
+            'sk_prefix':
+                'users#$mobile', // FIX: Use sk_prefix to query only the user!
           },
         );
 
-        final list =
-            (userResp['data'] is List) ? (userResp['data'] as List) : null;
+        final list = (userResp['data'] is List)
+            ? (userResp['data'] as List)
+            : (userResp['Items'] is List)
+                ? (userResp['Items'] as List)
+                : null;
         Map<String, dynamic>? awsUser;
 
         if (list != null && list.isNotEmpty) {
