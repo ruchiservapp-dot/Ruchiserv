@@ -2,6 +2,8 @@
 // Last Updated: 2025-12-09 | Features: Pre-loaded ingredients list, Add/Edit, Categories
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import 'package:ruchiserv/repositories/inventory_repository.dart';
 import '../services/language_service.dart';
 import '../services/master_data_sync_service.dart';
@@ -40,16 +42,18 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
     
     if (_firmId != null) {
       _ingredients = await InventoryRepository().getAllIngredients(_firmId!);
       _applyFilter();
     }
     
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   void _applyFilter() {
@@ -320,6 +324,12 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      Future.microtask(() => _loadData());
+    }
+
     // Group by category for display
     final grouped = <String, List<Map<String, dynamic>>>{};
     for (var ing in _filteredIngredients) {

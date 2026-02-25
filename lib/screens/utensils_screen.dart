@@ -2,6 +2,8 @@
 // Last Locked: 2025-12-08 | Features: Stock Management, Add/Edit/Delete, Firm-scoped Data
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import 'package:ruchiserv/repositories/operation_repository.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -97,9 +99,9 @@ class _UtensilsScreenState extends State<UtensilsScreen> {
                 final stock = int.tryParse(stockController.text) ?? 0;
 
                 try {
-                  // Get firmId from SharedPreferences
-                  final sp = await SharedPreferences.getInstance();
-                  final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+                  // Get firmId from SettingsProvider
+                  final settings = dialogContext.read<SettingsProvider>();
+                  final firmId = settings.firmId ?? 'DEFAULT';
 
                   await OperationRepository().insertUtensil({
                     'firmId': firmId,

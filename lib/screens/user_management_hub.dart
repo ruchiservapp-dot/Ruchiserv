@@ -4,6 +4,8 @@ import 'package:ruchiserv/core/app_logger.dart';
 // Features: RBAC, showRates toggle, module access
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import '../db/database_helper.dart';
 import '../core/app_theme.dart';
 import '../services/permission_service.dart';
@@ -52,9 +54,10 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance();
-    _currentFirmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    _currentFirmId = settings.firmId;
 
     if (_currentFirmId != null) {
       final db = await DatabaseHelper().database;
@@ -93,6 +96,12 @@ class _UserManagementHubScreenState extends State<UserManagementHubScreen>
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != null && settings.firmId != _currentFirmId) {
+      _currentFirmId = settings.firmId;
+      Future.microtask(() => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Access Control"),

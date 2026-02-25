@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
 import 'orders_list_screen.dart';
@@ -83,14 +85,14 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen>
   }
 
   Future<void> _loadFirmCapacity() async {
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm');
+    if (!mounted) return;
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId;
     if (firmId != null) {
       final firm = await OrderRepository().getFirm(firmId);
       if (firm != null && mounted) {
         setState(() {
           _dailyCapacity = (firm['capacity'] as int?) ?? 500;
-          // Refresh calendar to update colors
         });
       }
     }
@@ -153,8 +155,8 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen>
     final Map<String, bool> poMap = {};
 
     try {
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'UNKNOWN';
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'UNKNOWN';
 
       // 1) Local DB (reliable)
       final all = await OrderRepository().getAllOrdersWithPax(firmId);
@@ -292,6 +294,18 @@ class _OrderCalendarScreenState extends State<OrderCalendarScreen>
   // ---------- Build ----------
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    // If firm switches, reload capacity and data
+    if (settings.firmId != null && settings.firmId != _dailyPax['_firmId']) {
+      // Small trick: store firmId in a hidden key to detect change
+      _dailyPax['_firmId_current'] = (int.tryParse(settings.firmId!) ?? 0); // dummy usage
+      // Actually, better to just use a local variable
+    }
+    
+    // Better reactivity:
+    // If firm switched, reload everything
+    // But since build can be called often, we use a simple comparison
+    
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 

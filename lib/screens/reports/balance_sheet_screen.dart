@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../core/settings_provider.dart';
 import '../../db/database_helper.dart';
 import '../report_preview_page.dart';
 
@@ -26,10 +28,11 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId ?? 'DEFAULT';
 
     final dateStr = DateFormat('yyyy-MM-dd').format(_asOfDate);
     final data = await DatabaseHelper().getBalanceSheetData(_firmId, dateStr);
@@ -92,6 +95,12 @@ class _BalanceSheetScreenState extends State<BalanceSheetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    }
+
     final assets = (_data?['assets'] as Map<String, dynamic>?) ?? {};
     final liabilities = (_data?['liabilities'] as Map<String, dynamic>?) ?? {};
     final netWorth = (_data?['netWorth'] as num?)?.toDouble() ?? 0;

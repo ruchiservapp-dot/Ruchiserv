@@ -16,7 +16,18 @@ import 'package:ruchiserv/core/app_logger.dart';
 ///   --dart-define=PRODUCTION=true
 /// ```
 class AppConfig {
-  AppConfig._(); // Private constructor - all members are static
+  AppConfig._();
+
+  // ========== API GATEWAY ==========
+  static const String apiBaseUrl = 'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com';
+  static const String apiStage = 'prod';
+  static const String sqsUrl = 'https://ajajqugtitbljslq4kvfs33rcy0njifc.lambda-url.ap-south-1.on.aws/';
+  static const String websiteUrl = 'https://ruchiserv.com';
+
+  // ========== FCM NOTIFICATIONS ==========
+  static const String fcmChannelId = 'ruchiserv_high_importance_channel';
+  static const String fcmChannelName = 'Alerts';
+  static const String fcmChannelDescription = 'High importance notifications';
 
   // ========== ENVIRONMENT ==========
 

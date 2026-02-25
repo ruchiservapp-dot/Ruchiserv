@@ -16,6 +16,8 @@ import '../services/whatsapp_service.dart';
 import '../services/messaging_service.dart';
 import 'package:intl/intl.dart';
 import '../utils/time_utils.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 
 class AddOrderScreen extends StatefulWidget {
   final DateTime date;
@@ -156,8 +158,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   }
 
   Future<void> _loadLastServiceRates() async {
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId ?? 'DEFAULT';
 
     if (firmId != 'DEFAULT') {
       final sRate =
@@ -183,8 +185,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   }
 
   Future<void> _loadExistingDishes(int orderId) async {
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId ?? 'DEFAULT';
     final dishes = await OrderRepository().getDishesForOrder(orderId, firmId);
 
     // Group dishes by category
@@ -358,9 +360,9 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         }
       }
 
-      // Get firmId from logged-in user
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+      // Get firmId from reactive settings
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'DEFAULT';
 
       // order map
       final order = <String, dynamic>{

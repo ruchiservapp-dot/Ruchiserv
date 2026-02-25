@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,8 @@ import '../services/cloud_sync_service.dart';
 import 'reports/analytics_dashboard_screen.dart';
 import 'add_order_screen.dart';
 import 'mrp_run_screen.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -17,7 +20,7 @@ class HomeDashboardScreen extends StatefulWidget {
 
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   String? _firmId;
-  String _userName = 'User';
+  StreamSubscription? _syncSubscription;
 
   // KPIs
   int _activeOrders = 0;
@@ -29,15 +32,32 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDashboardData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDashboardData();
+      _listenToSyncEvents();
+    });
+  }
+
+  void _listenToSyncEvents() {
+    _syncSubscription?.cancel();
+    _syncSubscription = DatabaseHelper().syncStream.listen((event) {
+      if (mounted) _loadDashboardData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _syncSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadDashboardData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final sp = await SharedPreferences.getInstance();
-      _firmId = sp.getString('last_firm');
-      _userName = sp.getString('user_name') ?? 'Admin';
+      final settings = context.read<SettingsProvider>();
+      _firmId = settings.firmId ?? 'UNKNOWN';
+      final userName = settings.username ?? 'Admin';
 
       if (_firmId != null) {
         final db = await DatabaseHelper().database;
@@ -144,11 +164,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _buildGreeting(bool isDark) {
+    final settings = context.watch<SettingsProvider>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Welcome back, $_userName',
+          'Welcome back, ${settings.username ?? 'User'}',
           style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade600,

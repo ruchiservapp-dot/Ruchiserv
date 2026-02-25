@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import '../db/database_helper.dart';
 import '../core/app_theme.dart';
 
@@ -27,8 +29,8 @@ class _ManageAuthorizedMobilesScreenState
   Future<void> _loadMobiles() async {
     setState(() => _isLoading = true);
     try {
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'default_firm';
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'default_firm';
 
       final db = DatabaseHelper();
       final mobiles = await db.getAuthorizedMobiles(
@@ -112,9 +114,9 @@ class _ManageAuthorizedMobilesScreenState
               }
 
               try {
-                final sp = await SharedPreferences.getInstance();
-                final firmId = sp.getString('last_firm') ?? 'default_firm';
-                final userId = sp.getString('user_id') ?? 'ADMIN';
+                final settings = context.read<SettingsProvider>();
+                final firmId = settings.firmId ?? 'default_firm';
+                final userId = settings.userId ?? 'ADMIN';
 
                 final db = DatabaseHelper();
                 await db.addAuthorizedMobile(

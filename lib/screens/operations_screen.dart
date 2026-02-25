@@ -3,6 +3,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'kitchen_screen.dart';
@@ -29,13 +31,15 @@ class _OperationsScreenState extends State<OperationsScreen> {
   }
 
   Future<void> _checkUserRole() async {
-    final sp = await SharedPreferences.getInstance();
-    String role = sp.getString('user_role') ?? sp.getString('last_role') ?? '';
+    final settings = context.read<SettingsProvider>();
+    String role = settings.lastRole ?? '';
+    final firmId = settings.firmId; // Declare firmId here
 
-    // If role not in SharedPreferences, try to get from database
+    // If role not in Settings, try to get from database
     if (role.isEmpty) {
-      final mobile = sp.getString('last_mobile');
-      final firmId = sp.getString('last_firm');
+      final mobile = settings.userId;
+      // firmId is already declared above, no need to redeclare here
+      // final firmId = settings.firmId; // This line is removed as firmId is already declared
 
       if (mobile != null && firmId != null) {
         final db = await DatabaseHelper().database;
@@ -46,7 +50,7 @@ class _OperationsScreenState extends State<OperationsScreen> {
         );
         if (users.isNotEmpty) {
           role = users.first['role']?.toString() ?? '';
-          await sp.setString('last_role', role);
+          settings.setLastRole(role);
         }
       }
     }
@@ -67,6 +71,8 @@ class _OperationsScreenState extends State<OperationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<SettingsProvider>(); // Rebuild if settings change
+    
     if (_isLoading) {
       return const Scaffold(body: ShimmerCardLoader());
     }

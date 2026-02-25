@@ -12,6 +12,8 @@ import 'package:ruchiserv/l10n/app_localizations.dart';
 // MODULE: INVENTORY HUB (Lustre UI Modernization)
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../db/database_helper.dart';
 
 class InventoryScreen extends StatefulWidget {
@@ -36,10 +38,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> _loadDashboardStats() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final sp = await SharedPreferences.getInstance();
-      _firmId = sp.getString('last_firm');
+      final settings = context.read<SettingsProvider>();
+      _firmId = settings.firmId;
 
       if (_firmId != null) {
         final db = await DatabaseHelper().database;
@@ -78,6 +81,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadDashboardStats());
+    }
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 

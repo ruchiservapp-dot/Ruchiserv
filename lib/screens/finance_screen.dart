@@ -2,6 +2,8 @@ import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import 'transactions_screen.dart';
 import 'ledger_screen.dart';
 import 'invoices_screen.dart';
@@ -78,8 +80,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
     setState(() => _isLoading = true);
 
     // Load firm ID
-    final prefs = await SharedPreferences.getInstance();
-    _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId ?? 'DEFAULT';
 
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
@@ -104,6 +106,12 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      _firmId = settings.firmId!;
+      Future.microtask(() => _loadData());
+    }
+
     final netBalance = _totalIncome - _totalExpense;
 
     return Scaffold(

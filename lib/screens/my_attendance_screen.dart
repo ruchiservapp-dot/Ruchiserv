@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import '../services/geo_fence_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:ruchiserv/repositories/operation_repository.dart';
@@ -56,9 +58,9 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen>
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    final sp = await SharedPreferences.getInstance();
-    _userMobile = sp.getString('last_mobile');
-    _firmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    _userMobile = settings.userId;
+    _firmId = settings.firmId;
 
     final opRepo = OperationRepository();
 
@@ -295,6 +297,13 @@ class _MyAttendanceScreenState extends State<MyAttendanceScreen>
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      _userMobile = settings.userId;
+      Future.microtask(() => _loadData());
+    }
+
     if (_isLoading) {
       return Scaffold(
         appBar:

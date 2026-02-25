@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../db/database_helper.dart';
 import 'supplier_calendar_screen.dart';
 import 'supplier_po_screen.dart';
@@ -24,6 +26,7 @@ class _SupplierHomeScreenState extends State<SupplierHomeScreen> {
   int _pendingDeliveries = 0;
   Map<String, dynamic> _summary = {};
   List<Map<String, dynamic>> _recentPOs = [];
+  String? _currentFirmId;
 
   @override
   void initState() {
@@ -32,11 +35,12 @@ class _SupplierHomeScreenState extends State<SupplierHomeScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final sp = await SharedPreferences.getInstance();
-    final mobile = sp.getString('last_mobile') ?? '';
-    final firmId = sp.getString('last_firm') ?? '';
+    final settings = context.read<SettingsProvider>();
+    final mobile = settings.userId ?? '';
+    final firmId = settings.firmId ?? '';
 
     final db = await DatabaseHelper().database;
 
@@ -88,6 +92,13 @@ class _SupplierHomeScreenState extends State<SupplierHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _currentFirmId) {
+      _currentFirmId = settings.firmId;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    }
+
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

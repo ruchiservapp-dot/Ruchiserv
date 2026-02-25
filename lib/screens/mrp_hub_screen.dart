@@ -7,6 +7,8 @@ import 'allotment_screen.dart';
 import 'purchase_orders_screen.dart';
 import '../db/database_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 
 class MrpHubScreen extends StatefulWidget {
   const MrpHubScreen({super.key});
@@ -28,8 +30,9 @@ class _MrpHubScreenState extends State<MrpHubScreen> {
   }
 
   Future<void> _loadStats() async {
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    if (!mounted) return;
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
     
     if (_firmId != null) {
       final db = await DatabaseHelper().database;
@@ -53,6 +56,12 @@ class _MrpHubScreenState extends State<MrpHubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadStats());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('MRP Planning', style: TextStyle(fontWeight: FontWeight.bold)),

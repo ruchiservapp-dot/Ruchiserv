@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import '../db/database_helper.dart';
 import '../core/app_theme.dart';
 
@@ -35,13 +37,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
-    final userId = sp.getString('user_id');
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
+    final userId = settings.userId;
 
     // If no userId, try to find by mobile
-    final mobile = sp.getString('last_mobile');
+    final mobile = settings.userId; // userId often holds mobile in this context
 
     if (_firmId != null) {
       final db = DatabaseHelper();

@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../repositories/order_repository.dart';
 import '../../repositories/finance_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../core/settings_provider.dart';
 
 class DashboardView extends StatefulWidget {
   final DateTime startDate;
@@ -30,17 +32,22 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Future<void> _loadFirmId() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
-        _isInit = true;
-      });
-    }
+    if (!mounted) return;
+    final settings = context.read<SettingsProvider>();
+    setState(() {
+      _firmId = settings.firmId ?? 'DEFAULT';
+      _isInit = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadFirmId());
+    }
+
     if (!_isInit) return const Center(child: CircularProgressIndicator());
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;

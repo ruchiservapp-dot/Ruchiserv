@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../core/settings_provider.dart';
 import '../../db/database_helper.dart';
 import '../report_preview_page.dart';
 
@@ -27,10 +29,11 @@ class _PLReportScreenState extends State<PLReportScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId ?? 'DEFAULT';
 
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
@@ -116,6 +119,13 @@ class _PLReportScreenState extends State<PLReportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    
+    // Auto-reload if firm changes globally while screen is open
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    }
+
     final totalIncome = (_plData?['totalIncome'] as num?)?.toDouble() ?? 0;
     final totalExpense = (_plData?['totalExpense'] as num?)?.toDouble() ?? 0;
     final netProfit = (_plData?['netProfit'] as num?)?.toDouble() ?? 0;

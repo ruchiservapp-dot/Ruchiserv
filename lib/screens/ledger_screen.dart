@@ -4,6 +4,8 @@ import 'package:ruchiserv/repositories/order_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../db/seed_ledger_data.dart';
 import 'ledger_detail_screen.dart';
 
@@ -30,9 +32,10 @@ class _LedgerScreenState extends State<LedgerScreen>
   }
 
   Future<void> _loadFirmId() async {
-    final sp = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final settings = context.read<SettingsProvider>();
     setState(() {
-      _firmId = sp.getString('last_firm') ?? 'DEFAULT';
+      _firmId = settings.firmId ?? 'DEFAULT';
       _isLoadingFirm = false;
     });
   }
@@ -46,6 +49,14 @@ class _LedgerScreenState extends State<LedgerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      _firmId = settings.firmId!;
+      Future.microtask(() {
+        if (mounted) setState(() {});
+      });
+    }
+
     if (_isLoadingFirm) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

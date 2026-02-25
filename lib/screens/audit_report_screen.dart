@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -41,10 +43,11 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
   }
 
   Future<void> _loadLogs() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'default_firm';
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'default_firm';
       
       
       final userId = _userIdController.text.trim().isEmpty ? null : _userIdController.text.trim();
@@ -161,6 +164,8 @@ class _AuditReportScreenState extends State<AuditReportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Audit Report'),

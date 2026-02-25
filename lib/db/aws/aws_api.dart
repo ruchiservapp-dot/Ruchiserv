@@ -2,13 +2,13 @@ import 'package:ruchiserv/core/app_logger.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import 'package:ruchiserv/config/app_config.dart';
 
 /// Minimal API client for your API Gateway (adjust base/stage).
 class AwsApi {
   // ✅ New cost-optimized serverless API (Dec 2024)
-  static const String _baseUrl =
-      'https://do3uf8e3w6.execute-api.ap-south-1.amazonaws.com';
-  static const String _stage = 'prod';
+  static const String _baseUrl = AppConfig.apiBaseUrl;
+  static const String _stage = AppConfig.apiStage;
 
   /// JWT Token for authentication (Cognito)
   static String? _authToken;
@@ -133,8 +133,7 @@ class AwsApi {
     required Map<String, dynamic> payload,
   }) async {
     // Real integration: POST to Lambda Function URL (Producer)
-    const functionUrl =
-        'https://ajajqugtitbljslq4kvfs33rcy0njifc.lambda-url.ap-south-1.on.aws/';
+    const functionUrl = AppConfig.sqsUrl;
 
     try {
       final res = await http.post(

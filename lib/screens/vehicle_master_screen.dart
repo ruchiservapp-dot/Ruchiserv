@@ -4,6 +4,8 @@ import 'package:ruchiserv/core/app_logger.dart';
 // Last Locked: 2025-12-07 | Features: Fleet Management, Vehicle Type, Driver Info, In-House/Outside Classification
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Added
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../db/database_helper.dart';
 
 class VehicleMasterScreen extends StatefulWidget {
@@ -25,9 +27,11 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
   }
 
   Future<void> _loadVehicles() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance(); // Added
-    _firmId = sp.getString('last_firm'); // Added
+    
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
 
     final db = await DatabaseHelper().database;
     final result = await db.query('vehicles',
@@ -209,6 +213,12 @@ class _VehicleMasterScreenState extends State<VehicleMasterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      Future.microtask(() => _loadVehicles());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Vehicle Master'),

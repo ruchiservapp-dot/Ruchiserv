@@ -17,6 +17,8 @@ import '../utils/time_utils.dart';
 import 'return_tracking_screen.dart';
 import 'unload_verify_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import 'dispatch_tracking_screen.dart';
 
 class DispatchScreen extends StatefulWidget {
@@ -35,6 +37,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
   List<Map<String, dynamic>> _unloads = [];
   bool _isLoading = true;
   Timer? _refreshTimer;
+  String? _currentFirmId;
 
   final List<DateTime> _dateList = [];
 
@@ -90,8 +93,8 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
       final unloads = await operationRepo.getDispatchHubUnloads();
       AppLogger.info("📍 DispatchHubScreen: Unloads loaded: ${unloads.length}");
 
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'DEFAULT';
       
       // Get dishes for pending orders
       List<Map<String, dynamic>> pendingWithDishes = [];
@@ -107,6 +110,7 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
           _activeDispatches = List<Map<String, dynamic>>.from(active);
           _returns = List<Map<String, dynamic>>.from(returns);
           _unloads = List<Map<String, dynamic>>.from(unloads);
+          _currentFirmId = firmId;
           _isLoading = false;
         });
       }
@@ -120,6 +124,11 @@ class _DispatchScreenState extends State<DispatchScreen> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != null && settings.firmId != _currentFirmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadAllData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).dispatchTitle),
@@ -650,8 +659,8 @@ class _DispatchLoadingSheetState extends State<_DispatchLoadingSheet> {
       AppLogger.info("📍 _DispatchLoadingSheet: Fetching data from repositories");
       final vehicles = await operationRepo.getAllVehicles();
       AppLogger.info("📍 _DispatchLoadingSheet: Vehicles loaded: ${vehicles.length}");
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'DEFAULT';
       final dishes = await orderRepo.getDishesForOrder(widget.order['id'] as int, firmId);
       AppLogger.info("📍 _DispatchLoadingSheet: Dishes loaded: ${dishes.length}");
       final dbUtensils = await operationRepo.getAllUtensils();

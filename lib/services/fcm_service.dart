@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../firebase_options.dart';
 import '../db/database_helper.dart';
 import 'cloud_sync_service.dart';
+import '../config/app_config.dart';
 
 // @locked - Core Push-Pull architecture. Do not modify without full understanding.
 
@@ -103,7 +104,7 @@ class FcmService {
 
       try {
         final prefs = await SharedPreferences.getInstance();
-        final firmId = prefs.getString('last_firm');
+        final firmId = prefs.getString('firm_id') ?? prefs.getString('last_firm');
 
         if (firmId != null) {
           // Trigger immediate sync for the specified table
@@ -127,9 +128,9 @@ class FcmService {
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'ruchiserv_high_importance_channel', // Must match AndroidManifest
-      'Alerts', // Channel name
-      channelDescription: 'High importance notifications',
+      AppConfig.fcmChannelId,
+      AppConfig.fcmChannelName,
+      channelDescription: AppConfig.fcmChannelDescription,
       importance: Importance.max,
       priority: Priority.high,
       icon: '@mipmap/launcher_icon',
@@ -156,8 +157,8 @@ class FcmService {
     try {
       if (firmId == null || mobile == null) {
         final sp = await SharedPreferences.getInstance();
-        firmId ??= sp.getString('last_firm');
-        mobile ??= sp.getString('last_mobile');
+        firmId ??= sp.getString('firm_id') ?? sp.getString('last_firm');
+        mobile ??= sp.getString('mobile') ?? sp.getString('last_mobile');
       }
 
       if (firmId == null || mobile == null) {
@@ -207,7 +208,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final firmId = prefs.getString('last_firm');
+      final firmId = prefs.getString('firm_id') ?? prefs.getString('last_firm');
 
       if (firmId != null) {
         await CloudSyncService().syncTableFromCloud(table, firmId);

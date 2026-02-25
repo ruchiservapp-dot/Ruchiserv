@@ -1,4 +1,6 @@
 import '../db/database_helper.dart';
+import '../config/app_config.dart';
+import '../core/app_logger.dart';
 
 class AnalyticsService {
   final _db = DatabaseHelper();

@@ -50,6 +50,7 @@ class DatabaseHelper {
   /// Event stream for database mutations that need cloud sync.
   /// Decouples DatabaseHelper from CloudSyncService to avoid circular dependencies.
   final syncStreamController = StreamController<SyncEvent>.broadcast();
+  Stream<SyncEvent> get syncStream => syncStreamController.stream;
 
   Future<Database> get database async {
     if (_database != null) return _database!;

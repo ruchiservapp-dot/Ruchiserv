@@ -8,6 +8,8 @@ import 'package:ruchiserv/core/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../db/database_helper.dart';
 import 'mrp_output_screen.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
@@ -49,9 +51,10 @@ class _MrpRunScreenState extends State<MrpRunScreen>
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
 
     if (_firmId != null) {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
@@ -673,6 +676,12 @@ class _MrpRunScreenState extends State<MrpRunScreen>
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      Future.microtask(() => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).mrpRunScreenTitle),

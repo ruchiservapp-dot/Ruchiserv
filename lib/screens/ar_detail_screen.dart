@@ -2,6 +2,8 @@
 // Last Updated: 2025-12-17 | Features: Customer aging breakdown, outstanding balances
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import '../db/database_helper.dart';
 
 class ARDetailScreen extends StatefulWidget {
@@ -23,10 +25,11 @@ class _ARDetailScreenState extends State<ARDetailScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId ?? 'DEFAULT';
 
     final aging = await DatabaseHelper().getARAgingReport(_firmId);
 
@@ -38,6 +41,12 @@ class _ARDetailScreenState extends State<ARDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      _firmId = settings.firmId!;
+      Future.microtask(() => _loadData());
+    }
+
     final summary = _agingData?['summary'] as Map<String, dynamic>? ?? {};
     final customers =
         (_agingData?['customers'] as List?)?.cast<Map<String, dynamic>>() ?? [];

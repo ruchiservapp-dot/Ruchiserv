@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../utils/responsive_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../db/database_helper.dart';
 import '../services/geo_fence_service.dart';
 import 'staff_detail_screen.dart';
@@ -46,10 +48,11 @@ class _StaffScreenState extends State<StaffScreen>
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
 
     // Load firm GPS settings
     if (_firmId != null) {
@@ -249,6 +252,12 @@ class _StaffScreenState extends State<StaffScreen>
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      Future.microtask(() => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).staffManagement),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/analytics_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../core/settings_provider.dart';
 import '../../core/app_theme.dart';
 
 class AnalyticsDashboardScreen extends StatefulWidget {
@@ -32,8 +34,9 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   }
 
   Future<void> _loadData() async {
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    if (!mounted) return;
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
 
     if (_firmId != null) {
       final narrative = await _analyticsService.getNarrativeInsights(_firmId!);
@@ -51,6 +54,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    }
+
     if (_isLoading) return const Center(child: CircularProgressIndicator());
 
     return RefreshIndicator(

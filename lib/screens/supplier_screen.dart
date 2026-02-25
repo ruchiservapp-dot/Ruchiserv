@@ -4,6 +4,8 @@ import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:flutter/material.dart';
 import '../utils/responsive_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../db/database_helper.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -26,9 +28,10 @@ class _SupplierScreenState extends State<SupplierScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
     
     if (_firmId != null) {
       _suppliers = await FinanceRepository().getAllSuppliers(_firmId!);
@@ -198,6 +201,12 @@ class _SupplierScreenState extends State<SupplierScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).supplierMaster),

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../repositories/finance_repository.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -28,9 +30,11 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
     
     if (_firmId != null) {
       _pos = await FinanceRepository().getPurchaseOrders(
@@ -39,7 +43,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
       );
     }
     
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Color _getStatusColor(String status) {
@@ -170,6 +174,12 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      Future.microtask(() => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).purchaseOrdersTitle),

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../repositories/operation_repository.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 
@@ -27,6 +29,7 @@ class _StaffPayrollScreenState extends State<StaffPayrollScreen> {
   double _totalOTPay = 0;
   double _totalAdvances = 0;
   double _totalNetPay = 0;
+  String? _currentFirmId;
 
   @override
   void initState() {
@@ -41,8 +44,8 @@ class _StaffPayrollScreenState extends State<StaffPayrollScreen> {
     setState(() => _isLoading = true);
 
     // Get OT multiplier from firm settings
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId;
     if (firmId != null) {
       final firm = await _operationRepo.getFirmDetails(firmId);
       if (firm != null && firm['otMultiplier'] != null) {
@@ -165,6 +168,21 @@ class _StaffPayrollScreenState extends State<StaffPayrollScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    // This screen depends on firm settings (OT multiplier),
+    // but we don't necessarily need to reload everything if the firm changes
+    // globally unless we want full reactivity. Let's add it for consistency.
+    // However, _loadPayrollData already reads context.read<SettingsProvider>().
+    // To trigger a reload, we can monitor settings.firmId.
+    
+    // We need a local _currentFirmId to track what's currently loaded.
+    // Adding it to state.
+    if (settings.firmId != null && settings.firmId != _currentFirmId) {
+      _currentFirmId = settings.firmId;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadPayrollData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).staffPayroll),

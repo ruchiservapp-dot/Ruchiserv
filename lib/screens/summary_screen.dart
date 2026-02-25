@@ -3,6 +3,8 @@ import 'package:ruchiserv/repositories/order_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 
 class SummaryScreen extends StatefulWidget {
   final DateTime date;
@@ -31,8 +33,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
       });
 
       final dateString = widget.date.toIso8601String().split('T').first;
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'DEFAULT';
       final data =
           await OrderRepository().getDishesSummaryByDate(dateString, firmId);
       setState(() {

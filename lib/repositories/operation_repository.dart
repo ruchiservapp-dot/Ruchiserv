@@ -355,10 +355,7 @@ class OperationRepository {
         AND d.dispatchStatus IN ('PENDING', 'LOADING', 'DISPATCHED', 'DELIVERED')
       ORDER BY d.dispatchTime DESC LIMIT 1
     ''', [driverId]);
-    return result.isNotEmpty ? result.first : null;
   }
-
-    await _dbHelper.updateRecord('dispatches', dispatchId, updates);
 
   Future<void> updateDispatchKmAndEarnings(int dispatchId,
       {double? kmForward, double? kmReturn, double? driverShare}) async {
@@ -437,7 +434,13 @@ class OperationRepository {
 
   Future<void> updateOrderServiceAssignment(int orderId,
       {int? serviceSubId, int? counterSubId}) async {
-    if (updates.isNotEmpty) {
+    final updates = <String, dynamic>{
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+    if (serviceSubId != null) updates['serviceSubcontractorId'] = serviceSubId;
+    if (counterSubId != null) updates['counterSubcontractorId'] = counterSubId;
+
+    if (updates.length > 1) {
       await _dbHelper.updateRecord('orders', orderId, updates);
     }
   }

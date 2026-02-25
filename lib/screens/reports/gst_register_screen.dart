@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../core/settings_provider.dart';
 import '../../repositories/finance_repository.dart';
 import '../report_preview_page.dart';
 
@@ -37,10 +39,11 @@ class _GstRegisterScreenState extends State<GstRegisterScreen>
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId ?? 'DEFAULT';
 
     final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
     final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
@@ -177,6 +180,12 @@ class _GstRegisterScreenState extends State<GstRegisterScreen>
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _firmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    }
+
     final outputTotals = _outputTotals;
     final inputTotals = _inputTotals;
     final netPayable = outputTotals['total']! - inputTotals['tax']!;

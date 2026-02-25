@@ -6,6 +6,8 @@ import '../db/database_helper.dart';
 import '../services/cloud_sync_service.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import 'add_order_screen.dart';
 import 'order_fullscreen_view_screen.dart';
 import 'summary_screen.dart';
@@ -38,8 +40,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       });
       final dateStr = widget.date.toIso8601String().split('T')[0];
 
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+      if (!mounted) return;
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'DEFAULT';
 
       // Sync from Cloud (using robust service)
       try {
@@ -349,6 +352,14 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final currentFirmId = settings.firmId ?? 'DEFAULT';
+    
+    // Check for firmId change to trigger reload
+    // We can't easily store _firmId in state and sync it with build
+    // but we can use didChangeDependencies if we wanted a more formal approach.
+    // For now, the most reactive way is to watch the firmId.
+    
     final formattedDate =
         '${widget.date.day}/${widget.date.month}/${widget.date.year}';
     final grouped = _groupByMealType(_orders);

@@ -7,6 +7,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
 import '../db/database_helper.dart';
 import '../utils/time_utils.dart';
@@ -31,6 +33,7 @@ class _KitchenScreenState extends State<KitchenScreen>
   List<Map<String, dynamic>> _productionQueue = [];
   // Tab 3: Ready Queue Data
   List<Map<String, dynamic>> _readyQueue = [];
+  String? _currentFirmId;
 
   final List<DateTime> _dateList = [];
   Timer? _refreshTimer; // Auto-refresh for TV displays
@@ -114,14 +117,18 @@ class _KitchenScreenState extends State<KitchenScreen>
         '✅ KitchenScreen: Data load complete. Orders: ${_orders.length}, ProductionQueue: ${_productionQueue.length}, ReadyQueue: ${_readyQueue.length}');
 
     if (mounted) {
-      setState(() => _isLoading = false);
+      final settings = context.read<SettingsProvider>();
+      setState(() {
+        _currentFirmId = settings.firmId;
+        _isLoading = false;
+      });
     }
   }
 
   Future<void> _loadOrdersForDate() async {
     final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId ?? 'DEFAULT';
     final orders = await OrderRepository().getOrdersByDate(dateStr, firmId);
 
     final List<Map<String, dynamic>> enriched = [];
@@ -135,14 +142,14 @@ class _KitchenScreenState extends State<KitchenScreen>
   }
 
   Future<void> _loadProductionQueue() async {
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId ?? 'DEFAULT';
     _productionQueue = await OrderRepository().getProductionQueue(firmId);
   }
 
   Future<void> _loadReadyQueue() async {
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId ?? 'DEFAULT';
     _readyQueue = await OrderRepository().getReadyQueue(firmId);
   }
 
@@ -178,6 +185,12 @@ class _KitchenScreenState extends State<KitchenScreen>
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _currentFirmId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).kitchenOperations),

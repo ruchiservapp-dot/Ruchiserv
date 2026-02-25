@@ -2,6 +2,8 @@
 // Last Updated: 2025-12-09 | Features: Dish-Ingredient mapping @ 100 pax standard
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import 'package:ruchiserv/repositories/inventory_repository.dart';
 import 'package:ruchiserv/repositories/order_repository.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
@@ -32,9 +34,10 @@ class _BomScreenState extends State<BomScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
     
     if (_firmId != null) {
       _dishes = await InventoryRepository().getAllDishes(_firmId!);
@@ -194,6 +197,12 @@ class _BomScreenState extends State<BomScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      Future.microtask(() => _loadData());
+    }
+
     final filtered = _searchController.text.isEmpty
         ? _dishes
         : _dishes.where((d) => 

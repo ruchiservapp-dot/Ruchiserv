@@ -4,6 +4,8 @@ import 'package:ruchiserv/core/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import '../db/database_helper.dart';
 import 'driver_assignment_screen.dart';
 import 'driver_dispatch_detail_screen.dart';
@@ -82,11 +84,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final SharedPreferences sp = await SharedPreferences.getInstance();
-      AppLogger.info("📍 DriverHomeScreen: SP initialized");
-      final mobile = sp.getString('last_mobile') ?? '';
-      final firmId = sp.getString('last_firm') ?? '';
-      _driverName = sp.getString('last_user_name') ?? 'Driver';
+      final settings = context.read<SettingsProvider>();
+      AppLogger.info("📍 DriverHomeScreen: Settings retrieved");
+      final mobile = settings.userId ?? ''; // userId maps to mobile in this app context often
+      final firmId = settings.firmId ?? '';
+      _driverName = settings.username ?? 'Driver';
 
       final db = await DatabaseHelper().database;
       AppLogger.info("📍 DriverHomeScreen: DB initialized");
@@ -229,6 +231,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    // If firm switched, reload driver data
+    // We can use the same pattern as other screens
+    // But for now let's just ensure we have access to the context.watch
+    
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../core/settings_provider.dart';
 import '../../repositories/operation_repository.dart';
 
 class SalaryDisbursementScreen extends StatefulWidget {
@@ -36,13 +38,14 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
   String get _monthDisplay => DateFormat('MMMM yyyy').format(_selectedMonth);
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final sp = await SharedPreferences.getInstance();
-    _firmId = sp.getString('last_firm');
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId;
 
     if (_firmId == null) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       return;
     }
 
@@ -237,6 +240,12 @@ class _SalaryDisbursementScreenState extends State<SalaryDisbursementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId;
+      Future.microtask(() => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Salary Disbursement'),

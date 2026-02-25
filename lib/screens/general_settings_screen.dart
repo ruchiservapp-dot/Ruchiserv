@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../core/locale_provider.dart';
-import '../core/theme_provider.dart';
 import '../core/settings_provider.dart';
 
 class GeneralSettingsScreen extends StatefulWidget {
@@ -25,14 +24,14 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
         children: [
           const Text("Appearance",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Consumer<ThemeProvider>(
-            builder: (context, theme, child) {
+          Consumer<SettingsProvider>(
+            builder: (context, settings, child) {
               return SwitchListTile(
                 title: const Text("Dark Mode"),
                 subtitle: const Text("Enable dark theme"),
-                value: theme.isDarkMode,
+                value: settings.isDarkMode,
                 onChanged: (val) {
-                  theme.setTheme(val);
+                  settings.setTheme(val);
                 },
               );
             },

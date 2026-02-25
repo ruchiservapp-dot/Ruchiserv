@@ -2,6 +2,8 @@ import 'package:ruchiserv/core/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:ruchiserv/db/database_helper.dart';
 import 'package:ruchiserv/services/cashfree_payment_service.dart';
+import 'package:provider/provider.dart';
+import 'package:ruchiserv/core/settings_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:ruchiserv/l10n/app_localizations.dart';
@@ -42,8 +44,8 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
   }
 
   Future<void> _checkCurrentSubscription() async {
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId ?? 'DEFAULT';
     final firmDetails = await DatabaseHelper().getFirmDetails(firmId);
 
     if (firmDetails != null) {
@@ -79,15 +81,15 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
         'SaaSPayment: Proceeding to payment via $_selectedMethod...');
     setState(() => _isLoading = true);
 
-    final sp = await SharedPreferences.getInstance();
-    final mobile = sp.getString('last_mobile') ?? '9999999999';
-    final email = sp.getString('last_email') ?? 'user@example.com';
-    final name = sp.getString('last_name') ?? 'User';
+    final settings = context.read<SettingsProvider>();
+    final mobile = settings.userId ?? '9999999999';
+    final email = settings.lastEmail ?? 'user@example.com';
+    final name = settings.username ?? 'User';
     final amount = _plans[_selectedPlan]!['price'] as double;
 
     if (_selectedMethod == 'Direct') {
       // DIRECT UPI FLOW
-      final firmId = sp.getString('last_firm') ?? 'UNK';
+      final firmId = settings.firmId ?? 'UNK';
       final txnRef = UPIService.generateTransactionRef(firmId);
       final note = 'SaaS Subscription: $_selectedPlan';
 
@@ -227,8 +229,8 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final sp = await SharedPreferences.getInstance();
-      final firmId = sp.getString('last_firm') ?? 'UNK';
+      final settings = context.read<SettingsProvider>();
+      final firmId = settings.firmId ?? 'UNK';
 
       // 1. Grant Local Extension (7 Days)
       await SubscriptionService().grantManualExtension(firmId);
@@ -298,7 +300,7 @@ class _SaaSPaymentScreenState extends State<SaaSPaymentScreen> {
     }
 
     try {
-      final sp = await SharedPreferences.getInstance();
+      final settings = context.read<SettingsProvider>();
 
       // Calculate new date for UI display
       String currentEndStr = DateTime.now().toIso8601String();

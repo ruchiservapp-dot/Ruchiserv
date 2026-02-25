@@ -3,6 +3,8 @@ import 'package:ruchiserv/repositories/inventory_repository.dart';
 import 'package:ruchiserv/repositories/order_repository.dart';
 import 'package:ruchiserv/repositories/finance_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../core/settings_provider.dart';
 // MODULE: REPORTS SCREEN - COMPREHENSIVE
 // Last Updated: 2025-12-13 | Features: Orders, Kitchen, Dispatch, HR Reports + Export
 import 'package:flutter/material.dart';
@@ -41,6 +43,7 @@ class _DetailedReportsViewState extends State<DetailedReportsView> {
   List<Map<String, dynamic>> _reportData = [];
   bool _isLoading = true;
   String? _errorMessage; // Track network or database errors
+  String? _currentFirmId;
 
   // For expandable detail rows
   final Set<String> _expandedItems = {};
@@ -158,8 +161,10 @@ class _DetailedReportsViewState extends State<DetailedReportsView> {
     });
 
     List<Map<String, dynamic>> data = [];
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    if (!mounted) return;
+    final settings = context.read<SettingsProvider>();
+    final firmId = settings.firmId ?? 'DEFAULT';
+    _currentFirmId = firmId;
 
     final orderRepo = OrderRepository();
     final opRepo = OperationRepository();
@@ -553,6 +558,13 @@ class _DetailedReportsViewState extends State<DetailedReportsView> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+
+    if (settings.firmId != null && settings.firmId != _currentFirmId) {
+      _currentFirmId = settings.firmId;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadReportData());
+    }
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -1384,8 +1396,7 @@ class _DetailedReportsViewState extends State<DetailedReportsView> {
 
   Future<void> _loadOrdersForDate(String date) async {
     if (_drillDownData.containsKey(date)) return;
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final firmId = context.read<SettingsProvider>().firmId ?? 'DEFAULT';
     final orders = await OrderRepository().getOrdersByDate(date, firmId);
     if (mounted) {
       setState(() {
@@ -1396,8 +1407,7 @@ class _DetailedReportsViewState extends State<DetailedReportsView> {
 
   Future<void> _loadDishesForOrder(int orderId, String key) async {
     if (_drillDownData.containsKey(key)) return;
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final firmId = context.read<SettingsProvider>().firmId ?? 'DEFAULT';
     final dishes = await OrderRepository().getDishesForOrder(orderId, firmId);
     if (mounted) {
       setState(() {
@@ -1672,8 +1682,7 @@ class _DetailedReportsViewState extends State<DetailedReportsView> {
   Future<void> _loadOrdersByType(
       String typeKey, String typeValue, String key) async {
     if (_drillDownData.containsKey(key)) return;
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final firmId = context.read<SettingsProvider>().firmId ?? 'DEFAULT';
     final orders = await OrderRepository().getOrdersByFilter(
       typeKey,
       typeValue,
@@ -1893,8 +1902,7 @@ class _DetailedReportsViewState extends State<DetailedReportsView> {
   Future<void> _loadProductionDetails(String date) async {
     final key = 'kitchen_$date';
     if (_drillDownData.containsKey(key)) return;
-    final sp = await SharedPreferences.getInstance();
-    final firmId = sp.getString('last_firm') ?? 'DEFAULT';
+    final firmId = context.read<SettingsProvider>().firmId ?? 'DEFAULT';
     final dishes = await OrderRepository().getDishesForDate(date, firmId);
     if (mounted) {
       setState(() {

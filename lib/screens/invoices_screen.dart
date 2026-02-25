@@ -4,6 +4,8 @@ import 'package:ruchiserv/repositories/order_repository.dart';
 // Last Updated: 2025-12-17 | Features: Invoice list, status filter, auto-generate from orders, PDF export
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../core/settings_provider.dart';
 import '../services/invoice_pdf_service.dart';
 
 class InvoicesScreen extends StatefulWidget {
@@ -26,10 +28,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    _firmId = prefs.getString('last_firm') ?? 'DEFAULT';
+    final settings = context.read<SettingsProvider>();
+    _firmId = settings.firmId ?? 'DEFAULT';
 
     final invoices = await FinanceRepository().getInvoices(
       _firmId,
@@ -168,6 +171,12 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.firmId != _firmId) {
+      _firmId = settings.firmId ?? 'DEFAULT';
+      Future.microtask(() => _loadData());
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Invoices'),
